@@ -90,3 +90,26 @@
     margin: 0;
     box-sizing: border-box;
 }
+
+#header-div {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 0 20px;
+    padding: 10px 20px;
+}
+
+#control-div {
+    border: 1px solid black;
+    width: 80px;
+    border-radius: 25px;
+}
+
+#slider-div {
+    border: 1px solid red;
+    width: 40px;
+    height: 100%;
+    border-radius: 25px;
+    background-color: #1a1a1a;
+    transition: all 0.3s ease-in-out;
+}

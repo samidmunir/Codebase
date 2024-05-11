@@ -1,0 +1,1 @@
+const slider_div = document.getElementById('slider-div');
