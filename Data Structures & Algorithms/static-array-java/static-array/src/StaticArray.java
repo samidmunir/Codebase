@@ -41,6 +41,14 @@ public class StaticArray {
         return input_array;
     }
 
+    private int[] shift_left(int[] input_array, int input_pointer) {
+        for (int i = 0; i < input_pointer; i++) {
+            input_array[i] = input_array[i + 1];
+        }
+        input_array[input_pointer] = 0;
+        return input_array;
+    }
+
     public void insert_head(int data) {
         if (is_full()) {
             System.out.println("--<ERROR>-- cannot insert in full capacity static_array[].");
@@ -57,4 +65,6 @@ public class StaticArray {
         System.out.println("\ninsert_head(" + data + ") called -->");
         print_static_array_stats();
     }
+
+    public void remove_head() {}
 }
