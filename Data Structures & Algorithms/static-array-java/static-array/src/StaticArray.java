@@ -33,6 +33,10 @@ public class StaticArray {
         return pointer + 1 == capacity;
     }
 
+    private boolean is_empty() {
+        return pointer == -1;
+    }
+
     private int[] shift_right(int[] input_array, int input_pointer) {
         for (int i = input_pointer; i > 0; i--) {
             input_array[i] = input_array[i - 1];
@@ -42,14 +46,15 @@ public class StaticArray {
     }
 
     private int[] shift_left(int[] input_array, int input_pointer) {
-        for (int i = 0; i < input_pointer; i++) {
+        for (int i = 0; i < input_pointer + 1; i++) {
             input_array[i] = input_array[i + 1];
         }
-        input_array[input_pointer] = 0;
+        input_array[input_pointer + 1] = 0;
         return input_array;
     }
 
     public void insert_head(int data) {
+        System.out.println("\ninsert_head(" + data + ") called -->");
         if (is_full()) {
             System.out.println("--<ERROR>-- cannot insert in full capacity static_array[].");
         } else if (pointer == -1) {
@@ -66,5 +71,19 @@ public class StaticArray {
         print_static_array_stats();
     }
 
-    public void remove_head() {}
+    public void remove_head() {
+        System.out.println("\nremove_head() called -->");
+        if (is_empty()) {
+            System.out.println("--<ERROR>-- cannot remove from empty/null static_array[].");
+        } else if (pointer == 0) {
+            array[0] = 0;
+            pointer--;
+            number_of_elements--;
+        } else {
+            pointer--;
+            array = shift_left(array, pointer);
+            number_of_elements--;
+        }
+        print_static_array_stats();
+    }
 }
