@@ -8,3 +8,5 @@ struct singly_linked_list {
     int pointer;
     int number_of_elements;
 };
+
+struct singly_linked_list * initialize_singly_linked_list();
