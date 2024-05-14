@@ -49,5 +49,14 @@ public class App {
         array.remove_tail();
         array.remove_tail();
         array.remove_tail(); // ERROR expected: static_array[] empty/null.
+
+        /*
+         * Testing function clear_static_array()
+         */
+        array.insert_head(3);
+        array.insert_tail(4);
+        array.insert_head(2);
+        array.insert_head(1);
+        array.clear_static_array();
     }
 }

@@ -125,4 +125,14 @@ public class StaticArray {
         }
         print_static_array_stats();
     }
+
+    public void clear_static_array() {
+        System.out.println("\nclear_static_array() called -->");
+        for (int i = 0; i < array.length; i++) {
+            array[i] = 0;
+        }
+        pointer = -1;
+        number_of_elements = 0;
+        print_static_array_stats();
+    }
 }
