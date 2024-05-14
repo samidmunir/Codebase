@@ -25,5 +25,14 @@ public class App {
         array.remove_head();
         array.remove_head();
         array.remove_head(); // ERROR expected: static_array[] empty/null.
+
+        /*
+         * Testing function insert_tail()
+         */
+        array.insert_tail(2);
+        array.insert_tail(7);
+        array.insert_head(11);
+        array.insert_tail(56);
+        array.insert_tail(123); // ERROR expected: static_array[] at full capacity.
     }
 }

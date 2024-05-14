@@ -67,7 +67,6 @@ public class StaticArray {
             array[0] = data;
             number_of_elements++;
         }
-        System.out.println("\ninsert_head(" + data + ") called -->");
         print_static_array_stats();
     }
 
@@ -83,6 +82,18 @@ public class StaticArray {
             pointer--;
             array = shift_left(array, pointer);
             number_of_elements--;
+        }
+        print_static_array_stats();
+    }
+
+    public void insert_tail(int data) {
+        System.out.println("\ninsert_tail(" + data + ") called -->");
+        if (is_full()) {
+            System.out.println("--<ERROR>-- cannot insert in full capacity static_array[].");
+        } else {
+            pointer++;
+            array[pointer] = data;
+            number_of_elements++;
         }
         print_static_array_stats();
     }
