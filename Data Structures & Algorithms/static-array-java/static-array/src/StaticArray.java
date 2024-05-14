@@ -98,6 +98,22 @@ public class StaticArray {
         print_static_array_stats();
     }
 
+    public void remove_tail() {
+        System.out.println("\nremove_tail() called -->");
+        if (is_empty()) {
+            System.out.println("--<ERROR>-- cannot remove from empty/null static_array[].");
+        } else if (pointer == 0) {
+            array[0] = 0;
+            pointer--;
+            number_of_elements--;
+        } else {
+            pointer--;
+            array[pointer + 1] = 0;
+            number_of_elements--;
+        }
+        print_static_array_stats();
+    }
+
     public void replace_data_at_index(int data, int index) {
         System.out.println("\nreplace_data_at_index(" + data + ", " + index + ") called -->");
         if (is_empty()) {

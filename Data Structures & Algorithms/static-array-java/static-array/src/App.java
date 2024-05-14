@@ -41,6 +41,13 @@ public class App {
         array.replace_data_at_index(123, 3);
         array.remove_head();
         array.remove_head();
-        array.replace_data_at_index(125, 3); // ERROR expected: index parameter > pointer
+        array.replace_data_at_index(125, 3); // ERROR expected: index parameter > pointer.
+
+        /*
+         * Testing function remove_tail()
+         */
+        array.remove_tail();
+        array.remove_tail();
+        array.remove_tail(); // ERROR expected: static_array[] empty/null.
     }
 }
