@@ -6,7 +6,7 @@
 
 from typing import List
 
-class Solution_One:
+class Solution_Two:
     def twoSum(self, nums: List[int], target: int) -> List[int]:
         n = len(nums)
         nums_map = {}
