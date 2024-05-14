@@ -34,5 +34,13 @@ public class App {
         array.insert_head(11);
         array.insert_tail(56);
         array.insert_tail(123); // ERROR expected: static_array[] at full capacity.
+
+        /*
+         * Testing function replace_data_at_index()
+         */
+        array.replace_data_at_index(123, 3);
+        array.remove_head();
+        array.remove_head();
+        array.replace_data_at_index(125, 3); // ERROR expected: index parameter > pointer
     }
 }

@@ -97,4 +97,16 @@ public class StaticArray {
         }
         print_static_array_stats();
     }
+
+    public void replace_data_at_index(int data, int index) {
+        System.out.println("\nreplace_data_at_index(" + data + ", " + index + ") called -->");
+        if (is_empty()) {
+            System.out.println("--<ERROR>-- cannot replace data at index in empty/null static_array[].");
+        } else if (index <= 0 || index > pointer || index >= array.length) {
+            System.out.println("--<ERROR>-- cannot replace data in static_array[] at out-of-bounds index.");
+        } else {
+            array[index] = data;
+        }
+        print_static_array_stats();
+    }
 }
