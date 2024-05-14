@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void print_singly_linked_list(struct singly_linked_list_node *head) {
+void print_singly_linked_list(struct singly_linked_list_node *head, int pointer) {
     printf("singly-linked-list: ");
-    if (head == NULL) {
+    if (head == NULL || pointer < 0) {
         printf("HEAD -> NULL\n");
         return;
     } else {
@@ -16,11 +16,15 @@ void print_singly_linked_list(struct singly_linked_list_node *head) {
             current_node = current_node -> next;
         }
         printf("NULL\n");
-        return;
     }
 }
 
-void print_singly_linked_list_struct(struct singly_linked_list *linked_list) {}
+void print_singly_linked_list_struct(struct singly_linked_list *linked_list) {
+    print_singly_linked_list(linked_list -> head, linked_list -> pointer);
+    printf("\tpointer: %d\n", linked_list -> pointer);
+    printf("\tnumber_of_elements: %d\n", linked_list -> number_of_elements);
+    printf("\tused memory: %lu bytes\n", (linked_list -> number_of_elements * sizeof(struct singly_linked_list_node)));
+}
 
 struct singly_linked_list * initialize_singly_linked_list() {
     printf("\ninitialize_singly_linked_list() called -->\n");
@@ -39,6 +43,8 @@ struct singly_linked_list * initialize_singly_linked_list() {
     singly_linked_list_struct -> number_of_elements = 0;
     
     printf("\tsingly linked-list successfully initialized!\n");
+
+    print_singly_linked_list_struct(singly_linked_list_struct);
 
     return singly_linked_list_struct;
 }
