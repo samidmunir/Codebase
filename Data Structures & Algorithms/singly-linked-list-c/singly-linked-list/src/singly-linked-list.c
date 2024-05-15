@@ -3,13 +3,21 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void print_singly_linked_list(struct singly_linked_list_node *head, int pointer) {
+bool is_empty(struct singly_linked_list *linked_list) {
+    if (linked_list -> head == NULL || linked_list -> pointer < 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void print_singly_linked_list(struct singly_linked_list *linked_list) {
     printf("singly-linked-list: ");
-    if (head == NULL || pointer < 0) {
+    if (is_empty(linked_list)) {
         printf("HEAD -> NULL\n");
         return;
     } else {
-        struct singly_linked_list_node *current_node = head;
+        struct singly_linked_list_node *current_node = linked_list -> head;
         printf("HEAD -> ");
         while (current_node != NULL) {
             printf("%d -> ", current_node -> data);
@@ -20,7 +28,7 @@ void print_singly_linked_list(struct singly_linked_list_node *head, int pointer)
 }
 
 void print_singly_linked_list_struct(struct singly_linked_list *linked_list) {
-    print_singly_linked_list(linked_list -> head, linked_list -> pointer);
+    print_singly_linked_list(linked_list);
     printf("\tpointer: %d\n", linked_list -> pointer);
     printf("\tnumber_of_elements: %d\n", linked_list -> number_of_elements);
     printf("\tused memory: %lu bytes\n", (linked_list -> number_of_elements * sizeof(struct singly_linked_list_node)));
