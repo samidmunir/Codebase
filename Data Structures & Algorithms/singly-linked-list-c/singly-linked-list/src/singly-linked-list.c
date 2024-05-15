@@ -56,3 +56,23 @@ struct singly_linked_list * initialize_singly_linked_list() {
 
     return singly_linked_list_struct;
 }
+
+struct singly_linked_list * insert_head(struct singly_linked_list *linked_list, int data) {
+    printf("\ninsert_head(%d) called -->\n", data);
+    if (linked_list -> pointer == -1) {
+        linked_list -> head -> data = data;
+        linked_list -> head -> next = NULL;
+        linked_list -> pointer++;
+        linked_list -> number_of_elements++;
+    } else {
+        struct singly_linked_list_node *new_head = (struct singly_linked_list_node *) malloc(sizeof(struct singly_linked_list_node));
+        new_head -> data = data;
+        new_head -> next = linked_list -> head;
+        linked_list -> head = new_head;
+        linked_list -> pointer++;
+        linked_list -> number_of_elements++;
+    }
+    print_singly_linked_list_struct(linked_list);
+    
+    return linked_list;
+}

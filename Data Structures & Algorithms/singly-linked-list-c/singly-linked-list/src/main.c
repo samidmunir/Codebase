@@ -19,6 +19,13 @@ int main(int argc, char* argv[]) {
         Testing function initialize_singly_linked_list()
     */
     struct singly_linked_list *linked_list = initialize_singly_linked_list();
+
+    /*
+        Testing function insert_head()
+    */
+    linked_list = insert_head(linked_list, 2);
+    linked_list = insert_head(linked_list, 7);
+    linked_list = insert_head(linked_list, 11);
     
     return EXIT_SUCCESS;
 }
