@@ -100,3 +100,30 @@ struct singly_linked_list * remove_head(struct singly_linked_list *linked_list) 
 
     return linked_list;
 }
+
+struct singly_linked_list * insert_tail(struct singly_linked_list *linked_list, int data) {
+    printf("\ninsert_tail(%d) called -->\n", data);
+    if (linked_list -> pointer == -1) {
+        linked_list -> head -> data = data;
+        linked_list -> head -> next = NULL;
+        linked_list -> pointer++;
+        linked_list -> number_of_elements++;
+    } else {
+        struct singly_linked_list_node *new_node = (struct singly_linked_list_node *) malloc(sizeof(struct singly_linked_list_node));
+        new_node -> data = data;
+        struct singly_linked_list_node *current_node = linked_list -> head;
+        while (current_node != NULL) {
+            if (current_node -> next == NULL) {
+                break;
+            }
+            current_node = current_node -> next;
+        }
+        current_node -> next = new_node;
+        linked_list -> pointer++;
+        linked_list -> number_of_elements++;
+    }
+
+    print_singly_linked_list_struct(linked_list);
+
+    return linked_list;
+}
