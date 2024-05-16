@@ -43,6 +43,15 @@ int main(int argc, char* argv[]) {
     linked_list = insert_tail(linked_list, 7);
     linked_list = insert_head(linked_list, 123);
     linked_list = insert_tail(linked_list, 63);
+
+    /*
+        Testing function remove_tail()
+    */
+    linked_list = remove_tail(linked_list);
+    linked_list = remove_tail(linked_list);
+    linked_list = remove_tail(linked_list);
+    linked_list = remove_tail(linked_list);
+    linked_list = remove_tail(linked_list); // ERROR expected: empty/null linked-list.
     
     return EXIT_SUCCESS;
 }
