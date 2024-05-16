@@ -52,6 +52,17 @@ int main(int argc, char* argv[]) {
     linked_list = remove_tail(linked_list);
     linked_list = remove_tail(linked_list);
     linked_list = remove_tail(linked_list); // ERROR expected: empty/null linked-list.
+
+    /*
+        Testing function clear_singly_linked_list()
+    */
+    linked_list = initialize_singly_linked_list();
+    linked_list = insert_tail(linked_list, 3);
+    linked_list = insert_head(linked_list, 2);
+    linked_list = insert_head(linked_list, 1);
+    linked_list = insert_tail(linked_list, 4);
+    linked_list = insert_head(linked_list, 0);
+    linked_list = clear_singly_linked_list(linked_list);
     
     return EXIT_SUCCESS;
 }

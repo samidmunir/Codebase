@@ -160,3 +160,15 @@ struct singly_linked_list * remove_tail(struct singly_linked_list *linked_list) 
     
     return linked_list;
 }
+
+struct singly_linked_list * clear_singly_linked_list(struct singly_linked_list *linked_list) {
+    printf("\nclear_singly_linked_lis() called -->\n");
+    linked_list -> head -> data = 0;
+    linked_list -> head -> next = NULL;
+    linked_list -> pointer = -1;
+    linked_list -> number_of_elements = 0;
+
+    print_singly_linked_list_struct(linked_list);
+
+    return linked_list;
+}

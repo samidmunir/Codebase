@@ -18,3 +18,5 @@ struct singly_linked_list * remove_head(struct singly_linked_list *linked_list);
 struct singly_linked_list * insert_tail(struct singly_linked_list *linked_list, int data);
 
 struct singly_linked_list * remove_tail(struct singly_linked_list *linked_list);
+
+struct singly_linked_list * clear_singly_linked_list(struct singly_linked_list *linked_list);
