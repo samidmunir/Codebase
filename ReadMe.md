@@ -3,6 +3,7 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 ## Data Structures & Algorithms
 ### 1. static-array *(Java)*
 ### 3. singly-linked-list *(C)*
+### 4. doubly-linked-list *(C)*
 ## LeetCode Mastery
 ### 1. Two Sum *(Java, Python)*
 ## Projects
