@@ -10,3 +10,5 @@ struct doubly_linked_list {
     int pointer;
     int number_of_elements;
 };
+
+struct doubly_linked_list * initialize_doubly_linked_list();
