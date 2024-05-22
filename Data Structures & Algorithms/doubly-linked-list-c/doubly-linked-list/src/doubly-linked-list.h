@@ -12,3 +12,5 @@ struct doubly_linked_list {
 };
 
 struct doubly_linked_list * initialize_doubly_linked_list();
+
+struct doubly_linked_list * insert_head(struct doubly_linked_list *linked_list, int data);

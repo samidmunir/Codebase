@@ -20,5 +20,12 @@ int main(int argc, char* argv[]) {
     */
     struct doubly_linked_list *linked_list  = initialize_doubly_linked_list();
 
+    /*
+        Testing function insert_head()
+    */
+    linked_list = insert_head(linked_list, 2);
+    linked_list = insert_head(linked_list, 7);
+    linked_list = insert_head(linked_list, 11);
+
     return EXIT_SUCCESS;
 }
