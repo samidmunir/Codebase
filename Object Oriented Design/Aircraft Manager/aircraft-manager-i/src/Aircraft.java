@@ -16,7 +16,8 @@ public class Aircraft {
         this.airline = airline;
     }
 
-    public Aircraft(String manufacturer, String model, String registration, String airline, short number_of_engines, short range, long max_cruise_level) {
+    public Aircraft(String manufacturer, String model, String registration, String airline, short number_of_engines, 
+        short range, long max_cruise_level) {
         this.manufacturer = manufacturer;
         this.model = model;
         this.registration = registration;
