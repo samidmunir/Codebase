@@ -9,6 +9,13 @@ public class Aircraft {
 
     public Aircraft() {}
 
+    public Aircraft(String manufacturer, String model, String registration, String airline) {
+        this.manufacturer = manufacturer;
+        this.model = model;
+        this.registration = registration;
+        this.airline = airline;
+    }
+
     public Aircraft(String manufacturer, String model, String registration, String airline, short number_of_engines, short range, long max_cruise_level) {
         this.manufacturer = manufacturer;
         this.model = model;
@@ -73,5 +80,15 @@ public class Aircraft {
 
     public long get_max_cruise_level() {
         return max_cruise_level;
+    }
+
+    @Override
+    public String toString() {
+        String output = "\n";
+        output += manufacturer + " " + model;
+        output += "\n-------------------------";
+        output += "\n" + airline + " | " + registration;
+        output += "\n" + number_of_engines + " | " + range + " NM | " + max_cruise_level + " FT";
+        return output;
     }
 }
