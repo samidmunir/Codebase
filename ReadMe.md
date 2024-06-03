@@ -8,3 +8,5 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 ### 1. Two Sum *(Java, Python)*
 ## Projects
 ### 1. dark-mode-ui *(HTML, CSS, JavaScript)*
+## Object Oriented Design
+### 1. Aircraft Manager v1 - *(Java)*
