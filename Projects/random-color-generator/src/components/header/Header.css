@@ -1,0 +1,13 @@
+#Header {
+    background-color: #262626;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* border-bottom: 5px solid #ffffff; */
+}
+
+.column span {
+    display: inline-block;
+    vertical-align: -5px;
+}
