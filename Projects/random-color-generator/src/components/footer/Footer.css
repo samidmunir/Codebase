@@ -1,0 +1,22 @@
+#Footer {
+    bottom: 0;
+    /* padding: 10px; */
+    height: 87px;
+    text-align: center;
+    background-color: #262626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#Footer p {
+    transition: all 0.3s linear;
+}
+
+#Footer p:hover {
+    color: crimson;
+}
+
+#Footer p span {
+    vertical-align: -2px;
+}
