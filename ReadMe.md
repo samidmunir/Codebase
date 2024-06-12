@@ -1,18 +1,37 @@
 Sami Munir | Rutgers University | sami.munir2001@outlook.com
+
 # Codebase
+
 ## Data Structures & Algorithms
-### 1. static-array *(Java)*
-### 3. singly-linked-list *(C)*
-### 4. doubly-linked-list *(C)*
+
+### 1. static-array _(Java)_
+
+### 3. singly-linked-list _(C)_
+
+### 4. doubly-linked-list _(C)_
+
 ## LeetCode Mastery
-### 1. Two Sum *(Java, Python)*
+
+### 1. Two Sum _(Java, Python)_
+
 ## Projects
-### 1. dark-mode-ui *(HTML, CSS, JavaScript)*
-### 2. random-color-generator *(React.js, CSS)*
+
+### 1. dark-mode-ui _(HTML, CSS, JavaScript)_
+
+### 2. random-color-generator _(React.js, CSS)_
+
+### 3. time-checker _(React.js, CSS)_
+
 ## Object Oriented Design
-### 1. Aircraft Manager v1 - *(Java)*
+
+### 1. Aircraft Manager v1 - _(Java)_
+
 ## The Ultimate React Course 2024: React, Next.js, Redux & More
+
 ### Part 1 - Fundamentals
+
 ### Part 2 - Intermediate
+
 ### Part 3 - Advanced
+
 ### Part 4 - Professional Developer
