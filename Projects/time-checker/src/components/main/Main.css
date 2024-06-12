@@ -1,0 +1,8 @@
+.Main {
+  border: 1px solid red;
+}
+
+.main-section-image {
+  transform: scale(0.5);
+  border: 1px solid green;
+}
