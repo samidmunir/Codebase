@@ -1,0 +1,21 @@
+.Header {
+  width: 100%;
+  background: #262626;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px solid #0099ff;
+}
+
+.header-logo h1 {
+  color: #0099ff;
+}
+
+.header-logo h1 span {
+  vertical-align: -5px;
+}
+
+.header-main h1 {
+  color: #ffffff;
+}
