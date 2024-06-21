@@ -22,6 +22,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 ### 3. time-checker _(React.js, CSS)_
 
+### 4. apple-clone _(React.js, TailwindCSS)_
+
 ## Object Oriented Design
 
 ### 1. Aircraft Manager v1 - _(Java)_
