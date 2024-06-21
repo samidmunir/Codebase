@@ -18,5 +18,9 @@ public class App {
          *  output: 3
          */
         String s1 = "abcabcbb";
+        Solution_One solution_one = new Solution_One(s1);
+
+        String s2 = "bbbbb";
+        Solution_One solution_one_b = new Solution_One(s2);
     }
 }
