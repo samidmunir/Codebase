@@ -1,5 +1,3 @@
-function App() {
-  return <div className="App"></div>;
+export default function App() {
+  return <div>Hello React</div>;
 }
-
-export default App;
