@@ -10,20 +10,14 @@ export default function App() {
   const [step, setStep] = useState(1);
 
   function handlePrevious() {
-    // alert("Previous");
-    if (step === 1) {
-      return;
-    } else {
-      setStep(step--);
+    if (step > 1) {
+      setStep(step - 1);
     }
   }
 
   function handleNext() {
-    // alert("Next");
-    if (step === 3) {
-      return;
-    } else {
-      setStep(step++);
+    if (step < 3) {
+      setStep(step + 1);
     }
   }
 
