@@ -14,6 +14,12 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 ### 1. Two Sum _(Java, Python)_
 
+### 2. Add Two Numbers _(Python)_
+
+### 3. Longest Substring Without Repeating Characters _(Python)_
+
+### 4. Median of Two Sorted Arrays _(Python)_
+
 ## Projects
 
 ### 1. dark-mode-ui _(HTML, CSS, JavaScript)_
