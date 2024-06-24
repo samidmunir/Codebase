@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 const messages = [
   "Learn React ⚛️",
   "Apply for jobs 💼",
@@ -5,7 +7,15 @@ const messages = [
 ];
 
 export default function App() {
-  const step = 1;
+  const [step, setStep] = useState(1);
+
+  function handlePrevious() {
+    alert("Previous");
+  }
+
+  function handleNext() {
+    alert("Next");
+  }
 
   return (
     <div className="steps">
@@ -18,10 +28,16 @@ export default function App() {
         Step {step}: {messages[step - 1]}
       </p>
       <div className="buttons">
-        <button style={{ backgroundColor: "#7950f2", color: "#ffffff" }}>
+        <button
+          style={{ backgroundColor: "#7950f2", color: "#ffffff" }}
+          onClick={handlePrevious}
+        >
           Previous
         </button>
-        <button style={{ backgroundColor: "#7950f2", color: "#ffffff" }}>
+        <button
+          style={{ backgroundColor: "#7950f2", color: "#ffffff" }}
+          onClick={handleNext}
+        >
           Next
         </button>
       </div>
