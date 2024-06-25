@@ -22,7 +22,9 @@ public class App {
          *  output: 1
          */
         int[] height1 = {1, 8, 6, 2, 5, 4, 8, 3, 7};
+        Solution_One solution_one = new Solution_One(height1);
 
         int[] height2 = {1, 1};
+        Solution_One solution_one_b = new Solution_One(height2);
     }
 }
