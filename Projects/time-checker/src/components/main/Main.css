@@ -5,19 +5,32 @@
 }
 
 .main-section {
-  border: 1px solid green;
+  margin-top: 40px;
+  padding: 20px;
 }
 
 .main-section h1 {
   font-size: 48px;
   text-align: center;
+  /* color: #0099ff; */
+  color: #ffffff;
+}
+
+.main-section h2 {
+  margin-top: 40px;
+  font-size: 36px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.time-container {
+  margin: 20% auto;
+  padding: 19px;
+}
+
+.time-container p {
   color: #0099ff;
-}
-
-.main-section-img-con {
-  border: 1px solid blue;
-}
-
-.main-section-img-con img {
-  width: 600px;
+  font-weight: bold;
+  text-align: center;
+  font-size: 96px;
 }
