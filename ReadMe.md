@@ -20,6 +20,10 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 ### 3. Longest Substring Without Repeating Characters _(Python)_
 
+### 2. Add Two Numbers _(Python)_
+
+### 11. Container with Most Water _(Java)_
+
 ## Projects
 
 ### 1. dark-mode-ui _(HTML, CSS, JavaScript)_
