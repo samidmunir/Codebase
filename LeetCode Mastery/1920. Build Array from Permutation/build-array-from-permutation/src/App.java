@@ -11,6 +11,15 @@ public class App {
          * Example 1
          *  input: nums = [0, 2, 1, 5, 3, 4]
          *  output: [0, 1, 2, 4, 5, 3]
+         * 
+         * Example 2
+         *  input: nums = [5, 0, 1, 2, 3, 4]
+         *  output: [4, 5, 0, 1, 2, 3]
          */
+        int[] nums1 = {0, 2, 1, 5, 3, 4};
+        Solution_One solution_one = new Solution_One(nums1);
+
+        int[] nums2 = {5, 0, 1, 2, 3, 4};
+        Solution_One solution_one_b = new Solution_One(nums2);
     }
 }
