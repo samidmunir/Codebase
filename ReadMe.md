@@ -18,6 +18,12 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 1929. Concatenation of Array (easy) - _Java_
 
+#### 1512. Number of Good Pairs (easy) - _Java_
+
+#### 2011. Final Value of Variable after Performing Operations (easy) - _Java_
+
+#### 1470. Shuffle the Array (easy) - _Java_
+
 #### 1. Two Sum _(Java, Python)_
 
 #### 4. Median of Two Sorted Arrays _(Python)_
