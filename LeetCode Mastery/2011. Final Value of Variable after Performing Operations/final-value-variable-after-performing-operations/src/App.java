@@ -23,5 +23,13 @@ public class App {
          *  input: operations = ["X++", "++X", "--X", "X--"]
          *  output: 0
          */
+        String[] operations1 = {"--X", "X++", "X++"};
+        Solution_One solution_one = new Solution_One(operations1);
+
+        String[] operations2 = {"++X", "++X", "X++"};
+        Solution_One solution_one_b = new Solution_One(operations2);
+
+        String[] operations3 = {"X++", "++X", "--X", "X--"};
+        Solution_One solution_one_c = new Solution_One(operations3);
     }
 }
