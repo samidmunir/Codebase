@@ -21,5 +21,16 @@ public class App {
          *  input: words = ["abc", "bcd", "aaaa", "cbc"], x = "z"
          *  output: []
          */
+        String[] words1 = {"leet", "code"};
+        char x1 = 'e';
+        Solution_One solution_one = new Solution_One(words1, x1);
+
+        String[] words2 = {"abc", "bcd", "aaaa", "cbc"};
+        char x2 = 'a';
+        Solution_One solution_one_b = new Solution_One(words2, x2);
+
+        String[] words3 = {"abc", "bcd", "aaaa", "cbc"};
+        char x3 = 'z';
+        Solution_One solution_one_c = new Solution_One(words3, x3);
     }
 }
