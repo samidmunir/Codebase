@@ -26,6 +26,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 2942. Find Words Containing Characters (easy) - _Java_
 
+#### 1672. Richest Customer Wealth (easy) - _Java_
+
 #### 1. Two Sum _(Java, Python)_
 
 #### 4. Median of Two Sorted Arrays _(Python)_
