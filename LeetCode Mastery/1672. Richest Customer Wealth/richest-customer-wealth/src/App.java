@@ -22,5 +22,13 @@ public class App {
          *  input: [[2, 8, 7], [7, 1, 3], [1, 9, 5]]
          *  output: 17
          */
+        int[][] accounts1 = {{1, 2, 3}, {3, 2, 1}};
+        Solution_One solution_one = new Solution_One(accounts1);
+
+        int[][] accounts2 = {{1, 5}, {7, 3}, {3, 5}};
+        Solution_One solution_one_b = new Solution_One(accounts2);
+
+        int[][] accounts3 = {{2, 8, 7}, {7, 1, 3}, {1, 9, 5}};
+        Solution_One solution_one_c = new Solution_One(accounts3);
     }
 }

@@ -28,6 +28,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 1672. Richest Customer Wealth (easy) - _Java_
 
+#### 2798. Number of Employees Who Met the Target (easy) - _(Java)_
+
 #### 1. Two Sum _(Java, Python)_
 
 #### 4. Median of Two Sorted Arrays _(Python)_
