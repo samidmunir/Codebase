@@ -46,8 +46,6 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 ### 4. apple-clone _(React.js, TailwindCSS)_
 
-### 5. personal-portfolio _(React.js, TailwindCSS, sanity.io)_
-
 ## Object Oriented Design
 
 ### 1. Aircraft Manager v1 - _(Java)_
