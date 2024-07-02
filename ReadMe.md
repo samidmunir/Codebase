@@ -30,6 +30,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 2798. Number of Employees Who Met the Target (easy) - _(Java)_
 
+#### 1909. Remove One Element to Make the Array Strictly Increasing
+
 #### 1. Two Sum _(Java, Python)_
 
 #### 4. Median of Two Sorted Arrays _(Python)_
