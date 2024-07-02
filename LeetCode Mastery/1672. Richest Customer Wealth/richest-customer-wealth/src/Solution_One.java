@@ -10,6 +10,7 @@ import java.util.Arrays;
  */
 public class Solution_One {
     public Solution_One(int[][] accounts) {
+        System.out.println("\nSolution 1 -->");
         System.out.println("input[]: " + Arrays.deepToString(accounts));
         System.out.println("output: " + maximumWealth(accounts));
     }
