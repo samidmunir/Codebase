@@ -18,8 +18,15 @@ public class App {
          *  output: 3
          * 
          * Example 2
-         *  input: [5, 1, 4, 2, 2]
+         *  input: [5, 1, 4, 2, 2], target = 6
          *  output: 0
          */
+        int[] hours1 = {0, 1, 2, 3, 4};
+        int target1 = 2;
+        Solution_One solution_one = new Solution_One(hours1, target1);
+
+        int[] hours2 = {5, 1, 4, 2, 2};
+        int target2 = 6;
+        Solution_One solution_one_b = new Solution_One(hours2, target2);
     }
 }
