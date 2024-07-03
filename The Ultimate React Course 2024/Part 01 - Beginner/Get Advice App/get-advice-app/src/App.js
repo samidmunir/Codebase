@@ -1,12 +1,15 @@
-import logo from "./logo.svg";
 import "./App.css";
 
-function App() {
+export default function App() {
+  async function getAdvice() {
+    const res = await fetch("https://api.adviceslip.com/advice");
+    const data = await res.json();
+  }
+
   return (
-    <div className="App">
-      <h1>Get Advice App</h1>
+    <div>
+      <h1>Hello World!</h1>
+      <button onClick={getAdvice}>Get Advice</button>
     </div>
   );
 }
-
-export default App;
