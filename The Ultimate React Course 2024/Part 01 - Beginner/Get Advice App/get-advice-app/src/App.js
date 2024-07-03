@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import Navbar from "./components/navbar/Navbar";
+import Advice from "./components/advice/Advice";
+import AdviceController from "./components/advice-controller/AdviceController";
 
 export default function App() {
   const [advice, setAdvice] = useState("");
@@ -20,17 +22,8 @@ export default function App() {
   return (
     <div className="app">
       <Navbar />
-      <h1>{advice}</h1>
-      <button onClick={getAdvice}>Get Advice</button>
-      <Message count={count} />
+      <Advice advice={advice} />
+      <AdviceController count={count} getAdviceFunc={getAdvice} />
     </div>
-  );
-}
-
-function Message(props) {
-  return (
-    <p>
-      You have read <strong>{props.count}</strong> pieces of advice.
-    </p>
   );
 }
