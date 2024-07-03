@@ -17,5 +17,16 @@ public class App {
          *  input: flowerbed = [1, 0, 0, 0, 1], n = 2
          *  output: false
          */
+        int[] flowerbed1 = {1, 0, 0, 0, 1};
+        int n1 = 1;
+        Solution_One solution_one = new Solution_One(flowerbed1, n1);
+
+        int[] flowerbed2 = {1, 0, 0, 0, 1};
+        int n2 = 2;
+        Solution_One solution_one_b = new Solution_One(flowerbed2, n2);
+
+        int[] flowerbed3 = {0, 0, 1, 0, 0};
+        int n3 = 1;
+        Solution_One solution_one_c = new Solution_One(flowerbed3, n3);
     }
 }
