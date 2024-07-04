@@ -3,7 +3,7 @@ import java.util.HashMap;
 
 public class SolutionBravo {
     public SolutionBravo(int[] nums, int target) {
-        System.out.println("\nSolution Alpha -->");
+        System.out.println("\nSolution Bravo -->");
         System.out.println("nums[]: " + Arrays.toString(nums));
         System.out.println("target: " + target);
         System.out.println("--> output: " + Arrays.toString(twoSum(nums, target)));
