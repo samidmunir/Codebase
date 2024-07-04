@@ -9,6 +9,7 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 #### 1. Two Sum (easy)
 
 - java
+- python
 
 ## The Ultimate React Course 2024: React, Next.js, Redux & More
 

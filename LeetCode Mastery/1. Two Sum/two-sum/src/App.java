@@ -35,5 +35,11 @@ public class App {
         int[] numsAlpha = {2, 7, 11, 15};
         int targetAlpha = 9;
         SolutionAlpha solutionAlpha = new SolutionAlpha(numsAlpha, targetAlpha);
+        System.out.println(solutionAlpha.getClass());
+
+        int[] numsBravo = {3, 2, 4};
+        int targetBravo = 6;
+        SolutionBravo solutionBravo = new SolutionBravo(numsBravo, targetBravo);
+        System.out.println(solutionBravo.getClass());
     }
 }
