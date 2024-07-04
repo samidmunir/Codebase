@@ -6,17 +6,9 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 ### 1. Arrays
 
-#### 1. Two Sum
+#### 1. Two Sum (easy)
 
-#### 2. Add Two Numbers
-
-#### 3. Longest Substring without Repeating Characters
-
-#### 4. Median of Two Sorted Arrays
-
-#### 11. Container with Most Water
-
-#### 605. Can Place Flowers
+- java
 
 ## The Ultimate React Course 2024: React, Next.js, Redux & More
 
