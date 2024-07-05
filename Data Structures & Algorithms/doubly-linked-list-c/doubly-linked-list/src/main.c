@@ -46,5 +46,13 @@ int main(int argc, char* argv[]) {
    linked_list = insert_tail(linked_list, 11);
    linked_list = insert_tail(linked_list, 56);
 
+    /*
+        Testing function remove_tail()
+    */
+    linked_list = remove_tail(linked_list);
+    linked_list = remove_tail(linked_list);
+    linked_list = remove_tail(linked_list);
+    linked_list = remove_tail(linked_list);
+
     return EXIT_SUCCESS;
 }
