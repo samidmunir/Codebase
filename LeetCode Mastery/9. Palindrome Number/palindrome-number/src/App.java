@@ -22,8 +22,12 @@ public class App {
          */
         System.out.println("\n9. Palindrome Number");
 
-        int xAlpha = 121;
+        int xAlpha = 1221;
         SolutionAlpha solutionAlpha = new SolutionAlpha(xAlpha);
         System.out.println(solutionAlpha.getClass());
+
+        int xBravo = 12321;
+        SolutionBravo solutionBravo = new SolutionBravo(xBravo);
+        System.out.println(solutionBravo.getClass());
     }
 }
