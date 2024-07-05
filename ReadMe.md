@@ -2,6 +2,14 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 # Codebase
 
+## Data Structures & Algorithms
+
+### 1. static-array-java
+
+### 2. singly-linked-list-c
+
+### 3. doubly-linked-list.c
+
 ## Leetcode Mastery
 
 ### 1. Arrays

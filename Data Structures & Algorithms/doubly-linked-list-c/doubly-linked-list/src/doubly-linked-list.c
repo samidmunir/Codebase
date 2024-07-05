@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 bool is_empty(struct doubly_linked_list *linked_list) {
-    if (linked_list -> head == NULL || linked_list -> pointer < 0) {
+    if (linked_list -> pointer < 0) {
         return true;
     } else {
         return false;
@@ -76,9 +76,21 @@ struct doubly_linked_list * insert_head(struct doubly_linked_list *linked_list, 
         linked_list -> tail = linked_list -> head;
         linked_list -> pointer++;
         linked_list -> number_of_elements++;
+    } else if (linked_list -> pointer == 0) {
+        struct doubly_linked_list_node *new_head = (struct doubly_linked_list_node *) malloc(sizeof(struct doubly_linked_list_node));
+        new_head -> data = data;
+        new_head -> prev = NULL;
+        new_head -> next = linked_list -> head;
+        linked_list -> head -> prev = new_head;
+        linked_list -> head = new_head;
+        linked_list -> tail = linked_list -> head -> next;
+        linked_list -> tail -> prev = linked_list -> head;
+        linked_list -> pointer++;
+        linked_list -> number_of_elements++;
     } else {
         struct doubly_linked_list_node *new_head = (struct doubly_linked_list_node *) malloc(sizeof(struct doubly_linked_list_node));
         new_head -> data = data;
+        new_head -> prev = NULL;
         new_head -> next = linked_list -> head;
         linked_list -> head -> prev = new_head;
         linked_list -> head = new_head;

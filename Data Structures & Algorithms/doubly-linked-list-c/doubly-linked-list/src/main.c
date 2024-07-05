@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) {
     linked_list = insert_head(linked_list, 2);
     linked_list = insert_head(linked_list, 7);
     linked_list = insert_head(linked_list, 11);
+    linked_list = insert_head(linked_list, 56);
 
     return EXIT_SUCCESS;
 }
