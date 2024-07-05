@@ -16,9 +16,14 @@ public class App {
          * Example 3
          *  input: x = 10
          *  output: false
+         * 
+         * Follow-up: Could you solve it without converting the integer to
+         *  a string?
          */
         System.out.println("\n9. Palindrome Number");
 
         int xAlpha = 121;
+        SolutionAlpha solutionAlpha = new SolutionAlpha(xAlpha);
+        System.out.println(solutionAlpha.getClass());
     }
 }

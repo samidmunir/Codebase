@@ -21,6 +21,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 9. Palindrome Number (easy)
 
+- java
+
 ## The Ultimate React Course 2024: React, Next.js, Redux & More
 
 ### Part 01 - Beginner
