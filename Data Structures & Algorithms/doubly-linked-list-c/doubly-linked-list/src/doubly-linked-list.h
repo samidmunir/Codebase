@@ -20,3 +20,7 @@ struct doubly_linked_list * remove_head(struct doubly_linked_list *linked_list);
 struct doubly_linked_list * insert_tail(struct doubly_linked_list *liked_list, int data);
 
 struct doubly_linked_list * remove_tail(struct doubly_linked_list *linked_list);
+
+void print_reversed(struct doubly_linked_list *linked_list);
+
+struct doubly_linked_list * clear_doubly_linked_list(struct doubly_linked_list *linked_list);

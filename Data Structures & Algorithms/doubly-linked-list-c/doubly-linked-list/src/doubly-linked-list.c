@@ -178,3 +178,28 @@ struct doubly_linked_list * remove_tail(struct doubly_linked_list *linked_list) 
 
     return linked_list;
 }
+
+void print_reversed(struct doubly_linked_list *linked_list) {
+    struct doubly_linked_list_node *current_node = linked_list -> tail;
+    printf("\nprint_reversed() called -->");
+    printf("\ndoubly-linked-list: HEAD <-> ");
+    while (current_node != NULL) {
+        printf("%d <-> ", current_node -> data);
+        current_node = current_node -> prev;
+    }
+    printf("TAIL\n");
+}
+
+struct doubly_linked_list * clear_doubly_linked_list(struct doubly_linked_list *linked_list) {
+    printf("\nclear_doubly_linked_lis() called -->\n");
+    linked_list -> head -> data = -1;
+    linked_list -> head -> next = NULL;
+    linked_list -> head -> prev = NULL;
+    linked_list -> tail = linked_list -> head;
+    linked_list -> pointer = -1;
+    linked_list -> number_of_elements = 0;
+
+    print_doubly_linked_list_struct(linked_list);
+
+    return linked_list;
+}

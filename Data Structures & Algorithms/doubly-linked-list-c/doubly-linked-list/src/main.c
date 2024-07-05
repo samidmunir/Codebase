@@ -54,5 +54,22 @@ int main(int argc, char* argv[]) {
     linked_list = remove_tail(linked_list);
     linked_list = remove_tail(linked_list);
 
+    /*
+        Testing function print_reversed()
+    */
+    linked_list = initialize_doubly_linked_list();
+    linked_list = insert_head(linked_list, 1);
+    linked_list = insert_tail(linked_list, 2);
+    linked_list = insert_tail(linked_list, 3);
+    print_reversed(linked_list);
+
+    /*
+        Testing function clear_doubly_linked_list()
+    */
+    linked_list = insert_head(linked_list, 1);
+    linked_list = insert_tail(linked_list, 2);
+    linked_list = insert_tail(linked_list, 3);
+    linked_list = clear_doubly_linked_list(linked_list);
+
     return EXIT_SUCCESS;
 }
