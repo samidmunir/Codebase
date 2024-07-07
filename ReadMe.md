@@ -12,14 +12,20 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 ## Leetcode Mastery
 
-### 1. Arrays
-
 #### 1. Two Sum (easy)
 
 - java
 - python
 
 #### 9. Palindrome Number (easy)
+
+- java
+
+#### 13. Roman to Integer (easy)
+
+- java
+
+#### 14. Longest Common Prefix (easy)
 
 - java
 
