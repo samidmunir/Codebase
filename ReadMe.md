@@ -8,7 +8,9 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 ### 2. singly-linked-list-c
 
-### 3. doubly-linked-list.c
+### 3. doubly-linked-list-c
+
+### 4. heap-c
 
 ## Leetcode Mastery
 
