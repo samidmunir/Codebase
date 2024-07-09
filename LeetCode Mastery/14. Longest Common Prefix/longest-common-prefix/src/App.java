@@ -15,5 +15,9 @@ public class App {
          *  output: ""
          */
         System.out.println("\n14. Longest Common Prefix");
+
+        String[] strsAlpha = {"flower", "flow", "flight"};
+        SolutionAlpha solutionAlpha = new SolutionAlpha(strsAlpha);
+        System.out.println(solutionAlpha.getClass());
     }
 }
