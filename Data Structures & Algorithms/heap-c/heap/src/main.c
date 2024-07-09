@@ -12,5 +12,9 @@ int main(int argc, char* argv[]) {
     printf("\nheap | implementation in C\n");
     printf("--------------------------\n");
 
+    /*
+        Testing function initialize_heap()
+    */
+
     return EXIT_SUCCESS;
 }
