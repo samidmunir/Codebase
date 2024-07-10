@@ -38,3 +38,5 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 #### 1.1 - First React App
 
 #### 1.2 - Get Advice App
+
+#### 1.3 - Pizza Menu App
