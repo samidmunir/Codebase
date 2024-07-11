@@ -31,6 +31,24 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 - java
 
+## NeetCode.IO
+
+## Projects
+
+#### 1. apple-clone (React, Tailwind, ThreeJS, GSAP)
+
+#### 2. constant-time-array-ads (Python)
+
+#### 3. dark-mode-ui (HTML, CSS, Javascript)
+
+#### 4. product-page (React)
+
+#### 5. random-color-generator (React)
+
+#### 6. time-checker (React)
+
+#### 7. virtual-airline-manager (React)
+
 ## The Ultimate React Course 2024: React, Next.js, Redux & More
 
 ### Part 01 - Beginner
