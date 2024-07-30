@@ -58,6 +58,10 @@
   align-items: center;
 }
 
+.navbar-right-login {
+  transition: all 0.25s ease-in-out;
+}
+
 .navbar-right-login button {
   margin: auto 10px;
   cursor: pointer;
@@ -101,125 +105,259 @@
   font-size: 20px;
 }
 
-@media (max-width: 1020px) {
+/* 600px and down */
+@media only screen and (max-width: 600px) {
   .navbar-left-title {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .navbar-left-logo {
-    font-size: 24px;
-    margin-left: 10px;
-  }
-
-  .navbar-center-ul-item {
-    font-size: 19px;
-    padding: 2.5px 5px;
-  }
-
-  .navbar-center-ul-item:hover {
-    font-size: 19px;
-  }
-
-  .active-tab {
-    font-size: 19px;
-    padding: 2.5px 5px;
-  }
-
-  .navbar-login-btn1 {
-    font-size: 19px;
-  }
-
-  .navbar-login-btn1:hover {
-    font-size: 19px;
-  }
-
-  .navbar-login-btn2 {
-    font-size: 19px;
-  }
-
-  .navbar-login-btn2:hover {
-    font-size: 19px;
-  }
-}
-
-@media (max-width: 720px) {
-  .navbar-left-title {
-    font-size: 18px;
-  }
-
-  .navbar-left-logo {
-    font-size: 18px;
+    font-size: 20px;
     margin-left: 8px;
   }
 
   .navbar-center-ul-item {
-    font-size: 13px;
-    padding: 2.5px 5px;
-  }
-
-  .navbar-center-ul-item:hover {
-    font-size: 13px;
+    padding: 2px 7px;
+    font-size: 10px;
+    margin: 0 7px;
   }
 
   .active-tab {
-    font-size: 13px;
-    padding: 2.5px 5px;
+    padding: 2px 7px;
+    margin: 0 7px;
+    font-size: 12px;
+  }
+
+  .navbar-center-ul-item:hover {
+    font-size: 12px;
+  }
+
+  .navbar-right-login button {
+    display: none;
   }
 
   .navbar-login-btn1 {
-    font-size: 13px;
+    padding: 2px 7px;
+    font-size: 12px;
   }
 
   .navbar-login-btn1:hover {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .navbar-login-btn2 {
-    font-size: 13px;
+    padding: 2px 7px;
+    font-size: 12px;
   }
 
   .navbar-login-btn2:hover {
-    font-size: 13px;
+    font-size: 14px;
   }
 }
 
-@media (max-width: 575px) {
+/* 600px and up */
+@media only screen and (min-width: 600px) {
   .navbar-left-title {
-    font-size: 15px;
+    font-size: 24px;
   }
 
   .navbar-left-logo {
-    font-size: 15px;
-    margin-left: 5px;
+    font-size: 24px;
+    margin-left: 8px;
   }
 
   .navbar-center-ul-item {
-    font-size: 9px;
-    padding: 1.5px 3px;
-  }
-
-  .navbar-center-ul-item:hover {
-    font-size: 9px;
+    padding: 2px 7px;
+    font-size: 14px;
+    margin: 0 15px;
   }
 
   .active-tab {
-    font-size: 9px;
-    padding: 1.5px 3px;
+    padding: 2px 7px;
+    margin: 0 7px;
+    font-size: 16px;
   }
 
-  .navbar-login-btn1 {
-    font-size: 9px;
+  .navbar-center-ul-item:hover {
+    font-size: 16px;
+  }
+
+  .navbar-right-login button {
+    display: none;
+  }
+
+  /* .navbar-login-btn1 {
+    padding: 2px 7px;
+    font-size: 16px;
   }
 
   .navbar-login-btn1:hover {
-    font-size: 9px;
+    font-size: 14px;
   }
 
   .navbar-login-btn2 {
-    font-size: 9px;
+    padding: 2px 7px;
+    font-size: 12px;
   }
 
   .navbar-login-btn2:hover {
-    font-size: 9px;
+    font-size: 14px;
+  } */
+}
+
+/* 768px and up */
+@media only screen and (min-width: 768px) {
+  .navbar-left-title {
+    font-size: 24px;
+  }
+
+  .navbar-left-logo {
+    font-size: 24px;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+
+  .navbar-center-ul-item {
+    padding: 2px 7px;
+    font-size: 12px;
+    margin: 0 7px;
+  }
+
+  .active-tab {
+    padding: 2px 7px;
+    margin: 0 7px;
+    font-size: 14px;
+  }
+
+  .navbar-center-ul-item:hover {
+    font-size: 14px;
+  }
+
+  .navbar-right-login button {
+    margin: auto 7px;
+    display: block;
+  }
+
+  .navbar-login-btn1 {
+    padding: 2px 7px;
+    font-size: 12px;
+  }
+
+  .navbar-login-btn1:hover {
+    font-size: 14px;
+  }
+
+  .navbar-login-btn2 {
+    padding: 2px 7px;
+    font-size: 12px;
+  }
+
+  .navbar-login-btn2:hover {
+    font-size: 14px;
+  }
+}
+
+/* 992px and up */
+@media only screen and (min-width: 992px) {
+  .navbar-left-title {
+    font-size: 28px;
+  }
+
+  .navbar-left-logo {
+    font-size: 28px;
+    vertical-align: middle;
+    margin-left: 9px;
+  }
+
+  .navbar-center-ul-item {
+    padding: 3px 8px;
+    font-size: 14px;
+    margin: 0 8px;
+  }
+
+  .active-tab {
+    padding: 3px 8px;
+    margin: 0 8px;
+    font-size: 16px;
+  }
+
+  .navbar-center-ul-item:hover {
+    font-size: 16px;
+  }
+
+  .navbar-right-login button {
+    margin: auto 8px;
+  }
+
+  .navbar-login-btn1 {
+    outline: none;
+    border: 1px solid #ffffff;
+    padding: 3px 8px;
+    font-size: 14px;
+  }
+
+  .navbar-login-btn1:hover {
+    font-size: 16px;
+  }
+
+  .navbar-login-btn2 {
+    padding: 3px 8px;
+    font-size: 14px;
+  }
+
+  .navbar-login-btn2:hover {
+    font-size: 16px;
+  }
+}
+
+/* 1200px and up */
+@media only screen and (min-width: 1200px) {
+  .navbar-left-title {
+    font-size: 32px;
+  }
+
+  .navbar-left-logo {
+    font-size: 32px;
+    margin-left: 9px;
+  }
+
+  .navbar-center-ul-item {
+    padding: 4px 9px;
+    font-size: 16px;
+    margin: 0 9px;
+  }
+
+  .active-tab {
+    padding: 4px 9px;
+    margin: 0 9px;
+    font-size: 18px;
+  }
+
+  .navbar-center-ul-item:hover {
+    font-size: 18px;
+  }
+
+  .navbar-right-login button {
+    margin: auto 9px;
+  }
+
+  .navbar-login-btn1 {
+    outline: none;
+    border: 1px solid #ffffff;
+    padding: 4px 9px;
+    font-size: 16px;
+  }
+
+  .navbar-login-btn1:hover {
+    font-size: 18px;
+  }
+
+  .navbar-login-btn2 {
+    padding: 4px 9px;
+    font-size: 16px;
+  }
+
+  .navbar-login-btn2:hover {
+    font-size: 18px;
   }
 }
