@@ -1,11 +1,9 @@
-.App {
-}
-
 .Navbar {
   margin: 0 auto;
   width: 100%;
   padding: 10px 20px;
-  border-bottom: 5px solid #000000;
+  border-bottom: 5px solid #0066ff;
+  background-color: #ffffff;
 }
 
 .Navbar ul {
@@ -18,24 +16,26 @@
 
 .Navbar ul li {
   margin: 0 5px;
-  padding: 2px 7px;
+  padding: 5px 10px;
   font-size: 24px;
+  font-weight: 500;
   border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.25s linear;
+  cursor: crosshair;
+  transition: all 0.3s linear;
 }
 
 .Navbar ul li:hover {
-  background-color: #000000;
+  background-color: #0066ff;
   color: #ffffff;
 }
 
 .active-tab {
-  background-color: #000000;
+  background-color: #0066ff;
   color: #ffffff;
 }
 
 .Main {
   border: 1px solid red;
-  min-height: 75vh;
+  min-height: 60vh;
+  max-height: 60vh;
 }

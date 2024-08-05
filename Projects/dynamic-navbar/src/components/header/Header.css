@@ -1,0 +1,29 @@
+.Header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #0066ff;
+  color: #ffffff;
+}
+
+.Header h1 {
+  padding: 5px 10px;
+  font-weight: 700;
+  font-size: 32px;
+  cursor: none;
+}
+
+.Header h1 span {
+  vertical-align: -5px;
+  font-size: 32px;
+  cursor: none;
+}
+
+.Header h2 {
+  padding: 5px 10px;
+  font-weight: 500;
+  font-size: 28px;
+  cursor: none;
+}
