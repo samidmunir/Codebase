@@ -1,0 +1,11 @@
+.Header {
+  width: 100%;
+  border-bottom: 5px solid #0099ff;
+  padding: 20px 20px;
+}
+
+.header-title {
+  font-size: 36px;
+  font-weight: bold;
+  text-align: center;
+}

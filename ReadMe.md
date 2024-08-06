@@ -49,6 +49,10 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 7. virtual-airline-manager (React)
 
+#### 8. dynamic-navbar (React)
+
+#### 9. react-charts (React, Recharts)
+
 ## The Ultimate React Course 2024: React, Next.js, Redux & More
 
 ### Part 01 - Beginner
