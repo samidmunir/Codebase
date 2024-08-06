@@ -1,0 +1,66 @@
+.Home {
+  padding: 10px 20px;
+}
+
+.header {
+  margin: 0 auto;
+}
+
+.header-title {
+  font-size: 30px;
+  font-weight: 500;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.dashboard {
+  display: flex;
+  flex-direction: row;
+}
+
+.dashboard-col h1 {
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.dashboard-col-left {
+  padding: 5px 10px;
+  width: 25%;
+  border-right: 3px solid #0066ff;
+}
+
+.dashboard-col-center {
+  padding: 5px 10px;
+  border-right: 3px solid #0066ff;
+}
+
+.dashboard-col-right {
+  padding: 5px 10px;
+  width: 50%;
+}
+
+.top-services-list {
+  list-style: none;
+}
+
+.top-services-list-item {
+  margin: 5px 0;
+}
+
+.overview-list {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  margin-top: 25px;
+}
+
+.overview-list-item {
+  transition: all 0.3s linear;
+  cursor: crosshair;
+}
+
+.overview-list-item:hover {
+  color: #0066ff;
+  text-decoration: overline;
+}

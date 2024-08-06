@@ -1,0 +1,20 @@
+.Services {
+  padding: 10px 20px;
+}
+
+.header {
+  margin: 0 auto;
+}
+
+.header-title {
+  font-size: 30px;
+  font-weight: 500;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.services {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}

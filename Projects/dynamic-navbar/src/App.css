@@ -35,7 +35,8 @@
 }
 
 .Main {
-  border: 1px solid red;
-  min-height: 60vh;
-  max-height: 60vh;
+  /* border: 1px solid red; */
+  min-height: 74.8vh;
+  max-height: 74.8vh;
+  transition: all 0.3s linear;
 }

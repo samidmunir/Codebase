@@ -3,6 +3,7 @@ import { React, useState } from "react";
 import Header from "./components/header/Header";
 import Home from "./components/home/Home";
 import Services from "./components/services/Services";
+import Footer from "./components/footer/Footer";
 
 function App() {
   const [toggleState, setToggleState] = useState(1);
@@ -50,6 +51,7 @@ function App() {
         {toggleState === 1 && <Home />}
         {toggleState === 2 && <Services />}
       </div>
+      <Footer />
     </div>
   );
 }

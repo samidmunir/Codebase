@@ -1,0 +1,16 @@
+.Footer {
+  width: 100%;
+  background-color: #0066ff;
+  text-align: center;
+  padding: 10px 20px;
+}
+
+.Footer p {
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.footer-icon {
+  vertical-align: middle;
+}
