@@ -1,0 +1,19 @@
+.Footer {
+  display: flex;
+  flex-direction: row;
+  /* justify-content: space-evenly; */
+  align-items: center;
+  padding: 20px;
+}
+
+.footer-col-left {
+  flex: 1;
+}
+
+.footer-col-center {
+  flex: 2;
+}
+
+.footer-col-right {
+  flex: 3;
+}

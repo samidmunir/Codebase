@@ -1,4 +1,4 @@
-import { React, useEffect, useState } from "react";
+import { React, useState } from "react";
 import { FaSitemap } from "react-icons/fa";
 import "./Navbar.css";
 
@@ -6,7 +6,6 @@ const Navbar = () => {
   const [toggleState, setToggleState] = useState(1);
 
   const toggleTab = (index) => {
-    // alert(`index: ${index}`);
     setToggleState(index);
   };
   return (
