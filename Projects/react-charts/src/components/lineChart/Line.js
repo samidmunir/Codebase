@@ -22,6 +22,15 @@ ChartJS.register(
 );
 
 export const LineGraph = () => {
-  const options = {};
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: { position: "bottom" },
+      title: {
+        display: true,
+        text: "This is a Graph Representing my Daily Steps",
+      },
+    },
+  };
   return <Line options={options} data={lineChartData} />;
 };
