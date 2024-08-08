@@ -53,6 +53,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 9. react-charts (React, Recharts)
 
+#### 10. fjv-dashboard (React, React Charts.js)
+
 ## The Ultimate React Course 2024: React, Next.js, Redux & More
 
 ### Part 01 - Beginner
