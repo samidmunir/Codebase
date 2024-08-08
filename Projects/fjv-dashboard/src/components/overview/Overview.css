@@ -1,0 +1,24 @@
+.overview-title-con {
+  margin-top: 20px;
+}
+
+.overview-title-con h1 {
+  font-family: "Satisfy", cursive;
+  font-weight: 400;
+  font-style: normal;
+  text-align: center;
+}
+
+.overview-title-con h2 {
+  font-family: "Alegreya Sans", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  text-align: center;
+  color: #ff0066;
+}
+
+.overview-flex-con {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 20px;
+}

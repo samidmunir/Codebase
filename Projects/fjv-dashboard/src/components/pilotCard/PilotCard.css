@@ -1,0 +1,77 @@
+.PilotCard {
+  /* border: 1px solid red; */
+  background: #262626;
+  padding: 20px;
+}
+
+.pilot-deets1 {
+  text-align: center;
+  /* border-bottom: 1.5px solid #ff0066; */
+  padding: 5px 10px;
+}
+
+.pilot-deets1 h1 {
+  font-size: 30px;
+}
+
+.pilot-deets1 h2 {
+  font-size: 26px;
+  font-family: "Satisfy", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.pilot-deets1 h3 {
+  font-size: 22;
+}
+
+.pilot-deets2 {
+  text-align: center;
+  /* border-bottom: 1.5px solid #ff0066; */
+  padding: 5px 10px;
+  font-size: 18px;
+}
+
+.aircraft-ratings-list {
+  list-style: none;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  margin: 5px 0;
+}
+
+.aircraft-ratings-list li {
+  margin: 0 5px;
+  padding: 2px 4px;
+  font-size: 18px;
+  transition: all 0.25s ease-in-out;
+}
+
+.aircraft-ratings-list li:hover {
+  color: #ff0066;
+}
+
+.pilot-star-list {
+  list-style: none;
+  display: flex;
+  justify-content: space-evenly;
+  margin: 5px 0;
+}
+
+.pilot-star-list li {
+  margin: 0 5px;
+  padding: 2px 4px;
+}
+
+.pilot-deets3 {
+  text-align: center;
+  padding: 5px 10px;
+  font-size: 18px;
+  /* margin-top: 2.5px; */
+  /* border-top: 1.5px solid #ff0066; */
+}
+
+.pilot-email {
+  font-weight: bold;
+  margin-top: 5px;
+}
