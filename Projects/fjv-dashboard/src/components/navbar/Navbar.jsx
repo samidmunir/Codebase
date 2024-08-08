@@ -1,8 +1,14 @@
-import React from "react";
+import { React, useState } from "react";
 import "./Navbar.css";
 import { IoAirplaneSharp } from "react-icons/io5";
 
 const Navbar = () => {
+  const [toggleState, setToggleState] = useState(1);
+
+  const toggleTab = (index) => {
+    setToggleState(index);
+    console.log(index);
+  };
   return (
     <div className="Navbar">
       <div className="navbar-title-con">
@@ -11,13 +17,55 @@ const Navbar = () => {
       </div>
       <div className="navbar-items-con">
         <ul className="navbar-items-list">
-          <li className="navbar-item active-tab">Overview</li>
-          <li className="navbar-item">Aircrafts</li>
-          <li className="navbar-item">Routes</li>
-          <li className="navbar-item">Flights</li>
-          <li className="navbar-item">Aircrafts</li>
-          <li className="navbar-item">Statistics</li>
-          <li className="navbar-item">Wallet</li>
+          <li
+            className={toggleState === 1 ? "active-tab" : "navbar-item"}
+            id="nav-overview"
+            onClick={() => toggleTab(1)}
+          >
+            Overview
+          </li>
+          <li
+            className={toggleState === 2 ? "active-tab" : "navbar-item"}
+            id="nav-aircrafts"
+            onClick={() => toggleTab(2)}
+          >
+            Aircrafts
+          </li>
+          <li
+            className={toggleState === 3 ? "active-tab" : "navbar-item"}
+            id="nav-routes"
+            onClick={() => toggleTab(3)}
+          >
+            Routes
+          </li>
+          <li
+            className={toggleState === 4 ? "active-tab" : "navbar-item"}
+            id="nav-flights"
+            onClick={() => toggleTab(4)}
+          >
+            Flights
+          </li>
+          <li
+            className={toggleState === 5 ? "active-tab" : "navbar-item"}
+            id="nav-notams"
+            onClick={() => toggleTab(5)}
+          >
+            NOTAMS
+          </li>
+          <li
+            className={toggleState === 6 ? "active-tab" : "navbar-item"}
+            id="nav-statistics"
+            onClick={() => toggleTab(6)}
+          >
+            Statistics
+          </li>
+          <li
+            className={toggleState === 7 ? "active-tab" : "navbar-item"}
+            id="nav-wallet"
+            onClick={() => toggleTab(7)}
+          >
+            Wallet
+          </li>
         </ul>
       </div>
       <div className="navbar-buttons-con">
