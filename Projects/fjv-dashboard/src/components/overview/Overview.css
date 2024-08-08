@@ -22,3 +22,34 @@
   justify-content: space-evenly;
   margin-top: 20px;
 }
+
+.overview-flex-con div {
+  max-width: 400px;
+}
+
+.active-flights-con {
+  padding: 20px 40px;
+  background: #262626;
+}
+
+.active-flights-con h1 {
+  text-align: center;
+  font-size: 32px;
+}
+
+.flights-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.flights-list-item {
+  margin: 10px 0;
+}
+
+.notams-con {
+  background-color: #262626;
+  padding: 10px 20px;
+}

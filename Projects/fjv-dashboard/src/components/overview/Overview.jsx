@@ -1,6 +1,7 @@
 import React from "react";
 import "./Overview.css";
 import PilotCard from "../pilotCard/PilotCard";
+import { PieChart } from "../pieChart/Pie";
 
 const Overview = () => {
   return (
@@ -17,15 +18,15 @@ const Overview = () => {
           <h1>Active Flights</h1>
           <div className="flights-con">
             <ul className="flights-list">
-              <li className="flights-list-item">FJL235 | OPKC - OPIS</li>
-              <li className="flights-list-item">FJL307 | OPKC - OOMS</li>
-              <li className="flights-list-item">FJL236 | OPIS - OPKC</li>
-              <li className="flights-list-item">FJL417 | OPKC - OMDB</li>
+              <li className="flights-list-item">FJL235 | OPKC - OPIS | A320</li>
+              <li className="flights-list-item">FJL307 | OPKC - OOMS | A320</li>
+              <li className="flights-list-item">FJL236 | OPIS - OPKC | A320</li>
+              <li className="flights-list-item">FJL417 | OPKC - OMDB | B738</li>
             </ul>
           </div>
         </div>
         <div className="notams-con">
-          <PilotCard />
+          <PieChart />
         </div>
       </div>
     </div>
