@@ -1,0 +1,26 @@
+.Footer {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  background-color: #262626;
+  padding: 10px 20px;
+}
+
+.footer-con {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-p-1 {
+  font-size: 16px;
+  color: #ff0066;
+}
+
+.footer-p-2 {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+  font-size: 16px;
+}
