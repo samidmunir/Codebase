@@ -1,0 +1,20 @@
+.AircraftsPanel {
+  padding: 10px 20px;
+}
+
+.aircrafts-panel-title {
+  text-align: center;
+}
+
+.aircrafts-panel-title-2 {
+  text-align: center;
+  color: #ff0066;
+}
+
+.aircrafts-panel-aircraft-con {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+}
