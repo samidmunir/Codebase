@@ -1,4 +1,5 @@
 .Main {
   height: 635px;
   padding: 10px 20px;
+  transition: all 0.25s ease-in-out;
 }
