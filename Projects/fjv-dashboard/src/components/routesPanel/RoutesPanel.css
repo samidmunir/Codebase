@@ -1,0 +1,28 @@
+.RoutesPanel {
+  padding: 10px 20px;
+  margin: 0 auto;
+}
+
+.routes-panel-header {
+  padding: 10px 20px;
+}
+
+.routes-panel-title {
+  text-align: center;
+  font-family: "Satisfy", cursive;
+  font-weight: 400;
+  font-style: normal;
+  color: #ff0066;
+}
+
+.routes-panel-subtitle {
+  text-align: center;
+}
+
+.routes-panel-header-row {
+  padding: 2.5px 20px;
+}
+
+.routes-panel-body {
+  padding: 0 20px;
+}

@@ -1,0 +1,20 @@
+.RouteStrip {
+  display: flex;
+  /* justify-content: space-between; */
+  justify-content: center;
+  align-items: center;
+  margin: 10px;
+  padding: 10px 20px;
+  background-color: #262626;
+  opacity: 0.75;
+  transition: all 0.25s ease-in-out;
+}
+
+.RouteStrip:hover {
+  opacity: 1;
+}
+
+.RouteStrip div {
+  /* border: 1px solid red; */
+  width: 200px;
+}

@@ -5,6 +5,12 @@
   display: flex;
   align-items: center;
   justify-content: space-evenly;
+  opacity: 0.75;
+  transition: all 0.25s ease-in-out;
+}
+
+.Navbar:hover {
+  opacity: 1;
 }
 
 .navbar-title-con {
