@@ -22,11 +22,17 @@ const Overview = () => {
               <li className="flights-list-item">FJL307 | OPKC - OOMS | A320</li>
               <li className="flights-list-item">FJL236 | OPIS - OPKC | A320</li>
               <li className="flights-list-item">FJL417 | OPKC - OMDB | B738</li>
+              <li className="flights-list-item">FJL420 | OTHH - OPKC | B738</li>
+              <li className="flights-list-item">FJL239 | OPLA - OPMT | A320</li>
+              <li className="flights-list-item">FJL510 | OPKC - OERK | A320</li>
             </ul>
           </div>
         </div>
         <div className="notams-con">
           <PieChart />
+          <h2 style={{ textAlign: "center", marginTop: "5px" }}>
+            Flight hours/Aircraft
+          </h2>
         </div>
       </div>
     </div>

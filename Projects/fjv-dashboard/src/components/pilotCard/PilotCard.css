@@ -4,6 +4,10 @@
   padding: 20px;
 }
 
+.pilot-card-con {
+  min-height: 320px;
+}
+
 .pilot-deets1 {
   text-align: center;
   /* border-bottom: 1.5px solid #ff0066; */
@@ -35,7 +39,8 @@
 .aircraft-ratings-list {
   list-style: none;
   display: flex;
-  justify-content: space-evenly;
+  /* justify-content: space-evenly; */
+  justify-content: center;
   align-items: center;
   margin: 5px 0;
 }
@@ -54,7 +59,7 @@
 .pilot-star-list {
   list-style: none;
   display: flex;
-  justify-content: space-evenly;
+  justify-content: center;
   margin: 5px 0;
 }
 

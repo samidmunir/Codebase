@@ -38,6 +38,9 @@ const PilotCard = () => {
         <div className="pilot-deets3">
           <h5>2001-10-11</h5>
           <h5 className="pilot-email">sami.munir2001@gmail.com</h5>
+          <p style={{ marginTop: "25px", fontWeight: "bold" }}>
+            203 hours to promotion.
+          </p>
         </div>
       </div>
     </div>
