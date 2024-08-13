@@ -55,6 +55,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 10. fjv-dashboard (React, React Charts.js)
 
+#### 11. the-wild-oasis (React)
+
 ## The Ultimate React Course 2024: React, Next.js, Redux & More
 
 ### Part 01 - Beginner
@@ -64,3 +66,7 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 #### 1.2 - Get Advice App
 
 #### 1.3 - Pizza Menu App
+
+### Part 04 - Professional React Development
+
+#### 4.1 - The Wild Oasis
