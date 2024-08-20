@@ -67,6 +67,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 1.3 - Pizza Menu App
 
+#### 1.4 - Steps
+
 ### Part 04 - Professional React Development
 
 #### 4.1 - The Wild Oasis
