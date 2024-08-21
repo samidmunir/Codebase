@@ -67,7 +67,11 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 1.3 - Pizza Menu App
 
-#### 1.4 - Steps
+#### 1.4 - React Steps App
+
+#### 1.5 - Date Counter App
+
+#### 1.6 - Far Away Travel List App
 
 ### Part 04 - Professional React Development
 
