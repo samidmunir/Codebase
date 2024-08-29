@@ -73,6 +73,10 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 1.6 - Far Away Travel List App
 
+### Part 02 - Intermediate
+
+#### 2.1 - usePopcorn App
+
 ### Part 04 - Professional React Development
 
 #### 4.1 - The Wild Oasis
