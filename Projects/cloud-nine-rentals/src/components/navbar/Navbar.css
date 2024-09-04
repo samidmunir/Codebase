@@ -4,6 +4,12 @@
   font-style: normal;
 }
 
+.abel-bold {
+  font-family: "Abel", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
 .dancing-script-regular {
   font-family: "Dancing Script", cursive;
   font-weight: 400;
@@ -17,34 +23,28 @@
 }
 
 .Navbar {
-  border: 1px solid red;
   padding: 15px 20px;
   background-color: #0f0f0f;
-}
-
-.navbar-title-con {
-  border: 1px solid red;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
 }
 
 .navbar-title {
-  border: 1px solid red;
   font-size: 36px;
-  color: #e6e6e6;
-}
-
-.navbar-list-con {
-  border: 1px solid red;
+  color: #c5a880;
+  text-decoration: overline;
 }
 
 .navbar-list {
-  border: 1px solid red;
   list-style: none;
   display: flex;
+  justify-content: space-evenly;
+  align-items: center;
 }
 
 .navbar-list-item {
-  /* border: 1px solid red; */
-  border-bottom: 1px solid #0f0f0f;
+  border-bottom: 2px solid #0f0f0f;
   color: #e6e6e6;
   font-size: 18px;
   padding: 5px 10px;
@@ -54,5 +54,33 @@
 }
 
 .navbar-list-item:hover {
-  border-bottom: 1px solid #c5a880;
+  color: #c5a880;
+  border-bottom: 2px solid #c5a880;
+}
+
+.navbar-user-con {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.button {
+  outline: none;
+  padding: 5px 10px;
+  font-size: 18px;
+  background-color: #0f0f0f;
+  color: #e6e6e6;
+  transition: all 0.25s linear;
+}
+
+.navbar-user-logout-button {
+  border: 1px solid #c5a880;
+  background-color: #0f0f0f;
+  color: #c5a880;
+}
+
+.navbar-user-logout-button:hover {
+  border: 1px solid #0f0f0f;
+  background-color: #0f0f0f;
+  color: #c5a880;
 }
