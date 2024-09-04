@@ -7,3 +7,5 @@ const user = {
   nationality: "United Kingdom",
   validPassport: true,
 };
+
+export default user;

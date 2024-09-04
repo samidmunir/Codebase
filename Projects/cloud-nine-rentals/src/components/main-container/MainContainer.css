@@ -1,0 +1,31 @@
+.abel-regular {
+  font-family: "Abel", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.abel-bold {
+  font-family: "Abel", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.dancing-script-regular {
+  font-family: "Dancing Script", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.dancing-script-bold {
+  font-family: "Dancing Script", cursive;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.MainContainer {
+  padding: 15px 20px;
+  background-color: #e6e6e6;
+  /* background-color: #532e1c; */
+  /* border: 1px solid red; */
+  height: 627.5px;
+}
