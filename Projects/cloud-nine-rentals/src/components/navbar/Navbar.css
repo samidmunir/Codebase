@@ -1,0 +1,58 @@
+.abel-regular {
+  font-family: "Abel", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.dancing-script-regular {
+  font-family: "Dancing Script", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.dancing-script-bold {
+  font-family: "Dancing Script", cursive;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.Navbar {
+  border: 1px solid red;
+  padding: 15px 20px;
+  background-color: #0f0f0f;
+}
+
+.navbar-title-con {
+  border: 1px solid red;
+}
+
+.navbar-title {
+  border: 1px solid red;
+  font-size: 36px;
+  color: #e6e6e6;
+}
+
+.navbar-list-con {
+  border: 1px solid red;
+}
+
+.navbar-list {
+  border: 1px solid red;
+  list-style: none;
+  display: flex;
+}
+
+.navbar-list-item {
+  /* border: 1px solid red; */
+  border-bottom: 1px solid #0f0f0f;
+  color: #e6e6e6;
+  font-size: 18px;
+  padding: 5px 10px;
+  margin: 0 10px;
+  transition: all 0.25s linear;
+  cursor: default;
+}
+
+.navbar-list-item:hover {
+  border-bottom: 1px solid #c5a880;
+}
