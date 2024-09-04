@@ -10,7 +10,13 @@
   font-style: normal;
 }
 
-.NavUserCtls {
+.nav-user-logged-in {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-user-logged-out {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -32,6 +38,30 @@
 }
 
 .navbar-user-logout-button:hover {
+  border: 1px solid #0f0f0f;
+  background-color: #0f0f0f;
+  color: #c5a880;
+}
+
+.navbar-user-signup-button {
+  border: 1px solid #c5a880;
+  background-color: #0f0f0f;
+  color: #c5a880;
+}
+
+.navbar-user-signup-button:hover {
+  border: 1px solid #0f0f0f;
+  background-color: #0f0f0f;
+  color: #c5a880;
+}
+
+.navbar-user-login-button {
+  border: 1px solid #c5a880;
+  background-color: #0f0f0f;
+  color: #c5a880;
+}
+
+.navbar-user-login-button:hover {
   border: 1px solid #0f0f0f;
   background-color: #0f0f0f;
   color: #c5a880;

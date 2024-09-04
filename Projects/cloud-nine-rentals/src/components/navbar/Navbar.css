@@ -53,6 +53,10 @@
   cursor: default;
 }
 
+.active-list-item {
+  border-bottom: 2px solid #c5a880;
+}
+
 .navbar-list-item:hover {
   color: #c5a880;
   border-bottom: 2px solid #c5a880;

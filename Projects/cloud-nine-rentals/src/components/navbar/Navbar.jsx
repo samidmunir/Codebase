@@ -11,7 +11,7 @@ function Navbar({ isSignedIn, setIsSignedIn }) {
         <li className="abel-bold navbar-list-item">Bookings</li>
         <li className="abel-bold navbar-list-item">My Account</li>
       </ul>
-      <NavUserCtls />
+      <NavUserCtls isSignedIn={isSignedIn} setIsSignedIn={setIsSignedIn} />
     </div>
   );
 }
