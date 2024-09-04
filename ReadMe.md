@@ -73,6 +73,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 1.6 - Far Away Travel List App
 
+#### 1.7 - Eat n Split App
+
 ### Part 02 - Intermediate
 
 #### 2.1 - usePopcorn App
