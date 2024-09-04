@@ -1,0 +1,76 @@
+.abel-regular {
+  font-family: "Abel", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.abel-bold {
+  font-family: "Abel", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.dancing-script-regular {
+  font-family: "Dancing Script", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.dancing-script-bold {
+  font-family: "Dancing Script", cursive;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.Dashboard {
+  border: 1px solid red;
+}
+
+.dashboard-title {
+  text-align: center;
+}
+
+.dashboard-flex-con {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.dashboard-flex-con-cols {
+  border: 1px solid red;
+}
+
+.col1 {
+  width: 250px;
+  height: 400px;
+}
+
+.col2 {
+  width: 500px;
+  height: 300px;
+}
+
+.col2-top {
+  border: 1px solid blue;
+  width: 499px;
+  height: 149px;
+}
+
+.col2-bottom {
+  border: 1px solid blue;
+  width: 499px;
+  height: 149px;
+}
+
+.col3 {
+  width: 250px;
+  height: 400px;
+}
+
+.dashboard-bottom-long-con {
+  margin: 55px auto 0 auto;
+  border: 1px solid red;
+  width: 1000px;
+  height: 100px;
+}

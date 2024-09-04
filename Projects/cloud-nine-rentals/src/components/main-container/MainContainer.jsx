@@ -1,12 +1,13 @@
 import "./MainContainer.css";
+import Dashboard from "../dashboard/Dashboard";
 
 function MainContainer({ activeListItem }) {
   return (
     <div className="MainContainer">
-      <h1>{activeListItem === 1 ? "Dashboard" : null}</h1>
-      <h1>{activeListItem === 2 ? "Services" : null}</h1>
-      <h1>{activeListItem === 3 ? "Bookings" : null}</h1>
-      <h1>{activeListItem === 4 ? "My Account" : null}</h1>
+      {activeListItem === 1 && <Dashboard />}
+      {activeListItem === 2 ? "Services" : null}
+      {activeListItem === 3 ? "Bookings" : null}
+      {activeListItem === 4 ? "My Account" : null}
     </div>
   );
 }
