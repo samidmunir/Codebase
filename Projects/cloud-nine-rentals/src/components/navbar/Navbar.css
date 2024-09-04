@@ -54,6 +54,12 @@
 }
 
 .active-list-item {
+  color: #c5a880;
+  font-size: 18px;
+  padding: 5px 10px;
+  margin: 0 10px;
+  transition: all 0.25s linear;
+  cursor: default;
   border-bottom: 2px solid #c5a880;
 }
 
