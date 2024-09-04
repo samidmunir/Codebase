@@ -1,9 +1,11 @@
+import { useState } from "react";
 import Navbar from "./components/navbar/Navbar";
 
 function App() {
+  const [isSignedIn, setIsSignedIn] = useState(true);
   return (
     <div className="App">
-      <Navbar />
+      <Navbar isSignedIn={isSignedIn} setIsSignedIn={setIsSignedIn} />
     </div>
   );
 }

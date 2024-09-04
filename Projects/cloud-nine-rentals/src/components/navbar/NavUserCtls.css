@@ -1,0 +1,38 @@
+.abel-regular {
+  font-family: "Abel", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.abel-bold {
+  font-family: "Abel", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.NavUserCtls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.button {
+  outline: none;
+  padding: 5px 10px;
+  font-size: 18px;
+  background-color: #0f0f0f;
+  color: #e6e6e6;
+  transition: all 0.25s linear;
+}
+
+.navbar-user-logout-button {
+  border: 1px solid #c5a880;
+  background-color: #0f0f0f;
+  color: #c5a880;
+}
+
+.navbar-user-logout-button:hover {
+  border: 1px solid #0f0f0f;
+  background-color: #0f0f0f;
+  color: #c5a880;
+}
