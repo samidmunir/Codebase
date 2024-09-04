@@ -57,6 +57,8 @@ Sami Munir | Rutgers University | sami.munir2001@outlook.com
 
 #### 11. the-wild-oasis (React)
 
+#### 12. cloud-nine-rentals (React)
+
 ## The Ultimate React Course 2024: React, Next.js, Redux & More
 
 ### Part 01 - Beginner
