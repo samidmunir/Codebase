@@ -1,17 +1,23 @@
 import "./NavUserCtls.css";
-import { FaUser } from "react-icons/fa";
+// import { FaUser } from "react-icons/fa";
 import { IoIosLogIn, IoIosLogOut } from "react-icons/io";
 import { FaChalkboardUser } from "react-icons/fa6";
 
-function NavUserCtls({ isSignedIn, setIsSignedIn }) {
+function NavUserCtls({ isSignedIn, setIsSignedIn, userData }) {
   return (
     <div className="NavUserCtls">
       {isSignedIn ? (
         <div className="nav-user-logged-in">
-          <FaUser
+          {/* <FaUser
             style={{ color: "#c5a880", fontSize: "24px", margin: "0px 25px" }}
             onClick={() => alert("my profile")}
-          />
+          /> */}
+          <p
+            className="abel-bold"
+            style={{ fontSize: "18px", color: "#c5a880", marginRight: "15px" }}
+          >
+            {userData.firstName} {userData.lastName[0]}.
+          </p>
           <button
             className="abel-bold button navbar-user-logout-button"
             onClick={() => setIsSignedIn(false)}

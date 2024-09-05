@@ -1,0 +1,117 @@
+.abel-regular {
+  font-family: "Abel", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.abel-bold {
+  font-family: "Abel", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.dancing-script-regular {
+  font-family: "Dancing Script", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.dancing-script-bold {
+  font-family: "Dancing Script", cursive;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.UpcomingTrip {
+  background-color: #532e1c;
+  height: 100%;
+  padding: 5px 10px;
+}
+
+.upcoming-trip-title {
+  text-align: center;
+  font-size: 28px;
+  color: #c5a880;
+}
+
+.upcoming-flight-con1 {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 20px;
+  border-bottom: 2px solid #c5a880;
+  padding: 5px;
+}
+
+.upcoming-trip-flight-num {
+  text-align: center;
+  color: #c5a880;
+  font-size: 28px;
+}
+
+.upcoming-trip-route {
+  text-align: center;
+  color: #c5a880;
+  font-size: 24px;
+}
+
+.upcoming-flight-con2 {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  border-bottom: 2px solid #c5a880;
+  padding: 5px;
+}
+
+.upcoming-trip-flight-time {
+  text-align: center;
+  color: #c5a880;
+  font-size: 20px;
+  margin-top: 15px;
+}
+
+.upcoming-trip-date {
+  text-align: center;
+  color: #c5a880;
+  font-size: 18px;
+}
+
+.upcoming-trip-countdown {
+  text-align: center;
+  color: #c5a880;
+  font-size: 18px;
+}
+
+.upcoming-trip-time {
+  text-align: center;
+  color: #c5a880;
+  font-size: 24px;
+  margin-top: 15px;
+  border-bottom: 2px solid #c5a880;
+  padding: 5px;
+}
+
+.upcoming-trip-buttons-con {
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.upcoming-trip-buttons-con button {
+  outline: none;
+  border: 2px solid #532e1c;
+  background-color: #532e1c;
+  padding: 5px;
+  margin: 0 5px;
+  color: #c5a880;
+  cursor: default;
+  transition: all 0.25s linear;
+}
+
+.upcoming-trip-buttons-con button:hover {
+  background-color: #c5a880;
+  border: 2px solid #c5a880;
+  color: #0f0f0f;
+}

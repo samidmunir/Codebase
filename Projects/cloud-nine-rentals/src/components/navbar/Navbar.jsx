@@ -10,6 +10,7 @@ function Navbar({
   setIsSignedIn,
   activeListItem,
   setActiveListItem,
+  userData,
 }) {
   return (
     <div className="Navbar">
@@ -84,7 +85,11 @@ function Navbar({
           />
         </li>
       </ul>
-      <NavUserCtls isSignedIn={isSignedIn} setIsSignedIn={setIsSignedIn} />
+      <NavUserCtls
+        isSignedIn={isSignedIn}
+        setIsSignedIn={setIsSignedIn}
+        userData={userData}
+      />
     </div>
   );
 }
