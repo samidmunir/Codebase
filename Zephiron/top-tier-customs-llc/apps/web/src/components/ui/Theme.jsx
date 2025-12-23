@@ -13,7 +13,7 @@ const Theme = () => {
       {isDark ? (
         <Sun className="text-amber-500" />
       ) : (
-        <Moon className="text-blue-600" />
+        <Moon className="text-indigo-600" />
       )}
     </button>
   );

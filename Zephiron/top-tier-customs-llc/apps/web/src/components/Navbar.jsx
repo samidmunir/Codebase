@@ -3,6 +3,11 @@ import { useAuth } from "../contexts/Auth";
 import { useTheme } from "../contexts/Theme";
 import { useState } from "react";
 import logo from "../assets/logo.jpg";
+import Cart from "../components/ui/Cart";
+import Theme from "../components/ui/Theme";
+import Logout from "../components/ui/Logout";
+import Login from "../components/ui/Login";
+import { X, Menu } from "lucide-react";
 
 const Navbar = () => {
   const { theme } = useTheme();
@@ -44,7 +49,18 @@ const Navbar = () => {
         {/* Desktop Nav */}
         <div></div>
         {/* Right CTA */}
-        <div></div>
+        <div className="flex items-center gap-2 md:gap-4 lg:gap-6">
+          <Cart />
+          <Theme />
+          {isAuthenticated && <p className={``}>samidmunir@outlook.com</p>}
+          {isAuthenticated ? <Logout /> : <Login />}
+          <button
+            onClick={() => setMobileOpen((prev) => !prev)}
+            className="p-1 lg:hidden cursor-pointer"
+          >
+            {mobileOpen ? <X /> : <Menu />}
+          </button>
+        </div>
       </main>
       {/* Mobile Drop-down */}
       <section></section>
