@@ -1,5 +1,6 @@
 import { useTheme } from "../contexts/Theme";
 import Navbar from "../components/Navbar";
+import ScrollBar from "../components/ui/ScrollBar";
 
 const Main = ({ children }) => {
   const { theme } = useTheme();
@@ -7,6 +8,7 @@ const Main = ({ children }) => {
 
   return (
     <main>
+      <ScrollBar />
       <Navbar />
       <section
         className={`min-h-screen transition-all duration-3000 ${
