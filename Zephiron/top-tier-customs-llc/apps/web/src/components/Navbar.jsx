@@ -52,7 +52,7 @@ const Navbar = () => {
   return (
     <nav
       className={`w-full px-8 py-4 fixed top-0 left-0 right-0 z-999 backdrop-blur-xs shadow-2xl transition-all duration-3000 ${
-        isDark ? "bg-zinc-950/90 text-zinc-50" : "bg-zinc-50/50 text-zinc-950"
+        isDark ? "bg-zinc-950/90" : "bg-zinc-50/50"
       }`}
     >
       <main className="flex items-center justify-between">
@@ -116,7 +116,27 @@ const Navbar = () => {
         </div>
       </main>
       {/* Mobile Drop-down */}
-      <section></section>
+      {mobileOpen && (
+        <section className="flex flex-col gap-4 mt-4 lg:hidden">
+          {[...navBaseItems, ...(isAuthenticated ? navAuthItems : [])].map(
+            (navItem) => (
+              <div
+                key={navItem.id}
+                className={`flex items-center gap-1 font-semibold cursor-pointer transition-all duration-1000`}
+              >
+                <p>{navItem.icon}</p>
+                <p>{navItem.label}</p>
+              </div>
+            )
+          )}
+          {isAuthenticated && (
+            <div className="flex items-center justify-between">
+              <p>Sami Munir</p>
+              <p>samidmunir@outlook.com</p>
+            </div>
+          )}
+        </section>
+      )}
     </nav>
   );
 };
