@@ -1,0 +1,252 @@
+# ---------------------------------------------------------
+# GLOBAL OS / EDITOR / IDE
+# ---------------------------------------------------------
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Windows thumbnail caches
+$RECYCLE.BIN/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# IDE specific
+.idea/
+.vscode/
+*.sublime-*
+*.code-workspace
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------
+# NODE / JAVASCRIPT / TYPESCRIPT
+# ---------------------------------------------------------
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Build output
+dist/
+build/
+out/
+
+# Vite / Next / Nuxt / Remix
+.vite/
+.next/
+.nuxt/
+.remix/
+
+# Cache
+.cache/
+.eslintcache
+.stylelintcache
+.next/cache/
+
+# TypeScript build
+*.tsbuildinfo
+
+# PM2 logs
+.pids
+pids/
+
+# Bun
+.bun/
+bun.lockb
+
+# ---------------------------------------------------------
+# REACT
+# ---------------------------------------------------------
+
+# CRA or Vite builds
+build/
+*.cache
+
+# Storybook
+.storybook-out/
+out/
+storybook-static/
+
+# ---------------------------------------------------------
+# PYTHON / ML / DATA SCIENCE
+# ---------------------------------------------------------
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.dSYM
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints
+jupyter_cache/
+
+# Python packaging
+build/
+develop-eggs/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+
+# ---------------------------------------------------------
+# JAVA / JVM
+# ---------------------------------------------------------
+
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+*.ipr
+*.iws
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+.mvn/wrapper/MavenWrapperDownloader.java
+
+# Gradle
+.gradle/
+build/
+
+# ---------------------------------------------------------
+# GO
+# ---------------------------------------------------------
+
+# Go build
+bin/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# ---------------------------------------------------------
+# RUST
+# ---------------------------------------------------------
+
+target/
+Cargo.lock
+
+# ---------------------------------------------------------
+# PHP / LARAVEL
+# ---------------------------------------------------------
+
+vendor/
+storage/
+bootstrap/cache/
+.env
+.env.*
+
+# ---------------------------------------------------------
+# DOTNET / C#
+# ---------------------------------------------------------
+
+[Bb]in/
+[Oo]bj/
+*.user
+*.swp
+*.suo
+*.cache
+*.pdb
+*.mdb
+*.opendb
+
+# ---------------------------------------------------------
+# DOCKER & CONTAINERS
+# ---------------------------------------------------------
+
+docker-data/
+docker-compose.override.yml
+*.pid
+
+# ---------------------------------------------------------
+# DATABASES
+# ---------------------------------------------------------
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Mongo
+dump/
+data/
+*.bson
+*.local
+
+# PostgreSQL backups
+*.sql
+*.dump
+
+# ---------------------------------------------------------
+# IMAGES / DESIGN / TEMP FILES
+# ---------------------------------------------------------
+
+*.psd
+*.ai
+*.sketch
+*.xcf
+*.tiff
+*.png.tmp
+*.jpg.tmp
+
+# ---------------------------------------------------------
+# TESTING / COVERAGE / LINTING
+# ---------------------------------------------------------
+
+coverage/
+.nyc_output/
+.coverage
+coverage-final.json
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+
+# Playwright
+test-results/
+playwright-report/
+
+# Jest
+jest-cache/
+jest-results/
+
+# ---------------------------------------------------------
+# MISCELLANEOUS
+# ---------------------------------------------------------
+
+tmp/
+temp/
+cache/
+logs/
+*.tmp
+*.swp
+*.bak
+*.old
+
+# Local SSL certs
+*.pem
+*.key
+*.csr
+certs/
