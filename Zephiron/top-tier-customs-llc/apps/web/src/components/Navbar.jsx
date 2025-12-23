@@ -7,7 +7,37 @@ import Cart from "../components/ui/Cart";
 import Theme from "../components/ui/Theme";
 import Logout from "../components/ui/Logout";
 import Login from "../components/ui/Login";
-import { X, Menu } from "lucide-react";
+import { X, Menu, Package, Wrench, Gauge, Activity } from "lucide-react";
+
+const navBaseItems = [
+  {
+    id: 0,
+    label: "Catalog",
+    href: "/catalog",
+    icon: <Package />,
+  },
+  {
+    id: 1,
+    label: "Services",
+    href: "/services",
+    icon: <Wrench />,
+  },
+  {
+    id: 2,
+    label: "Activity",
+    href: "/activity",
+    icon: <Activity />,
+  },
+];
+
+const navAuthItems = [
+  {
+    id: 3,
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: <Gauge />,
+  },
+];
 
 const Navbar = () => {
   const { theme } = useTheme();
@@ -47,13 +77,36 @@ const Navbar = () => {
           </h1>
         </div>
         {/* Desktop Nav */}
-        <div></div>
+        <div className="hidden lg:flex items-center gap-8">
+          {navBaseItems.map((navItem) => (
+            <div
+              key={navItem.id}
+              onClick={() => navigate(navItem.href)}
+              className={`text-lg font-semibold uppercase flex items-center gap-1 cursor-pointer transition-all duration-1000 hover:scale-110`}
+            >
+              <p>{navItem.icon}</p>
+              <p>{navItem.label}</p>
+            </div>
+          ))}
+          {isAuthenticated &&
+            navAuthItems.map((navItem) => (
+              <div
+                key={navItem.id}
+                onClick={() => navigate(navItem.href)}
+                className={`text-lg font-semibold uppercase flex items-center gap-1 cursor-pointer transition-all duration-1000 hover:scale-110`}
+              >
+                <p>{navItem.icon}</p>
+                <p>{navItem.label}</p>
+              </div>
+            ))}
+        </div>
         {/* Right CTA */}
         <div className="flex items-center gap-2 md:gap-4 lg:gap-6">
           <Cart />
           <Theme />
           {isAuthenticated && <p className={``}>samidmunir@outlook.com</p>}
           {isAuthenticated ? <Logout /> : <Login />}
+          {/* Hamburger Menu Btn */}
           <button
             onClick={() => setMobileOpen((prev) => !prev)}
             className="p-1 lg:hidden cursor-pointer"
