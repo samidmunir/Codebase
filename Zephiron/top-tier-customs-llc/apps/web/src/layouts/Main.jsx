@@ -2,6 +2,7 @@ import { useTheme } from "../contexts/Theme";
 import Navbar from "../components/Navbar";
 import ScrollBar from "../components/ui/ScrollBar";
 import { ToastContainer } from "react-toastify";
+import Footer from "../components/Footer";
 
 const Main = ({ children }) => {
   const { theme } = useTheme();
@@ -19,6 +20,7 @@ const Main = ({ children }) => {
       >
         {children}
       </section>
+      <Footer />
     </main>
   );
 };
