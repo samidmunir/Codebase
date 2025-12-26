@@ -11,7 +11,7 @@ const Login = () => {
   return (
     <button
       onClick={() => navigate("/auth")}
-      className={`p-1 flex items-center justify-center cursor-pointer transition-all duration-1000 ${
+      className={`p-1 flex items-center justify-center cursor-pointer transition-all duration-3000 ${
         isDark ? "text-sky-500" : "text-blue-600"
       }`}
     >

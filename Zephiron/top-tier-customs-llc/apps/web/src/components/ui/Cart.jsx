@@ -11,7 +11,7 @@ const Cart = () => {
 
   return (
     <button
-      className={`relative p-1 rounded-full cursor-pointer transition-all duration-1000 ${
+      className={`relative p-1 rounded-full cursor-pointer transition-all duration-3000 ${
         isDark ? "text-emerald-500" : "text-green-600"
       }`}
     >

@@ -8,13 +8,31 @@ const Theme = () => {
   return (
     <button
       onClick={toggleTheme}
-      className={`p-1 flex items-center justify-center cursor-pointer transition-all duration-1000`}
+      aria-label="Toggle theme"
+      className="relative h-10 w-10 rounded-xl grid place-items-center cursor-pointer
+                 transition-transform active:scale-95"
     >
-      {isDark ? (
-        <Sun className="text-amber-500" />
-      ) : (
-        <Moon className="text-indigo-600" />
-      )}
+      {/* Sun */}
+      <Sun
+        className={[
+          "absolute h-6 w-6 transition-all duration-1500 ease-out",
+          "motion-reduce:transition-none",
+          isDark
+            ? "opacity-100 scale-100 rotate-0 text-amber-500"
+            : "opacity-0 scale-75 -rotate-90 text-amber-500 pointer-events-none",
+        ].join(" ")}
+      />
+
+      {/* Moon */}
+      <Moon
+        className={[
+          "absolute h-6 w-6 transition-all duration-1500 ease-out",
+          "motion-reduce:transition-none",
+          isDark
+            ? "opacity-0 scale-75 rotate-90 text-indigo-600 pointer-events-none"
+            : "opacity-100 scale-100 rotate-0 text-indigo-600",
+        ].join(" ")}
+      />
     </button>
   );
 };

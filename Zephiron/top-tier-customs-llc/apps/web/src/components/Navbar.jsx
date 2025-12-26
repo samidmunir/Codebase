@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/Auth";
 import { useTheme } from "../contexts/Theme";
 import { useState } from "react";
@@ -45,6 +45,7 @@ const Navbar = () => {
 
   const { user, isAuthenticated } = useAuth();
 
+  const location = useLocation();
   const navigate = useNavigate();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -64,12 +65,12 @@ const Navbar = () => {
           <img
             src={logo}
             alt="Logo"
-            className={`w-12.5 lg:w-15 rounded-full border-3 transition-all duration-1000 ${
+            className={`w-12.5 lg:w-15 rounded-full border-3 transition-all duration-3000 ${
               isDark ? "border-rose-500" : "border-sky-500"
             }`}
           />
           <h1
-            className={`text-xl lg:text-2xl font-bold uppercase bg-clip-text text-transparent bg-linear-to-r transition-all duration-1000 ${
+            className={`text-xl lg:text-2xl font-bold uppercase bg-clip-text text-transparent bg-linear-to-r transition-all duration-3000 ${
               isDark ? "from-rose-500 to-zinc-50" : "from-sky-500 to-zinc-950"
             }`}
           >
@@ -82,7 +83,9 @@ const Navbar = () => {
             <div
               key={navItem.id}
               onClick={() => navigate(navItem.href)}
-              className={`text-lg font-semibold uppercase flex items-center gap-1 cursor-pointer transition-all duration-1000 hover:scale-110`}
+              className={`text-lg font-semibold uppercase flex items-center gap-1 cursor-pointer transition-all duration-3000 hover:scale-110 ${
+                isDark ? "text-zinc-50" : "text-zinc-950"
+              } ${location.pathname === navItem.href && "text-rose-500"}`}
             >
               <p>{navItem.icon}</p>
               <p>{navItem.label}</p>
@@ -93,7 +96,9 @@ const Navbar = () => {
               <div
                 key={navItem.id}
                 onClick={() => navigate(navItem.href)}
-                className={`text-lg font-semibold uppercase flex items-center gap-1 cursor-pointer transition-all duration-1000 hover:scale-110`}
+                className={`text-lg font-semibold uppercase flex items-center gap-1 cursor-pointer transition-all duration-3000 hover:scale-110 ${
+                  isDark ? "text-zinc-50" : "text-zinc-950"
+                }`}
               >
                 <p>{navItem.icon}</p>
                 <p>{navItem.label}</p>
