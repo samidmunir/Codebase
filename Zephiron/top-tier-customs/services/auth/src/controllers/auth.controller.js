@@ -1,7 +1,12 @@
 import ENV from "../config/env.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
-import { generateAT, generateRT, setRTCookie } from "../utils/tokens.js";
+import {
+  clearRTCookie,
+  generateAT,
+  generateRT,
+  setRTCookie,
+} from "../utils/tokens.js";
 
 export const health = async (req, res) => {
   return res.status(200).json({
@@ -150,6 +155,25 @@ export const login = async (req, res) => {
       ok: false,
       source: "<api.auth.controller>: login()",
       message: "Failed to login.",
+      error: "Internal server error.",
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    clearRTCookie(res);
+
+    return res.status(200).json({
+      ok: true,
+      source: "<api.auth.controller>: logout()",
+      message: "Logout successful.",
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      source: "<api.auth.controller>: logout()",
+      message: "Failed to logout.",
       error: "Internal server error.",
     });
   }

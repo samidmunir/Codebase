@@ -37,3 +37,12 @@ export const setRTCookie = (res, token) => {
     path: "/api/auth",
   });
 };
+
+export const clearRTCookie = (res) => {
+  res.clearCookie("refresh_token", {
+    httpOnly: true,
+    secure: ENV.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/api/auth",
+  });
+};
