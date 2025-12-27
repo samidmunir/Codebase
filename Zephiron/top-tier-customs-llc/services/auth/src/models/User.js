@@ -40,9 +40,50 @@ const userSchema = new mongoose.Schema(
       phone: {
         type: String,
       },
+      vehicles: {
+        type: [
+          {
+            make: String,
+            model: String,
+            year: String,
+          },
+        ],
+      },
+    },
+    billing: {
+      address: {
+        type: String,
+      },
+      city: {
+        type: String,
+      },
+      country: {
+        type: String,
+      },
+      postal_code: {
+        type: String,
+      },
+    },
+    shipping: {
+      address: {
+        type: String,
+      },
+      city: {
+        type: String,
+      },
+      country: {
+        type: String,
+      },
+      postal_code: {
+        type: String,
+      },
     },
     settings: {
       notifications: {
+        new_products: {
+          type: Boolean,
+          default: false,
+        },
         order_updates: {
           type: Boolean,
           default: false,
