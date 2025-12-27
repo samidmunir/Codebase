@@ -34,12 +34,16 @@ const Hero = () => {
       <section className="absolute inset-0 z-10 flex items-center justify-center">
         <div className="max-w-2xl lg:max-w-5xl text-center space-y-4 md:space-y-6">
           <h1
-            className={`text-4xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-wide leading-tight`}
+            className={`text-4xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-wide leading-tight transition-all duration-3000 ${
+              isDark ? "text-zinc-50" : "text-zinc-950"
+            }`}
           >
             Customize. Dominate. Drive.
           </h1>
           <p
-            className={`text-base md:text-lg lg:text-2xl opacity-80 max-w-md lg:max-w-lg mx-auto`}
+            className={`text-base font-semibold md:text-lg lg:text-2xl opacity-80 max-w-md lg:max-w-lg mx-auto transition-all duration-3000 ${
+              isDark ? "text-zinc-300" : "text-zinc-800"
+            }`}
           >
             Top-tier modes. Legendary performance. Built for your passion.
           </p>
