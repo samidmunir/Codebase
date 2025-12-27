@@ -5,11 +5,8 @@ dotenv.config();
 const ENV = {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
+  MONGO_URI: process.env.MONGO_URI,
   CLIENT: process.env.CLIENT_ORIGIN,
-  UPSTREAM: {
-    AUTH: process.env.AUTH_SERVICE_URL,
-    CATALOG: process.env.CATALOG_SERVICE_URL,
-  },
 };
 
 export default ENV;

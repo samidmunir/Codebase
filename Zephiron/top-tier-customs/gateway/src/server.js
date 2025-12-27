@@ -3,6 +3,7 @@ import ENV from "./config/env.js";
 import morgan from "morgan";
 import cors from "cors";
 import authProxy from "./routes/auth.routes.proxy.js";
+import catalogProxy from "./routes/catalog.routes.proxy.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authProxy);
+app.use("/api/catalog", catalogProxy);
 
 app.listen(PORT, () => {
   console.log(`✅ <api.gateway> live on http://localhost:${PORT}`);
