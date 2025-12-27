@@ -1,8 +1,10 @@
 import express from "express";
-import { health } from "../controllers/auth.controller.js";
+import { health, signup } from "../controllers/auth.controller.js";
 
 const authRouter = express.Router();
 
 authRouter.get("/health", health);
+
+authRouter.post("/signup", signup);
 
 export default authRouter;
