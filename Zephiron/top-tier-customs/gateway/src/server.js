@@ -13,7 +13,7 @@ app.use(morgan("dev"));
 
 app.use(cors({ origin: CLIENT, credentials: true }));
 
-app.get("/health", (_req, res) => {
+app.get("/api/health", (_req, res) => {
   return res.status(200).json({
     ok: true,
     source: "<api.gateway>",
