@@ -1,6 +1,7 @@
 import ENV from "../config/env.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import { generateAT, generateRT, setRTCookie } from "../utils/tokens.js";
 
 export const health = async (req, res) => {
   return res.status(200).json({
@@ -61,6 +62,95 @@ export const signup = async (req, res) => {
       user: userRes,
     });
   } catch (e) {
-    //
+    return res.status(400).json({
+      ok: false,
+      source: "<api.auth.controller>: signup()",
+      message: "Failed to signup.",
+      error: "Internal server error.",
+    });
+  }
+};
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        ok: false,
+        source: "<api.auth.controller>: login()",
+        message: "Failed to login.",
+        error: "Missing required fields.",
+      });
+    }
+
+    const dbUser = await User.findOne({ email });
+    if (!dbUser) {
+      return res.status(401).json({
+        ok: false,
+        source: "<api.auth.controller>: login()",
+        message: "Failed to login.",
+        error: `An account does not exist with email: ${email}.`,
+      });
+    }
+
+    if (dbUser.sec_ops.failed_logins >= 3) {
+      return res.status(403).json({
+        ok: false,
+        source: "<api.auth.controller>: signup()",
+        message: "Failed to login.",
+        error:
+          "Account is locked, contact support [support@toptiercustoms.com]",
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      dbUser.password_hash
+    );
+    if (!isPasswordValid) {
+      dbUser.sec_ops.failed_logins++;
+      await dbUser.save();
+
+      return res.status(401).json({
+        ok: false,
+        source: "<api.auth.controller>: login()",
+        message: "Failed to login.",
+        error: "Invalid credentials.",
+      });
+    }
+
+    dbUser.sec_ops.last_login = new Date().toISOString();
+    await dbUser.save();
+
+    const access_token = generateAT(dbUser);
+    const refresh_token = generateRT(dbUser);
+
+    setRTCookie(res, refresh_token);
+
+    const userRes = {
+      _id: dbUser._id,
+      email: dbUser.email,
+      roles: dbUser.roles,
+      profile: dbUser.profile,
+      sec_ops: dbUser.sec_ops,
+      createdAt: dbUser.createdAt,
+      updatedAt: dbUser.updatedAt,
+    };
+
+    return res.status(200).json({
+      ok: true,
+      source: "<api.auth.controller>: login()",
+      message: "Login successful.",
+      user: userRes,
+      access_token: access_token,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      source: "<api.auth.controller>: login()",
+      message: "Failed to login.",
+      error: "Internal server error.",
+    });
   }
 };
