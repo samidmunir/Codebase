@@ -55,7 +55,7 @@ export const signup = async (req, res) => {
     const userRes = {
       _id: user._id,
       email: user.email,
-      roles: user.roles,
+      role: user.role,
       firstName: user.profile.first_name,
       lastName: user.profile.last_name,
     };
@@ -67,7 +67,7 @@ export const signup = async (req, res) => {
       user: userRes,
     });
   } catch (e) {
-    return res.status(400).json({
+    return res.status(500).json({
       ok: false,
       source: "<api.auth.controller>: signup()",
       message: "Failed to signup.",
@@ -114,7 +114,11 @@ export const login = async (req, res) => {
       dbUser.password_hash
     );
     if (!isPasswordValid) {
-      dbUser.sec_ops.failed_logins++;
+      if (dbUser.sec_ops.failed_logins) {
+        dbUser.sec_ops.failed_logins++;
+      } else {
+        dbUser.sec_ops.failed_logins = 1;
+      }
       await dbUser.save();
 
       return res.status(401).json({
@@ -136,7 +140,7 @@ export const login = async (req, res) => {
     const userRes = {
       _id: dbUser._id,
       email: dbUser.email,
-      roles: dbUser.roles,
+      role: dbUser.role,
       profile: dbUser.profile,
       sec_ops: dbUser.sec_ops,
       createdAt: dbUser.createdAt,
@@ -151,6 +155,7 @@ export const login = async (req, res) => {
       access_token: access_token,
     });
   } catch (e) {
+    console.log(e);
     return res.status(500).json({
       ok: false,
       source: "<api.auth.controller>: login()",

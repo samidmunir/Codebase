@@ -4,7 +4,8 @@ import ENV from "../config/env.js";
 export const generateAT = (user) => {
   const payload = {
     sub: user._id.toString(),
-    roles: user.roles,
+    email: user.email,
+    role: user.role,
     token_version: user.token_version,
   };
 
@@ -18,7 +19,8 @@ export const generateAT = (user) => {
 export const generateRT = (user) => {
   const payload = {
     sub: user._id.toString(),
-    roles: user.roles,
+    email: user.email,
+    role: user.role,
     token_version: user.token_version,
   };
 

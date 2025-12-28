@@ -17,7 +17,7 @@ app.use(cors({ origin: CLIENT, credentials: true }));
 app.get("/api/health", (_req, res) => {
   return res.status(200).json({
     ok: true,
-    source: "<api.gateway>",
+    source: "<api.gateway>: health()",
     message: `/api/gateway is live on http://localhost:${PORT}`,
   });
 });

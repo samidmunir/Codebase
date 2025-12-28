@@ -28,3 +28,34 @@ export const getAllProducts = async (req, res) => {
     });
   }
 };
+
+export const createProduct = async (req, res) => {
+  try {
+    const { sku, title, description, price, installable } = req.body;
+    if (!sku || !title || !description || !price || !installable) {
+      return res.status(400).json({
+        ok: false,
+        source: "<api.catalog.controller>: createProduct()",
+        message: "Failed to create new product.",
+        error: "Missing required fields.",
+      });
+    }
+
+    const product = await Product.create(req.body);
+
+    return res.status(201).json({
+      ok: true,
+      source: "<api.catalog.controller>: createProduct()",
+      message: "New product successfully created.",
+      product: product,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      source: "<api.catalog.controller>: createProduct()",
+      message: "Failed to create new product.",
+      error: "Internal server error.",
+      e: e.message,
+    });
+  }
+};
