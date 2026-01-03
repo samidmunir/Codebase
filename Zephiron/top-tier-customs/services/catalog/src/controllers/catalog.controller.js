@@ -202,12 +202,12 @@ export const getService = async (req, res) => {
   try {
     const serviceID = req.params.id;
 
-    const dbService = await Product.findById(serviceID);
+    const dbService = await Service.findById(serviceID);
     if (!dbService) {
       return res.status(404).json({
         ok: false,
-        source: "<api.catalog.controller>: getProduct()",
-        message: "Failed to fetch product.",
+        source: "<api.catalog.controller>: getService()",
+        message: "Failed to fetch service.",
         error: `No product found with ID: ${serviceID}.`,
       });
     }

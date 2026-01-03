@@ -77,7 +77,9 @@ catalogRouter.delete(
 
 catalogRouter.get("/health", catalogProxy);
 catalogRouter.get("/products", catalogProxy);
+catalogRouter.get("/products/:id", catalogProxy);
 catalogRouter.get("/services", catalogProxy);
+catalogRouter.get("/services/:id", catalogProxy);
 
 export default catalogRouter;
 
