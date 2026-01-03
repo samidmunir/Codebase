@@ -21,38 +21,50 @@ const serviceSchema = new mongoose.Schema(
         type: [String],
       },
     },
-    price: {
+    priceCents: {
       type: Number,
       required: true,
+      min: 0,
+    },
+    stripe: {
+      serviceID: { type: String },
+      depositPriceID: { type: String },
     },
     deposit: {
       required: {
         type: Boolean,
-        required: true,
+        default: false,
+        type: {
+          type: String,
+          enum: ["fixed", "percent"],
+        },
+        amountCents: {
+          type: Number,
+        },
+        percent: {
+          type: Number,
+        },
       },
-      amount: {
-        type: Number,
+      discount: {
+        active: {
+          type: Boolean,
+        },
+        message: {
+          type: String,
+        },
+        amount: {
+          type: Number,
+        },
       },
-    },
-    discount: {
-      active: {
-        type: Boolean,
-      },
-      message: {
-        type: String,
-      },
-      amount: {
-        type: Number,
-      },
-    },
-    duration: {
-      min: {
-        type: Number,
-        required: true,
-      },
-      max: {
-        type: Number,
-        required: true,
+      duration: {
+        min: {
+          type: Number,
+          required: true,
+        },
+        max: {
+          type: Number,
+          required: true,
+        },
       },
     },
   },

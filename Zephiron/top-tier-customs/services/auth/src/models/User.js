@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema(
       enum: ["customer", "admin"],
       default: "customer",
     },
+    stripe: {
+      customerID: {
+        type: String,
+        index: true,
+      },
+    },
     profile: {
       first_name: {
         type: String,
