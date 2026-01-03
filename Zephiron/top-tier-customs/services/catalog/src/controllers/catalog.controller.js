@@ -1,5 +1,6 @@
 import ENV from "../config/env.js";
 import Product from "../models/Product.js";
+import Service from "../models/Service.js";
 
 export const health = async (req, res) => {
   return res.status(200).json({
@@ -170,6 +171,188 @@ export const deleteProduct = async (req, res) => {
       ok: false,
       source: "<api.catalog.controller>: deleteProduct()",
       message: "Failed to delete product.",
+      error: "Internal server error.",
+      e: e.message,
+    });
+  }
+};
+
+export const getAllServices = async (req, res) => {
+  try {
+    const services = await Service.find();
+
+    return res.status(200).json({
+      ok: true,
+      source: "<api.catalog.controller>: getAllServices()",
+      message: "Services fetched successfully.",
+      services: services,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      source: "<api.catalog.controller>: getAllServices()",
+      message: "Failed to fetch all services.",
+      error: "Internal server error.",
+      e: e.message,
+    });
+  }
+};
+
+export const getService = async (req, res) => {
+  try {
+    const serviceID = req.params.id;
+
+    const dbService = await Product.findById(serviceID);
+    if (!dbService) {
+      return res.status(404).json({
+        ok: false,
+        source: "<api.catalog.controller>: getProduct()",
+        message: "Failed to fetch product.",
+        error: `No product found with ID: ${serviceID}.`,
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      source: "<api.catalog.controller>: getService()",
+      message: "Service fetched successfully.",
+      service: dbService,
+    });
+  } catch (e) {
+    //
+  }
+};
+
+export const createService = async (req, res) => {
+  try {
+    const { sid, title, description, price, deposit, duration } = req.body;
+    if (!sid || !title || !description || !price || !deposit || !duration) {
+      return res.status(400).json({
+        ok: false,
+        source: "<api.catalog.controller>: createService()",
+        message: "Failed to create new service.",
+        error: "Missing required fields.",
+      });
+    }
+
+    const service = await Service.create(req.body);
+
+    return res.status(201).json({
+      ok: true,
+      source: "<api.catalog.controller>: createService()",
+      message: "New service successfully created.",
+      service: service,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      source: "<api.catalog.controller>: createService()",
+      message: "Failed to create new service.",
+      error: "Internal server error.",
+      e: e.message,
+    });
+  }
+};
+
+export const updateService = async (req, res) => {
+  try {
+    const serviceID = req.params.id;
+
+    const dbService = await Product.findById(serviceID);
+    if (!dbService) {
+      return res.status(404).json({
+        ok: false,
+        source: "<api.catalog.controller>: updateService()",
+        message: "Failed to update service.",
+        error: `No service found with ID: ${serviceID}.`,
+      });
+    }
+
+    const {
+      sid,
+      title,
+      description,
+      media,
+      price,
+      deposit,
+      discount,
+      duration,
+    } = req.body;
+
+    if (sid !== "" && dbService.sid !== sid) {
+      dbService.sid = sid;
+    }
+
+    if (title !== "" && dbService.title !== title) {
+      dbService.title = title;
+    }
+
+    if (description !== "" && dbService.description !== description) {
+      dbService.description = description;
+    }
+
+    if (price !== 0.0 && dbService.price !== price) {
+      dbService.price = price;
+    }
+
+    if (discount !== null && dbService.discount !== discount) {
+      dbService.discount = discount;
+    }
+
+    if (deposit !== null && dbService.deposit !== deposit) {
+      dbService.deposit = deposit;
+    }
+
+    if (duration !== null && dbService.duration !== duration) {
+      dbService.duration = duration;
+    }
+
+    await dbService.save();
+
+    return res.status(200).json({
+      ok: true,
+      source: "<api.catalog.controller>: updateService()",
+      message: "Service updated successfully.",
+      service: dbService,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      source: "<api.catalog.controller>: updateService()",
+      message: "Failed to update service.",
+      error: "Internal server error.",
+      e: e.message,
+    });
+  }
+};
+
+export const deleteService = async (req, res) => {
+  try {
+    const serviceID = req.params.id;
+
+    const dbService = await Product.findByIdAndDelete(serviceID);
+    if (!dbService) {
+      return res.status(404).json({
+        ok: false,
+        source: "<api.catalog.controller>: deleteService()",
+        message: "Failed to delete service.",
+        error: `No service found with ID: ${serviceID}.`,
+      });
+    }
+
+    const dbServices = await Service.find();
+
+    return res.status(200).json({
+      ok: true,
+      source: "<api.catalog.controller>: deleteService()",
+      message: `Successfully deleted service [${serviceID}]`,
+      serices: dbServices,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      source: "<api.catalog.controller>: deleteService()",
+      message: "Failed to delete service.",
       error: "Internal server error.",
       e: e.message,
     });

@@ -56,8 +56,28 @@ catalogRouter.delete(
   catalogProxy
 );
 
+catalogRouter.post(
+  "/admin/services",
+  authenticate,
+  authorize("admin"),
+  catalogProxy
+);
+catalogRouter.put(
+  "/admin/services/:id",
+  authenticate,
+  authorize("admin"),
+  catalogProxy
+);
+catalogRouter.delete(
+  "/admin/services/:id",
+  authenticate,
+  authorize("admin"),
+  catalogProxy
+);
+
 catalogRouter.get("/health", catalogProxy);
 catalogRouter.get("/products", catalogProxy);
+catalogRouter.get("/services", catalogProxy);
 
 export default catalogRouter;
 
