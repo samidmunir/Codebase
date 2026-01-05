@@ -5,6 +5,7 @@ import cors from "cors";
 import authProxy from "./routes/auth.routes.proxy.js";
 import catalogProxy from "./routes/catalog.routes.proxy.js";
 import paymentsRouter from "./routes/payments.routes.proxy.js";
+import ordersRouter from "./routes/orders.routes.proxy.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authProxy);
 app.use("/api/catalog", catalogProxy);
 app.use("/api/payments", paymentsRouter);
+app.use("/api/orders", ordersRouter);
 
 app.listen(PORT, () => {
   console.log(`✅ <api.gateway> live on http://localhost:${PORT}`);

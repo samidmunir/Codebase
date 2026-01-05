@@ -4,8 +4,11 @@ import ENV from "../config/env.js";
 
 const authProxy = express.Router();
 
-const target = ENV.UPSTREAM.AUTH;
+const TARGET = ENV.UPSTREAM.AUTH;
 
-authProxy.use("/", createProxyMiddleware({ target, changeOrigin: true }));
+authProxy.use(
+  "/",
+  createProxyMiddleware({ target: TARGET, changeOrigin: true })
+);
 
 export default authProxy;

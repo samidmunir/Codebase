@@ -18,6 +18,6 @@ const stripeEventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const StripeEvent = mongoose.model("StripeEvents", stripeEventSchema);
+const StripeEvent = mongoose.model("Stripe_Events", stripeEventSchema);
 
 export default StripeEvent;

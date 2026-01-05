@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    userId: {
+    userID: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       index: true,
@@ -11,12 +11,12 @@ const orderSchema = new mongoose.Schema(
     // Snapshot at purchase time (don’t trust live catalog values later)
     items: [
       {
-        productId: { type: mongoose.Schema.Types.ObjectId, required: true },
+        productID: { type: mongoose.Schema.Types.ObjectId, required: true },
         sku: { type: String },
         title: { type: String },
         qty: { type: Number, required: true, min: 1 },
         unitPriceCents: { type: Number, required: true, min: 0 },
-        stripePriceId: { type: String, required: true }, // Stripe Price used in checkout
+        stripePriceID: { type: String, required: true }, // Stripe Price used in checkout
       },
     ],
 
@@ -31,12 +31,12 @@ const orderSchema = new mongoose.Schema(
     },
 
     stripe: {
-      checkoutSessionId: { type: String, index: true },
-      paymentIntentId: { type: String, index: true },
+      checkoutSessionID: { type: String, index: true },
+      paymentIntentID: { type: String, index: true },
     },
 
     // Idempotency: track Stripe event IDs we already applied
-    appliedStripeEventIds: { type: [String], default: [] },
+    appliedStripeEventIDs: { type: [String], default: [] },
   },
   { timestamps: true }
 );

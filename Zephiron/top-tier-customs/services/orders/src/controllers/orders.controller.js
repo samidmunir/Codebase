@@ -1,4 +1,15 @@
+import ENV from "../config/env.js";
 import Order from "../models/Order.js";
+
+const PORT = ENV.PORT;
+
+export const health = async (req, res) => {
+  return res.status(200).json({
+    ok: true,
+    source: "<api.orders.controller>: health()",
+    message: `/api/orders is live on http://localhost:${PORT}`,
+  });
+};
 
 export const create = async (req, res) => {
   const { items } = req.body || {};

@@ -3,12 +3,12 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import { authenticate } from "../middleware/auth.middleware.js";
 import ENV from "../config/env.js";
 
-const paymentsRouter = express.Router();
+const ordersRouter = express.Router();
 
-const TARGET = ENV.UPSTREAM.PAYMENTS;
+const TARGET = ENV.UPSTREAM.ORDERS;
 const SECRET = ENV.SECRET;
 
-const paymentsProxy = createProxyMiddleware({
+const ordersProxy = createProxyMiddleware({
   target: TARGET,
   changeOrigin: true,
   on: {
@@ -23,9 +23,10 @@ const paymentsProxy = createProxyMiddleware({
   },
 });
 
-paymentsRouter.post("/checkout-session", authenticate, paymentsProxy);
-// paymentsRouter.post("/stripe/webhook", authenticate, paymentsProxy);
+ordersRouter.post("/:id", authenticate, ordersProxy);
+ordersRouter.get("/:id", authenticate, ordersProxy);
+ordersRouter.post("/:id", authenticate, ordersProxy);
 
-paymentsRouter.get("/health", paymentsProxy);
+ordersRouter.get("/health", ordersProxy);
 
-export default paymentsRouter;
+export default ordersRouter;
