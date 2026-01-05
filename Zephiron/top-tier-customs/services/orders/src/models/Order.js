@@ -1,44 +1,65 @@
 import mongoose from "mongoose";
 
-const orderSchema = new mongoose.Schema(
+const OrderItemSchema = new mongoose.Schema(
   {
-    userID: {
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      index: true,
+    },
+    variantId: { type: mongoose.Schema.Types.ObjectId }, // if using variants
+
+    sku: { type: String },
+    title: { type: String },
+
+    qty: { type: Number, required: true, min: 1 },
+    unitPriceCents: { type: Number, required: true, min: 0 },
+
+    // Stripe price used at checkout time
+    stripePriceId: { type: String, required: true },
+  },
+  { _id: false }
+);
+
+const OrderSchema = new mongoose.Schema(
+  {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       index: true,
     },
 
-    // Snapshot at purchase time (don’t trust live catalog values later)
-    items: [
-      {
-        productID: { type: mongoose.Schema.Types.ObjectId, required: true },
-        sku: { type: String },
-        title: { type: String },
-        qty: { type: Number, required: true, min: 1 },
-        unitPriceCents: { type: Number, required: true, min: 0 },
-        stripePriceID: { type: String, required: true }, // Stripe Price used in checkout
-      },
-    ],
-
-    currency: { type: String, default: "usd" },
-    subtotalCents: { type: Number, required: true, min: 0 },
-
     status: {
       type: String,
-      enum: ["pending_payment", "paid", "canceled", "refunded"],
+      enum: ["pending_payment", "paid", "fulfilled", "canceled", "refunded"],
       default: "pending_payment",
       index: true,
     },
 
+    currency: { type: String, default: "usd" },
+    subtotalCents: { type: Number, required: true, min: 0 },
+    discountCents: { type: Number, default: 0, min: 0 },
+    taxCents: { type: Number, default: 0, min: 0 },
+    shippingCents: { type: Number, default: 0, min: 0 },
+
+    totalCents: { type: Number, required: true, min: 0 },
+
+    items: { type: [OrderItemSchema], default: [] },
+
     stripe: {
-      checkoutSessionID: { type: String, index: true },
-      paymentIntentID: { type: String, index: true },
+      checkoutSessionId: { type: String, index: true },
+      paymentIntentId: { type: String, index: true },
+      customerId: { type: String, index: true },
     },
 
-    // Idempotency: track Stripe event IDs we already applied
-    appliedStripeEventIDs: { type: [String], default: [] },
+    // idempotency at the domain level
+    appliedStripeEventIds: { type: [String], default: [] },
+
+    notes: { type: String, trim: true },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Orders", orderSchema);
+OrderSchema.index({ userId: 1, createdAt: -1 });
+
+export default mongoose.model("Orders", OrderSchema);
