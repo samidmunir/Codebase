@@ -1,69 +1,114 @@
 import mongoose from "mongoose";
 
-const productSchema = new mongoose.Schema(
+const ProductImageSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true },
+    alt: { type: String, default: "" },
+    sortOrder: { type: Number, default: 0 },
+    isPrimary: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
+const ProductVariantSchema = new mongoose.Schema(
+  {
+    sku: { type: String, trim: true },
+    name: { type: String, required: true },
+    options: { type: Map, of: String, default: {} }, // e.g. { finish: "matte", color: "black" }
+
+    priceCents: { type: Number, required: true, min: 0 },
+    compareAtPriceCents: { type: Number, min: 0 },
+
+    trackInventory: { type: Boolean, default: true },
+    stockQty: { type: Number, default: 0, min: 0 },
+
+    images: { type: [ProductImageSchema], default: [] },
+
+    stripe: {
+      priceId: { type: String, index: true }, // Price for this variant
+      currency: { type: String, default: "usd" },
+      active: { type: Boolean, default: true },
+      lastSyncAt: { type: Date },
+    },
+
+    isActive: { type: Boolean, default: true },
+    sortOrder: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+const ProductSchema = new mongoose.Schema(
   {
     sku: {
       type: String,
       unique: true,
       lowercase: true,
+      trim: true,
       required: true,
+      index: true,
     },
-    title: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
+    title: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
+
     media: {
-      images: {
-        type: [String],
-      },
+      images: { type: [ProductImageSchema], default: [] },
     },
+
+    categories: { type: [String], default: [], index: true },
+    tags: { type: [String], default: [], index: true },
+
+    // If no variants, use base price
+    hasVariants: { type: Boolean, default: false },
+    priceCents: { type: Number, min: 0 },
+    compareAtPriceCents: { type: Number, min: 0 },
+
+    discount: { type: Number }, // optional (prefer promos/coupons later)
+
+    installable: { type: Boolean, required: true },
+
+    trackInventory: { type: Boolean, default: true },
+    stockQty: { type: Number, default: 0, min: 0 }, // for non-variant products
+
+    isActive: { type: Boolean, default: true, index: true },
+    isFeatured: { type: Boolean, default: false },
+
+    variants: { type: [ProductVariantSchema], default: [] },
+
     stripe: {
-      productID: {
-        type: String,
-        index: true,
-      },
-      priceID: {
-        type: String,
-        index: true,
-      },
-      currency: {
-        type: String,
-        default: "usd",
-      },
-      active: {
-        type: Boolean,
-        default: true,
-      },
-      lastSyncAt: {
-        type: Date,
-      },
-    },
-    priceCents: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-    discount: {
-      type: {
-        type: String,
-        enum: ["fixed", "percent"],
-      },
-      amount: {
-        type: Number,
-      },
-    },
-    installable: {
-      type: Boolean,
-      required: true,
+      productId: { type: String, index: true },
+      // If no variants, store a single Price here:
+      priceId: { type: String, index: true },
+      currency: { type: String, default: "usd" },
+      active: { type: Boolean, default: true },
+      lastSyncAt: { type: Date },
+      metadata: { type: Map, of: String, default: {} },
     },
   },
   { timestamps: true }
 );
 
-const Product = mongoose.model("Products", productSchema);
+ProductSchema.index({
+  title: "text",
+  description: "text",
+  sku: "text",
+  tags: "text",
+});
+ProductSchema.index({ "stripe.productId": 1 });
+ProductSchema.index({ "stripe.priceId": 1 });
+ProductSchema.index({ "variants.stripe.priceId": 1 });
 
-export default Product;
+// Guardrail: price must exist depending on hasVariants
+ProductSchema.pre("validate", function (next) {
+  if (this.hasVariants) {
+    if (!Array.isArray(this.variants) || this.variants.length === 0) {
+      return next(new Error("variants[] required when hasVariants=true"));
+    }
+  } else {
+    if (typeof this.priceCents !== "number") {
+      return next(new Error("priceCents required when hasVariants=false"));
+    }
+  }
+  next();
+});
+
+export default mongoose.model("Products", ProductSchema);
