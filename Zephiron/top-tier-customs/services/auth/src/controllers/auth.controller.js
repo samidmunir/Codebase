@@ -18,9 +18,18 @@ export const health = async (req, res) => {
 
 export const signup = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, city, country } = req.body;
+    const { email, password, firstName, lastName, city, country, phone } =
+      req.body;
 
-    if (!email || !password || !firstName || !lastName || !city || !country) {
+    if (
+      !email ||
+      !password ||
+      !firstName ||
+      !lastName ||
+      !city ||
+      !country ||
+      !phone
+    ) {
       return res.status(400).json({
         ok: false,
         source: "<api.auth.controller>: signup()",
@@ -43,10 +52,11 @@ export const signup = async (req, res) => {
 
     const user = await User.create({
       email: email,
-      password_hash: hashedPassword,
+      passwordHash: hashedPassword,
       profile: {
-        first_name: firstName,
-        last_name: lastName,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
         city: city,
         country: country,
       },
@@ -56,8 +66,7 @@ export const signup = async (req, res) => {
       _id: user._id,
       email: user.email,
       role: user.role,
-      firstName: user.profile.first_name,
-      lastName: user.profile.last_name,
+      profile: user.profile,
     };
 
     return res.status(201).json({
