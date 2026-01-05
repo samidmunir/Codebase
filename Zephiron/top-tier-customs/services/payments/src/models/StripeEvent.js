@@ -1,23 +1,32 @@
 import mongoose from "mongoose";
 
-const stripeEventSchema = new mongoose.Schema(
+const StripeEventSchema = new mongoose.Schema(
   {
-    eventID: {
+    eventId: { type: String, required: true, unique: true, index: true },
+    type: { type: String, required: true },
+
+    // Optional correlation to your domain
+    kind: {
       type: String,
-      unique: true,
-      index: true,
+      enum: ["order", "deposit", "refund", "unknown"],
+      default: "unknown",
     },
-    type: {
-      type: String,
+    orderId: { type: mongoose.Schema.Types.ObjectId },
+    bookingId: { type: mongoose.Schema.Types.ObjectId },
+
+    // Useful Stripe refs
+    stripe: {
+      checkoutSessionId: { type: String, index: true },
+      paymentIntentId: { type: String, index: true },
+      customerId: { type: String, index: true },
     },
-    processedAt: {
-      type: Date,
-      default: Date.now(),
-    },
+
+    processedAt: { type: Date, default: Date.now },
+    processingError: { type: String },
   },
   { timestamps: true }
 );
 
-const StripeEvent = mongoose.model("Stripe_Events", stripeEventSchema);
+StripeEventSchema.index({ createdAt: -1 });
 
-export default StripeEvent;
+export default mongoose.model("Stripe_Events", StripeEventSchema);
