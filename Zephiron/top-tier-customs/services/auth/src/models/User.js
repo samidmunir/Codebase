@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
   {
     email: {
       type: String,
@@ -9,63 +9,41 @@ const userSchema = new mongoose.Schema(
       trim: true,
       required: true,
     },
-    password_hash: {
-      type: String,
-      required: true,
-    },
+    passwordHash: { type: String, required: true, select: false },
+
     role: {
       type: String,
       enum: ["customer", "admin"],
       default: "customer",
+      index: true,
     },
-    stripe: {
-      customerID: {
-        type: String,
-        index: true,
-      },
-    },
+
     profile: {
-      first_name: {
-        type: String,
-        required: true,
-      },
-      last_name: {
-        type: String,
-        required: true,
-      },
-      city: {
-        type: String,
-        required: true,
-      },
-      country: {
-        type: String,
-        required: true,
-      },
-      phone: {
-        type: String,
-      },
+      firstName: { type: String, required: true, trim: true },
+      lastName: { type: String, required: true, trim: true },
+      phone: { type: String, trim: true },
+      city: { type: String, trim: true },
+      country: { type: String, trim: true },
     },
-    sec_ops: {
-      token_version: {
-        type: Number,
-      },
-      last_login: {
-        type: String,
-      },
-      failed_logins: {
-        type: Number,
-      },
-      last_password_reset: {
-        type: String,
-      },
-      failed_resets: {
-        type: Number,
-      },
+
+    // Security ops (optional, but useful)
+    secOps: {
+      tokenVersion: { type: Number, default: 0 },
+      lastLoginAt: { type: Date },
+      failedLogins: { type: Number, default: 0 },
+      lastPasswordResetAt: { type: Date },
+      failedResets: { type: Number, default: 0 },
+      lockedUntil: { type: Date },
+    },
+
+    // Stripe mapping
+    stripe: {
+      customerId: { type: String, index: true },
     },
   },
   { timestamps: true }
 );
 
-const User = mongoose.model("Users", userSchema);
+UserSchema.index({ email: 1 });
 
-export default User;
+export default mongoose.model("Users", UserSchema);
