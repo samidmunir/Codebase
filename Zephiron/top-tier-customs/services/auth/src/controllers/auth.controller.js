@@ -108,7 +108,7 @@ export const login = async (req, res) => {
       });
     }
 
-    if (dbUser.sec_ops.failed_logins >= 3) {
+    if (dbUser.secOps.failedLogins > 3) {
       return res.status(403).json({
         ok: false,
         source: "<api.auth.controller>: signup()",
@@ -118,16 +118,10 @@ export const login = async (req, res) => {
       });
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      dbUser.password_hash
-    );
+    const isPasswordValid = await bcrypt.compare(password, dbUser.passwordHash);
     if (!isPasswordValid) {
-      if (dbUser.sec_ops.failed_logins) {
-        dbUser.sec_ops.failed_logins++;
-      } else {
-        dbUser.sec_ops.failed_logins = 1;
-      }
+      dbUser.secOps.failedLogins++;
+
       await dbUser.save();
 
       return res.status(401).json({
@@ -138,7 +132,7 @@ export const login = async (req, res) => {
       });
     }
 
-    dbUser.sec_ops.last_login = new Date().toISOString();
+    dbUser.secOps.lastLoginAt = new Date();
     await dbUser.save();
 
     const access_token = generateAT(dbUser);
@@ -151,7 +145,7 @@ export const login = async (req, res) => {
       email: dbUser.email,
       role: dbUser.role,
       profile: dbUser.profile,
-      sec_ops: dbUser.sec_ops,
+      secOps: dbUser.secOps,
       createdAt: dbUser.createdAt,
       updatedAt: dbUser.updatedAt,
     };
