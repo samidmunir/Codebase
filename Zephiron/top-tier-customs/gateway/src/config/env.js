@@ -16,6 +16,8 @@ const ENV = {
   UPSTREAM: {
     AUTH: process.env.AUTH_SERVICE_URL,
     CATALOG: process.env.CATALOG_SERVICE_URL,
+    PAYMENTS: process.env.PAYMENTS_SERVICE_URL,
+    ORDERS: process.env.ORDERS_SERVICE_URL,
   },
 };
 

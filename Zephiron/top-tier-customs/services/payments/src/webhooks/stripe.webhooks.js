@@ -3,6 +3,14 @@ import ENV from "../config/env.js";
 import StripeEvent from "../models/StripeEvent.js";
 import { markOrderPaid } from "../client/orders.client.js";
 
+export const health = async (req, res) => {
+  return res.status(200).json({
+    ok: true,
+    source: "<api.payments.stripe.webhooks>: health()",
+    message: `/api/payments is live on http://localhost:${PORT}`,
+  });
+};
+
 export const stripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
 
