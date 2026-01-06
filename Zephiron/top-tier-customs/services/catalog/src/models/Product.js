@@ -93,22 +93,24 @@ ProductSchema.index({
   sku: "text",
   tags: "text",
 });
-ProductSchema.index({ "stripe.productId": 1 });
-ProductSchema.index({ "stripe.priceId": 1 });
-ProductSchema.index({ "variants.stripe.priceId": 1 });
 
-// Guardrail: price must exist depending on hasVariants
-ProductSchema.pre("validate", function (next) {
+ProductSchema.pre("validate", function () {
   if (this.hasVariants) {
     if (!Array.isArray(this.variants) || this.variants.length === 0) {
-      return next(new Error("variants[] required when hasVariants=true"));
+      throw new Error("variants[] required when hasVariants=true");
     }
+    this.priceCents = undefined;
+    this.compareAtPriceCents = undefined;
+    this.trackInventory = undefined;
+    this.stockQty = undefined;
   } else {
     if (typeof this.priceCents !== "number") {
-      return next(new Error("priceCents required when hasVariants=false"));
+      throw new Error("priceCents required when hasVariants=false");
+    }
+    if (Array.isArray(this.variants) && this.variants.length > 0) {
+      this.variants = [];
     }
   }
-  next();
 });
 
 export default mongoose.model("Products", ProductSchema);
