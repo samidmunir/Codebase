@@ -16,7 +16,7 @@ app.use(morgan("dev"));
 
 app.use(cors({ origin: ENV.CLIENT, credentials: true }));
 
-// app.use("/stripe", webhookRouter);
+app.use("/stripe", webhookRouter);
 app.use(express.json());
 
 app.use("/", paymentsRouter);

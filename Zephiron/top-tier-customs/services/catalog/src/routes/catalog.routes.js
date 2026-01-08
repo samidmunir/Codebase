@@ -9,13 +9,23 @@ import {
   getProduct,
   getService,
   health,
+  quote,
+  syncProductToStripe,
   updateProduct,
   updateService,
 } from "../controllers/catalog.controller.js";
 import { gatewayCheck, authorize } from "../middleware/auth.middleware.js";
+import { internalize } from "../../../orders/src/middleware/internal.middleware.js";
 
 const catalogRouter = express.Router();
 
+catalogRouter.post(
+  "/admin/products/:id/sync-stripe",
+  gatewayCheck,
+  authorize,
+  syncProductToStripe
+);
+catalogRouter.post("/internal/quote", internalize, quote);
 catalogRouter.post("/admin/products", gatewayCheck, authorize, createProduct);
 catalogRouter.put(
   "/admin/products/:id",

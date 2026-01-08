@@ -9,12 +9,13 @@ import authRouter from "./routes/auth.routes.js";
 const app = express();
 
 const PORT = ENV.PORT;
+const CLIENT = ENV.CLIENT;
 
 connectDB();
 
 app.use(morgan("dev"));
 
-app.use(cors({ origin: ENV.CLIENT, credentials: true }));
+app.use(cors({ origin: CLIENT, credentials: true }));
 
 app.use(express.json());
 app.use(cookieParser());

@@ -24,7 +24,7 @@ const paymentsProxy = createProxyMiddleware({
 });
 
 paymentsRouter.post("/checkout-session", authenticate, paymentsProxy);
-// paymentsRouter.post("/stripe/webhook", authenticate, paymentsProxy);
+paymentsRouter.post("/stripe/webhook", paymentsProxy);
 
 paymentsRouter.get("/health", paymentsProxy);
 

@@ -6,6 +6,7 @@ const ENV = {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
   MONGO_URI: process.env.MONGO_URI,
+  STRIPE_SECRET: process.env.STRIPE_SECRET,
   JWT: {
     ACCESS: process.env.JWT_ACCESS_SECRET,
     ACCESS_TTL: process.env.JWT_ACCESS_TTL,

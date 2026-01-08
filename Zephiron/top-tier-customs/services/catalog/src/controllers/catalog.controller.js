@@ -1,6 +1,8 @@
 import ENV from "../config/env.js";
 import Product from "../models/Product.js";
 import Service from "../models/Service.js";
+import mongoose from "mongoose";
+import { stripe } from "../client/stripe.client.js";
 
 export const health = async (req, res) => {
   return res.status(200).json({
@@ -24,6 +26,161 @@ const pickDefined = (obj, allowed) => {
 };
 
 const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
+
+// POST /internal/quote
+// Body: { items: [{ productId, variantId?, qty }] }
+export const quote = async (req, res) => {
+  try {
+    const { items } = req.body || {};
+    if (!Array.isArray(items) || items.length === 0) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "items[] is required." });
+    }
+
+    const normalized = items.map((it, idx) => {
+      const productId = it?.productId;
+      const variantId = it?.variantId;
+      const qty = Number(it?.qty);
+
+      if (!mongoose.isValidObjectId(productId)) {
+        throw new Error(`items[${idx}].productId is invalid`);
+      }
+      if (variantId && !mongoose.isValidObjectId(variantId)) {
+        throw new Error(`items[${idx}].variantId is invalid`);
+      }
+      if (!Number.isInteger(qty) || qty < 1) {
+        throw new Error(`items[${idx}].qty must be an integer >= 1`);
+      }
+
+      return { productId, variantId, qty };
+    });
+
+    const productIds = [...new Set(normalized.map((x) => x.productId))];
+
+    const products = await Product.find({
+      _id: { $in: productIds },
+      isActive: true,
+    }).lean();
+
+    const productById = new Map(products.map((p) => [String(p._id), p]));
+
+    const quotedItems = [];
+    let subtotalCents = 0;
+
+    for (const line of normalized) {
+      const product = productById.get(String(line.productId));
+      if (!product) {
+        return res.status(404).json({
+          ok: false,
+          message: `Product not found or inactive: ${line.productId}`,
+        });
+      }
+
+      // Variant product
+      if (product.hasVariants) {
+        if (!line.variantId) {
+          return res.status(400).json({
+            ok: false,
+            message: `variantId required for variant product ${product._id}`,
+          });
+        }
+
+        const variant = (product.variants || []).find(
+          (v) => String(v._id) === String(line.variantId)
+        );
+
+        if (!variant || variant.isActive === false) {
+          return res.status(404).json({
+            ok: false,
+            message: `Variant not found or inactive: ${line.variantId}`,
+          });
+        }
+
+        const stripePriceId = variant?.stripe?.priceId;
+        if (!stripePriceId) {
+          return res.status(400).json({
+            ok: false,
+            message: `Variant missing Stripe priceId (sync to Stripe first): ${line.variantId}`,
+          });
+        }
+
+        if (variant.trackInventory === true) {
+          const stockQty = Number(variant.stockQty ?? 0);
+          if (stockQty < line.qty) {
+            return res.status(409).json({
+              ok: false,
+              message: `Insufficient stock for variant: ${line.variantId}`,
+            });
+          }
+        }
+
+        const unitPriceCents = Number(variant.priceCents);
+        subtotalCents += unitPriceCents * line.qty;
+
+        quotedItems.push({
+          productId: String(product._id),
+          variantId: String(variant._id),
+          sku: variant.sku || product.sku,
+          title: `${product.title} - ${variant.name}`,
+          qty: line.qty,
+          unitPriceCents,
+          stripePriceId,
+        });
+
+        continue;
+      }
+
+      // Non-variant product
+      if (line.variantId) {
+        return res.status(400).json({
+          ok: false,
+          message: `variantId should not be provided for non-variant product ${product._id}`,
+        });
+      }
+
+      const stripePriceId = product?.stripe?.priceId;
+      if (!stripePriceId) {
+        return res.status(400).json({
+          ok: false,
+          message: `Product missing Stripe priceId (sync to Stripe first): ${product._id}`,
+        });
+      }
+
+      if (product.trackInventory === true) {
+        const stockQty = Number(product.stockQty ?? 0);
+        if (stockQty < line.qty) {
+          return res.status(409).json({
+            ok: false,
+            message: `Insufficient stock for product ${product._id}. Available: ${stockQty}`,
+          });
+        }
+      }
+
+      const unitPriceCents = Number(product.priceCents);
+      subtotalCents += unitPriceCents * line.qty;
+
+      quotedItems.push({
+        productId: String(product._id),
+        variantId: null,
+        sku: product.sku,
+        title: product.title,
+        qty: line.qty,
+        unitPriceCents,
+        stripePriceId,
+      });
+    }
+
+    return res.json({
+      ok: true,
+      currency: "usd",
+      subtotalCents,
+      items: quotedItems,
+    });
+  } catch (e) {
+    return res.status(400).json({ ok: false, message: e.message });
+  }
+};
 
 export const getAllProducts = async (req, res) => {
   try {
@@ -398,6 +555,118 @@ export const deleteProduct = async (req, res) => {
       message: "Failed to delete product.",
       error: "Internal server error.",
       e: e.message,
+    });
+  }
+};
+
+export const syncProductToStripe = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ ok: false, message: "Product not found." });
+    }
+
+    // Optional guard: don't sync inactive products
+    if (product.isActive === false) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "Cannot sync an inactive product." });
+    }
+
+    const currency =
+      product?.stripe?.currency || process.env.STRIPE_CURRENCY || "usd";
+
+    // 1) Ensure Stripe Product exists
+    if (!product?.stripe?.productId) {
+      const sp = await stripe.products.create({
+        name: product.title,
+        description: product.description?.slice(0, 500) || undefined,
+        metadata: {
+          catalogProductId: String(product._id),
+          sku: product.sku,
+          hasVariants: String(!!product.hasVariants),
+        },
+      });
+
+      product.stripe = product.stripe || {};
+      product.stripe.productId = sp.id;
+      product.stripe.currency = currency;
+    }
+
+    // 2) Create Stripe Price(s)
+    if (product.hasVariants) {
+      if (!Array.isArray(product.variants) || product.variants.length === 0) {
+        return res.status(400).json({
+          ok: false,
+          message: "variants[] required for variant product.",
+        });
+      }
+
+      for (const v of product.variants) {
+        if (v.isActive === false) continue;
+
+        // If the variant already has a priceId, we won't recreate unless price changed.
+        // Minimal approach: create only if missing.
+        if (!v?.stripe?.priceId) {
+          const price = await stripe.prices.create({
+            product: product.stripe.productId,
+            currency,
+            unit_amount: Number(v.priceCents),
+            // Optional: make it easier to trace in Stripe
+            nickname: `${product.title} - ${v.name}`,
+            metadata: {
+              catalogProductId: String(product._id),
+              catalogVariantId: String(v._id),
+              sku: v.sku || product.sku,
+            },
+          });
+
+          v.stripe = v.stripe || {};
+          v.stripe.priceId = price.id;
+          v.stripe.currency = currency;
+          v.stripe.active = true;
+          v.stripe.lastSyncAt = new Date();
+        }
+      }
+
+      // Keep product-level priceId empty for variant products
+      product.stripe.priceId = undefined;
+      product.stripe.lastSyncAt = new Date();
+    } else {
+      // Non-variant product → single Stripe Price
+      if (!product?.stripe?.priceId) {
+        const price = await stripe.prices.create({
+          product: product.stripe.productId,
+          currency,
+          unit_amount: Number(product.priceCents),
+          nickname: product.title,
+          metadata: {
+            catalogProductId: String(product._id),
+            sku: product.sku,
+          },
+        });
+
+        product.stripe.priceId = price.id;
+        product.stripe.currency = currency;
+        product.stripe.active = true;
+        product.stripe.lastSyncAt = new Date();
+      }
+    }
+
+    await product.save();
+
+    return res.status(200).json({
+      ok: true,
+      message: "Product synced to Stripe successfully.",
+      product,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to sync product to Stripe.",
+      error: e.message,
     });
   }
 };

@@ -24,6 +24,13 @@ const catalogProxy = createProxyMiddleware({
 });
 
 catalogRouter.post(
+  "/admin/products/:id/sync-stripe",
+  authenticate,
+  authorize("admin"),
+  catalogProxy
+);
+catalogRouter.post("/internal/quote", authenticate, catalogProxy);
+catalogRouter.post(
   "/admin/products",
   authenticate,
   authorize("admin"),

@@ -1,6 +1,6 @@
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import { authenticate } from "../middleware/auth.middleware.js";
+import { authenticate, authorize } from "../middleware/auth.middleware.js";
 import ENV from "../config/env.js";
 
 const ordersRouter = express.Router();
@@ -23,9 +23,9 @@ const ordersProxy = createProxyMiddleware({
   },
 });
 
-ordersRouter.post("/:id", authenticate, ordersProxy);
-ordersRouter.get("/:id", authenticate, ordersProxy);
-ordersRouter.post("/:id", authenticate, ordersProxy);
+ordersRouter.post("/", authenticate, authorize("customer"), ordersProxy);
+// ordersRouter.get("/:id", authenticate, ordersProxy);
+// ordersRouter.post("/:id", authenticate, ordersProxy);
 
 ordersRouter.get("/health", ordersProxy);
 

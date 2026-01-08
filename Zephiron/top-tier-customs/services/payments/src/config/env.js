@@ -10,7 +10,7 @@ const ENV = {
     SECRET: process.env.STRIPE_SECRET,
     WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
   },
-  CLIENT: process.env.CLIENT_ORIGIN,
+  CLIENT: process.env.CLIENT_URL,
   UPSTREAM: {
     AUTH: process.env.AUTH_SERVICE_URL,
     CATALOG: process.env.CATALOG_SERVICE_URL,

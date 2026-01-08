@@ -13,6 +13,7 @@ const fetchJSON = async (url, options = {}) => {
 };
 
 export const getOrder = async (orderID) => {
+  console.log("orderID:", orderID);
   return fetchJSON(`${ENV.UPSTREAM.ORDERS}/${orderID}`, {
     headers: { "x-internal-secret": ENV.INTERNAL_SECRET },
   });
