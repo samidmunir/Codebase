@@ -20,7 +20,7 @@ export const getOrder = async (orderID) => {
 };
 
 export const markOrderPaid = async (orderID, payload) => {
-  return fetchJSON(`${ENV.UPSTREAM.ORDERS}/${orderID}/payment-succeeded`, {
+  return fetchJSON(`${ENV.UPSTREAM.ORDERS}/${orderID}`, {
     method: "POST",
     headers: { "x-internal-secret": ENV.INTERNAL_SECRET },
     body: JSON.stringify(payload),
