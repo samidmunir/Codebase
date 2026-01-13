@@ -8,6 +8,8 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 ## Projects
 
+### RAG app
+
 ## Zephiron
 
 ### top-tier-customs
