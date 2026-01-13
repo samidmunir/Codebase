@@ -214,4 +214,19 @@ chunks = split_documents(documents = documents)
 
 # initialize the embedding manager
 embedding_manager = EmbeddingManager()
-vectorStore = VectorStore()
+vector_store = VectorStore()
+
+"""
+Convert text (in each chunk) to embeddings
+"""
+texts = [doc.page_content for doc in chunks]
+
+"""
+Generate the embeddings
+"""
+embeddings = embedding_manager.generate_embeddings(texts = texts)
+
+"""
+Store in the Vector Database
+"""
+vector_store.add_documents(chunks, embeddings)
