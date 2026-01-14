@@ -281,3 +281,40 @@ class RAGRetriever:
 rag_retriever = RAGRetriever(vector_store, embedding_manager)
 retrieved_docs = rag_retriever.retrieve(query = "What is machine learning?")
 print(f"\nretrieved_docs ->\n{retrieved_docs}")
+
+"""
+Simple RAG pipeline with Groq LLM
+"""
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# groq_api_key = os.getenv("GROQ_API_KEY")
+groq_api_key = "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"
+
+llm = ChatGroq(groq_api_key = groq_api_key, model_name = "openai/gpt-oss-120b", temperature = 0.1, max_tokens = 1024)
+
+def rag_simple(query, retriever, llm, top_k = 3):
+    results = retriever.retrieve(query, top_k)
+    context = "\n\n".join([doc["content"] for doc in results]) if results else ""
+    if not context:
+        return "No relevant context found to answer the question."
+    
+    ## generate the answer using GROQ LLM
+    prompt = f"""
+        Use the following context to answer the question concisely.
+
+        Context: {context}
+
+        Question: {query}
+
+        Answer:"""
+    
+    response = llm.invoke(prompt.format(context = context, query = query))
+
+    return response.content
+
+
+answer = rag_simple("What is machine learning?", rag_retriever, llm)
+print(answer)
