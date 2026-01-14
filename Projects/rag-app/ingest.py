@@ -284,6 +284,7 @@ print(f"\nretrieved_docs ->\n{retrieved_docs}")
 
 """
 Simple RAG pipeline with Groq LLM
+3. Augmentation
 """
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
@@ -317,3 +318,39 @@ def rag_simple(query, retriever, llm, top_k = 3):
 
 answer = rag_simple("What is machine learning?", rag_retriever, llm)
 print(answer)
+
+def rag_advanced(query, retriever, llm, top_k = 5, min_score = 0.2, return_context = False):
+    results = retriever.retrieve(query, top_k = top_k, score_threshold = min_score)
+    if not results:
+        return {"answer": "No relevant context found.", "sources": [], "confidence": 0.0, "context": ""}
+    
+    context = "\n\n".join([doc["content"] for doc in results])
+    sources = [{
+        "source": doc["metadata"].get("source_file", doc["metadata"].get("source", "unknown")),
+        "page": doc["metadata"].get("page", "unknown"),
+        "score": doc["similarity_score"],
+        "preview": doc["content"][:300] + "...",
+    } for doc in results]
+    confidence = max([doc["similarity_score"] for doc in results])
+
+    prompt = f"""Use the following context to answer the question concisely.\n\nContext: {context}\n\nQuestion: {query}\n\nAnswer:"""
+    
+    response = llm.invoke(prompt.format(context = context, query = query))
+
+    output = {
+        "answer": response.content,
+        "sources": sources,
+        "confidence": confidence
+    }
+
+    if return_context:
+        output["context"] = context
+
+    return output
+
+result = rag_advanced("What is machine learning?", rag_retriever, llm, top_k = 3, min_score = 0.1, return_context = True)
+print("\nAdvanced RAG")
+print("--> Answer:", result["answer"])
+print("--> Sources:", result["sources"])
+print("--> Confidence:", result["confidence"])
+print("--> Context Preview:", result["context"][:300])
