@@ -1,5 +1,5 @@
 const Page = () => {
-  return <div>Welcome to Next.j 16!</div>;
+  return <h1>Welcome to Next.js 16!</h1>;
 };
 
 export default Page;
