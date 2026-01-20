@@ -12,6 +12,8 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 ### dev-events
 
+### maravex
+
 ## Zephiron
 
 ### top-tier-customs
