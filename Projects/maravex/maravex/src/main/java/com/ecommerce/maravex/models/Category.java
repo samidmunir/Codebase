@@ -1,4 +1,4 @@
-package com.ecommerce.maravex.model;
+package com.ecommerce.maravex.models;
 
 public class Category {
     private Long categoryId;

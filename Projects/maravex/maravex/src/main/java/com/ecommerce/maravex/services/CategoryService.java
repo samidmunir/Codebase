@@ -1,8 +1,8 @@
-package com.ecommerce.maravex.service;
+package com.ecommerce.maravex.services;
 
 import java.util.List;
 
-import com.ecommerce.maravex.model.Category;
+import com.ecommerce.maravex.models.Category;
 
 public interface CategoryService {
     List<Category> getAllCategories();
