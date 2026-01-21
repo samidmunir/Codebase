@@ -1,5 +1,7 @@
 package com.example.multithreading;
 
+import java.util.concurrent.TimeUnit;
+
 /*
     Process - a unit of execution, that has its own memory space.
     > a Java console application is a process.
@@ -28,6 +30,21 @@ public class Main {
         currentThread.setName("Main_Thread");
         currentThread.setPriority(Thread.MAX_PRIORITY);
         printThreadState(currentThread);
+
+        CustomThread customThread = new CustomThread();
+        customThread.start(); // asynchronous
+        // customThread.run(); // synchronous
+
+        for (int i = 0; i < 3; i++) {
+            System.out.print(" 1 ");
+
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println();
     }
 
     public static void printThreadState(Thread thread) {
