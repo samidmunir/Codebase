@@ -13,6 +13,5 @@ public class CustomThread extends Thread {
                 e.printStackTrace();
             }
         }
-        System.out.println();
     }
 }
