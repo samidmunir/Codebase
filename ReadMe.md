@@ -14,6 +14,8 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 ### maravex
 
+### lightvelocity
+
 ## Zephiron
 
 ### top-tier-customs
