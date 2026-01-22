@@ -21,7 +21,7 @@ export default function Footer() {
   return (
     <footer className="relative mt-16 border-t border-slate-200/70 dark:border-slate-800/70">
       {/* subtle brand glow */}
-      <div className="pointer-events-none absolute inset-x-0 -top-10 h-24 bg-gradient-to-r from-sky-500/10 via-cyan-400/10 to-violet-500/10 blur-2xl" />
+      <div className="pointer-events-none absolute inset-x-0 -top-10 h-24 bg-linear-to-r from-sky-500/10 via-cyan-400/10 to-violet-500/10 blur-2xl" />
 
       <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="grid gap-10 md:grid-cols-12">
@@ -29,7 +29,7 @@ export default function Footer() {
           <div className="md:col-span-5">
             <div className="flex items-center gap-3">
               <span className="relative grid place-items-center">
-                <span className="h-10 w-10 rounded-2xl bg-gradient-to-br from-sky-500 to-violet-500 shadow-sm" />
+                <span className="h-10 w-10 rounded-2xl bg-linear-to-br from-sky-500 to-violet-500 shadow-sm" />
                 <span className="pointer-events-none absolute text-[11px] font-extrabold text-white">
                   LV
                 </span>

@@ -7,13 +7,13 @@ export default function LandingPage() {
       <section className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 p-8 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/40 sm:p-12">
         {/* Hero glow */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-24 left-1/2 h-56 w-[780px] -translate-x-1/2 rounded-full bg-gradient-to-r from-sky-500/20 via-cyan-400/15 to-violet-500/20 blur-3xl" />
+          <div className="absolute -top-24 left-1/2 h-56 w-195 -translate-x-1/2 rounded-full bg-linear-to-r from-sky-500/20 via-cyan-400/15 to-violet-500/20 blur-3xl" />
         </div>
 
         <div className="relative grid gap-10 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-7">
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/60 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-slate-800/70 dark:bg-slate-950/40 dark:text-slate-200">
-              <span className="h-2 w-2 rounded-full bg-gradient-to-r from-sky-500 to-violet-500" />
+              <span className="h-2 w-2 rounded-full bg-linear-to-r from-sky-500 to-violet-500" />
               Fictional airline booking experience
             </div>
 
@@ -30,7 +30,7 @@ export default function LandingPage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/flights"
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-violet-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90"
+                className="inline-flex items-center justify-center rounded-full bg-linear-to-r from-sky-500 to-violet-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90"
               >
                 Search flights
               </Link>
@@ -124,7 +124,7 @@ export default function LandingPage() {
 function QuickStartRow({ title, desc }: { title: string; desc: string }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800/70 dark:bg-slate-950/40">
-      <div className="mt-0.5 h-2.5 w-2.5 rounded-full bg-gradient-to-r from-sky-500 to-violet-500" />
+      <div className="mt-0.5 h-2.5 w-2.5 rounded-full bg-linear-to-r from-sky-500 to-violet-500" />
       <div>
         <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">
           {title}

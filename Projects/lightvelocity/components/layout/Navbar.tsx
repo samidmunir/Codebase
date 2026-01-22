@@ -38,13 +38,13 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50">
       {/* Subtle top glow bar for brand identity */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-sky-500 via-cyan-400 to-violet-500" />
+      <div className="h-0.5 w-full bg-linear-to-r from-sky-500 via-cyan-400 to-violet-500" />
 
       <nav
         aria-label="Primary"
         className={cx(
           "border-b",
-          "backdrop-blur supports-[backdrop-filter]:backdrop-blur-md",
+          "backdrop-blur supports-backdrop-filter:backdrop-blur-md",
           "bg-white/80 dark:bg-slate-950/70",
           "border-slate-200/70 dark:border-slate-800/70",
         )}
@@ -61,7 +61,7 @@ export default function Navbar() {
               )}
             >
               <span className="relative grid place-items-center">
-                <span className="h-8 w-8 rounded-xl bg-gradient-to-br from-sky-500 to-violet-500 shadow-sm" />
+                <span className="h-8 w-8 rounded-xl bg-linear-to-br from-sky-500 to-violet-500 shadow-sm" />
                 <span className="pointer-events-none absolute text-[10px] font-bold text-white">
                   LV
                 </span>
@@ -104,7 +104,7 @@ export default function Navbar() {
                 href={rightLink.href}
                 className={cx(
                   "ml-2 inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold",
-                  "bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-sm",
+                  "bg-linear-to-r from-sky-500 to-violet-500 text-white shadow-sm",
                   "hover:opacity-95 active:opacity-90 transition",
                   "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
                 )}
@@ -132,20 +132,20 @@ export default function Navbar() {
               <span className="relative block h-4 w-5">
                 <span
                   className={cx(
-                    "absolute left-0 top-0 h-[2px] w-5 rounded bg-current transition-transform",
-                    mobileOpen && "translate-y-[7px] rotate-45",
+                    "absolute left-0 top-0 h-0.5 w-5 rounded bg-current transition-transform",
+                    mobileOpen && "translate-y-1.75 rotate-45",
                   )}
                 />
                 <span
                   className={cx(
-                    "absolute left-0 top-[7px] h-[2px] w-5 rounded bg-current transition-opacity",
+                    "absolute left-0 top-1.75 h-0.5 w-5 rounded bg-current transition-opacity",
                     mobileOpen ? "opacity-0" : "opacity-100",
                   )}
                 />
                 <span
                   className={cx(
-                    "absolute left-0 bottom-0 h-[2px] w-5 rounded bg-current transition-transform",
-                    mobileOpen && "-translate-y-[7px] -rotate-45",
+                    "absolute left-0 bottom-0 h-0.5 w-5 rounded bg-current transition-transform",
+                    mobileOpen && "-translate-y-1.75 -rotate-45",
                   )}
                 />
               </span>
@@ -188,7 +188,7 @@ export default function Navbar() {
                     href={rightLink.href}
                     className={cx(
                       "rounded-xl px-3 py-3 text-sm font-semibold text-white transition",
-                      "bg-gradient-to-r from-sky-500 to-violet-500 shadow-sm",
+                      "bg-linear-to-r from-sky-500 to-violet-500 shadow-sm",
                       "hover:opacity-95 active:opacity-90",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
                     )}

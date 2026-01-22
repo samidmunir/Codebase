@@ -28,8 +28,8 @@ export default function RootLayout({
       >
         {/* Background ambiance (subtle brand glow) */}
         <div className="pointer-events-none fixed inset-0 -z-10">
-          <div className="absolute -top-40 left-1/2 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-r from-sky-500/15 via-cyan-400/10 to-violet-500/15 blur-3xl" />
-          <div className="absolute bottom-[-220px] right-[-180px] h-[520px] w-[520px] rounded-full bg-violet-500/10 blur-3xl" />
+          <div className="absolute -top-40 left-1/2 h-130 w-225 -translate-x-1/2 rounded-full bg-linear-to-r from-sky-500/15 via-cyan-400/10 to-violet-500/15 blur-3xl" />
+          <div className="absolute -bottom-55 -right-45 h-130 w-130 rounded-full bg-violet-500/10 blur-3xl" />
         </div>
 
         <div className="min-h-dvh flex flex-col">
