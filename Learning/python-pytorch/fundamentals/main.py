@@ -61,3 +61,30 @@ print(f"random_tensor[0]: {random_tensor[0]}")
 
 # Create a random tensor with similar shape to an image tensor
 random_image_size_tensor = torch.rand(size = (224, 224, 3)) # height, width, color channel
+print(f"\nrandom_image_size_tensor (tensor): {random_image_size_tensor}")
+print(f"type(random_image_size_tensor): {type(random_image_size_tensor)}")
+print(f"random_image_size_tensor.ndim: {random_image_size_tensor.ndim}")
+print(f"random_image_size_tensor.shape: {random_image_size_tensor.shape}")
+print(f"random_image_size_tensor[0]: {random_image_size_tensor[0]}")
+
+# Zeros and Ones
+zeros = torch.zeros(size = (3, 4))
+print(f"\nzeros (tensor): {zeros}")
+print(f"type(zeros): {type(zeros)}")
+print(f"zeros.ndim: {zeros.ndim}")
+print(f"zeros.shape: {zeros.shape}")
+print(f"zeros[0]: {zeros[0]}")
+
+ones = torch.ones(size = (3, 4))
+print(f"\nones (tensor): {ones}")
+print(f"type(ones): {type(ones)}")
+print(f"ones.ndim: {ones.ndim}")
+print(f"ones.shape: {ones.shape}")
+print(f"ones[0]: {ones[0]}")
+
+print(f"\nones.dtype: {ones.dtype}")
+
+"""
+    Creating a range of tensors and tensors-like:
+"""
+print(f"\ntorch.range(0, 10): {torch.range(0, 10)}")
