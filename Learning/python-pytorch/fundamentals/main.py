@@ -43,3 +43,21 @@ print(f"type(TENSOR): {type(TENSOR)}")
 print(f"TENSOR.ndim: {TENSOR.ndim}")
 print(f"TENSOR.shape: {TENSOR.shape}")
 print(f"TENSOR[0]: {TENSOR[0]}")
+
+"""
+    Random Tensors
+    - they are important because the way many neural networks learn is that they start with tensors full of random numbers and then adjust those random numbers to better represent the data.
+        1. start with random numbers
+        2. look at data
+        3. update random numbers
+        4. repeat from #2
+"""
+random_tensor = torch.rand(3, 4)
+print(f"\nrandom_tensor (tensor): {random_tensor}")
+print(f"type(random_tensor): {type(random_tensor)}")
+print(f"random_tensor.ndim: {random_tensor.ndim}")
+print(f"random_tensor.shape: {random_tensor.shape}")
+print(f"random_tensor[0]: {random_tensor[0]}")
+
+# Create a random tensor with similar shape to an image tensor
+random_image_size_tensor = torch.rand(size = (224, 224, 3)) # height, width, color channel
