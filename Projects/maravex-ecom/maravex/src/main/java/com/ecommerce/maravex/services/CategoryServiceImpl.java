@@ -3,10 +3,10 @@ package com.ecommerce.maravex.services;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import com.ecommerce.maravex.exceptions.APIException;
+import com.ecommerce.maravex.exceptions.ResourceNotFoundException;
 import com.ecommerce.maravex.models.Category;
 import com.ecommerce.maravex.repositories.CategoryRepository;
 
@@ -27,13 +27,17 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void createCategory(Category category) {
+        Category savedCategory = this.categoryRepository.findByCategoryName(category.getCategoryName());
         this.categoryRepository.save(category);
+        if (savedCategory != null) {
+            throw new APIException("Category with the name " + category.getCategoryName() + " already exists.");
+        }
     }
 
     @Override
     public String deleteCategory(Long categoryId) {
         Category category = this.categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource Not Found."));
+            .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
 
         this.categoryRepository.delete(category);
         
@@ -43,7 +47,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Category updateCategory(Category category, Long categoryId) {
         Category savedCategory = this.categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource Not Found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
 
         category.setCategoryId(categoryId);
         savedCategory = this.categoryRepository.save(category);
