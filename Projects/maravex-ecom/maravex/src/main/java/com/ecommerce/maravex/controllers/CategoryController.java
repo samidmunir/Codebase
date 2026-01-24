@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.ecommerce.maravex.models.Category;
 import com.ecommerce.maravex.services.CategoryService;
 
@@ -23,15 +21,6 @@ import jakarta.validation.Valid;
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
-
-    /*
-        This constructor is commented out because we are using @Autowired annotation for dependency injection -> type: [CategoryService]
-    */
-    /*
-    public CategoryController(CategoryService categoryService) {
-        this.categoryService = categoryService;
-    }
-    */
 
     @GetMapping("/api/public/categories")
     public ResponseEntity<List<Category>> getAllCategories() {
@@ -49,25 +38,17 @@ public class CategoryController {
 
     @DeleteMapping("/api/admin/categories/{categoryId}")
     public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
-        try {
-            String status = categoryService.deleteCategory(categoryId);
-            
-            return new ResponseEntity<>(status, HttpStatus.OK);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(e.getReason(), e.getStatusCode());
-        }
+        String status = this.categoryService.deleteCategory(categoryId);
+
+        return new ResponseEntity<>(status, HttpStatus.OK);
     }
 
     @PutMapping("/api/admin/categories/{categoryId}")
-    public ResponseEntity<String> updateCategory(@RequestBody Category category, @PathVariable Long categoryId) {
-        try {
-            Category savedCategory = this.categoryService.updateCategory(category, categoryId);
+    public ResponseEntity<String> updateCategory(@Valid @RequestBody Category category, @PathVariable Long categoryId) {
+        Category savedCategory = this.categoryService.updateCategory(category, categoryId);
 
-            String responseMessage = "Category with categoryId: " + categoryId + "updated successfully.";
+        String responseMessage = "Category with categoryId: " + categoryId + "updated successfully.";
 
-            return new ResponseEntity<>(responseMessage, HttpStatus.OK);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(e.getReason(), e.getStatusCode());
-        }
+        return new ResponseEntity<>(responseMessage, HttpStatus.OK);
     }
 }

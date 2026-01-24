@@ -12,17 +12,17 @@ import com.ecommerce.maravex.repositories.CategoryRepository;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
-    /*
-        Deprecated because we are now utilizing our database & repository layer.
-    */
-    // private List<Category> categories = new ArrayList<>();
-
     @Autowired
     private CategoryRepository categoryRepository;
 
     @Override
     public List<Category> getAllCategories() {
-        return this.categoryRepository.findAll();
+        List<Category> categories = this.categoryRepository.findAll();
+        if (categories.isEmpty()) {
+            throw new APIException("No category created until now.");
+        }
+        
+        return categories;
     }
 
     @Override
