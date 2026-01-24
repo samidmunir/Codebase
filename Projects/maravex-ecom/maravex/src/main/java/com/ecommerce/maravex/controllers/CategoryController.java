@@ -17,6 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 import com.ecommerce.maravex.models.Category;
 import com.ecommerce.maravex.services.CategoryService;
 
+import jakarta.validation.Valid;
+
 @RestController
 public class CategoryController {
     @Autowired
@@ -39,7 +41,7 @@ public class CategoryController {
     }
 
     @PostMapping("/api/public/categories")
-    public ResponseEntity<String> createCategory(@RequestBody Category category) {
+    public ResponseEntity<String> createCategory(@Valid @RequestBody Category category) {
         this.categoryService.createCategory(category);
         
         return new ResponseEntity<>("Category added successfully.", HttpStatus.CREATED);
