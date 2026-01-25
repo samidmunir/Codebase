@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.ecommerce.maravex.models.Category;
+import com.ecommerce.maravex.payload.CategoryResponse;
 import com.ecommerce.maravex.services.CategoryService;
 
 import jakarta.validation.Valid;
@@ -23,10 +24,10 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping("/api/public/categories")
-    public ResponseEntity<List<Category>> getAllCategories() {
-        List<Category> categories = this.categoryService.getAllCategories();
+    public ResponseEntity<CategoryResponse> getAllCategories() {
+        CategoryResponse categoryResponse = this.categoryService.getAllCategories();
 
-        return new ResponseEntity<>(categories, HttpStatus.OK);
+        return new ResponseEntity<>(categoryResponse, HttpStatus.OK);
     }
 
     @PostMapping("/api/public/categories")

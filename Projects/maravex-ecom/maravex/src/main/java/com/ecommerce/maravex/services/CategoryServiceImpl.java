@@ -1,20 +1,27 @@
 package com.ecommerce.maravex.services;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.maravex.exceptions.APIException;
 import com.ecommerce.maravex.exceptions.ResourceNotFoundException;
 import com.ecommerce.maravex.models.Category;
+import com.ecommerce.maravex.payload.CategoryDTO;
 import com.ecommerce.maravex.payload.CategoryResponse;
 import com.ecommerce.maravex.repositories.CategoryRepository;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
+    
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Override
     public CategoryResponse getAllCategories() {
@@ -22,8 +29,16 @@ public class CategoryServiceImpl implements CategoryService {
         if (categories.isEmpty()) {
             throw new APIException("No category created until now.");
         }
+
+        List<CategoryDTO> categoryDTOs = categories
+            .stream()
+            .map(category -> modelMapper.map(category, CategoryDTO.class))
+            .toList();
+
+        CategoryResponse categoryResponse = new CategoryResponse();
+        categoryResponse.setContent(categoryDTOs);
         
-        return categories;
+        return categoryResponse;
     }
 
     @Override
