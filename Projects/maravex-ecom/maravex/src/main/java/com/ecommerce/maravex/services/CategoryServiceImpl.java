@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.ecommerce.maravex.exceptions.APIException;
 import com.ecommerce.maravex.exceptions.ResourceNotFoundException;
 import com.ecommerce.maravex.models.Category;
+import com.ecommerce.maravex.payload.CategoryResponse;
 import com.ecommerce.maravex.repositories.CategoryRepository;
 
 @Service
@@ -16,7 +17,7 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryRepository categoryRepository;
 
     @Override
-    public List<Category> getAllCategories() {
+    public CategoryResponse getAllCategories() {
         List<Category> categories = this.categoryRepository.findAll();
         if (categories.isEmpty()) {
             throw new APIException("No category created until now.");
