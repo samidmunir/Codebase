@@ -4,8 +4,24 @@ public class Main {
 
     public static void main(String[] args) {
         DownloadThread downloader = new DownloadThread();
+        InstallThread installer = new InstallThread();
 
-        System.out.println(downloader.getName() + " starting package downloads...");
         downloader.start();
+
+        try {
+            downloader.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        installer.start();
+
+        try {
+            installer.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("\nProduct download & install complete!");
     }
 }
