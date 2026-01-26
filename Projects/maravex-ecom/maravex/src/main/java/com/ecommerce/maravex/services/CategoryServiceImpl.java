@@ -1,7 +1,6 @@
 package com.ecommerce.maravex.services;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,12 +41,18 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public void createCategory(Category category) {
-        Category savedCategory = this.categoryRepository.findByCategoryName(category.getCategoryName());
-        this.categoryRepository.save(category);
-        if (savedCategory != null) {
+    public CategoryDTO createCategory(CategoryDTO categorDTO) {
+        Category category = modelMapper.map(categorDTO, Category.class);
+
+        Category categoryDB = this.categoryRepository.findByCategoryName(category.getCategoryName());
+        if (categoryDB != null) {
             throw new APIException("Category with the name " + category.getCategoryName() + " already exists.");
         }
+        Category savedCategory = this.categoryRepository.save(category);
+
+        CategoryDTO savedCategoryDTO = modelMapper.map(savedCategory, CategoryDTO.class);
+
+        return savedCategoryDTO;
     }
 
     @Override

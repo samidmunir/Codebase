@@ -1,7 +1,5 @@
 package com.ecommerce.maravex.controllers;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.ecommerce.maravex.models.Category;
+import com.ecommerce.maravex.payload.CategoryDTO;
 import com.ecommerce.maravex.payload.CategoryResponse;
 import com.ecommerce.maravex.services.CategoryService;
 
@@ -31,10 +30,10 @@ public class CategoryController {
     }
 
     @PostMapping("/api/public/categories")
-    public ResponseEntity<String> createCategory(@Valid @RequestBody Category category) {
-        this.categoryService.createCategory(category);
+    public ResponseEntity<CategoryDTO> createCategory(@Valid @RequestBody CategoryDTO categoryDTO) {
+        CategoryDTO savedCategoryDTO = this.categoryService.createCategory(categoryDTO);
         
-        return new ResponseEntity<>("Category added successfully.", HttpStatus.CREATED);
+        return new ResponseEntity<>(savedCategoryDTO, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/api/admin/categories/{categoryId}")
