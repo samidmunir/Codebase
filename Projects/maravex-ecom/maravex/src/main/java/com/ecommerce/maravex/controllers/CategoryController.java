@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import com.ecommerce.maravex.models.Category;
 import com.ecommerce.maravex.payload.CategoryDTO;
 import com.ecommerce.maravex.payload.CategoryResponse;
 import com.ecommerce.maravex.services.CategoryService;
@@ -44,11 +43,9 @@ public class CategoryController {
     }
 
     @PutMapping("/api/admin/categories/{categoryId}")
-    public ResponseEntity<String> updateCategory(@Valid @RequestBody Category category, @PathVariable Long categoryId) {
-        Category savedCategory = this.categoryService.updateCategory(category, categoryId);
+    public ResponseEntity<CategoryDTO> updateCategory(@Valid @RequestBody CategoryDTO categoryDTO, @PathVariable Long categoryId) {
+        CategoryDTO savedCategoryDTO = this.categoryService.updateCategory(categoryDTO, categoryId);
 
-        String responseMessage = "Category with categoryId: " + categoryId + "updated successfully.";
-
-        return new ResponseEntity<>(responseMessage, HttpStatus.OK);
+        return new ResponseEntity<>(savedCategoryDTO, HttpStatus.OK);
     }
 }

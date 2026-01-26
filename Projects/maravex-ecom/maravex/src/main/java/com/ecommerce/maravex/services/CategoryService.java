@@ -1,6 +1,5 @@
 package com.ecommerce.maravex.services;
 
-import com.ecommerce.maravex.models.Category;
 import com.ecommerce.maravex.payload.CategoryDTO;
 import com.ecommerce.maravex.payload.CategoryResponse;
 
@@ -11,5 +10,5 @@ public interface CategoryService {
 
     String deleteCategory(Long categoryId);
 
-    Category updateCategory(Category category, Long categoryId);
+    CategoryDTO updateCategory(CategoryDTO categoryDTO, Long categoryId);
 }
