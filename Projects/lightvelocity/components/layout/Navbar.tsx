@@ -1,210 +1,104 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { GiCrossedAirFlows } from "react-icons/gi";
+import { FaRegBell } from "react-icons/fa";
+import { FiSearch } from "react-icons/fi";
 
-type NavItem = {
-  label: string;
-  href: string;
-};
-
-const NAV_ITEMS: NavItem[] = [
-  { label: "Flights", href: "/flights" },
-  { label: "My Trips", href: "/trips" },
+const navItemsPrimary = [
+  {
+    id: 0,
+    label: "Book",
+    href: "/flights",
+  },
+  {
+    id: 1,
+    label: "Check-In",
+    href: "/check-in",
+  },
+  {
+    id: 2,
+    label: "My Trips",
+    href: "/my-trips",
+  },
+  {
+    id: 3,
+    label: "Flight Status",
+    href: "/flights/status",
+  },
 ];
 
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
+const navItemsSecondary = [
+  {
+    id: 0,
+    label: "Travel Info",
+    href: "/travel-info",
+  },
+  {
+    id: 1,
+    label: "Velocity Miles",
+    href: "/miles",
+  },
+  {
+    id: 2,
+    label: "Need Help?",
+    href: "/help",
+  },
+];
 
-function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(href + "/");
-}
-
-export default function Navbar() {
-  const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  const rightLink = useMemo(() => ({ label: "Sign in", href: "/auth" }), []);
-
-  useEffect(() => {
-    // Close mobile menu on route change
-    setMobileOpen(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
-
+const Navbar = () => {
   return (
-    <header className="sticky top-0 z-50">
-      {/* Subtle top glow bar for brand identity */}
-      <div className="h-0.5 w-full bg-linear-to-r from-sky-500 via-cyan-400 to-violet-500" />
-
-      <nav
-        aria-label="Primary"
-        className={cx(
-          "border-b",
-          "backdrop-blur supports-backdrop-filter:backdrop-blur-md",
-          "bg-white/80 dark:bg-slate-950/70",
-          "border-slate-200/70 dark:border-slate-800/70",
-        )}
-      >
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="flex h-16 items-center justify-between">
-            {/* Brand */}
+    <header className="bg-zinc-950 w-full px-8 py-2 flex justify-between items-center">
+      {/* Desktop Nav - Logo */}
+      <div className="flex items-center gap-4">
+        <GiCrossedAirFlows size={28} className="text-sky-500" />
+        <Link href="/" className="text-[28px] font-bold">
+          <span className="text-zinc-100">Light</span>
+          <span className="text-sky-500">Velocity</span>
+        </Link>
+      </div>
+      {/* Desktop Nav - Main Items */}
+      <nav className="flex items-center gap-8 border-2">
+        <div className="flex items-center gap-4">
+          {navItemsPrimary.map((item) => (
             <Link
-              href="/"
-              className={cx(
-                "group inline-flex items-center gap-2",
-                "font-semibold tracking-tight",
-                "text-slate-900 dark:text-slate-50",
-              )}
+              key={item.id}
+              href={item.href}
+              className="text-zinc-300 font-semibold uppercase text-[16px]"
             >
-              <span className="relative grid place-items-center">
-                <span className="h-8 w-8 rounded-xl bg-linear-to-br from-sky-500 to-violet-500 shadow-sm" />
-                <span className="pointer-events-none absolute text-[10px] font-bold text-white">
-                  LV
-                </span>
-              </span>
-
-              <span className="text-[15px]">
-                Lightvelocity
-                <span className="ml-2 align-middle text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Airline
-                </span>
-              </span>
+              {item.label}
             </Link>
-
-            {/* Desktop nav */}
-            <div className="hidden items-center gap-2 md:flex">
-              <div className="flex items-center gap-1 rounded-full border border-slate-200/70 bg-white/60 px-1 py-1 dark:border-slate-800/70 dark:bg-slate-950/40">
-                {NAV_ITEMS.map((item) => {
-                  const active = isActive(pathname, item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cx(
-                        "rounded-full px-4 py-2 text-sm font-medium transition",
-                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
-                        active
-                          ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950"
-                          : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-white",
-                      )}
-                      aria-current={active ? "page" : undefined}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* CTA */}
-              <Link
-                href={rightLink.href}
-                className={cx(
-                  "ml-2 inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold",
-                  "bg-linear-to-r from-sky-500 to-violet-500 text-white shadow-sm",
-                  "hover:opacity-95 active:opacity-90 transition",
-                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
-                )}
-              >
-                {rightLink.label}
-              </Link>
-            </div>
-
-            {/* Mobile button */}
-            <button
-              type="button"
-              className={cx(
-                "md:hidden inline-flex items-center justify-center",
-                "h-10 w-10 rounded-xl border",
-                "border-slate-200 bg-white/70 text-slate-900",
-                "dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-100",
-                "hover:bg-slate-100 dark:hover:bg-slate-900/50 transition",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
-              )}
-              aria-label="Toggle menu"
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen((v) => !v)}
+          ))}
+        </div>
+        <div className="flex items-center gap-4">
+          {navItemsSecondary.map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className="text-zinc-300 font-medium text-[14px]"
             >
-              {/* Hamburger / X */}
-              <span className="relative block h-4 w-5">
-                <span
-                  className={cx(
-                    "absolute left-0 top-0 h-0.5 w-5 rounded bg-current transition-transform",
-                    mobileOpen && "translate-y-1.75 rotate-45",
-                  )}
-                />
-                <span
-                  className={cx(
-                    "absolute left-0 top-1.75 h-0.5 w-5 rounded bg-current transition-opacity",
-                    mobileOpen ? "opacity-0" : "opacity-100",
-                  )}
-                />
-                <span
-                  className={cx(
-                    "absolute left-0 bottom-0 h-0.5 w-5 rounded bg-current transition-transform",
-                    mobileOpen && "-translate-y-1.75 -rotate-45",
-                  )}
-                />
-              </span>
-            </button>
-          </div>
-
-          {/* Mobile menu */}
-          <div
-            className={cx(
-              "md:hidden overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
-              mobileOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
-            )}
-          >
-            <div className="pb-5 pt-2">
-              <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-2 dark:border-slate-800/70 dark:bg-slate-950/40">
-                <div className="flex flex-col gap-1">
-                  {NAV_ITEMS.map((item) => {
-                    const active = isActive(pathname, item.href);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cx(
-                          "rounded-xl px-3 py-3 text-sm font-semibold transition",
-                          active
-                            ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950"
-                            : "text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900/60",
-                          "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
-                        )}
-                        aria-current={active ? "page" : undefined}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-
-                  <div className="my-1 h-px bg-slate-200/70 dark:bg-slate-800/70" />
-
-                  <Link
-                    href={rightLink.href}
-                    className={cx(
-                      "rounded-xl px-3 py-3 text-sm font-semibold text-white transition",
-                      "bg-linear-to-r from-sky-500 to-violet-500 shadow-sm",
-                      "hover:opacity-95 active:opacity-90",
-                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
-                    )}
-                  >
-                    {rightLink.label}
-                  </Link>
-                </div>
-              </div>
-
-              <p className="mt-3 px-1 text-xs text-slate-500 dark:text-slate-400">
-                Fast booking. Clean experiences. Fictional airline.
-              </p>
-            </div>
-          </div>
+              {item.label}
+            </Link>
+          ))}
         </div>
       </nav>
+      {/* Desktop Nav - Right User Controls */}
+      <div className="flex items-center gap-4">
+        <Link
+          href="/auth/signup"
+          className="text-zinc-100 uppercase font-semibold px-2 py-1"
+        >
+          Sign Up
+        </Link>
+        <Link
+          href="/auth/signup"
+          className="text-zinc-100 uppercase font-semibold bg-red-500 px-2 py-1"
+        >
+          Log In
+        </Link>
+        <FaRegBell size={28} className="text-zinc-100" />
+        <FiSearch size={28} className="text-zinc-100" />
+      </div>
     </header>
   );
-}
+};
+
+export default Navbar;

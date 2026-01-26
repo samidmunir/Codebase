@@ -18,30 +18,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={[
-          inter.className,
-          // App-wide base styling (works nicely with your new Navbar/Footer)
-          "min-h-dvh bg-white text-slate-900 antialiased",
-          "dark:bg-slate-950 dark:text-slate-50",
-        ].join(" ")}
-      >
-        {/* Background ambiance (subtle brand glow) */}
-        <div className="pointer-events-none fixed inset-0 -z-10">
-          <div className="absolute -top-40 left-1/2 h-130 w-225 -translate-x-1/2 rounded-full bg-linear-to-r from-sky-500/15 via-cyan-400/10 to-violet-500/15 blur-3xl" />
-          <div className="absolute -bottom-55 -right-45 h-130 w-130 rounded-full bg-violet-500/10 blur-3xl" />
-        </div>
-
-        <div className="min-h-dvh flex flex-col">
+      <body className={inter.className}>
+        <main>
           <Navbar />
-
           {/* Main content area */}
-          <main className="flex-1">
-            <section className="mx-auto max-w-6xl px-6">{children}</section>
-          </main>
-
+          <section>
+            <section>{children}</section>
+          </section>
           <Footer />
-        </div>
+        </main>
       </body>
     </html>
   );
