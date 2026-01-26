@@ -34,7 +34,7 @@ const navItemsSecondary = [
   },
   {
     id: 1,
-    label: "Velocity Miles",
+    label: "VelocityMiles",
     href: "/miles",
   },
   {
