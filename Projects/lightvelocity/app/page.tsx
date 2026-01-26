@@ -89,8 +89,35 @@ const FlightSearch = () => {
 
 const Hero = () => {
   return (
-    <main>
-      <h1>Hero Component</h1>
+    <main className="relative w-full h-150 overflow-hidden">
+      {/* Background Image */}
+      <section
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage:
+            "url('https://images.trvl-media.com/place/180023/95ef1260-b69c-42e7-94b7-804f81f1d796.jpg')",
+        }}
+      />
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-linear-to-b from-black/70 via-black/50 to-black/80" />
+      {/* Floating Content */}
+      <div className="relative z-10 h-full flex items-center">
+        <div className="ml-40">
+          <h1 className="text-[48px] font-bold uppercase text-zinc-100">
+            Book your next trip
+          </h1>
+          <p className="text-[24px] font-bold text-zinc-100">
+            Explore our current flight deals and <br /> plan your next
+            adventure.
+          </p>
+          <button
+            type="button"
+            className="text-zinc-100 uppercase font-medium bg-red-500 px-3 py-1.5 text-[24px] mt-4"
+          >
+            Explore Offers
+          </button>
+        </div>
+      </div>
     </main>
   );
 };
