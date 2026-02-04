@@ -25,3 +25,5 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 ### java-programming
 
 ### python-pytorch
+
+### rust-programming
