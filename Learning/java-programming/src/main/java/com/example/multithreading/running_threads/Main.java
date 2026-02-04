@@ -3,11 +3,11 @@ package com.example.multithreading.running_threads;
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("\nMain thread running...");
+        System.out.println("\nMain thread is running!");
 
         try {
-            System.out.println("\nMain thread is paused for 1s...");
-            Thread.sleep(1000);
+            System.out.println("\n> Main thread is paused for 2s...");
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -35,7 +35,7 @@ public class Main {
         System.out.println("\n" + threadZero.getName() + " is starting...");
         threadZero.start();
 
-        System.out.println("\nMain thread would continue here...");
+        System.out.println("\nMain thread would continue here -->");
 
         try {
             Thread.sleep(2000);

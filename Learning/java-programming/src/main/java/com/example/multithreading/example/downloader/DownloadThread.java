@@ -4,7 +4,7 @@ public class DownloadThread extends Thread {
 
     @Override
     public void run() {
-        System.out.println(Thread.currentThread().getName() + " starting package downloads...");
+        System.out.println("\n" + Thread.currentThread().getName() + " starting package downloads...");
 
         for (int i = 0; i < 3; i++) {
             System.out.println("- Downloading package [" + (i + 1) + "]");
@@ -13,6 +13,10 @@ public class DownloadThread extends Thread {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                System.out.println(Thread.currentThread().getName() + " was interrupted!");
+                Thread.currentThread().interrupt();
+
+                return;
             }
         }
     }

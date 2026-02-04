@@ -4,7 +4,8 @@ public class InstallThread extends Thread {
 
     @Override
     public void run() {
-        System.out.println(Thread.currentThread().getName() + " starting package installation...");
+        System.out.println("\n" + Thread.currentThread().getName() + " starting package installation...");
+        
         for (int i = 0; i < 3; i++) {
             System.out.println("- Installing package [" + (i + 1) + "]");
 
