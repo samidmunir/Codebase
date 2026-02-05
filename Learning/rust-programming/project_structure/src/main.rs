@@ -18,6 +18,8 @@
             * a library crate does not have a main function and does not compile to be an executable program.
 
     A module is an organizational container that encapsulates related code.
+
+    A crate root is the base/foundation of a crate (the starting point for the compiler).
 */
 
 fn main() {
