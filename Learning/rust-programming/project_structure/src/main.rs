@@ -20,6 +20,12 @@
     A module is an organizational container that encapsulates related code.
 
     A crate root is the base/foundation of a crate (the starting point for the compiler).
+
+    1. in-file mod declaration
+    2. external file mod declaration (.rs extension within src folder)
+    3. external folder mod with mod.rs file
+
+    You cannot have two Rust modules with the same name (orders.rs vs. orders folder w/ mod.rs)...
 */
 
 fn main() {

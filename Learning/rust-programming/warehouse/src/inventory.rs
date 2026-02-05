@@ -1,4 +1,3 @@
-
 const FLOOR_SPACE: i32 = 10000;
 pub const MANAGER: &str = "Sami M.";
 

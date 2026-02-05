@@ -1,8 +1,6 @@
 mod inventory;
 
-mod orders {
-    pub const MANAGER: &str = "Razz K.";
-}
+mod orders;
 
 fn main() {
     println!("\nThe manager of our inventory is {}", inventory::MANAGER);
