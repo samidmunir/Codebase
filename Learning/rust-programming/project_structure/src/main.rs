@@ -16,6 +16,8 @@
     - Library Cate
         > exports functionality for other Rust programs to share and use.
             * a library crate does not have a main function and does not compile to be an executable program.
+
+    A module is an organizational container that encapsulates related code.
 */
 
 fn main() {
