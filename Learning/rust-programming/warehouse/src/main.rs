@@ -15,10 +15,10 @@ fn main() {
 
     inventory::talk_to_manager();
 
-    let favorite_category = inventory::ProductCategory::Hammer;
+    let favorite_category = inventory::products::ProductCategory::Hammer;
     println!("\nfavorite_category = {favorite_category:?}");
 
-    let tall_ladder = inventory::Item {
+    let tall_ladder = inventory::products::Item {
         name: String::from("Ladder-o-matic 2000"),
         category: favorite_category,
         quantity: 100,

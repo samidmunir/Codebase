@@ -26,6 +26,17 @@
     3. external folder mod with mod.rs file
 
     You cannot have two Rust modules with the same name (orders.rs vs. orders folder w/ mod.rs)...
+
+    You can create modules within other modules. These are called submodules.
+    
+    A submodule is a module that exists within another (parent) module.
+    - in-line
+    - file.rs
+    - folder/mod.rs
+
+    An absolute path is the full, complete path to a name starting from the crate root.
+
+    A relative path is the path to a name starting from the current location/module.
 */
 
 fn main() {
