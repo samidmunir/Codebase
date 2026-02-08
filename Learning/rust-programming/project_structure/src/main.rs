@@ -37,6 +37,8 @@
     An absolute path is the full, complete path to a name starting from the crate root.
 
     A relative path is the path to a name starting from the current location/module.
+
+    The "use" keyword brings a name into the current scope. It creates a "shortcut" to a name in a nested module.
 */
 
 fn main() {
