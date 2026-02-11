@@ -13,6 +13,7 @@ pub struct Item {
 
 impl Item {
     pub fn new(name: String, category: ProductCategory, quantity: u32) -> Self {
+        super::
         Self {
             name,
             category,
