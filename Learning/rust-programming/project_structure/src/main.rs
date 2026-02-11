@@ -39,6 +39,11 @@
     A relative path is the path to a name starting from the current location/module.
 
     The "use" keyword brings a name into the current scope. It creates a "shortcut" to a name in a nested module.
+
+    The self keyword refers to the after-mentioned module; whatever is the last module before the scope-resolution operator.
+
+    The super keyword comes into play when a child module wants to refer to something public within the parent module
+    - hierarchical relation
 */
 
 fn main() {

@@ -10,3 +10,13 @@ pub struct Item {
     pub category: ProductCategory,
     pub quantity: u32,
 }
+
+impl Item {
+    pub fn new(name: String, category: ProductCategory, quantity: u32) -> Self {
+        Self {
+            name,
+            category,
+            quantity,
+        }
+    }
+}
