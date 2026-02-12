@@ -13,7 +13,7 @@ public class FirstTest {
 
     @BeforeClass
     public void setUp() {
-        System.setProperty("webdriver.chrome.driver", "/Users/samidmunir/Downloads/chromedriver-mac-arm64/chromedriver");
+        // Selenium 4 uses Selenium Manager to auto-download the correct ChromeDriver
         driver = new ChromeDriver();
         driver.manage();
         driver.get("https://opensource-demo.orangehrmlive.com/web/index.php/auth/login");
