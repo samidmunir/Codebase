@@ -3,5 +3,5 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Println("Welcome to Rust programing!")
+	fmt.Println("Welcome to Go programing!")
 }
