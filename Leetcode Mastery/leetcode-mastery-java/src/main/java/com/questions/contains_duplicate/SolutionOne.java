@@ -2,6 +2,10 @@ package com.questions.contains_duplicate;
 
 import java.util.Arrays;
 
+/*
+    Runtime: 25ms
+    Memory: 76.74MB
+*/
 public class SolutionOne {
     public boolean containsDuplicate(int[] nums) {
         if (nums.length == 0) {

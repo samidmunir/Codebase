@@ -27,7 +27,8 @@ public class Main {
         * -10^9 <= nums[i] <= 10^9
     */
     public static void main(String[] args) {
-        SolutionOne sol1 = new SolutionOne();
+        // SolutionOne sol1 = new SolutionOne();
+        SolutionTwo sol1 = new SolutionTwo();
         
         int[] nums = {1, 2, 3, 1};
         System.out.println("\nExample 1)\n----------");
