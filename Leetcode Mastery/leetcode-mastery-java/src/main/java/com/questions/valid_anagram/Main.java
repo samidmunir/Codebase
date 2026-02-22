@@ -35,8 +35,8 @@ public class Main {
         System.out.println("s: " + s + ", t: " + t);
         System.out.println("Output: " + sol1.isAnagram(s, t));
 
-        s = new String("");
-        t = new String("");
+        s = new String("aacc");
+        t = new String("ccac");
         System.out.println("\nExample 3)\n----------\n");
         System.out.println("s: " + s + ", t: " + t);
         System.out.println("Output: " + sol1.isAnagram(s, t));

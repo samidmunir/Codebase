@@ -36,10 +36,12 @@ public class SolutionOne {
         }
 
         for (int i = 0; i < t.length(); i++) {
-            if (sCharsMap.containsKey(t.charAt(i)) && (tCharsMap.get(t.charAt(i)) == sCharsMap.get(t.charAt(i)))) {
-                continue;
-            } else {
+            if (!sCharsMap.containsKey(t.charAt(i))) {
                 return false;
+            } else {
+                if (sCharsMap.get(t.charAt(i)) != tCharsMap.get(t.charAt(i))) {
+                    return false;
+                }
             }
         }
 
