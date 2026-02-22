@@ -30,6 +30,7 @@ public class Helicopter extends Aircraft {
 
     @Override
     public String toString() {
+        System.out.println("\nHelicopter.toString() called...");
         String helicopter = super.toString() + "\n- # engine blades: " + numberOfEngineBlades;
 
         return helicopter;

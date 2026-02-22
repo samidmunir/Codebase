@@ -40,6 +40,7 @@ public class Aircraft {
 
     @Override
     public String toString() {
+        System.out.println("\nAircraft.toString() called...");
         String aircraft = manufacturer + " " + model + "\n- # engines: " + numberOfEngines;
 
         return aircraft;
