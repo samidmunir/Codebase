@@ -21,7 +21,8 @@ public class Main {
         * s and t consist of lowercase English letters.
     */
     public static void main(String[] args) {
-        SolutionOne sol1 = new SolutionOne();
+        // SolutionOne sol1 = new SolutionOne();
+        SolutionTwo sol1 = new SolutionTwo();
 
         String s = "anagram";
         String t = "nagaram";
