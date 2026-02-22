@@ -25,19 +25,19 @@ public class Main {
 
         String s = "anagram";
         String t = "nagaram";
-        System.out.println("\nExample 1)\n----------\n");
+        System.out.println("\nExample 1)\n----------");
         System.out.println("s: " + s + ", t: " + t);
         System.out.println("Output: " + sol1.isAnagram(s, t));
 
         s = new String("rat");
         t = new String("car");
-        System.out.println("\nExample 2)\n----------\n");
+        System.out.println("\nExample 2)\n----------");
         System.out.println("s: " + s + ", t: " + t);
         System.out.println("Output: " + sol1.isAnagram(s, t));
 
         s = new String("aacc");
         t = new String("ccac");
-        System.out.println("\nExample 3)\n----------\n");
+        System.out.println("\nExample 3)\n----------");
         System.out.println("s: " + s + ", t: " + t);
         System.out.println("Output: " + sol1.isAnagram(s, t));
     }

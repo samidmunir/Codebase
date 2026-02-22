@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 /*
     Runtime: 25ms
-    Memory: 76.74MB
+    Memory: 47.46MB
 */
 public class SolutionOne {
     public boolean isAnagram(String s, String t) {
@@ -26,22 +26,24 @@ public class SolutionOne {
         }
 
         for (int i = 0; i < t.length(); i++) {
-            if (tCharsMap.containsKey(s.charAt(i))) {
-                int freq = tCharsMap.get(s.charAt(i));
+            if (tCharsMap.containsKey(t.charAt(i))) {
+                int freq = tCharsMap.get(t.charAt(i));
                 freq++;
-                tCharsMap.replace(s.charAt(i), freq);
+                tCharsMap.replace(t.charAt(i), freq);
             } else {
-                tCharsMap.put(s.charAt(i), 1);
+                tCharsMap.put(t.charAt(i), 1);
             }
         }
 
         for (int i = 0; i < t.length(); i++) {
-            if (!sCharsMap.containsKey(t.charAt(i))) {
-                return false;
-            } else {
-                if (sCharsMap.get(t.charAt(i)) != tCharsMap.get(t.charAt(i))) {
+            if (sCharsMap.containsKey(t.charAt(i))) {
+                if (sCharsMap.get(t.charAt(i)).equals(tCharsMap.get(t.charAt(i)))) {
+                    continue;
+                } else {
                     return false;
                 }
+            } else {
+                return false;
             }
         }
 
