@@ -22,7 +22,8 @@ public class Main {
     */
     public static void main(String[] args) {
         // SolutionOne sol1 = new SolutionOne();
-        SolutionTwo sol1 = new SolutionTwo();
+        // SolutionTwo sol1 = new SolutionTwo();
+        SolutionThree sol1 = new SolutionThree();
 
         String s = "anagram";
         String t = "nagaram";
