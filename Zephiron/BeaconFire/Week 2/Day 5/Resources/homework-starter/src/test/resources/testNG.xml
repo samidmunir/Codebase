@@ -1,0 +1,3 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<suite name="mock the Leetcode judgment system">
+</suite>
