@@ -1,0 +1,24 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Appium Suite">
+
+    <test name="Smoke Test">
+        <classes>
+            <class name="tests.LaunchTest"/>
+        </classes>
+    </test>
+
+    <test name="Feature Tests">
+        <classes>
+            <class name="tests.PreferenceSwitchTest"/>
+            <class name="tests.SeekBarTest"/>
+            <class name="tests.WebViewTest"/>
+        </classes>
+    </test>
+
+    <test name="End To End Flow">
+        <classes>
+            <class name="tests.ApiDemosFlowTest"/>
+        </classes>
+    </test>
+
+</suite>
