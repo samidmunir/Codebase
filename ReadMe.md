@@ -8,11 +8,13 @@ Sami Munir | samidmunir@outlook.com | Rutgers University CS '24
 
 #### user-fav-num-input
 
-## Java Programming
+## C++ Programming
 
 #### hello-world
 
-## C++ Programming
+#### basics
+
+## Java Programming
 
 #### hello-world
 
