@@ -600,7 +600,9 @@ def main():
     print(f"Path found with {len(path)} states.")
     print(f"Explored {len(explored)} states.")
 
-    animate_path(obstacles, start, goal, path)
+    # animate_path(obstacles, start, goal, path)
+    smooth_path = expand_path_with_interpolation(path, steps_per_segment=6)
+    animate_path(obstacles, start, goal, smooth_path)
 
 
 if __name__ == "__main__":
