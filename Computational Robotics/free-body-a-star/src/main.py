@@ -2,7 +2,11 @@ import random
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 
-from geometry import get_rectangle_corners
+from geometry import (
+    get_rectangle_corners,
+    rectangles_collide,
+    rectangle_within_bounds,
+)
 
 
 WORLD_WIDTH = 100
@@ -12,9 +16,6 @@ WORLD_HEIGHT = 100
 def create_random_obstacles(num_obstacles):
     """
     Create a list of random rectangular obstacles.
-
-    Each obstacle is represented as a dictionary with:
-        cx, cy, width, height, angle
     """
     obstacles = []
 
@@ -45,28 +46,53 @@ def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black
     ax.add_patch(polygon)
 
     # Draw center point
-    ax.plot(cx, cy, marker="o", markersize=3)
+    ax.plot(cx, cy, marker="o", markersize=3, color="black")
 
-    # Draw heading line to show orientation
-    # We use the midpoint of the "front" edge.
+    # Draw a heading line using the midpoint of one edge
     front_mid_x = (corners[1][0] + corners[2][0]) / 2.0
     front_mid_y = (corners[1][1] + corners[2][1]) / 2.0
-    ax.plot([cx, front_mid_x], [cy, front_mid_y], linewidth=2)
+    ax.plot([cx, front_mid_x], [cy, front_mid_y], linewidth=2, color="black")
+
+
+def robot_collides_with_any_obstacle(robot, obstacles):
+    """
+    Return True if the robot collides with at least one obstacle.
+    """
+    for obs in obstacles:
+        if rectangles_collide(robot, obs):
+            return True
+    return False
+
+
+def robot_state_is_valid(robot, obstacles):
+    """
+    A valid robot state must:
+    1. remain fully within the world
+    2. not collide with any obstacle
+    """
+    if not rectangle_within_bounds(robot, WORLD_WIDTH, WORLD_HEIGHT):
+        return False
+
+    if robot_collides_with_any_obstacle(robot, obstacles):
+        return False
+
+    return True
 
 
 def main():
+    random.seed(42)
+
     fig, ax = plt.subplots(figsize=(8, 8))
 
-    # Create random obstacles
-    obstacles = create_random_obstacles(num_obstacles=8)
+    obstacles = create_random_obstacles(num_obstacles=10)
 
-    # Define one robot
+    # Try changing these values to test:
     robot = {
         "cx": 20,
         "cy": 20,
         "width": 10,
         "height": 6,
-        "angle": 30
+        "angle": 120
     }
 
     # Draw obstacles
@@ -81,7 +107,11 @@ def main():
             facecolor="dimgray"
         )
 
-    # Draw robot
+    # Check robot validity
+    is_valid = robot_state_is_valid(robot, obstacles)
+
+    robot_color = "cornflowerblue" if is_valid else "tomato"
+
     draw_rectangle(
         ax,
         cx=robot["cx"],
@@ -89,14 +119,15 @@ def main():
         width=robot["width"],
         height=robot["height"],
         angle=robot["angle"],
-        facecolor="cornflowerblue"
+        facecolor=robot_color
     )
 
-    # Plot settings
+    status_text = "VALID" if is_valid else "INVALID / COLLIDING"
+    ax.set_title(f"Milestone 2: Collision Detection ({status_text})")
+
     ax.set_xlim(0, WORLD_WIDTH)
     ax.set_ylim(0, WORLD_HEIGHT)
     ax.set_aspect("equal")
-    ax.set_title("Milestone 1: Rotated Rectangles in a 2D World")
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.grid(True)
