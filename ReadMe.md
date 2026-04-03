@@ -14,6 +14,10 @@ Sami Munir | samidmunir@outlook.com | Rutgers University CS '24
 
 #### basics
 
+## Computational Robotics
+
+#### free-body-a-star
+
 ## Java Programming
 
 #### hello-world
