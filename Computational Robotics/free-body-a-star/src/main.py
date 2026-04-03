@@ -17,13 +17,23 @@ NUM_OBSTACLES = 10
 MAX_OBSTACLE_ATTEMPTS = 500
 MAX_POSE_ATTEMPTS = 500
 
+TRANSLATION_STEP = 5
+ROTATION_STEP = 15
 
-def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black", alpha=0.8):
+
+def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black", alpha=0.8, linewidth=1.5):
     """
     Draw a rotated rectangle on a matplotlib axis.
     """
     corners = get_rectangle_corners(cx, cy, width, height, angle)
-    polygon = Polygon(corners, closed=True, facecolor=facecolor, edgecolor=edgecolor, alpha=alpha)
+    polygon = Polygon(
+        corners,
+        closed=True,
+        facecolor=facecolor,
+        edgecolor=edgecolor,
+        alpha=alpha,
+        linewidth=linewidth
+    )
     ax.add_patch(polygon)
 
     # Draw center point
@@ -83,8 +93,6 @@ def create_random_obstacle():
     width = random.uniform(8, 20)
     height = random.uniform(6, 18)
     angle = random.uniform(0, 180)
-
-    # Use full world ranges; validity will be checked afterward
     cx = random.uniform(0, WORLD_WIDTH)
     cy = random.uniform(0, WORLD_HEIGHT)
 
@@ -140,15 +148,10 @@ def pose_center_distance(pose_a, pose_b):
 def generate_start_and_goal(obstacles, robot_width=10, robot_height=6, min_center_distance=40):
     """
     Generate a valid start and goal pose for the robot.
-
-    Conditions:
-    - both must be individually valid
-    - they must be at least min_center_distance apart
     """
     start = None
     goal = None
 
-    # Find valid start
     for _ in range(MAX_POSE_ATTEMPTS):
         candidate = create_random_robot_pose(width=robot_width, height=robot_height)
         if robot_state_is_valid(candidate, obstacles):
@@ -158,7 +161,6 @@ def generate_start_and_goal(obstacles, robot_width=10, robot_height=6, min_cente
     if start is None:
         return None, None
 
-    # Find valid goal sufficiently far from start
     for _ in range(MAX_POSE_ATTEMPTS):
         candidate = create_random_robot_pose(width=robot_width, height=robot_height)
 
@@ -174,6 +176,90 @@ def generate_start_and_goal(obstacles, robot_width=10, robot_height=6, min_cente
     return start, goal
 
 
+def normalize_angle(angle_deg):
+    """
+    Normalize angle into the range [0, 360).
+    """
+    return angle_deg % 360
+
+
+def copy_pose(pose):
+    """
+    Return a shallow copy of a pose dictionary.
+    """
+    return {
+        "cx": pose["cx"],
+        "cy": pose["cy"],
+        "width": pose["width"],
+        "height": pose["height"],
+        "angle": pose["angle"],
+    }
+
+
+def generate_candidate_neighbors(robot):
+    """
+    Generate up to 6 candidate neighbors from the current robot pose.
+
+    Allowed actions:
+    - up
+    - down
+    - left
+    - right
+    - rotate clockwise
+    - rotate counterclockwise
+
+    Returns:
+        list[tuple[str, dict]]
+        Example: [("up", pose1), ("rotate_cw", pose2), ...]
+    """
+    neighbors = []
+
+    # Move up
+    up_pose = copy_pose(robot)
+    up_pose["cy"] += TRANSLATION_STEP
+    neighbors.append(("up", up_pose))
+
+    # Move down
+    down_pose = copy_pose(robot)
+    down_pose["cy"] -= TRANSLATION_STEP
+    neighbors.append(("down", down_pose))
+
+    # Move left
+    left_pose = copy_pose(robot)
+    left_pose["cx"] -= TRANSLATION_STEP
+    neighbors.append(("left", left_pose))
+
+    # Move right
+    right_pose = copy_pose(robot)
+    right_pose["cx"] += TRANSLATION_STEP
+    neighbors.append(("right", right_pose))
+
+    # Rotate clockwise
+    rotate_cw_pose = copy_pose(robot)
+    rotate_cw_pose["angle"] = normalize_angle(rotate_cw_pose["angle"] - ROTATION_STEP)
+    neighbors.append(("rotate_cw", rotate_cw_pose))
+
+    # Rotate counterclockwise
+    rotate_ccw_pose = copy_pose(robot)
+    rotate_ccw_pose["angle"] = normalize_angle(rotate_ccw_pose["angle"] + ROTATION_STEP)
+    neighbors.append(("rotate_ccw", rotate_ccw_pose))
+
+    return neighbors
+
+
+def get_valid_neighbors(robot, obstacles):
+    """
+    Generate only the valid neighbors of the current robot pose.
+    """
+    valid_neighbors = []
+
+    for action_name, candidate_pose in generate_candidate_neighbors(robot):
+        if robot_state_is_valid(candidate_pose, obstacles):
+            valid_neighbors.append((action_name, candidate_pose))
+
+    return valid_neighbors
+
+
 def main():
     random.seed(42)
 
@@ -184,6 +270,12 @@ def main():
         robot_height=6,
         min_center_distance=40
     )
+
+    if start is None or goal is None:
+        print("Failed to generate a valid planning problem.")
+        return
+
+    valid_neighbors = get_valid_neighbors(start, obstacles)
 
     fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -199,44 +291,59 @@ def main():
             facecolor="dimgray"
         )
 
-    # Draw start pose
-    if start is not None:
+    # Draw goal
+    draw_rectangle(
+        ax,
+        cx=goal["cx"],
+        cy=goal["cy"],
+        width=goal["width"],
+        height=goal["height"],
+        angle=goal["angle"],
+        facecolor="mediumseagreen",
+        edgecolor="black",
+        alpha=0.9
+    )
+    ax.text(goal["cx"], goal["cy"] + 4, "GOAL", ha="center", va="bottom", fontsize=9)
+
+    # Draw valid neighbors of start
+    for action_name, neighbor in valid_neighbors:
         draw_rectangle(
             ax,
-            cx=start["cx"],
-            cy=start["cy"],
-            width=start["width"],
-            height=start["height"],
-            angle=start["angle"],
-            facecolor="cornflowerblue",
+            cx=neighbor["cx"],
+            cy=neighbor["cy"],
+            width=neighbor["width"],
+            height=neighbor["height"],
+            angle=neighbor["angle"],
+            facecolor="gold",
             edgecolor="black",
-            alpha=0.9
+            alpha=0.35,
+            linewidth=1.0
         )
-        ax.text(start["cx"], start["cy"] + 4, "START", ha="center", va="bottom", fontsize=9)
-
-    # Draw goal pose
-    if goal is not None:
-        draw_rectangle(
-            ax,
-            cx=goal["cx"],
-            cy=goal["cy"],
-            width=goal["width"],
-            height=goal["height"],
-            angle=goal["angle"],
-            facecolor="mediumseagreen",
-            edgecolor="black",
-            alpha=0.9
+        ax.text(
+            neighbor["cx"],
+            neighbor["cy"] + 2.5,
+            action_name,
+            ha="center",
+            va="bottom",
+            fontsize=7
         )
-        ax.text(goal["cx"], goal["cy"] + 4, "GOAL", ha="center", va="bottom", fontsize=9)
 
-    title_suffix = ""
-    if len(obstacles) < NUM_OBSTACLES:
-        title_suffix += f" | Only placed {len(obstacles)}/{NUM_OBSTACLES} obstacles"
+    # Draw start on top so it remains visually clear
+    draw_rectangle(
+        ax,
+        cx=start["cx"],
+        cy=start["cy"],
+        width=start["width"],
+        height=start["height"],
+        angle=start["angle"],
+        facecolor="cornflowerblue",
+        edgecolor="black",
+        alpha=0.95,
+        linewidth=2.0
+    )
+    ax.text(start["cx"], start["cy"] + 4, "START", ha="center", va="bottom", fontsize=9)
 
-    if start is None or goal is None:
-        title_suffix += " | Failed to generate valid start/goal"
-
-    ax.set_title(f"Milestone 3: Valid Random Environment{title_suffix}")
+    ax.set_title("Milestone 4: Valid Neighbor Generation")
     ax.set_xlim(0, WORLD_WIDTH)
     ax.set_ylim(0, WORLD_HEIGHT)
     ax.set_aspect("equal")
@@ -245,6 +352,13 @@ def main():
     ax.grid(True)
 
     plt.show()
+
+    print("Valid neighbors of START:")
+    for action_name, neighbor in valid_neighbors:
+        print(
+            f"  {action_name:>10} -> "
+            f"(cx={neighbor['cx']:.1f}, cy={neighbor['cy']:.1f}, angle={neighbor['angle']:.1f})"
+        )
 
 
 if __name__ == "__main__":
