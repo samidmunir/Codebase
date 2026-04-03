@@ -16,7 +16,7 @@ from geometry import (
 WORLD_WIDTH = 100
 WORLD_HEIGHT = 100
 
-NUM_OBSTACLES = 10
+NUM_OBSTACLES = 15
 MAX_OBSTACLE_ATTEMPTS = 500
 MAX_POSE_ATTEMPTS = 500
 
@@ -75,8 +75,8 @@ def obstacle_is_valid(candidate_obstacle, placed_obstacles):
 
 
 def create_random_obstacle():
-    width = random.uniform(8, 20)
-    height = random.uniform(6, 18)
+    width = random.uniform(5, 20)
+    height = random.uniform(3, 12)
     angle = random.uniform(0, 180)
     cx = random.uniform(0, WORLD_WIDTH)
     cy = random.uniform(0, WORLD_HEIGHT)
@@ -528,6 +528,130 @@ def show_search_result(obstacles, start, goal, path, explored):
 
     plt.show()
 
+def animate_search(obstacles, start, goal, explored, path=None, frame_skip=5):
+    """
+    Animate the A* search expansion itself.
+
+    Parameters:
+        obstacles: list of obstacle dicts
+        start: start pose
+        goal: goal pose
+        explored: list of explored poses in expansion order
+        path: optional final path
+        frame_skip: show every nth explored state to keep animation manageable
+    """
+    if not explored:
+        print("No explored states to animate.")
+        return None
+
+    # Downsample for smoother playback if desired
+    displayed_explored = explored[::frame_skip]
+    if displayed_explored[-1] != explored[-1]:
+        displayed_explored.append(explored[-1])
+
+    fig, ax = plt.subplots(figsize=(9, 9))
+
+    # Static world
+    for obs in obstacles:
+        draw_rectangle(
+            ax,
+            cx=obs["cx"],
+            cy=obs["cy"],
+            width=obs["width"],
+            height=obs["height"],
+            angle=obs["angle"],
+            facecolor="dimgray",
+            edgecolor="black",
+            alpha=0.9,
+            linewidth=1.2
+        )
+
+    # Start and goal
+    draw_rectangle(
+        ax,
+        cx=start["cx"],
+        cy=start["cy"],
+        width=start["width"],
+        height=start["height"],
+        angle=start["angle"],
+        facecolor="cornflowerblue",
+        edgecolor="black",
+        alpha=0.95,
+        linewidth=2.0
+    )
+    ax.text(start["cx"], start["cy"] + 4, "START", ha="center", va="bottom", fontsize=9)
+
+    draw_rectangle(
+        ax,
+        cx=goal["cx"],
+        cy=goal["cy"],
+        width=goal["width"],
+        height=goal["height"],
+        angle=goal["angle"],
+        facecolor="mediumseagreen",
+        edgecolor="black",
+        alpha=0.95,
+        linewidth=2.0
+    )
+    ax.text(goal["cx"], goal["cy"] + 4, "GOAL", ha="center", va="bottom", fontsize=9)
+
+    # Artist for current expanded state
+    current_patch, current_center, current_heading = create_robot_artists(
+        ax,
+        displayed_explored[0],
+        facecolor="orangered",
+        edgecolor="black",
+        alpha=0.85,
+        linewidth=2.0
+    )
+
+    # We'll store all already-explored patches so they remain visible
+    explored_patches = []
+
+    ax.set_xlim(0, WORLD_WIDTH)
+    ax.set_ylim(0, WORLD_HEIGHT)
+    ax.set_aspect("equal")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.grid(True)
+
+    def update(frame_index):
+        # Add all newly reached explored states up to this frame
+        pose = displayed_explored[frame_index]
+
+        explored_patch = Polygon(
+            get_rectangle_corners(pose["cx"], pose["cy"], pose["width"], pose["height"], pose["angle"]),
+            closed=True,
+            facecolor="gold",
+            edgecolor="goldenrod",
+            alpha=0.08,
+            linewidth=0.6
+        )
+        ax.add_patch(explored_patch)
+        explored_patches.append(explored_patch)
+
+        # Update current expanded state highlight
+        update_robot_artists(current_patch, current_center, current_heading, pose)
+
+        ax.set_title(
+            f"Milestone 8: A* Search Animation | "
+            f"Expanded {min((frame_index + 1) * frame_skip, len(explored))}/{len(explored)} states"
+        )
+
+        artists = explored_patches + [current_patch, current_center, current_heading]
+        return artists
+
+    anim = FuncAnimation(
+        fig,
+        update,
+        frames=len(displayed_explored),
+        interval=80,
+        blit=False,
+        repeat=False
+    )
+
+    plt.show()
+    return anim
 
 def shortest_angle_delta(a, b):
     """
@@ -575,14 +699,14 @@ def expand_path_with_interpolation(path, steps_per_segment=5):
     return smooth_path
 
 def main():
-    random.seed(42)
+    # random.seed(42)
 
     obstacles = generate_obstacles(NUM_OBSTACLES)
     start, goal = generate_start_and_goal(
         obstacles,
-        robot_width=10,
-        robot_height=6,
-        min_center_distance=40
+        robot_width=5,
+        robot_height=3,
+        min_center_distance=20
     )
 
     if start is None or goal is None:
@@ -590,6 +714,8 @@ def main():
         return
 
     path, explored = a_star_search(start, goal, obstacles)
+
+    animate_search(obstacles, start, goal, explored, path=path, frame_skip=5)
 
     show_search_result(obstacles, start, goal, path, explored)
 
@@ -600,7 +726,6 @@ def main():
     print(f"Path found with {len(path)} states.")
     print(f"Explored {len(explored)} states.")
 
-    # animate_path(obstacles, start, goal, path)
     smooth_path = expand_path_with_interpolation(path, steps_per_segment=6)
     animate_path(obstacles, start, goal, smooth_path)
 
