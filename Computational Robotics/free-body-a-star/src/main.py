@@ -4,6 +4,7 @@ import heapq
 import itertools
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
+from matplotlib.animation import FuncAnimation
 
 from geometry import (
     get_rectangle_corners,
@@ -27,9 +28,6 @@ ANGLE_TOLERANCE = ROTATION_STEP
 
 
 def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black", alpha=0.8, linewidth=1.5):
-    """
-    Draw a rotated rectangle on a matplotlib axis.
-    """
     corners = get_rectangle_corners(cx, cy, width, height, angle)
     polygon = Polygon(
         corners,
@@ -41,19 +39,14 @@ def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black
     )
     ax.add_patch(polygon)
 
-    # Draw center point
     ax.plot(cx, cy, marker="o", markersize=2.5, color="black")
 
-    # Draw heading line
     front_mid_x = (corners[1][0] + corners[2][0]) / 2.0
     front_mid_y = (corners[1][1] + corners[2][1]) / 2.0
     ax.plot([cx, front_mid_x], [cy, front_mid_y], linewidth=1.5, color="black")
 
 
 def robot_collides_with_any_obstacle(robot, obstacles):
-    """
-    Return True if the robot collides with any obstacle.
-    """
     for obs in obstacles:
         if rectangles_collide(robot, obs):
             return True
@@ -61,11 +54,6 @@ def robot_collides_with_any_obstacle(robot, obstacles):
 
 
 def robot_state_is_valid(robot, obstacles):
-    """
-    A valid robot must:
-    1. stay within world bounds
-    2. not collide with any obstacle
-    """
     if not rectangle_within_bounds(robot, WORLD_WIDTH, WORLD_HEIGHT):
         return False
 
@@ -76,11 +64,6 @@ def robot_state_is_valid(robot, obstacles):
 
 
 def obstacle_is_valid(candidate_obstacle, placed_obstacles):
-    """
-    A valid obstacle must:
-    1. remain fully within world bounds
-    2. not overlap any already-placed obstacle
-    """
     if not rectangle_within_bounds(candidate_obstacle, WORLD_WIDTH, WORLD_HEIGHT):
         return False
 
@@ -92,9 +75,6 @@ def obstacle_is_valid(candidate_obstacle, placed_obstacles):
 
 
 def create_random_obstacle():
-    """
-    Create one random rectangular obstacle candidate.
-    """
     width = random.uniform(8, 20)
     height = random.uniform(6, 18)
     angle = random.uniform(0, 180)
@@ -111,9 +91,6 @@ def create_random_obstacle():
 
 
 def generate_obstacles(num_obstacles):
-    """
-    Generate non-overlapping obstacles using rejection sampling.
-    """
     obstacles = []
     attempts = 0
 
@@ -129,9 +106,6 @@ def generate_obstacles(num_obstacles):
 
 
 def create_random_robot_pose(width=10, height=6):
-    """
-    Create one random robot pose candidate.
-    """
     return {
         "cx": random.uniform(0, WORLD_WIDTH),
         "cy": random.uniform(0, WORLD_HEIGHT),
@@ -142,18 +116,12 @@ def create_random_robot_pose(width=10, height=6):
 
 
 def pose_center_distance(pose_a, pose_b):
-    """
-    Euclidean distance between the centers of two poses.
-    """
     dx = pose_a["cx"] - pose_b["cx"]
     dy = pose_a["cy"] - pose_b["cy"]
     return math.hypot(dx, dy)
 
 
 def generate_start_and_goal(obstacles, robot_width=10, robot_height=6, min_center_distance=40):
-    """
-    Generate a valid start and goal pose for the robot.
-    """
     start = None
     goal = None
 
@@ -182,16 +150,10 @@ def generate_start_and_goal(obstacles, robot_width=10, robot_height=6, min_cente
 
 
 def normalize_angle(angle_deg):
-    """
-    Normalize angle into the range [0, 360).
-    """
     return angle_deg % 360
 
 
 def copy_pose(pose):
-    """
-    Return a shallow copy of a pose dictionary.
-    """
     return {
         "cx": pose["cx"],
         "cy": pose["cy"],
@@ -202,9 +164,6 @@ def copy_pose(pose):
 
 
 def generate_candidate_neighbors(robot):
-    """
-    Generate up to 6 candidate neighbors from the current robot pose.
-    """
     neighbors = []
 
     up_pose = copy_pose(robot)
@@ -235,11 +194,6 @@ def generate_candidate_neighbors(robot):
 
 
 def get_valid_neighbors(robot, obstacles):
-    """
-    Generate only the valid neighbors of the current robot pose.
-    Returns:
-        list[tuple[str, dict, float]]
-    """
     valid_neighbors = []
 
     for action_name, candidate_pose, step_cost in generate_candidate_neighbors(robot):
@@ -250,9 +204,6 @@ def get_valid_neighbors(robot, obstacles):
 
 
 def pose_to_key(pose):
-    """
-    Convert pose dict to a hashable discrete key.
-    """
     return (
         round(pose["cx"], 4),
         round(pose["cy"], 4),
@@ -261,9 +212,6 @@ def pose_to_key(pose):
 
 
 def key_to_pose(key, width, height):
-    """
-    Convert a state key back into a pose dict.
-    """
     cx, cy, angle = key
     return {
         "cx": cx,
@@ -275,37 +223,23 @@ def key_to_pose(key, width, height):
 
 
 def angular_difference_deg(a, b):
-    """
-    Smallest absolute angular difference between two angles in degrees.
-    Result is in [0, 180].
-    """
     diff = abs(normalize_angle(a) - normalize_angle(b))
     return min(diff, 360 - diff)
 
 
 def goal_reached(current_pose, goal_pose):
-    """
-    Return True if current pose is close enough to the goal pose.
-    """
     position_ok = pose_center_distance(current_pose, goal_pose) <= POSITION_TOLERANCE
     angle_ok = angular_difference_deg(current_pose["angle"], goal_pose["angle"]) <= ANGLE_TOLERANCE
     return position_ok and angle_ok
 
 
 def heuristic(pose, goal_pose):
-    """
-    Heuristic for A*:
-    translational distance + weighted angular mismatch
-    """
     translational_cost = pose_center_distance(pose, goal_pose) / TRANSLATION_STEP
     angular_cost = angular_difference_deg(pose["angle"], goal_pose["angle"]) / ROTATION_STEP
     return translational_cost + 0.5 * angular_cost
 
 
 def reconstruct_path(came_from, current_key, robot_width, robot_height):
-    """
-    Reconstruct path from start to goal using parent map.
-    """
     path_keys = [current_key]
 
     while current_key in came_from:
@@ -317,13 +251,6 @@ def reconstruct_path(came_from, current_key, robot_width, robot_height):
 
 
 def a_star_search(start_pose, goal_pose, obstacles):
-    """
-    Run A* from start_pose to goal_pose.
-
-    Returns:
-        path (list[dict]) or None
-        explored_poses (list[dict])
-    """
     robot_width = start_pose["width"]
     robot_height = start_pose["height"]
 
@@ -373,26 +300,58 @@ def a_star_search(start_pose, goal_pose, obstacles):
     return None, explored_poses
 
 
-def main():
-    random.seed(42)
+def create_robot_artists(ax, pose, facecolor="royalblue", edgecolor="black", alpha=0.95, linewidth=2.0):
+    """
+    Create reusable matplotlib artists for a robot:
+    - polygon body
+    - center point
+    - heading line
 
-    obstacles = generate_obstacles(NUM_OBSTACLES)
-    start, goal = generate_start_and_goal(
-        obstacles,
-        robot_width=10,
-        robot_height=6,
-        min_center_distance=40
+    Returns:
+        polygon_patch, center_line, heading_line
+    """
+    corners = get_rectangle_corners(pose["cx"], pose["cy"], pose["width"], pose["height"], pose["angle"])
+
+    polygon_patch = Polygon(
+        corners,
+        closed=True,
+        facecolor=facecolor,
+        edgecolor=edgecolor,
+        alpha=alpha,
+        linewidth=linewidth
     )
+    ax.add_patch(polygon_patch)
 
-    if start is None or goal is None:
-        print("Failed to generate a valid planning problem.")
-        return
+    center_line, = ax.plot([pose["cx"]], [pose["cy"]], marker="o", markersize=4, color="black")
 
-    path, explored = a_star_search(start, goal, obstacles)
+    front_mid_x = (corners[1][0] + corners[2][0]) / 2.0
+    front_mid_y = (corners[1][1] + corners[2][1]) / 2.0
+    heading_line, = ax.plot([pose["cx"], front_mid_x], [pose["cy"], front_mid_y], linewidth=2, color="black")
 
+    return polygon_patch, center_line, heading_line
+
+
+def update_robot_artists(polygon_patch, center_line, heading_line, pose):
+    """
+    Update existing robot artists to match a new pose.
+    """
+    corners = get_rectangle_corners(pose["cx"], pose["cy"], pose["width"], pose["height"], pose["angle"])
+    polygon_patch.set_xy(corners)
+
+    center_line.set_data([pose["cx"]], [pose["cy"]])
+
+    front_mid_x = (corners[1][0] + corners[2][0]) / 2.0
+    front_mid_y = (corners[1][1] + corners[2][1]) / 2.0
+    heading_line.set_data([pose["cx"], front_mid_x], [pose["cy"], front_mid_y])
+
+
+def animate_path(obstacles, start, goal, path):
+    """
+    Animate the robot executing the planned path.
+    """
     fig, ax = plt.subplots(figsize=(9, 9))
 
-    # Draw obstacles
+    # Static world
     for obs in obstacles:
         draw_rectangle(
             ax,
@@ -407,7 +366,96 @@ def main():
             linewidth=1.2
         )
 
-    # Draw explored states
+    # Draw start and goal lightly in the background
+    draw_rectangle(
+        ax,
+        cx=start["cx"],
+        cy=start["cy"],
+        width=start["width"],
+        height=start["height"],
+        angle=start["angle"],
+        facecolor="cornflowerblue",
+        edgecolor="black",
+        alpha=0.25,
+        linewidth=1.5
+    )
+    ax.text(start["cx"], start["cy"] + 4, "START", ha="center", va="bottom", fontsize=9)
+
+    draw_rectangle(
+        ax,
+        cx=goal["cx"],
+        cy=goal["cy"],
+        width=goal["width"],
+        height=goal["height"],
+        angle=goal["angle"],
+        facecolor="mediumseagreen",
+        edgecolor="black",
+        alpha=0.25,
+        linewidth=1.5
+    )
+    ax.text(goal["cx"], goal["cy"] + 4, "GOAL", ha="center", va="bottom", fontsize=9)
+
+    # Path center trace
+    path_x = [pose["cx"] for pose in path]
+    path_y = [pose["cy"] for pose in path]
+    ax.plot(path_x, path_y, linestyle="--", linewidth=1.5, alpha=0.8)
+
+    # Animated robot
+    polygon_patch, center_line, heading_line = create_robot_artists(
+        ax,
+        path[0],
+        facecolor="orangered",
+        edgecolor="black",
+        alpha=0.95,
+        linewidth=2.0
+    )
+
+    ax.set_xlim(0, WORLD_WIDTH)
+    ax.set_ylim(0, WORLD_HEIGHT)
+    ax.set_aspect("equal")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.grid(True)
+
+    def update(frame_index):
+        pose = path[frame_index]
+        update_robot_artists(polygon_patch, center_line, heading_line, pose)
+        ax.set_title(f"Milestone 6: Path Execution Animation | Step {frame_index + 1}/{len(path)}")
+        return polygon_patch, center_line, heading_line
+
+    anim = FuncAnimation(
+        fig,
+        update,
+        frames=len(path),
+        interval=350,
+        blit=False,
+        repeat=False
+    )
+
+    plt.show()
+    return anim
+
+
+def show_search_result(obstacles, start, goal, path, explored):
+    """
+    Show the static search visualization from Milestone 5.
+    """
+    fig, ax = plt.subplots(figsize=(9, 9))
+
+    for obs in obstacles:
+        draw_rectangle(
+            ax,
+            cx=obs["cx"],
+            cy=obs["cy"],
+            width=obs["width"],
+            height=obs["height"],
+            angle=obs["angle"],
+            facecolor="dimgray",
+            edgecolor="black",
+            alpha=0.9,
+            linewidth=1.2
+        )
+
     for pose in explored:
         draw_rectangle(
             ax,
@@ -422,7 +470,6 @@ def main():
             linewidth=0.6
         )
 
-    # Draw final path if found
     if path is not None:
         for pose in path:
             draw_rectangle(
@@ -438,7 +485,6 @@ def main():
                 linewidth=0.8
             )
 
-    # Draw start
     draw_rectangle(
         ax,
         cx=start["cx"],
@@ -453,7 +499,6 @@ def main():
     )
     ax.text(start["cx"], start["cy"] + 4, "START", ha="center", va="bottom", fontsize=9)
 
-    # Draw goal
     draw_rectangle(
         ax,
         cx=goal["cx"],
@@ -471,10 +516,7 @@ def main():
     if path is None:
         title = f"Milestone 5: A* Search Visualization | No Path Found | Explored={len(explored)}"
     else:
-        title = (
-            f"Milestone 5: A* Search Visualization | "
-            f"Explored={len(explored)} | Path Length={len(path)}"
-        )
+        title = f"Milestone 5: A* Search Visualization | Explored={len(explored)} | Path Length={len(path)}"
 
     ax.set_title(title)
     ax.set_xlim(0, WORLD_WIDTH)
@@ -486,11 +528,79 @@ def main():
 
     plt.show()
 
+
+def shortest_angle_delta(a, b):
+    """
+    Compute smallest signed angular difference from a -> b.
+    Result in range [-180, 180].
+    """
+    diff = (b - a + 180) % 360 - 180
+    return diff
+
+
+def interpolate_pose(pose_a, pose_b, t):
+    """
+    Interpolate between two poses using parameter t in [0, 1].
+    """
+    cx = pose_a["cx"] + t * (pose_b["cx"] - pose_a["cx"])
+    cy = pose_a["cy"] + t * (pose_b["cy"] - pose_a["cy"])
+
+    delta_angle = shortest_angle_delta(pose_a["angle"], pose_b["angle"])
+    angle = normalize_angle(pose_a["angle"] + t * delta_angle)
+
+    return {
+        "cx": cx,
+        "cy": cy,
+        "width": pose_a["width"],
+        "height": pose_a["height"],
+        "angle": angle,
+    }
+
+
+def expand_path_with_interpolation(path, steps_per_segment=5):
+    """
+    Expand discrete path into smooth path by interpolation.
+    """
+    smooth_path = []
+
+    for i in range(len(path) - 1):
+        a = path[i]
+        b = path[i + 1]
+
+        for step in range(steps_per_segment):
+            t = step / steps_per_segment
+            smooth_path.append(interpolate_pose(a, b, t))
+
+    smooth_path.append(path[-1])
+    return smooth_path
+
+def main():
+    random.seed(42)
+
+    obstacles = generate_obstacles(NUM_OBSTACLES)
+    start, goal = generate_start_and_goal(
+        obstacles,
+        robot_width=10,
+        robot_height=6,
+        min_center_distance=40
+    )
+
+    if start is None or goal is None:
+        print("Failed to generate a valid planning problem.")
+        return
+
+    path, explored = a_star_search(start, goal, obstacles)
+
+    show_search_result(obstacles, start, goal, path, explored)
+
     if path is None:
         print("No path found.")
-    else:
-        print(f"Path found with {len(path)} states.")
-        print(f"Explored {len(explored)} states.")
+        return
+
+    print(f"Path found with {len(path)} states.")
+    print(f"Explored {len(explored)} states.")
+
+    animate_path(obstacles, start, goal, path)
 
 
 if __name__ == "__main__":
