@@ -1,4 +1,5 @@
 import random
+import math
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 
@@ -12,29 +13,9 @@ from geometry import (
 WORLD_WIDTH = 100
 WORLD_HEIGHT = 100
 
-
-def create_random_obstacles(num_obstacles):
-    """
-    Create a list of random rectangular obstacles.
-    """
-    obstacles = []
-
-    for _ in range(num_obstacles):
-        width = random.uniform(8, 20)
-        height = random.uniform(6, 18)
-        cx = random.uniform(width / 2, WORLD_WIDTH - width / 2)
-        cy = random.uniform(height / 2, WORLD_HEIGHT - height / 2)
-        angle = random.uniform(0, 180)
-
-        obstacles.append({
-            "cx": cx,
-            "cy": cy,
-            "width": width,
-            "height": height,
-            "angle": angle
-        })
-
-    return obstacles
+NUM_OBSTACLES = 10
+MAX_OBSTACLE_ATTEMPTS = 500
+MAX_POSE_ATTEMPTS = 500
 
 
 def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black", alpha=0.8):
@@ -48,7 +29,7 @@ def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black
     # Draw center point
     ax.plot(cx, cy, marker="o", markersize=3, color="black")
 
-    # Draw a heading line using the midpoint of one edge
+    # Draw heading line
     front_mid_x = (corners[1][0] + corners[2][0]) / 2.0
     front_mid_y = (corners[1][1] + corners[2][1]) / 2.0
     ax.plot([cx, front_mid_x], [cy, front_mid_y], linewidth=2, color="black")
@@ -56,7 +37,7 @@ def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black
 
 def robot_collides_with_any_obstacle(robot, obstacles):
     """
-    Return True if the robot collides with at least one obstacle.
+    Return True if the robot collides with any obstacle.
     """
     for obs in obstacles:
         if rectangles_collide(robot, obs):
@@ -66,8 +47,8 @@ def robot_collides_with_any_obstacle(robot, obstacles):
 
 def robot_state_is_valid(robot, obstacles):
     """
-    A valid robot state must:
-    1. remain fully within the world
+    A valid robot must:
+    1. stay within world bounds
     2. not collide with any obstacle
     """
     if not rectangle_within_bounds(robot, WORLD_WIDTH, WORLD_HEIGHT):
@@ -79,21 +60,132 @@ def robot_state_is_valid(robot, obstacles):
     return True
 
 
+def obstacle_is_valid(candidate_obstacle, placed_obstacles):
+    """
+    A valid obstacle must:
+    1. remain fully within world bounds
+    2. not overlap any already-placed obstacle
+    """
+    if not rectangle_within_bounds(candidate_obstacle, WORLD_WIDTH, WORLD_HEIGHT):
+        return False
+
+    for obs in placed_obstacles:
+        if rectangles_collide(candidate_obstacle, obs):
+            return False
+
+    return True
+
+
+def create_random_obstacle():
+    """
+    Create one random rectangular obstacle candidate.
+    """
+    width = random.uniform(8, 20)
+    height = random.uniform(6, 18)
+    angle = random.uniform(0, 180)
+
+    # Use full world ranges; validity will be checked afterward
+    cx = random.uniform(0, WORLD_WIDTH)
+    cy = random.uniform(0, WORLD_HEIGHT)
+
+    return {
+        "cx": cx,
+        "cy": cy,
+        "width": width,
+        "height": height,
+        "angle": angle,
+    }
+
+
+def generate_obstacles(num_obstacles):
+    """
+    Generate non-overlapping obstacles using rejection sampling.
+    """
+    obstacles = []
+    attempts = 0
+
+    while len(obstacles) < num_obstacles and attempts < MAX_OBSTACLE_ATTEMPTS:
+        candidate = create_random_obstacle()
+
+        if obstacle_is_valid(candidate, obstacles):
+            obstacles.append(candidate)
+
+        attempts += 1
+
+    return obstacles
+
+
+def create_random_robot_pose(width=10, height=6):
+    """
+    Create one random robot pose candidate.
+    """
+    return {
+        "cx": random.uniform(0, WORLD_WIDTH),
+        "cy": random.uniform(0, WORLD_HEIGHT),
+        "width": width,
+        "height": height,
+        "angle": random.uniform(0, 360),
+    }
+
+
+def pose_center_distance(pose_a, pose_b):
+    """
+    Euclidean distance between the centers of two poses.
+    """
+    dx = pose_a["cx"] - pose_b["cx"]
+    dy = pose_a["cy"] - pose_b["cy"]
+    return math.hypot(dx, dy)
+
+
+def generate_start_and_goal(obstacles, robot_width=10, robot_height=6, min_center_distance=40):
+    """
+    Generate a valid start and goal pose for the robot.
+
+    Conditions:
+    - both must be individually valid
+    - they must be at least min_center_distance apart
+    """
+    start = None
+    goal = None
+
+    # Find valid start
+    for _ in range(MAX_POSE_ATTEMPTS):
+        candidate = create_random_robot_pose(width=robot_width, height=robot_height)
+        if robot_state_is_valid(candidate, obstacles):
+            start = candidate
+            break
+
+    if start is None:
+        return None, None
+
+    # Find valid goal sufficiently far from start
+    for _ in range(MAX_POSE_ATTEMPTS):
+        candidate = create_random_robot_pose(width=robot_width, height=robot_height)
+
+        if not robot_state_is_valid(candidate, obstacles):
+            continue
+
+        if pose_center_distance(start, candidate) < min_center_distance:
+            continue
+
+        goal = candidate
+        break
+
+    return start, goal
+
+
 def main():
     random.seed(42)
 
+    obstacles = generate_obstacles(NUM_OBSTACLES)
+    start, goal = generate_start_and_goal(
+        obstacles,
+        robot_width=10,
+        robot_height=6,
+        min_center_distance=40
+    )
+
     fig, ax = plt.subplots(figsize=(8, 8))
-
-    obstacles = create_random_obstacles(num_obstacles=10)
-
-    # Try changing these values to test:
-    robot = {
-        "cx": 20,
-        "cy": 20,
-        "width": 10,
-        "height": 6,
-        "angle": 120
-    }
 
     # Draw obstacles
     for obs in obstacles:
@@ -107,24 +199,44 @@ def main():
             facecolor="dimgray"
         )
 
-    # Check robot validity
-    is_valid = robot_state_is_valid(robot, obstacles)
+    # Draw start pose
+    if start is not None:
+        draw_rectangle(
+            ax,
+            cx=start["cx"],
+            cy=start["cy"],
+            width=start["width"],
+            height=start["height"],
+            angle=start["angle"],
+            facecolor="cornflowerblue",
+            edgecolor="black",
+            alpha=0.9
+        )
+        ax.text(start["cx"], start["cy"] + 4, "START", ha="center", va="bottom", fontsize=9)
 
-    robot_color = "cornflowerblue" if is_valid else "tomato"
+    # Draw goal pose
+    if goal is not None:
+        draw_rectangle(
+            ax,
+            cx=goal["cx"],
+            cy=goal["cy"],
+            width=goal["width"],
+            height=goal["height"],
+            angle=goal["angle"],
+            facecolor="mediumseagreen",
+            edgecolor="black",
+            alpha=0.9
+        )
+        ax.text(goal["cx"], goal["cy"] + 4, "GOAL", ha="center", va="bottom", fontsize=9)
 
-    draw_rectangle(
-        ax,
-        cx=robot["cx"],
-        cy=robot["cy"],
-        width=robot["width"],
-        height=robot["height"],
-        angle=robot["angle"],
-        facecolor=robot_color
-    )
+    title_suffix = ""
+    if len(obstacles) < NUM_OBSTACLES:
+        title_suffix += f" | Only placed {len(obstacles)}/{NUM_OBSTACLES} obstacles"
 
-    status_text = "VALID" if is_valid else "INVALID / COLLIDING"
-    ax.set_title(f"Milestone 2: Collision Detection ({status_text})")
+    if start is None or goal is None:
+        title_suffix += " | Failed to generate valid start/goal"
 
+    ax.set_title(f"Milestone 3: Valid Random Environment{title_suffix}")
     ax.set_xlim(0, WORLD_WIDTH)
     ax.set_ylim(0, WORLD_HEIGHT)
     ax.set_aspect("equal")
