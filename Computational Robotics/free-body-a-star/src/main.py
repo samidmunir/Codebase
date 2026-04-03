@@ -1,5 +1,7 @@
 import random
 import math
+import heapq
+import itertools
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 
@@ -20,6 +22,9 @@ MAX_POSE_ATTEMPTS = 500
 TRANSLATION_STEP = 5
 ROTATION_STEP = 15
 
+POSITION_TOLERANCE = TRANSLATION_STEP
+ANGLE_TOLERANCE = ROTATION_STEP
+
 
 def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black", alpha=0.8, linewidth=1.5):
     """
@@ -37,12 +42,12 @@ def draw_rectangle(ax, cx, cy, width, height, angle, facecolor, edgecolor="black
     ax.add_patch(polygon)
 
     # Draw center point
-    ax.plot(cx, cy, marker="o", markersize=3, color="black")
+    ax.plot(cx, cy, marker="o", markersize=2.5, color="black")
 
     # Draw heading line
     front_mid_x = (corners[1][0] + corners[2][0]) / 2.0
     front_mid_y = (corners[1][1] + corners[2][1]) / 2.0
-    ax.plot([cx, front_mid_x], [cy, front_mid_y], linewidth=2, color="black")
+    ax.plot([cx, front_mid_x], [cy, front_mid_y], linewidth=1.5, color="black")
 
 
 def robot_collides_with_any_obstacle(robot, obstacles):
@@ -199,50 +204,32 @@ def copy_pose(pose):
 def generate_candidate_neighbors(robot):
     """
     Generate up to 6 candidate neighbors from the current robot pose.
-
-    Allowed actions:
-    - up
-    - down
-    - left
-    - right
-    - rotate clockwise
-    - rotate counterclockwise
-
-    Returns:
-        list[tuple[str, dict]]
-        Example: [("up", pose1), ("rotate_cw", pose2), ...]
     """
     neighbors = []
 
-    # Move up
     up_pose = copy_pose(robot)
     up_pose["cy"] += TRANSLATION_STEP
-    neighbors.append(("up", up_pose))
+    neighbors.append(("up", up_pose, 1.0))
 
-    # Move down
     down_pose = copy_pose(robot)
     down_pose["cy"] -= TRANSLATION_STEP
-    neighbors.append(("down", down_pose))
+    neighbors.append(("down", down_pose, 1.0))
 
-    # Move left
     left_pose = copy_pose(robot)
     left_pose["cx"] -= TRANSLATION_STEP
-    neighbors.append(("left", left_pose))
+    neighbors.append(("left", left_pose, 1.0))
 
-    # Move right
     right_pose = copy_pose(robot)
     right_pose["cx"] += TRANSLATION_STEP
-    neighbors.append(("right", right_pose))
+    neighbors.append(("right", right_pose, 1.0))
 
-    # Rotate clockwise
     rotate_cw_pose = copy_pose(robot)
     rotate_cw_pose["angle"] = normalize_angle(rotate_cw_pose["angle"] - ROTATION_STEP)
-    neighbors.append(("rotate_cw", rotate_cw_pose))
+    neighbors.append(("rotate_cw", rotate_cw_pose, 1.0))
 
-    # Rotate counterclockwise
     rotate_ccw_pose = copy_pose(robot)
     rotate_ccw_pose["angle"] = normalize_angle(rotate_ccw_pose["angle"] + ROTATION_STEP)
-    neighbors.append(("rotate_ccw", rotate_ccw_pose))
+    neighbors.append(("rotate_ccw", rotate_ccw_pose, 1.0))
 
     return neighbors
 
@@ -250,14 +237,140 @@ def generate_candidate_neighbors(robot):
 def get_valid_neighbors(robot, obstacles):
     """
     Generate only the valid neighbors of the current robot pose.
+    Returns:
+        list[tuple[str, dict, float]]
     """
     valid_neighbors = []
 
-    for action_name, candidate_pose in generate_candidate_neighbors(robot):
+    for action_name, candidate_pose, step_cost in generate_candidate_neighbors(robot):
         if robot_state_is_valid(candidate_pose, obstacles):
-            valid_neighbors.append((action_name, candidate_pose))
+            valid_neighbors.append((action_name, candidate_pose, step_cost))
 
     return valid_neighbors
+
+
+def pose_to_key(pose):
+    """
+    Convert pose dict to a hashable discrete key.
+    """
+    return (
+        round(pose["cx"], 4),
+        round(pose["cy"], 4),
+        round(normalize_angle(pose["angle"]), 4),
+    )
+
+
+def key_to_pose(key, width, height):
+    """
+    Convert a state key back into a pose dict.
+    """
+    cx, cy, angle = key
+    return {
+        "cx": cx,
+        "cy": cy,
+        "width": width,
+        "height": height,
+        "angle": angle,
+    }
+
+
+def angular_difference_deg(a, b):
+    """
+    Smallest absolute angular difference between two angles in degrees.
+    Result is in [0, 180].
+    """
+    diff = abs(normalize_angle(a) - normalize_angle(b))
+    return min(diff, 360 - diff)
+
+
+def goal_reached(current_pose, goal_pose):
+    """
+    Return True if current pose is close enough to the goal pose.
+    """
+    position_ok = pose_center_distance(current_pose, goal_pose) <= POSITION_TOLERANCE
+    angle_ok = angular_difference_deg(current_pose["angle"], goal_pose["angle"]) <= ANGLE_TOLERANCE
+    return position_ok and angle_ok
+
+
+def heuristic(pose, goal_pose):
+    """
+    Heuristic for A*:
+    translational distance + weighted angular mismatch
+    """
+    translational_cost = pose_center_distance(pose, goal_pose) / TRANSLATION_STEP
+    angular_cost = angular_difference_deg(pose["angle"], goal_pose["angle"]) / ROTATION_STEP
+    return translational_cost + 0.5 * angular_cost
+
+
+def reconstruct_path(came_from, current_key, robot_width, robot_height):
+    """
+    Reconstruct path from start to goal using parent map.
+    """
+    path_keys = [current_key]
+
+    while current_key in came_from:
+        current_key = came_from[current_key]
+        path_keys.append(current_key)
+
+    path_keys.reverse()
+    return [key_to_pose(k, robot_width, robot_height) for k in path_keys]
+
+
+def a_star_search(start_pose, goal_pose, obstacles):
+    """
+    Run A* from start_pose to goal_pose.
+
+    Returns:
+        path (list[dict]) or None
+        explored_poses (list[dict])
+    """
+    robot_width = start_pose["width"]
+    robot_height = start_pose["height"]
+
+    start_key = pose_to_key(start_pose)
+
+    open_heap = []
+    counter = itertools.count()
+
+    g_cost = {start_key: 0.0}
+    came_from = {}
+
+    start_f = heuristic(start_pose, goal_pose)
+    heapq.heappush(open_heap, (start_f, next(counter), start_pose))
+
+    closed_set = set()
+    explored_poses = []
+
+    while open_heap:
+        _, _, current_pose = heapq.heappop(open_heap)
+        current_key = pose_to_key(current_pose)
+
+        if current_key in closed_set:
+            continue
+
+        closed_set.add(current_key)
+        explored_poses.append(copy_pose(current_pose))
+
+        if goal_reached(current_pose, goal_pose):
+            path = reconstruct_path(came_from, current_key, robot_width, robot_height)
+            return path, explored_poses
+
+        for action_name, neighbor_pose, step_cost in get_valid_neighbors(current_pose, obstacles):
+            neighbor_key = pose_to_key(neighbor_pose)
+
+            if neighbor_key in closed_set:
+                continue
+
+            tentative_g = g_cost[current_key] + step_cost
+
+            if neighbor_key not in g_cost or tentative_g < g_cost[neighbor_key]:
+                g_cost[neighbor_key] = tentative_g
+                came_from[neighbor_key] = current_key
+
+                f_cost = tentative_g + heuristic(neighbor_pose, goal_pose)
+                heapq.heappush(open_heap, (f_cost, next(counter), copy_pose(neighbor_pose)))
+
+    return None, explored_poses
 
 
 def main():
@@ -275,9 +388,9 @@ def main():
         print("Failed to generate a valid planning problem.")
         return
 
-    valid_neighbors = get_valid_neighbors(start, obstacles)
+    path, explored = a_star_search(start, goal, obstacles)
 
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(figsize=(9, 9))
 
     # Draw obstacles
     for obs in obstacles:
@@ -288,47 +401,44 @@ def main():
             width=obs["width"],
             height=obs["height"],
             angle=obs["angle"],
-            facecolor="dimgray"
+            facecolor="dimgray",
+            edgecolor="black",
+            alpha=0.9,
+            linewidth=1.2
         )
 
-    # Draw goal
-    draw_rectangle(
-        ax,
-        cx=goal["cx"],
-        cy=goal["cy"],
-        width=goal["width"],
-        height=goal["height"],
-        angle=goal["angle"],
-        facecolor="mediumseagreen",
-        edgecolor="black",
-        alpha=0.9
-    )
-    ax.text(goal["cx"], goal["cy"] + 4, "GOAL", ha="center", va="bottom", fontsize=9)
-
-    # Draw valid neighbors of start
-    for action_name, neighbor in valid_neighbors:
+    # Draw explored states
+    for pose in explored:
         draw_rectangle(
             ax,
-            cx=neighbor["cx"],
-            cy=neighbor["cy"],
-            width=neighbor["width"],
-            height=neighbor["height"],
-            angle=neighbor["angle"],
+            cx=pose["cx"],
+            cy=pose["cy"],
+            width=pose["width"],
+            height=pose["height"],
+            angle=pose["angle"],
             facecolor="gold",
-            edgecolor="black",
-            alpha=0.35,
-            linewidth=1.0
-        )
-        ax.text(
-            neighbor["cx"],
-            neighbor["cy"] + 2.5,
-            action_name,
-            ha="center",
-            va="bottom",
-            fontsize=7
+            edgecolor="goldenrod",
+            alpha=0.08,
+            linewidth=0.6
         )
 
-    # Draw start on top so it remains visually clear
+    # Draw final path if found
+    if path is not None:
+        for pose in path:
+            draw_rectangle(
+                ax,
+                cx=pose["cx"],
+                cy=pose["cy"],
+                width=pose["width"],
+                height=pose["height"],
+                angle=pose["angle"],
+                facecolor="red",
+                edgecolor="darkred",
+                alpha=0.18,
+                linewidth=0.8
+            )
+
+    # Draw start
     draw_rectangle(
         ax,
         cx=start["cx"],
@@ -343,7 +453,30 @@ def main():
     )
     ax.text(start["cx"], start["cy"] + 4, "START", ha="center", va="bottom", fontsize=9)
 
-    ax.set_title("Milestone 4: Valid Neighbor Generation")
+    # Draw goal
+    draw_rectangle(
+        ax,
+        cx=goal["cx"],
+        cy=goal["cy"],
+        width=goal["width"],
+        height=goal["height"],
+        angle=goal["angle"],
+        facecolor="mediumseagreen",
+        edgecolor="black",
+        alpha=0.95,
+        linewidth=2.0
+    )
+    ax.text(goal["cx"], goal["cy"] + 4, "GOAL", ha="center", va="bottom", fontsize=9)
+
+    if path is None:
+        title = f"Milestone 5: A* Search Visualization | No Path Found | Explored={len(explored)}"
+    else:
+        title = (
+            f"Milestone 5: A* Search Visualization | "
+            f"Explored={len(explored)} | Path Length={len(path)}"
+        )
+
+    ax.set_title(title)
     ax.set_xlim(0, WORLD_WIDTH)
     ax.set_ylim(0, WORLD_HEIGHT)
     ax.set_aspect("equal")
@@ -353,12 +486,11 @@ def main():
 
     plt.show()
 
-    print("Valid neighbors of START:")
-    for action_name, neighbor in valid_neighbors:
-        print(
-            f"  {action_name:>10} -> "
-            f"(cx={neighbor['cx']:.1f}, cy={neighbor['cy']:.1f}, angle={neighbor['angle']:.1f})"
-        )
+    if path is None:
+        print("No path found.")
+    else:
+        print(f"Path found with {len(path)} states.")
+        print(f"Explored {len(explored)} states.")
 
 
 if __name__ == "__main__":
