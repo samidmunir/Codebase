@@ -14,6 +14,8 @@ Sami Munir | samidmunir@outlook.com | Rutgers University CS '24
 
 #### basics
 
+#### variables
+
 ## Computational Robotics
 
 #### free-body-a-star
