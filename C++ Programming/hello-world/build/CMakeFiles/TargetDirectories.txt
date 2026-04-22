@@ -1,3 +1,0 @@
-/Users/samidmunir/Desktop/samidmunir/Codebase/C++ Programming/hello-world/build/CMakeFiles/main.dir
-/Users/samidmunir/Desktop/samidmunir/Codebase/C++ Programming/hello-world/build/CMakeFiles/edit_cache.dir
-/Users/samidmunir/Desktop/samidmunir/Codebase/C++ Programming/hello-world/build/CMakeFiles/rebuild_cache.dir
