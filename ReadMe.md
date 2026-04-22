@@ -4,4 +4,6 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 ## C++ Programming
 
-hello-world
+#### hello-world
+
+#### variables
