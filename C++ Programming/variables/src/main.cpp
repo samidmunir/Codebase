@@ -6,6 +6,7 @@
 */
 
 #include <iostream>
+#include <climits>
 
 using namespace std;
 
@@ -127,6 +128,39 @@ int main(int argc, char *argv[]) {
     */
     bool old_enough_to_drive = true;
     cout << "old_enough_to_drive: " << old_enough_to_drive << endl;
+
+    /*
+        C++ sizeof operator
+        - determines the size in bytes of a type or variable
+        - example:
+            * sizeof(int)
+            * sizeof(tax_rate)
+
+        The sizeof operator gets information from two include files:
+        - <climits>
+            > also contains min, max values for Integer data types
+        - <cfloat>
+        These files contain size and precision information about the implementation of C++ on the user's machine.
+    */
+    cout << "\nsizeof(my_age): " << sizeof(my_age) << endl;
+    cout << "sizeof(people_on_earth): " << sizeof(people_on_earth) << endl;
+    cout << "sizeof(tax_rate): " << sizeof(tax_rate) << endl;
+
+    cout << "\nMinimum Values" << endl;
+    cout << "-------------------------" << endl;
+    cout << "char: " << CHAR_MIN << endl;
+    cout << "int: " << INT_MIN << endl;
+    cout << "short: " << SHRT_MIN << endl;
+    cout << "long: " << LONG_MIN << endl;
+    cout << "long long: " << LLONG_MIN << endl;
+
+    cout << "\nMaximum Values" << endl;
+    cout << "-------------------------" << endl;
+    cout << "char: " << CHAR_MAX << endl;
+    cout << "int: " << INT_MAX << endl;
+    cout << "short: " << SHRT_MAX << endl;
+    cout << "long: " << LONG_MAX << endl;
+    cout << "long long: " << LLONG_MAX << endl;
 
     return EXIT_SUCCESS;
 }
