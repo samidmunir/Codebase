@@ -11,6 +11,11 @@
 using namespace std;
 
 /*
+    Constants can also be declared and initialized using the #define preprocessor directive
+*/
+#define account_number "013845AKF015793UJDM"
+
+/*
     Global variables can be accessed anywhere in the program.
     - uninitialized global variables are taken care of by the C++ compiler automatically with a default value.
 */
@@ -161,6 +166,25 @@ int main(int argc, char *argv[]) {
     cout << "short: " << SHRT_MAX << endl;
     cout << "long: " << LONG_MAX << endl;
     cout << "long long: " << LLONG_MAX << endl;
+
+    /*
+        Constants - variables whose values cannot be changed once declared.
+
+        Literal constants include specific values we assign to a variable or constant.
+        - Examples:
+            > 7
+            > '$'
+            > "this is a string literal"
+            > escape codes
+
+        Constants can also be declared and initialized using the #define preprocessor directive
+    */
+    const double PI {3.1415926};
+    cout << "\nPI: " << PI << endl;
+
+    const int months_in_year {12};
+    cout << "months_in_year: " << months_in_year << endl;
+    cout << "account_number: " << account_number << endl;
 
     return EXIT_SUCCESS;
 }
