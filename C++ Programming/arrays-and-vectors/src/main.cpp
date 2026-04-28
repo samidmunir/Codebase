@@ -6,6 +6,7 @@
 */
 
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -74,6 +75,44 @@ int main(int argc, char *argv[]) {
         {152, 155, 160}
     };
     cout << "\ncar_top_speeds[1][1]: " << car_top_speeds[1][1] << endl;
+
+    /*
+        Vectors - a dynamic array/list
+            - a container in the C++ Standard Template Library
+            - an array that can grow and shrink in size at execution time
+            - provides similar semantics & syntax as arrays
+            - very efficient
+            - provides bound checking
+            - utilize functions/methods on the vector object
+                > when we create a C++ vector, we are creating a C++ object
+
+        Must include the vector library
+        - make use of the standard template namespace
+
+        vector <char> vowels;
+        vector <int> test_scores;
+    */
+    vector <char> vowels_a;
+    vector <int> test_scores_c;
+
+    vector <char> vowels_b (5); // automatically sets elements to all ''
+    vector <int> test_scores_d (10); // automatically sets elements to all 0
+
+    vector <char> vowels_c {'a', 'e', 'i', 'o', 'u'};
+    vector <int> test_scores_e {100, 98, 89, 85, 93};
+    vector <double> hi_temperatures_c (365, 80.0); // all 365 elements initialized with value 80.0
+
+    /*
+        Vectors Characteristics
+        - dynamic size
+        - elements of the same type
+        - stored contiguously in memory
+        - individual elements accessed by position or index
+        - [] syntax -> no bounds checking
+        - provides many Object methods/functions that do include bounds checking
+        - elements are initialized to 0 or default values (if not initialized)
+        - very efficient
+    */
 
     return EXIT_SUCCESS;
 }
