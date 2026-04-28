@@ -7,3 +7,5 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 #### hello-world
 
 #### variables
+
+#### arrays-and-vectors
