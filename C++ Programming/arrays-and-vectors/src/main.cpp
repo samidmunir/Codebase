@@ -60,5 +60,20 @@ int main(int argc, char *argv[]) {
         - 0 (first) + i (index) * sizeof(element)
     */
 
+    /*
+        Multi-dimensional arrays
+        - Element_Type array_name [dim1_size][dim2_size]
+    */
+    const int rows {3};
+    const int cols {4};
+    int movie_ratings [rows][cols];
+
+    int car_top_speeds [3][3] {
+        {110, 124, 129},
+        {130, 137, 144},
+        {152, 155, 160}
+    };
+    cout << "\ncar_top_speeds[1][1]: " << car_top_speeds[1][1] << endl;
+
     return EXIT_SUCCESS;
 }
