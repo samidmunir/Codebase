@@ -14,6 +14,10 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 #### arrays-and-vectors
 
+## Java Programming
+
+#### hello-world
+
 ## Rust Programming
 
 #### hello_world
