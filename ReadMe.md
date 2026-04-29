@@ -13,3 +13,7 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 #### variables
 
 #### arrays-and-vectors
+
+## Rust Programming
+
+#### hello_world
