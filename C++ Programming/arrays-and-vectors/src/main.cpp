@@ -114,5 +114,21 @@ int main(int argc, char *argv[]) {
         - very efficient
     */
 
+    /*
+        Accessing vector elements
+        - array syntax -> [element_index]
+        - method/object reference syntax -> vector_name.at(element_index)
+    */
+    cout << "\nvowels_c[1]: " << vowels_c[1] << endl;
+    cout << "test_scores_e.at(2): " << test_scores_e.at(2) << endl;
+
+    /*
+        vector_name.push_back(element)
+        - adds a new element to the end of the vector
+    */
+    test_scores_e.push_back(78);
+    cout << "\ntest_scores_e.back(): " << test_scores_e.back() << endl;
+    cout << "test_scores_e.size(): " << test_scores_e.size() << endl;
+
     return EXIT_SUCCESS;
 }
