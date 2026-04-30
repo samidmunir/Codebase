@@ -18,6 +18,10 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 #### hello-world
 
+## Leetcode Mastery
+
+#### 217. Contains Duplicate
+
 ## Rust Programming
 
 #### hello_world
