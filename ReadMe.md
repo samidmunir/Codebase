@@ -20,7 +20,11 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 ## Leetcode Mastery
 
-#### 217. Contains Duplicate
+### 217. Contains Duplicate
+
+#### leetcode217
+
+#### leetcode217-python
 
 ## Rust Programming
 
