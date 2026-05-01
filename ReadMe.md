@@ -26,6 +26,10 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 #### leetcode217-python
 
+### 242. Valid Anagram
+
+#### leetcode242
+
 ## Rust Programming
 
 #### hello_world
