@@ -36,3 +36,21 @@ puts first_name + " " + last_name
 puts "My first name is #{first_name} and my last name is #{last_name}"
 full_name = "#{first_name} #{last_name}"
 puts full_name
+
+# Object/String methods
+# - method chaining
+puts "\nfirst_name.class: #{first_name.class}"
+puts "10.class: #{10.class}"
+puts "10.to_s.class: #{10.to_s.class}"
+puts "full_name.length: #{full_name.length}"
+puts "full_name.reverse: #{full_name.reverse}"
+puts "full_name.capitalize: #{full_name.capitalize}"
+puts "full_name.empty?: #{full_name.empty?}"
+puts "full_name.nil?: #{full_name.nil?}"
+
+# sub vs. gsub
+# - gsub will do a global substitution
+sentence = "Welcome to the jungle"
+puts "\nsentence: #{sentence}"
+sentence = sentence.sub("the jungle", "the utopia")
+puts "sentence: #{sentence}"
