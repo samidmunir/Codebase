@@ -6,5 +6,7 @@
 # - dynamically typed
 
 # puts stands for put string
-# - used to print 
-puts "Hello, welcome to Ruby programming!"
+# - used to print out the argument to the console
+puts "Hello, welcome to Ruby programming!" # has a newline
+p "Hello, welcome to Ruby programming!"
+print "Hello, welcome to Ruby programming!" # does not have a newline
