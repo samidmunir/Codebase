@@ -32,6 +32,10 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 #### leetcode242
 
+## Ruby Programming
+
+#### hello-ruby
+
 ## Rust Programming
 
 #### hello_world
