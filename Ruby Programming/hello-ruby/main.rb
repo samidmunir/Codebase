@@ -17,3 +17,22 @@ def say_hello(message)
 end
 
 say_hello "\nHello, welcome to Ruby programming!"
+
+puts ""
+
+# Strings
+# - text enclosed within double quotation marks (or single quotes) "Hello, world!"
+
+sentence = 'My name is Sami'
+p sentence
+
+# String concatenation
+first_name = 'Sami'
+last_name = 'Munir'
+puts first_name + " " + last_name
+
+# String interpolation
+# - only works within double quoted strings
+puts "My first name is #{first_name} and my last name is #{last_name}"
+full_name = "#{first_name} #{last_name}"
+puts full_name
