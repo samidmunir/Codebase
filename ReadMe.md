@@ -38,6 +38,10 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 #### leetcode242
 
+## Projects
+
+### go-auth-app
+
 ## Ruby Programming
 
 #### hello-ruby
