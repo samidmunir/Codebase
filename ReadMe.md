@@ -20,6 +20,8 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 #### hello-go
 
+#### data-types-and-variables
+
 ## Java Programming
 
 #### hello-world
