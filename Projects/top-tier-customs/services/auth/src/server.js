@@ -1,5 +1,6 @@
 import express from "express";
 import ENV from "./config/env.js";
+import connectDB from "./config/db.js";
 import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -9,6 +10,8 @@ const app = express();
 
 const PORT = ENV.PORT;
 const CLIENT = ENV.CLIENT;
+
+connectDB();
 
 app.use(morgan("dev"));
 
