@@ -1,7 +1,30 @@
 import jwt from "jsonwebtoken";
 import ENV from "../config/env.js";
 
-const authorize = (req, res, next) => {
+export const verifyRequestViaGateway = (req, res, next) => {
+  const gatewaySecretFromReqHeaders = req.headers["x-gateway-secret"];
+  console.log(gatewaySecretFromReqHeaders);
+
+  if (!gatewaySecretFromReqHeaders) {
+    return res.status(401).json({
+      ok: false,
+      source: "<api.gateway.middleware>: verifyRequestViaGateway()",
+      message: "Missing gateway shared secret.",
+    });
+  }
+
+  if (gatewaySecretFromReqHeaders !== process.env.GATEWAY_SHARED_SECRET) {
+    return res.status(403).json({
+      ok: false,
+      source: "<api.gateway.middleware>: verifyRequestViaGateway()",
+      message: "Invalid gateway shared secret.",
+    });
+  }
+
+  next();
+};
+
+export const authorize = (req, res, next) => {
   const header = req.headers["authorization"];
   if (!header) {
     return res.status(401).json({
@@ -34,5 +57,3 @@ const authorize = (req, res, next) => {
     });
   }
 };
-
-export default authorize;

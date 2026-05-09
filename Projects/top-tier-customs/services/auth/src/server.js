@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.routes.js";
+import { verifyRequestViaGateway } from "./middleware/auth.middleware.js";
 
 const app = express();
 
@@ -25,8 +26,10 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+app.use(verifyRequestViaGateway);
+
 app.use("/", authRouter);
 
 app.listen(PORT, () => {
-  console.log(`✅ <api.auth> live on http://localhost:${PORT}`);
+  console.log(`✅ <api/auth> live on http://localhost:${PORT}`);
 });

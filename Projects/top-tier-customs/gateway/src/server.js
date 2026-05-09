@@ -29,5 +29,5 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authProxy);
 
 app.listen(PORT, () => {
-  console.log(`✅ <api.gateway> live on http://localhost:${PORT}`);
+  console.log(`✅ <api/gateway> live on http://localhost:${PORT}`);
 });

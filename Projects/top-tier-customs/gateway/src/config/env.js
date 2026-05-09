@@ -5,7 +5,7 @@ dotenv.config();
 const ENV = {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
-  SECRET: process.env.GATEWAY_SHARED_SECRET,
+  GATEWAY_SHARED_SECRET: process.env.GATEWAY_SHARED_SECRET,
   JWT: {
     ACCESS: process.env.JWT_ACCESS_SECRET,
     ACCESS_TTL: process.env.JWT_ACCESS_TTL,
