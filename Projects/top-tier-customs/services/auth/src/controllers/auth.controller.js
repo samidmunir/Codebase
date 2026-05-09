@@ -168,3 +168,22 @@ export const login = async (req, res) => {
     });
   }
 };
+
+export const logout = async (req, res) => {
+  try {
+    clearRTCookie(res);
+
+    return res.status(200).json({
+      ok: true,
+      source: "<api.auth.controller>: logout()",
+      message: "Logout successful.",
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      source: "<api.auth.controller>: logout()",
+      message: "Failed to logout.",
+      error: "Internal server error.",
+    });
+  }
+};
