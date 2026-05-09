@@ -40,7 +40,7 @@ Sami Munir | samidmunir@outlook.com | Rutgers University '24
 
 ## Projects
 
-### go-auth-app
+### go-auth
 
 ### top-tier-customs
 
