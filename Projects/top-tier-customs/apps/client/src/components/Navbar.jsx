@@ -1,71 +1,152 @@
-import { useTheme } from "../context/ThemeContext";
-import logo from "../assets/logo.JPG";
-import { useNavigate } from "react-router-dom";
-import ThemeToggle from "./ui/ThemeToggle";
+import { useLocation, useNavigate } from "react-router-dom";
+import logo from "../assets/logo.jpg";
+import { useTheme } from "../contexts/Theme";
+import Cart from "./ui/Cart";
+import Theme from "./ui/Theme";
+import Login from "./ui/Login";
+import Logout from "../components/ui/Logout";
+import { useState } from "react";
+import { Activity, Gauge, Menu, Package, Wrench, X } from "lucide-react";
+import { useAuth } from "../contexts/Auth";
+
+const navBaseItems = [
+  {
+    id: 0,
+    label: "Catalog",
+    href: "/catalog",
+    icon: <Package />,
+  },
+  {
+    id: 1,
+    label: "Services",
+    href: "/services",
+    icon: <Wrench />,
+  },
+  {
+    id: 2,
+    label: "Activity",
+    href: "/activity",
+    icon: <Activity />,
+  },
+];
+
+const navAuthItems = [
+  {
+    id: 3,
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: <Gauge />,
+  },
+];
 
 const Navbar = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
+  const { user, isAuthenticated } = useAuth();
+
+  const location = useLocation();
   const navigate = useNavigate();
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <nav className="w-full">
-      <main
-        className={`flex items-center justify-between px-4 py-2 ${isDark ? "bg-zinc-900" : "bg-zinc-100"} transition-all duration-3000`}
-      >
-        <div className="flex items-center gap-2">
+    <nav
+      className={`w-full px-8 py-4 fixed top-0 left-0 right-0 z-999 backdrop-blur-xs shadow-2xl transition-all duration-3000 ${
+        isDark ? "bg-zinc-950/90 text-zinc-50" : "bg-zinc-50/50 text-zinc-950"
+      }`}
+    >
+      <main className="flex items-center justify-between">
+        {/* Logo */}
+        <div
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 cursor-pointer transition-all duration-1000"
+        >
           <img
             src={logo}
-            alt="Top Tier Customs Logo"
-            className={`w-16 h-16 rounded-full border-3 ${isDark ? "border-rose-500" : "border-sky-500"} transition-all duration-1500`}
+            alt="Logo"
+            className={`w-12.5 lg:w-15 rounded-full border-3 transition-all duration-1000 ${
+              isDark ? "border-rose-500" : "border-sky-500"
+            }`}
           />
           <h1
-            onClick={() => navigate("/")}
-            className={`text-3xl font-bold uppercase bg-linear-to-r bg-clip-text text-transparent ${isDark ? "from-rose-500 to-zinc-50" : "from-sky-500 to-zinc-950"} transition-all duration-1500`}
+            className={`text-xl lg:text-2xl font-bold uppercase bg-clip-text text-transparent bg-linear-to-r transition-all duration-1000 ${
+              isDark ? "from-rose-500 to-zinc-50" : "from-sky-500 to-zinc-950"
+            }`}
           >
-            Top Tier Customs
+            Top-Tier Customs
           </h1>
         </div>
-        <div>
-          <ul className="flex items-center gap-4">
-            <li
-              className={`text-lg font-medium uppercase ${isDark ? "text-zinc-50" : "text-zinc-950"} transition-all duration-1500`}
+        {/* Desktop Nav */}
+        <div className="hidden lg:flex items-center gap-8">
+          {navBaseItems.map((navItem) => (
+            <div
+              key={navItem.id}
+              onClick={() => navigate(navItem.href)}
+              className={`text-lg font-semibold uppercase flex items-center gap-1 cursor-pointer transition-all duration-1000`}
             >
-              Catalog
-            </li>
-            <li
-              className={`text-lg font-medium uppercase ${isDark ? "text-zinc-50" : "text-zinc-950"} transition-all duration-1500`}
-            >
-              Services
-            </li>
-            <li
-              className={`text-lg font-medium uppercase ${isDark ? "text-zinc-50" : "text-zinc-950"} transition-all duration-1500`}
-            >
-              About
-            </li>
-            <li
-              className={`text-lg font-medium uppercase ${isDark ? "text-zinc-50" : "text-zinc-950"} transition-all duration-1500`}
-            >
-              Contact
-            </li>
-          </ul>
+              <p>{navItem.icon}</p>
+              <p>{navItem.label}</p>
+            </div>
+          ))}
+          {isAuthenticated &&
+            navAuthItems.map((navItem) => (
+              <div
+                key={navItem.id}
+                onClick={() => navigate(navItem.href)}
+                className={`text-lg font-semibold uppercase flex items-center gap-1 cursor-pointer transition-all duration-1000`}
+              >
+                <p>{navItem.icon}</p>
+                <p>{navItem.label}</p>
+              </div>
+            ))}
         </div>
-        <div className="flex items-center gap-4">
+        {/* Right CTA */}
+        <div className="flex items-center gap-2 md:gap-4 lg:gap-6">
+          <Cart />
+          <Theme />
+          {isAuthenticated && (
+            <p
+              className={`text-md font-medium hidden md:inline-flex transition-all duration-1000 cursor-none ${
+                isDark ? "text-zinc-500" : "text-zinc-800"
+              }`}
+            >
+              samidmunir@outlook.com
+            </p>
+          )}
+          {isAuthenticated ? <Logout /> : <Login />}
           <button
-            className={`px-2 py-1 text-lg font-semibold uppercase border-3 rounded-md ${isDark ? "border-zinc-500 text-zinc-500 hover:bg-zinc-500 hover:text-zinc-950" : ""} transition-all duration-1500`}
+            onClick={() => setMobileOpen((prev) => !prev)}
+            className={`p-1 lg:hidden cursor-pointer`}
           >
-            Signup
+            {mobileOpen ? <X /> : <Menu />}
           </button>
-          <button
-            onClick={() => navigate("/login")}
-            className={`px-2 py-1 text-lg font-semibold uppercase border-3 border-gray-300 rounded-md ${isDark ? "border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-zinc-950" : ""} transition-all duration-1500`}
-          >
-            Login
-          </button>
-          <ThemeToggle />
         </div>
       </main>
+      {/* Mobile Menu */}
+      {mobileOpen && (
+        <div className="flex flex-col gap-4 mt-4 lg:hidden">
+          {[...navBaseItems, ...(isAuthenticated ? navAuthItems : [])].map(
+            (navItem) => (
+              <div
+                key={navItem.id}
+                className={`flex items-center gap-1 font-semibold cursor-pointer transition-all duration-1000`}
+              >
+                <p>{navItem.icon}</p>
+                <p>{navItem.label}</p>
+              </div>
+            )
+          )}
+          {isAuthenticated && (
+            <div className="flex items-center justify-between">
+              <p className={`font-bold transition-all duration-1000`}>
+                Sami M.
+              </p>
+              <p>samidmunir@outlook.com</p>
+            </div>
+          )}
+        </div>
+      )}
     </nav>
   );
 };

@@ -1,19 +1,22 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import App from "./App.jsx";
-import { BrowserRouter } from "react-router-dom";
-import { ThemeProvider } from "./context/ThemeContext.jsx";
-import { AuthProvider } from "./context/AuthContext.jsx";
+import App from "./App";
+import { BrowserRouter as Router } from "react-router-dom";
+import { ThemeProvider } from "./contexts/Theme";
+import { AuthProvider } from "./contexts/Auth";
+import { CartProvider } from "./contexts/Cart";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <BrowserRouter>
+    <Router>
       <ThemeProvider>
         <AuthProvider>
-          <App />
+          <CartProvider>
+            <App />
+          </CartProvider>
         </AuthProvider>
       </ThemeProvider>
-    </BrowserRouter>
-  </StrictMode>,
+    </Router>
+  </StrictMode>
 );
