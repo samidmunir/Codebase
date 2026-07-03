@@ -2,6 +2,8 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import { ENV } from "./config/env.js";
+import authProxyRouter from "./routes/auth.routes.proxy.js";
+import catalogProxyRouter from "./routes/catalog.routes.proxy.js";
 
 const app = express();
 
@@ -18,6 +20,9 @@ app.get("/api/v0/health", (_req, res) => {
     message: `/api/gateway is live on http://localhost:${PORT}/api/v0/`,
   });
 });
+
+app.use("/auth", authProxyRouter);
+app.use("/catalog", catalogProxyRouter);
 
 app.listen(PORT, () => {
   console.log(`✅ <api/gateway> live on http://localhost:${PORT}/api/v0/`);

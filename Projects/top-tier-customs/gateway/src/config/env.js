@@ -9,5 +9,6 @@ export const ENV = {
   GATEWAY_SHARED_SECRET: process.env.GATEWAY_SHARED_SECRET,
   UPSTREAM: {
     AUTH: process.env.AUTH_SERVICE_URL,
+    CATALOG: process.env.CATALOG_SERVICE_URL,
   },
 };
