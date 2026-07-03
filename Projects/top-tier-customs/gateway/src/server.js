@@ -25,5 +25,5 @@ app.use("/auth", authProxyRouter);
 app.use("/catalog", catalogProxyRouter);
 
 app.listen(PORT, () => {
-  console.log(`✅ <api/gateway> live on http://localhost:${PORT}/api/v0/`);
+  console.log(`\n✅ <api/v0/gateway> live on http://localhost:${PORT}/api/v0/`);
 });
