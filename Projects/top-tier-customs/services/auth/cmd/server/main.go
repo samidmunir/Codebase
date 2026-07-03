@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gin-contrib/cors"
@@ -26,9 +27,10 @@ func main() {
 
 	routes.RegisterAuthRoutes(router);
 
-	log.Printf("✅ <api/v0/auth/> is live on http://localhost:%s/api/v0/auth", env.Port)
+	// log.Printf("✅ <api/v0/auth/> is live on http://localhost:%s/api/v0/auth", env.Port)
+	fmt.Println("\n✅ <api/v0/auth/> is live on http://localhost:" + env.Port + "/api/v0/auth/");
 
-	if err := router.Run(":" + env.Port); err != nil {
+	if err := router.Run("localhost:" + env.Port); err != nil {
 		log.Fatal(err);
 	}
 }
