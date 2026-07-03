@@ -15,14 +15,14 @@ app.use(cors({ origin: CLIENT, credentials: true }));
 
 app.get("/api/v0/health", (_req, res) => {
   return res.status(200).json({
+    message: `/api/gateway is live on http://localhost:${PORT}/api/v0/`,
     ok: true,
     source: "<api.v0.gateway>: health()",
-    message: `/api/gateway is live on http://localhost:${PORT}/api/v0/`,
   });
 });
 
-app.use("/auth", authProxyRouter);
-app.use("/catalog", catalogProxyRouter);
+app.use("/api/v0/auth", authProxyRouter);
+app.use("/api/v0/catalog", catalogProxyRouter);
 
 app.listen(PORT, () => {
   console.log(`\n✅ <api/v0/gateway> live on http://localhost:${PORT}/api/v0/`);
