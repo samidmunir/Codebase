@@ -58,6 +58,40 @@ yarn-error.log*
 pnpm-debug.log*
 
 # =========================================================
+# PYTHON
+# =========================================================
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Pytest
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# =========================================================
 # NODE.JS / JAVASCRIPT / TYPESCRIPT
 # =========================================================
 

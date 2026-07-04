@@ -1,0 +1,13 @@
+asgiref==3.11.1
+click==8.4.2
+Django==6.0.6
+django-filter==25.2
+django-mongodb-backend==6.0.3
+djangorestframework==3.17.1
+dnspython==2.8.0
+h11==0.16.0
+pillow==12.3.0
+pymongo==4.17.0
+python-dotenv==1.2.2
+sqlparse==0.5.5
+uvicorn==0.49.0
