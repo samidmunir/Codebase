@@ -204,7 +204,7 @@ func Login(c *gin.Context) {
 
 	env := config.LoadEnv();
 
-	accessToken, err := utils.GenerateAccessToken(user.Id.Hex(), user.Email, user.Role, env.JWTAccessSecret);
+	accessToken, err := utils.GenerateAccessToken(user.Id.Hex(), user.Email, user.Role, user.SecOps.TokenVersion, env.JWTAccessSecret);
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H {
 			"ok": false,
@@ -215,7 +215,7 @@ func Login(c *gin.Context) {
 		return;
 	}
 
-	refreshToken, err := utils.GenerateRefreshToken(user.Id.Hex(), user.Email, user.Role, env.JWTRefreshSecret);
+	refreshToken, err := utils.GenerateRefreshToken(user.Id.Hex(), user.Email, user.Role, user.SecOps.TokenVersion, env.JWTRefreshSecret);
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H {
 			"ok": false,
@@ -366,7 +366,9 @@ func Refresh(c *gin.Context) {
 		return;
 	}
 
-	accessToken, err := utils.GenerateAccessToken(user.Id.Hex(), user.Email, user.Role, env.JWTAccessSecret);
+	newTokenVersion := user.SecOps.TokenVersion + 1;
+
+	accessToken, err := utils.GenerateAccessToken(user.Id.Hex(), user.Email, user.Role, newTokenVersion, env.JWTAccessSecret);
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"ok": false,
@@ -375,6 +377,19 @@ func Refresh(c *gin.Context) {
 		});
 		return;
 	}
+
+	now := time.Now()
+	
+	_, err = db.UsersCollection.UpdateOne(
+		ctx,
+		bson.M{"_id": user.Id},
+		bson.M{
+			"$set": bson.M{
+				"secOps.tokenVersion": newTokenVersion,
+				"updatedAt": now,
+			},
+		},
+	);
 
 	c.JSON(http.StatusOK, gin.H{
 		"ok": true,
