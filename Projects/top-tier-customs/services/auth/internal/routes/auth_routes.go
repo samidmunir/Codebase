@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/samidmunir/top-tier-customs/services/auth/internal/handlers"
+	"github.com/samidmunir/top-tier-customs/services/auth/internal/middleware"
 )
 
 func RegisterAuthRoutes(router *gin.Engine) {
@@ -10,6 +11,6 @@ func RegisterAuthRoutes(router *gin.Engine) {
 	router.POST("/signup", handlers.Signup);
 	router.POST("/login", handlers.Login);
 	router.POST("/logout", handlers.Logout);
-	router.GET("/me", handlers.Me);
+	router.GET("/me", middleware.Authorize(), handlers.Me);
 	router.POST("/refresh", handlers.Refresh);
 }

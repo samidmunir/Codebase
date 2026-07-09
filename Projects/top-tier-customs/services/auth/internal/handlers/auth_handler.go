@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -270,6 +271,7 @@ func Logout(c *gin.Context) {
 
 func Me(c *gin.Context) {
 	userId, exists := c.Get("userId");
+	fmt.Println("userId:", userId);
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"ok": false,
