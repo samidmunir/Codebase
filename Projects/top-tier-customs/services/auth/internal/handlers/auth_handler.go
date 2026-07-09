@@ -313,8 +313,80 @@ func Me(c *gin.Context) {
 }
 
 func Refresh(c *gin.Context) {
-	c.JSON(501, gin.H {
-		"ok": false,
-		"message": "Refresh handler not implemented yet.",
+	refreshToken, err := c.Cookie("refresh_token");
+	if err != nil || refreshToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"ok": false,
+			"source": "<api.v0.auth>: Refresh()",
+			"message": "Refresh token missing.",
+		});
+		return;
+	}
+
+	env := config.LoadEnv();
+
+	claims, err := utils.VerifyToken(refreshToken, env.JWTRefreshSecret);
+	if err != nil {
+		c.SetCookie("refresh_token", "", -1, "/", "", false, true);
+
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"ok": false,
+			"source": "<api.v0.auth>: Refresh()",
+			"message": "Invalid or expired refresh token.",
+		});
+		return;
+	}
+
+	objectId, err := primitive.ObjectIDFromHex(claims.Sub);
+	if err != nil {
+		c.SetCookie("refresh_token", "", -1, "/", "", false, true);
+
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"ok": false,
+			"source": "<api.v0.auth>: Refresh()",
+			"message": "Invalid refresh token.",
+		});
+		return;
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second);
+	defer cancel();
+
+	var user models.User;
+
+	err = db.UsersCollection.FindOne(ctx, bson.M{"_id": objectId}).Decode(&user);
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"ok": false,
+			"source": "<api.v0.auth>: Refresh()",
+			"message": "Invalid refresh token.",
+		});
+		return;
+	}
+
+	accessToken, err := utils.GenerateAccessToken(user.Id.Hex(), user.Email, user.Role, env.JWTAccessSecret);
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"ok": false,
+			"source": "<api.v0.auth>: Refresh()",
+			"message": "Failed to generate access token.",
+		});
+		return;
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"ok": true,
+		"source": "<api.v0.auth>: Refresh()",
+		"message": "Access token refreshed successfully.",
+		"access_token": accessToken,
+		"user": gin.H{
+			"_id": user.Id,
+			"email": user.Email,
+			"role": user.Role,
+			"profile": user.Profile,
+			"secOps": user.SecOps,
+			"createdAt": user.CreatedAt,
+			"updatedAt": user.UpdatedAt,
+		},
 	});
 }
