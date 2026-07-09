@@ -269,10 +269,47 @@ func Logout(c *gin.Context) {
 }
 
 func Me(c *gin.Context) {
-	c.JSON(501, gin.H {
-		"ok": false,
-		"message": "Me handler not implemented yet.",
-	});
+	userId, exists := c.Get("userId");
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"ok": false,
+			"source": "<api.v0.auth>: Me()",
+			"message": "Unauthorized.",
+		});
+		return;
+	}
+
+	objectId, err := primitive.ObjectIDFromHex(userId.(string));
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"ok": false,
+			"source": "<api.v0.auth>: Me()",
+			"message": "Invalid userId.",
+		});
+		return;
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second);
+	defer cancel();
+
+	var user models.User;
+
+	err = db.UsersCollection.FindOne(ctx, bson.M{"_id": objectId}).Decode(&user);
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"ok": false,
+			"source": "<api.v0.auth>: Me()",
+			"message": "User not found.",
+		});
+		return;
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+			"ok": true,
+			"source": "<api.v0.auth>: Me()",
+			"message": "User retrieved successfully.",
+			"user": user,
+		});
 }
 
 func Refresh(c *gin.Context) {
