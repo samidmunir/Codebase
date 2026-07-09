@@ -259,10 +259,13 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	c.JSON(501, gin.H {
-		"ok": false,
-		"message": "Logout handler not implemented yet.",
-	});
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true);
+
+	c.JSON(http.StatusOK, gin.H {
+			"ok": true,
+			"source": "<api.v0.auth>: Logout()",
+			"message": "Logout successful.",
+		});
 }
 
 func Me(c *gin.Context) {
