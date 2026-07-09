@@ -1,10 +1,12 @@
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+
 from .models import Product
 from .serializers import ProductSerializer
 
 
 class ProductViewSet(ModelViewSet):
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
     filterset_fields = [
@@ -35,3 +37,21 @@ class ProductViewSet(ModelViewSet):
         "updated_at",
         "stock_quantity",
     ]
+
+    def get_queryset(self):
+        return Product.objects.filter(is_active=True)
+
+    def destroy(self, request, *args, **kwargs):
+        product = self.get_object()
+        product.is_active = False
+        product.status = Product.ProductStatus.ARCHIVED
+        product.save(update_fields=["is_active", "status", "updated_at"])
+
+        return Response(
+            {
+                "message": "Product archived successfully.",
+                "id": product.id,
+                "name": product.name,
+            },
+            status=status.HTTP_200_OK,
+        )
