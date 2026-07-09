@@ -1,12 +1,48 @@
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from .models import Product
 from .serializers import ProductSerializer
 
 
-class ProductViewSet(ModelViewSet):
+class ProductPublicViewSet(ReadOnlyModelViewSet):
+    serializer_class = ProductSerializer
+
+    filterset_fields = [
+        "category",
+        "brand",
+        "is_featured",
+        "vehicle_make",
+        "vehicle_model",
+    ]
+
+    search_fields = [
+        "name",
+        "description",
+        "sku",
+        "brand",
+        "manufacturer_part_number",
+        "vehicle_make",
+        "vehicle_model",
+        "fitment_notes",
+    ]
+
+    ordering_fields = [
+        "price",
+        "sale_price",
+        "created_at",
+        "stock_quantity",
+    ]
+
+    def get_queryset(self):
+        return Product.objects.filter(
+            is_active=True,
+            status=Product.ProductStatus.ACTIVE,
+        )
+
+
+class ProductAdminViewSet(ModelViewSet):
     serializer_class = ProductSerializer
 
     filterset_fields = [
@@ -39,7 +75,7 @@ class ProductViewSet(ModelViewSet):
     ]
 
     def get_queryset(self):
-        return Product.objects.filter(is_active=True)
+        return Product.objects.all()
 
     def destroy(self, request, *args, **kwargs):
         product = self.get_object()
