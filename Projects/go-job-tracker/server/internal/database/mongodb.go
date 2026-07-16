@@ -39,3 +39,17 @@ func Connect(parentContext context.Context, uri string, databaseName string) (*M
 		Database: client.Database(databaseName),
 	}, nil;
 }
+
+func (m *MongoDB) Disconnect(ctx context.Context) error {
+	if m == nil || m.Client == nil {
+		return nil;
+	}
+
+	if err := m.Client.Disconnect(ctx); err != nil {
+		return fmt.Errorf("disconnect from MongoDB: %w", err);
+	}
+
+	slog.Info("MongoDB connection closed");
+
+	return nil;
+}
