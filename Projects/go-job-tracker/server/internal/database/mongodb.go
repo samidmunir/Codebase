@@ -53,3 +53,15 @@ func (m *MongoDB) Disconnect(ctx context.Context) error {
 
 	return nil;
 }
+
+func (m *MongoDB) Ping(ctx context.Context) error {
+	if m == nil || m.Client == nil {
+		return fmt.Errorf("MongoDB client is not initialized");
+	}
+
+	if err := m.Client.Ping(ctx, nil); err != nil {
+		return fmt.Errorf("ping MongoDB: %w", err);
+	}
+
+	return nil;
+}
