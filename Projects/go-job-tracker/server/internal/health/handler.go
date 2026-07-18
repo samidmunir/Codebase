@@ -1,6 +1,7 @@
 package health
 
 import (
+	"context"
 	"net/http"
 	"runtime"
 	"time"
@@ -38,6 +39,35 @@ func (h *Handler) Check(ctx *gin.Context) {
 			"timestamp": time.Now().UTC(),
 			"uptime": time.Since(h.startedAt).String(),
 			"goVersion": runtime.Version(),
+		},
+	);
+}
+
+func (h *Handler) DatabaseCheck(ctx *gin.Context) {
+	pingContext, cancel := context.WithTimeout(
+		ctx.Request.Context(),
+		3 * time.Second,
+	);
+	defer cancel();
+
+	if err := h.mongoDB.Ping(pingContext); err != nil {
+		response.Error(
+			ctx,
+			http.StatusServiceUnavailable,
+			"DATABASE_UNAVAILABLE",
+			"MongoDB is unavailable.",
+			nil,
+		);
+	}
+
+	response.JSON(
+		ctx,
+		http.StatusOK,
+		"MongoDB is healthy",
+		gin.H{
+			"status": "healthy",
+			"database": h.mongoDB.Database.Name(),
+			"timestamp": time.Now().UTC(),
 		},
 	);
 }
