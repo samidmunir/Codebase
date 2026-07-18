@@ -15,34 +15,41 @@ import (
 	"github.com/samidmunir/go-job-tracker/server/internal/platform/httpserver"
 )
 
+func main() {
+	if err := run(); err != nil {
+		slog.Error("application terminated", "error", err)
+		os.Exit(1)
+	}
+}
+
 func run() error {
-	cfg, err := config.Load();
+	cfg, err := config.Load()
 	if err != nil {
-		return err;
+		return err
 	}
 
-	rootContext := context.Background();
+	rootContext := context.Background()
 
 	mongoDB, err := database.Connect(
 		rootContext,
 		cfg.MongoDB.URI,
 		cfg.MongoDB.Database,
-	);
+	)
 	if err != nil {
-		return err;
+		return err
 	}
 
-	router := httpserver.NewRouter(cfg, mongoDB);
+	router := httpserver.NewRouter(cfg, mongoDB)
 
 	server := &http.Server{
-		Addr: ":" + cfg.Server.Port,
-		Handler: router,
-		ReadTimeout: cfg.Server.ReadTimeout,
+		Addr:         ":" + cfg.Server.Port,
+		Handler:      router,
+		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
-		IdleTimeout: cfg.Server.IdleTimeout,
-	};
+		IdleTimeout:  cfg.Server.IdleTimeout,
+	}
 
-	serverErrorChannel := make(chan error, 1);
+	serverErrorChannel := make(chan error, 1)
 
 	go func() {
 		slog.Info(
@@ -51,19 +58,19 @@ func run() error {
 			cfg.Server.Port,
 			"environment",
 			cfg.App.Environment,
-		);
+		)
 
-		serverErrorChannel <- server.ListenAndServe();
-	}();
+		serverErrorChannel <- server.ListenAndServe()
+	}()
 
-	shutdownSignalChannel := make(chan os.Signal, 1);
+	shutdownSignalChannel := make(chan os.Signal, 1)
 
 	signal.Notify(
 		shutdownSignalChannel,
 		os.Interrupt,
 		syscall.SIGTERM,
 		syscall.SIGINT,
-	);
+	)
 
 	select {
 	case signal := <-shutdownSignalChannel:
@@ -71,35 +78,35 @@ func run() error {
 			"shutdown signal received",
 			"signal",
 			signal.String(),
-		);
+		)
 
 	case serverErr := <-serverErrorChannel:
 		if !errors.Is(serverErr, http.ErrServerClosed) {
-			return serverErr;
+			return serverErr
 		}
 	}
 
 	shutdownContext, cancel := context.WithTimeout(
 		context.Background(),
 		cfg.Server.ShutdownTimeout,
-	);
-	defer cancel();
+	)
+	defer cancel()
 
 	if err := server.Shutdown(shutdownContext); err != nil {
-		return err;
+		return err
 	}
 
 	databaseShutdownContext, databaseCancel := context.WithTimeout(
 		context.Background(),
-		5 * time.Second,
-	);
-	defer databaseCancel();
+		5*time.Second,
+	)
+	defer databaseCancel()
 
 	if err := mongoDB.Disconnect(databaseShutdownContext); err != nil {
-		return err;
+		return err
 	}
 
-	slog.Info("server shut down successfully");
+	slog.Info("server shut down successfully")
 
-	return nil;
+	return nil
 }

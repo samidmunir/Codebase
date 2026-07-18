@@ -14,6 +14,6 @@ func Recovery() gin.HandlerFunc {
 			recovered,
 			"path",
 			ctx.Request.URL.Path,
-		);
-	});
+		)
+	})
 }

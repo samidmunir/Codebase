@@ -12,19 +12,19 @@ import (
 )
 
 type Handler struct {
-	mongoDB *database.MongoDB;
-	startedAt time.Time;
-	appName string;
-	env string;
+	mongoDB   *database.MongoDB
+	startedAt time.Time
+	appName   string
+	env       string
 }
 
 func NewHandler(mongoDB *database.MongoDB, appName string, environment string) *Handler {
 	return &Handler{
-		mongoDB: mongoDB,
+		mongoDB:   mongoDB,
 		startedAt: time.Now().UTC(),
-		appName: appName,
-		env: environment,
-	};
+		appName:   appName,
+		env:       environment,
+	}
 }
 
 func (h *Handler) Check(ctx *gin.Context) {
@@ -33,22 +33,22 @@ func (h *Handler) Check(ctx *gin.Context) {
 		http.StatusOK,
 		"API is healthy",
 		gin.H{
-			"service": h.appName,
+			"service":     h.appName,
 			"environment": h.env,
-			"status": "healthy",
-			"timestamp": time.Now().UTC(),
-			"uptime": time.Since(h.startedAt).String(),
-			"goVersion": runtime.Version(),
+			"status":      "healthy",
+			"timestamp":   time.Now().UTC(),
+			"uptime":      time.Since(h.startedAt).String(),
+			"goVersion":   runtime.Version(),
 		},
-	);
+	)
 }
 
 func (h *Handler) DatabaseCheck(ctx *gin.Context) {
 	pingContext, cancel := context.WithTimeout(
 		ctx.Request.Context(),
-		3 * time.Second,
-	);
-	defer cancel();
+		3*time.Second,
+	)
+	defer cancel()
 
 	if err := h.mongoDB.Ping(pingContext); err != nil {
 		response.Error(
@@ -57,7 +57,7 @@ func (h *Handler) DatabaseCheck(ctx *gin.Context) {
 			"DATABASE_UNAVAILABLE",
 			"MongoDB is unavailable.",
 			nil,
-		);
+		)
 	}
 
 	response.JSON(
@@ -65,9 +65,9 @@ func (h *Handler) DatabaseCheck(ctx *gin.Context) {
 		http.StatusOK,
 		"MongoDB is healthy",
 		gin.H{
-			"status": "healthy",
-			"database": h.mongoDB.Database.Name(),
+			"status":    "healthy",
+			"database":  h.mongoDB.Database.Name(),
 			"timestamp": time.Now().UTC(),
 		},
-	);
+	)
 }

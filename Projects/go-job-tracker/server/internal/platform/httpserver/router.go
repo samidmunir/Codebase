@@ -13,17 +13,17 @@ import (
 
 func NewRouter(cfg *config.Config, mongoDB *database.MongoDB) *gin.Engine {
 	if cfg.App.Environment == "production" {
-		gin.SetMode(gin.ReleaseMode);
+		gin.SetMode(gin.ReleaseMode)
 	}
 
-	router := gin.New();
+	router := gin.New()
 
 	router.Use(
 		middleware.RequestID(),
 		middleware.CORS(cfg.ClientURL),
 		gin.Logger(),
 		middleware.Recovery(),
-	);
+	)
 
 	router.GET("/", func(ctx *gin.Context) {
 		response.JSON(
@@ -32,20 +32,20 @@ func NewRouter(cfg *config.Config, mongoDB *database.MongoDB) *gin.Engine {
 			"Welcome to the GJT API",
 			gin.H{
 				"version": "v1",
-				"health": cfg.App.APIPrefix + "/health",
+				"health":  cfg.App.APIPrefix + "/health",
 			},
-		);
-	});
+		)
+	})
 
-	api := router.Group(cfg.App.APIPrefix);
+	api := router.Group(cfg.App.APIPrefix)
 
 	healthHandler := health.NewHandler(
 		mongoDB,
 		cfg.App.Name,
 		cfg.App.Environment,
-	);
+	)
 
-	health.RegisterRoutes(api, healthHandler);
+	health.RegisterRoutes(api, healthHandler)
 
 	router.NoRoute(func(ctx *gin.Context) {
 		response.Error(
@@ -55,9 +55,9 @@ func NewRouter(cfg *config.Config, mongoDB *database.MongoDB) *gin.Engine {
 			"The requested API route does not exist.",
 			gin.H{
 				"method": ctx.Request.Method,
-				"path": ctx.Request.URL.Path,
+				"path":   ctx.Request.URL.Path,
 			},
-		);
+		)
 	})
 
 	router.NoMethod(func(ctx *gin.Context) {
@@ -68,10 +68,10 @@ func NewRouter(cfg *config.Config, mongoDB *database.MongoDB) *gin.Engine {
 			"The requested HTTP method is not supported.",
 			gin.H{
 				"method": ctx.Request.Method,
-				"path": ctx.Request.URL.Path,
+				"path":   ctx.Request.URL.Path,
 			},
-		);
-	});
+		)
+	})
 
-	return router;
+	return router
 }
