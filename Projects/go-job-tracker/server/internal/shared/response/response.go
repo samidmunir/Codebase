@@ -1,6 +1,10 @@
 package response
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 type APIResponse struct {
 	Success bool `json:"success"`;
@@ -32,4 +36,14 @@ func Error(ctx *gin.Context, statusCode int, code string, message string, detail
 			Details: details,
 		},
 	});
+}
+
+func InternalServerError(ctx *gin.Context) {
+	Error(
+		ctx,
+		http.StatusInternalServerError,
+		"INTERNAL_SERVER_ERROR",
+		"An unexpected server error has occurred.",
+		nil,
+	);
 }
