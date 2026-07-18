@@ -17,3 +17,12 @@ func HashPassword(password string) (string, error) {
 
 	return string(hashedPassword), nil;
 }
+
+func VerifyPassword(password string, passwordHash string) bool {
+	err := bcrypt.CompareHashAndPassword(
+		[]byte(passwordHash),
+		[]byte(password),
+	);
+
+	return err == nil;
+}
