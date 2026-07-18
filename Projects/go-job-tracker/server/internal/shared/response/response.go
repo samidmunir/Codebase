@@ -20,5 +20,16 @@ func JSON(ctx *gin.Context, statusCode int, message string, data interface{}) {
 		Success: true,
 		Message: message,
 		Data: data,
-	})
+	});
+}
+
+func Error(ctx *gin.Context, statusCode int, code string, message string, details interface{}) {
+	ctx.JSON(statusCode, APIResponse{
+		Success: false,
+		Message: message,
+		Error: &APIError{
+			Code: code,
+			Details: details,
+		},
+	});
 }
