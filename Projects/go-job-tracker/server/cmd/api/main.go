@@ -13,6 +13,9 @@ import (
 	"github.com/samidmunir/go-job-tracker/server/internal/config"
 	"github.com/samidmunir/go-job-tracker/server/internal/database"
 	"github.com/samidmunir/go-job-tracker/server/internal/platform/httpserver"
+
+	"github.com/samidmunir/go-job-tracker/server/internal/auth"
+	"github.com/samidmunir/go-job-tracker/server/internal/user"
 )
 
 func main() {
@@ -36,6 +39,23 @@ func run() error {
 		cfg.MongoDB.Database,
 	)
 	if err != nil {
+		return err
+	}
+
+	userRepository := user.NewRepository(mongoDB.Database)
+	authRepository := auth.NewRepository(mongoDB.Database)
+
+	indexContext, indexCancel := context.WithTimeout(
+		rootContext,
+		10*time.Second,
+	)
+	defer indexCancel()
+
+	if err := userRepository.EnsureIndexes(indexContext); err != nil {
+		return err
+	}
+
+	if err := authRepository.EnsureIndexes(indexContext); err != nil {
 		return err
 	}
 

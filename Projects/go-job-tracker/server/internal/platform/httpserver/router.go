@@ -9,6 +9,9 @@ import (
 	"github.com/samidmunir/go-job-tracker/server/internal/health"
 	"github.com/samidmunir/go-job-tracker/server/internal/middleware"
 	"github.com/samidmunir/go-job-tracker/server/internal/shared/response"
+
+	"github.com/samidmunir/go-job-tracker/server/internal/auth"
+	"github.com/samidmunir/go-job-tracker/server/internal/user"
 )
 
 func NewRouter(cfg *config.Config, mongoDB *database.MongoDB) *gin.Engine {
@@ -46,6 +49,27 @@ func NewRouter(cfg *config.Config, mongoDB *database.MongoDB) *gin.Engine {
 	)
 
 	health.RegisterRoutes(api, healthHandler)
+
+	userRepository := user.NewRepository(mongoDB.Database)
+	authRepository := auth.NewRepository(mongoDB.Database)
+	jwtManager := auth.NewJWTManager(cfg.Auth)
+
+	authService := auth.NewService(
+		userRepository,
+		authRepository,
+		jwtManager,
+	)
+
+	authHandler := auth.NewHandler(
+		authService,
+		cfg,
+	)
+
+	auth.RegisterRoutes(
+		api,
+		authHandler,
+		jwtManager,
+	)
 
 	router.NoRoute(func(ctx *gin.Context) {
 		response.Error(
