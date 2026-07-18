@@ -13,18 +13,18 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("user not found");
-	ErrEmailInUse = errors.New("email is already in use");
-);
+	ErrNotFound   = errors.New("user not found")
+	ErrEmailInUse = errors.New("email is already in use")
+)
 
 type Repository struct {
-	collection *mongo.Collection;
+	collection *mongo.Collection
 }
 
 func NewRepository(database *mongo.Database) *Repository {
 	return &Repository{
 		collection: database.Collection("users"),
-	};
+	}
 }
 
 func (r *Repository) EnsureIndexes(ctx context.Context) error {
@@ -38,93 +38,93 @@ func (r *Repository) EnsureIndexes(ctx context.Context) error {
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("create user indexes: %w", err);
+		return fmt.Errorf("create user indexes: %w", err)
 	}
 
-	return  nil;
+	return nil
 }
 
-func (r * Repository) Create(ctx context.Context, user *User) error {
-	user.Email = normalizeEmail(user.Email);
+func (r *Repository) Create(ctx context.Context, user *User) error {
+	user.Email = normalizeEmail(user.Email)
 
-	result, err := r.collection.InsertOne(ctx, user);
+	result, err := r.collection.InsertOne(ctx, user)
 	if mongo.IsDuplicateKeyError(err) {
-		return ErrEmailInUse;
+		return ErrEmailInUse
 	}
 	if err != nil {
-		return fmt.Errorf("insert user: %w", err);
+		return fmt.Errorf("insert user: %w", err)
 	}
 
-	id, ok := result.InsertedID.(bson.ObjectID);
+	id, ok := result.InsertedID.(bson.ObjectID)
 	if !ok {
-		return errors.New("unexpected inserted user ID type");
+		return errors.New("unexpected inserted user ID type")
 	}
 
-	user.ID = id;
+	user.ID = id
 
-	return nil;
+	return nil
 }
 
 func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, error) {
-	var result User;
+	var result User
 
 	err := r.collection.FindOne(
 		ctx,
 		bson.M{"email": normalizeEmail(email)},
-	).Decode(&result);
+	).Decode(&result)
 
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrNotFound;
+		return nil, ErrNotFound
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("find user by email: %w", err);
+		return nil, fmt.Errorf("find user by email: %w", err)
 	}
 
-	return &result, nil;
+	return &result, nil
 }
 
 func (r *Repository) FindByID(ctx context.Context, id bson.ObjectID) (*User, error) {
-	var result User;
+	var result User
 
 	err := r.collection.FindOne(
 		ctx,
 		bson.M{"_id": id},
-	).Decode(&result);
+	).Decode(&result)
 
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrNotFound;
+		return nil, ErrNotFound
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("find user by ID: %w", err);
+		return nil, fmt.Errorf("find user by ID: %w", err)
 	}
 
-	return &result, nil;
+	return &result, nil
 }
 
-func (r * Repository) UpdateLastLogin(ctx context.Context, id bson.ObjectID, at time.Time) error {
+func (r *Repository) UpdateLastLogin(ctx context.Context, id bson.ObjectID, at time.Time) error {
 	result, err := r.collection.UpdateOne(
 		ctx,
 		bson.M{"_id": id},
 		bson.M{
 			"$set": bson.M{
 				"lastLoginAt": at,
-				"updatedAt": at,
+				"updatedAt":   at,
 			},
 		},
-	);
+	)
 	if err != nil {
-		return fmt.Errorf("update last login: %w", err);
+		return fmt.Errorf("update last login: %w", err)
 	}
 
 	if result.MatchedCount == 0 {
-		return ErrNotFound;
+		return ErrNotFound
 	}
 
-	return  nil;
+	return nil
 }
 
 func normalizeEmail(value string) string {
-	return strings.ToLower(strings.TrimSpace(value));
+	return strings.ToLower(strings.TrimSpace(value))
 }

@@ -7,55 +7,55 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const bcryptCost = 12;
+const bcryptCost = 12
 
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword(
 		[]byte(password),
 		bcryptCost,
-	);
+	)
 	if err != nil {
-		return "", err;
+		return "", err
 	}
 
-	return string(hashedPassword), nil;
+	return string(hashedPassword), nil
 }
 
 func VerifyPassword(password string, passwordHash string) bool {
 	err := bcrypt.CompareHashAndPassword(
 		[]byte(passwordHash),
 		[]byte(password),
-	);
+	)
 
-	return err == nil;
+	return err == nil
 }
 
 func ValidatePassword(password string) error {
 	if len(password) < 10 {
-		return  errors.New("password must contain at least 10 characters");
+		return errors.New("password must contain at least 10 characters")
 	}
 
-	var hasUpper bool;
-	var hasLower bool;
-	var hasNumber bool;
-	var hasSymbol bool;
-	
+	var hasUpper bool
+	var hasLower bool
+	var hasNumber bool
+	var hasSymbol bool
+
 	for _, character := range password {
 		switch {
 		case unicode.IsUpper(character):
-			hasUpper = true;
+			hasUpper = true
 		case unicode.IsLower(character):
-			hasLower = true;
+			hasLower = true
 		case unicode.IsNumber(character):
-			hasNumber = true;
+			hasNumber = true
 		case unicode.IsPunct(character) || unicode.IsSymbol(character):
-			hasSymbol = true;
+			hasSymbol = true
 		}
 	}
 
 	if !hasUpper || !hasLower || !hasNumber || !hasSymbol {
-		return errors.New("password must contain uppercase, lowercase, number, and special characters");
+		return errors.New("password must contain uppercase, lowercase, number, and special characters")
 	}
 
-	return nil;
+	return nil
 }
