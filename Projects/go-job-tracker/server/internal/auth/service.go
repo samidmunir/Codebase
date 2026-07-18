@@ -58,8 +58,8 @@ func (s *Service) Register(
 	now := time.Now().UTC()
 
 	newUser := &user.User{
-		FirstName:    strings.TrimSpace(request.FirstName),
-		LastName:     strings.TrimSpace(request.LastName),
+		FirstName: strings.TrimSpace(request.FirstName),
+		LastName:  strings.TrimSpace(request.LastName),
 		DisplayName: strings.TrimSpace(
 			request.FirstName + " " + request.LastName,
 		),
