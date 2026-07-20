@@ -12,3 +12,9 @@ export async function loginUser(payload) {
 
   return response.data;
 }
+
+export async function refreshSession() {
+  const response = await publicAPIClient.post("/auth/refresh");
+
+  return response.data;
+}
