@@ -32,6 +32,32 @@ function normalizeAPIError(error) {
   };
 }
 
+async function refreshAccessToken() {
+  if (!refreshPromise) {
+    refreshPromise = publicAPIClient
+      .post("/auth/refresh")
+      .then((response) => {
+        const token = response.data?.data?.accessToken;
+        if (!token) {
+          throw new Error("Refresh response did not contain an access token.");
+        }
+
+        setAccessToken(token);
+
+        return token;
+      })
+      .catch((error) => {
+        clearAccessToken();
+        throw error;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
