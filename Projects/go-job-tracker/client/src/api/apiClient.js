@@ -58,6 +58,18 @@ async function refreshAccessToken() {
   return refreshPromise;
 }
 
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(normalizeAPIError(error)),
+);
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
