@@ -18,3 +18,9 @@ export async function refreshSession() {
 
   return response.data;
 }
+
+export async function logoutUser() {
+  const response = await publicAPIClient.post("/auth/logout");
+
+  return response.data;
+}
