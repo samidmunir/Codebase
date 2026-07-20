@@ -72,17 +72,31 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const normalizedError = {
-      status: error.response?.status ?? 0,
-      code: error.response?.data?.error?.code ?? "NETWORK_ERROR",
-      message:
-        error.response?.data?.message ??
-        error.message ??
-        "An unexpected error occurred.",
-      details: error.response?.data?.error?.details ?? null,
-    };
+  async (error) => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
 
-    return Promise.reject(normalizedError);
+    const shouldAttemptRefresh =
+      status === 401 && originalRequest && !originalRequest._retry;
+    if (!shouldAttemptRefresh) {
+      return Promise.reject(normalizeAPIError(error));
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      const newAccessToken = await refreshAccessToken();
+
+      originalRequest.headers = originalRequest.headers ?? {};
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      clearAccessToken();
+
+      window.dispatchEvent(new CustomEvent("auth:session-expired"));
+
+      return Promise.reject(normalizeAPIError(refreshError));
+    }
   },
 );
