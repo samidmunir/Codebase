@@ -6,3 +6,9 @@ export async function registerUser(payload) {
 
   return response.data;
 }
+
+export async function loginUser(payload) {
+  const response = await publicAPIClient.post("/auth/login", payload);
+
+  return response.data;
+}
