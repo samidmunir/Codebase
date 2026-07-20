@@ -3,7 +3,7 @@ import { BriefcaseBusiness, LoaderCircle } from "lucide-react";
 export default function AuthLoadingScreen() {
   return (
     <main className="auth-loading-screen">
-      <div className="auth-loading-screen_logo">
+      <div className="auth-loading-screen__logo">
         <BriefcaseBusiness size={30} />
       </div>
 
