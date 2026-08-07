@@ -1,10 +1,7 @@
+import AppRouter from "../src/router/AppRouter";
+
 const App = () => {
-  return (
-    <main>
-      <h1>Top Tier Customs</h1>
-      <div></div>
-    </main>
-  );
+  return <AppRouter />;
 };
 
 export default App;
