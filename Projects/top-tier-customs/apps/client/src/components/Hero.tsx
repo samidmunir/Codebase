@@ -23,8 +23,10 @@ const Hero = () => {
             />
           </div>
         </div>
+
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-white/30 dark:bg-black/50 transition-all duration-300" />
+
         {/* Foreground Content */}
         <div className="relative z-10 flex min-h-screen items-center justify-center px-6 pt-20">
           <div className="mx-auto max-w-4xl text-center text-zinc-950 dark:text-zinc-50 transition-all duration-300">
