@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
+import { connectDB } from "./config/mongodb.js";
 
 dotenv.config();
 
@@ -14,7 +15,8 @@ app.use(express.json());
 
 app.listen(PORT, () => {
   console.log(
-    `top-tier-customs API server is live on http://localhost:${PORT}`,
+    `\ntop-tier-customs API server is live on http://localhost:${PORT}`,
   );
   console.log(`--> NODE_ENV: ${NODE_ENV}`);
+  connectDB();
 });
