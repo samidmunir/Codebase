@@ -52,6 +52,19 @@ const getErrorMessage = (error: unknown): string => {
   return "An unknown error occurred.";
 };
 
+export const health = async (
+  _req: Request,
+  res: Response,
+): Promise<Response> => {
+  return res.status(200).json({
+    success: true,
+    service: "auth",
+    status: "healthy",
+    message: "Auth API is running",
+    timestamp: new Date().toISOString(),
+  });
+};
+
 export const register = async (
   req: Request<Record<string, never>, unknown, RegisterBody>,
   res: Response,
