@@ -5,7 +5,8 @@ export type ServiceCategory =
   | "Climate"
   | "Exterior"
   | "Styling"
-  | "Protection";
+  | "Protection"
+  | "Security";
 
 export type ServicePriceType = "fixed" | "starting-at" | "estimate" | "contact";
 

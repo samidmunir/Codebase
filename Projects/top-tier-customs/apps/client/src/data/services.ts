@@ -20,7 +20,7 @@ export const services: Service[] = [
 
     estimatedDuration: "3–6 hours",
 
-    thumbnail: "/assets/services/ambient-lighting/thumbnail.jpg",
+    thumbnail: "../assets/services/ambient-lighting/thumbnail.jpg",
 
     images: [
       "/assets/services/ambient-lighting/ambient-1.jpg",
@@ -406,5 +406,282 @@ export const services: Service[] = [
     active: true,
 
     displayOrder: 6,
+  },
+  {
+    id: "service-007",
+
+    slug: "ghost-immobiliser-installation",
+
+    name: "Ghost Immobiliser Installation",
+
+    shortDescription:
+      "Protect your vehicle from theft with a discreet CAN-bus immobiliser requiring a personalised PIN sequence before the engine can start.",
+
+    category: "Security",
+
+    tags: ["Ghost", "Immobiliser", "Security", "CAN Bus", "Anti Theft"],
+
+    priceType: "starting-at",
+    price: 399,
+    priceLabel: "Starting from £399",
+
+    estimatedDuration: "3–5 hours",
+
+    thumbnail: "/assets/services/ghost-immobiliser/thumbnail.png",
+
+    images: [
+      "/assets/services/ghost-immobiliser/aero-1.jpg",
+      "/assets/services/ghost-immobiliser/aero-2.jpg",
+      "/assets/services/ghost-immobiliser/aero-3.jpg",
+    ],
+
+    description:
+      "Enhance your vehicle's security with a professionally installed Ghost Immobiliser. Unlike traditional alarm systems, the Ghost communicates directly with your vehicle's CAN bus and prevents the engine from starting until the correct PIN sequence is entered using existing steering wheel or dashboard controls.",
+
+    features: [
+      {
+        id: "ghost-feature-001",
+        title: "No Visible Keypads",
+      },
+      {
+        id: "ghost-feature-002",
+        title: "CAN Bus Technology",
+      },
+      {
+        id: "ghost-feature-003",
+        title: "Anti Theft Protection",
+      },
+      {
+        id: "ghost-feature-004",
+        title: "Valet / Service Mode",
+      },
+    ],
+
+    includes: [
+      "Professional installation",
+      "System configuration",
+      "PIN programming",
+      "Demonstration",
+      "Vehicle testing",
+    ],
+
+    featured: true,
+    popular: true,
+    bookable: true,
+    active: true,
+
+    displayOrder: 7,
+  },
+  {
+    id: "service-008",
+
+    slug: "apple-carplay-android-auto-installation",
+
+    name: "Apple CarPlay & Android Auto Installation",
+
+    shortDescription:
+      "Upgrade your infotainment system with seamless Apple CarPlay and Android Auto integration.",
+
+    category: "Electronics",
+
+    tags: [
+      "Apple CarPlay",
+      "Android Auto",
+      "Infotainment",
+      "Navigation",
+      "Touchscreen",
+    ],
+
+    priceType: "starting-at",
+    price: 299,
+    priceLabel: "Starting from £299",
+
+    estimatedDuration: "2–5 hours",
+
+    thumbnail: "/assets/services/car-play/thumbnail.jpg",
+
+    images: [
+      "/assets/services/car-play/aero-1.jpg",
+      "/assets/services/car-play/aero-2.jpg",
+      "/assets/services/car-play/aero-3.jpg",
+    ],
+
+    description:
+      "Bring modern smartphone connectivity to your vehicle with Apple CarPlay or Android Auto. We professionally integrate compatible modules or replacement displays while maintaining a clean OEM appearance.",
+
+    features: [
+      {
+        id: "carplay-feature-001",
+        title: "Wireless CarPlay",
+      },
+      {
+        id: "carplay-feature-002",
+        title: "Android Auto",
+      },
+      {
+        id: "carplay-feature-003",
+        title: "Navigation Integration",
+      },
+      {
+        id: "carplay-feature-004",
+        title: "Steering Wheel Controls",
+      },
+    ],
+
+    includes: [
+      "Professional installation",
+      "Module integration",
+      "Vehicle coding",
+      "Functionality testing",
+      "Customer walkthrough",
+    ],
+
+    featured: true,
+    popular: true,
+    bookable: true,
+    active: true,
+
+    displayOrder: 8,
+  },
+  {
+    id: "service-009",
+
+    slug: "custom-number-plates",
+
+    name: "Custom Number Plates",
+
+    shortDescription:
+      "Finish your vehicle's appearance with premium custom registration plates manufactured and fitted professionally.",
+
+    category: "Styling",
+
+    tags: [
+      "Number Plates",
+      "Registration",
+      "4D Plates",
+      "Gel Plates",
+      "Styling",
+    ],
+
+    priceType: "starting-at",
+    price: 39,
+    priceLabel: "Starting from £39",
+
+    estimatedDuration: "30–60 minutes",
+
+    thumbnail: "/assets/services/number-plates/thumbnail.jpg",
+
+    images: [
+      "/assets/services/number-plates/aero-1.jpg",
+      "/assets/services/number-plates/aero-2.jpg",
+      "/assets/services/number-plates/aero-3.jpg",
+    ],
+
+    description:
+      "Choose from premium acrylic, gel or 4D number plates to complement your vehicle's styling. Professionally manufactured and installed with careful attention to alignment and finish.",
+
+    features: [
+      {
+        id: "plate-feature-001",
+        title: "4D Number Plates",
+      },
+      {
+        id: "plate-feature-002",
+        title: "Gel Plates",
+      },
+      {
+        id: "plate-feature-003",
+        title: "Premium Acrylic",
+      },
+      {
+        id: "plate-feature-004",
+        title: "Professional Fitment",
+      },
+    ],
+
+    includes: [
+      "Plate production",
+      "Professional installation",
+      "Alignment",
+      "Quality inspection",
+    ],
+
+    featured: false,
+    popular: true,
+    bookable: true,
+    active: true,
+
+    displayOrder: 9,
+  },
+  {
+    id: "service-010",
+
+    slug: "custom-steering-wheel-installation",
+
+    name: "Custom Steering Wheel Installation",
+
+    shortDescription:
+      "Upgrade your driving experience with a bespoke steering wheel featuring premium materials and performance-inspired styling.",
+
+    category: "Interior",
+
+    tags: [
+      "Steering Wheel",
+      "Carbon Fibre",
+      "Alcantara",
+      "Leather",
+      "Interior",
+    ],
+
+    priceType: "starting-at",
+    price: 499,
+    priceLabel: "Starting from £499",
+
+    estimatedDuration: "2–4 hours",
+
+    thumbnail: "/assets/services/steering-wheel/thumbnail.jpg",
+
+    images: [
+      "/assets/services/steering-wheel/aero-1.jpg",
+      "/assets/services/steering-wheel/aero-2.jpg",
+      "/assets/services/steering-wheel/aero-3.jpg",
+    ],
+
+    description:
+      "Personalise your vehicle with a custom steering wheel tailored to your style. From carbon fibre and Alcantara to premium leather and custom stitching, every installation is completed with precision for an OEM-quality finish.",
+
+    features: [
+      {
+        id: "wheel-feature-001",
+        title: "Carbon Fibre Options",
+      },
+      {
+        id: "wheel-feature-002",
+        title: "Premium Leather & Alcantara",
+      },
+      {
+        id: "wheel-feature-003",
+        title: "Custom Stitching",
+      },
+      {
+        id: "wheel-feature-004",
+        title: "OEM Fit & Finish",
+      },
+    ],
+
+    includes: [
+      "Professional fitment",
+      "Airbag transfer",
+      "Control integration",
+      "Safety inspection",
+      "Final testing",
+    ],
+
+    featured: true,
+    popular: true,
+    bookable: true,
+    active: true,
+
+    displayOrder: 10,
   },
 ];

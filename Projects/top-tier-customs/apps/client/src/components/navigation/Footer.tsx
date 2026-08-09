@@ -5,7 +5,7 @@ import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
 const Footer = () => {
   const year = new Date().getFullYear();
   return (
-    <footer className="w-full px-8 py-4 bg-white/60 dark:bg-black/90  border-t border-black/10 dark:border-white/10 transition-all duration-300">
+    <footer className="w-full px-8 py-4 bg-white/60 dark:bg-black/90 text-zinc-950 dark:text-zinc-50 border-t border-black/10 dark:border-white/10 transition-all duration-300">
       <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12">
         {/* Company Info */}
         <div className="">
