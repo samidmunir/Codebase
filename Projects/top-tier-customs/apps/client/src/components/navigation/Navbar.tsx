@@ -54,12 +54,78 @@ const Navbar = () => {
           <Toolbox />
           Services
         </NavLink>
-        <Link to="/activity" className="flex items-center gap-2">
-          <Activity /> Activity
-        </Link>
-        <Link to="/contact" className="flex items-center gap-2">
-          <CarFront /> Garage
-        </Link>
+        <NavLink
+          to="/activity"
+          className={({ isActive }) =>
+            `
+    relative
+    flex items-center gap-2
+    py-2
+
+    ${
+      isActive
+        ? "text-sky-500 dark:text-rose-500"
+        : "hover:text-sky-500 dark:hover:text-rose-500"
+    }
+
+    after:absolute
+    after:left-0
+    after:-bottom-1
+    after:h-0.75
+    after:w-full
+    after:rounded-full
+    after:bg-sky-500
+    after:transition-all
+
+    dark:after:bg-rose-500
+
+    ${
+      isActive ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100"
+    }
+
+    after:origin-left
+    `
+          }
+        >
+          <Activity />
+          Activity
+        </NavLink>
+        <NavLink
+          to="/garage"
+          className={({ isActive }) =>
+            `
+    relative
+    flex items-center gap-2
+    py-2
+
+    ${
+      isActive
+        ? "text-sky-500 dark:text-rose-500"
+        : "hover:text-sky-500 dark:hover:text-rose-500"
+    }
+
+    after:absolute
+    after:left-0
+    after:-bottom-1
+    after:h-0.75
+    after:w-full
+    after:rounded-full
+    after:bg-sky-500
+    after:transition-all
+
+    dark:after:bg-rose-500
+
+    ${
+      isActive ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100"
+    }
+
+    after:origin-left
+    `
+          }
+        >
+          <CarFront />
+          Garage
+        </NavLink>
       </div>
       <div className="flex items-center gap-8">
         <GarageStatus />
