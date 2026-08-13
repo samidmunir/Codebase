@@ -1,4 +1,5 @@
 import type { Service } from "../types/service";
+import ServiceFAQAccordian from "../components/services/faqs/ServiceFAQAccordian";
 
 interface ServicePageProps {
   service: Service;
@@ -26,7 +27,9 @@ const ServicePage = ({ service }: ServicePageProps) => {
           </div>
         </div>
       </section>
-      <div>{/* FAQ section here... */}</div>
+      <div>
+        <ServiceFAQAccordian />
+      </div>
     </main>
   );
 };
