@@ -19,6 +19,9 @@ const router = createBrowserRouter([
         element: <ServicesPage />,
       },
       {
+        path: "services/:slug",
+      },
+      {
         path: "garage",
         element: <GaragePage />,
       },
