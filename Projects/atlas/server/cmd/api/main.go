@@ -1,9 +1,15 @@
 package main
 
 import (
-	"fmt"
+	"log"
+
+	"github.com/samidmunir/Codebase/projects/atlas/server/platform/server"
 )
 
 func main() {
-	fmt.Println("Atlas API starting...")
+	srv := server.New(":8080")
+
+	if err := srv.Start(); err != nil {
+		log.Fatal(err)
+	}
 }
