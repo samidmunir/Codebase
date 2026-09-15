@@ -194,8 +194,6 @@ compile_commands.json
 CTestTestfile.cmake
 cmake_install.cmake
 
-Makefile
-
 *.o
 *.obj
 *.a
@@ -272,7 +270,6 @@ docker-compose.override.yml
 
 dump/
 
-*.sql
 *.dump
 
 ###############################################################################
