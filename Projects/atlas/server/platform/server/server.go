@@ -15,22 +15,22 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func New(addr string, db *pgxpool.Pool) *Server {
+func New(addr string, db *pgxpool.Pool, frontendURL string) *Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /api/v1/health", health.Handler)
 	mux.HandleFunc("GET /api/v1/ready", health.ReadinessHandler(db))
 
-	httpServer := &http.Server {
-		Addr: addr,
-		Handler: mux,
+	httpServer := &http.Server{
+		Addr:              addr,
+		Handler:           corsMiddleware(mux, frontendURL),
 		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout: 10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout: 60 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
-	return &Server {
+	return &Server{
 		httpServer: httpServer,
 	}
 }

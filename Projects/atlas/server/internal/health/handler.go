@@ -6,15 +6,15 @@ import (
 )
 
 type Response struct {
-	Status string `json:"status"`
+	Status  string `json:"status"`
 	Service string `json:"service"`
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	response := Response {
-		Status: "ok",
+	response := Response{
+		Status:  "ok",
 		Service: "atlas-api",
 	}
 

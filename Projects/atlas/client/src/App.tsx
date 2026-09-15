@@ -1,10 +1,7 @@
+import { AppRouter } from "./routes/AppRouter";
+
 function App() {
-  return (
-    <main>
-      <h1>Atlas</h1>
-      <p>Your personal operating system.</p>
-    </main>
-  );
+  return <AppRouter />;
 }
 
 export default App;

@@ -6,16 +6,18 @@ import (
 )
 
 type Config struct {
-	Port string
+	Port        string
 	DatabaseURL string
 	Environment string
+	FrontendURL string
 }
 
 func Load() (*Config, error) {
-	cfg := &Config {
-		Port: getEnv("PORT", "8080"),
+	cfg := &Config{
+		Port:        getEnv("PORT", "8080"),
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		Environment: getEnv("APP_ENV", "development"),
+		FrontendURL: getEnv("FRONTEND_URL", "http://localhost:5173"),
 	}
 
 	if cfg.DatabaseURL == "" {

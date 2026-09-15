@@ -24,7 +24,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx:= context.Background()
+	ctx := context.Background()
 
 	db, err := database.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -33,15 +33,14 @@ func main() {
 	defer db.Close()
 
 	log.Println("Connected to PostgreSQL successfully")
-	
-	
-	srv := server.New(":" + cfg.Port, db)
+
+	srv := server.New(":"+cfg.Port, db, cfg.FrontendURL)
 
 	serverErrors := make(chan error, 1)
 
 	go func() {
 		serverErrors <- srv.Start()
-	} ()
+	}()
 
 	shutdownSignal := make(chan os.Signal, 1)
 
@@ -52,14 +51,14 @@ func main() {
 	)
 
 	select {
-		case err := <- serverErrors:
-			log.Fatalf("Server error: %v", err)
+	case err := <-serverErrors:
+		log.Fatalf("Server error: %v", err)
 
-		case sig := <- shutdownSignal:
-			log.Printf("Received shutdown signal: %s", sig)
+	case sig := <-shutdownSignal:
+		log.Printf("Received shutdown signal: %s", sig)
 	}
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
