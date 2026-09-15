@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/samidmunir/Codebase/projects/atlas/server/platform/config"
@@ -31,9 +35,36 @@ func main() {
 	log.Println("Connected to PostgreSQL successfully")
 	
 	
-	srv := server.New(":" + cfg.Port)
+	srv := server.New(":" + cfg.Port, db)
 
-	if err := srv.Start(); err != nil {
-		log.Fatal(err)
+	serverErrors := make(chan error, 1)
+
+	go func() {
+		serverErrors <- srv.Start()
+	} ()
+
+	shutdownSignal := make(chan os.Signal, 1)
+
+	signal.Notify(
+		shutdownSignal,
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+
+	select {
+		case err := <- serverErrors:
+			log.Fatalf("Server error: %v", err)
+
+		case sig := <- shutdownSignal:
+			log.Printf("Received shutdown signal: %s", sig)
 	}
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("HTTP server shutdown error: %v", err)
+	}
+
+	log.Println("Atlas API stopped")
 }
