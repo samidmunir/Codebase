@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/samidmunir/Codebase/projects/atlas/server/internal/auth"
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/health"
 )
 
@@ -15,11 +16,16 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func New(addr string, db *pgxpool.Pool, frontendURL string) *Server {
+func New(addr string, db *pgxpool.Pool, frontendURL string, authHandler *auth.Handler) *Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /api/v1/health", health.Handler)
 	mux.HandleFunc("GET /api/v1/ready", health.ReadinessHandler(db))
+
+	mux.HandleFunc(
+	"POST /api/v1/auth/register",
+	authHandler.Register,
+)
 
 	httpServer := &http.Server{
 		Addr:              addr,

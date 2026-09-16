@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/samidmunir/Codebase/projects/atlas/server/internal/auth"
+	"github.com/samidmunir/Codebase/projects/atlas/server/internal/users"
 	"github.com/samidmunir/Codebase/projects/atlas/server/platform/config"
 	"github.com/samidmunir/Codebase/projects/atlas/server/platform/database"
 	"github.com/samidmunir/Codebase/projects/atlas/server/platform/server"
@@ -34,7 +36,13 @@ func main() {
 
 	log.Println("Connected to PostgreSQL successfully")
 
-	srv := server.New(":"+cfg.Port, db, cfg.FrontendURL)
+	userRepository := users.NewRepository(db)
+
+	authService := auth.NewService(userRepository)
+
+	authHandler := auth.NewHandler(authService)
+
+	srv := server.New(":" + cfg.Port, db, cfg.FrontendURL, authHandler)
 
 	serverErrors := make(chan error, 1)
 
