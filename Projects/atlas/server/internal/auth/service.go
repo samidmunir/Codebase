@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/users"
 )
 
@@ -140,5 +141,34 @@ func (s *Service) Login(
 			IsVerified: user.IsVerified,
 			CreatedAt:  user.CreatedAt,
 		},
+	}, nil
+}
+
+func (s *Service) Me(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*UserResponse, error) {
+	user, err := s.users.FindByID(ctx, userID)
+
+	if errors.Is(err, users.ErrUserNotFound) {
+		return nil, ErrInvalidCredentials
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !user.IsActive {
+		return nil, ErrAccountDisabled
+	}
+
+	return &UserResponse{
+		ID:         user.ID,
+		Email:      user.Email,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
+		Timezone:   user.Timezone,
+		IsVerified: user.IsVerified,
+		CreatedAt:  user.CreatedAt,
 	}, nil
 }

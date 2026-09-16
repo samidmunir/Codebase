@@ -32,6 +32,13 @@ func New(addr string, db *pgxpool.Pool, frontendURL string, authHandler *auth.Ha
 		authHandler.Login,
 	)
 
+	mux.Handle(
+		"GET /api/v1/auth/me",
+		authHandler.Authenticate(
+			http.HandlerFunc(authHandler.Me),
+		),
+	)
+
 	httpServer := &http.Server{
 		Addr:              addr,
 		Handler:           corsMiddleware(mux, frontendURL),

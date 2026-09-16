@@ -41,3 +41,7 @@ type LoginResponse struct {
 	ExpiresIn   int          `json:"expiresIn"`
 	User        UserResponse `json:"user"`
 }
+
+type MeResponse struct {
+	User UserResponse `json:"user"`
+}

@@ -121,3 +121,67 @@ func (h *Handler) Login(
 
 	writeJSON(w, http.StatusOK, response)
 }
+
+func (h *Handler) Me(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	userID, ok := UserIDFromContext(r.Context())
+
+	if !ok {
+		writeJSON(
+			w,
+			http.StatusUnauthorized,
+			map[string]any{
+				"error": "authentication required",
+			},
+		)
+		return
+	}
+
+	user, err := h.service.Me(
+		r.Context(),
+		userID,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrInvalidCredentials):
+			writeJSON(
+				w,
+				http.StatusUnauthorized,
+				map[string]any{
+					"error": "user no longer exists",
+				},
+			)
+
+		case errors.Is(err, ErrAccountDisabled):
+			writeJSON(
+				w,
+				http.StatusForbidden,
+				map[string]any{
+					"error": "account is disabled",
+				},
+			)
+
+		default:
+			writeJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]any{
+					"error": "internal server error",
+				},
+			)
+		}
+
+		return
+	}
+
+	writeJSON(
+		w,
+		http.StatusOK,
+		MeResponse{
+			User: *user,
+		},
+	)
+}

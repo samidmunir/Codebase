@@ -64,3 +64,35 @@ func (tm *TokenManager) GenerateAccessToken(
 func (tm *TokenManager) AccessTokenTTL() time.Duration {
 	return tm.accessTokenTTL
 }
+
+func (tm *TokenManager) ValidateAccessToken(
+	tokenString string,
+) (*AccessTokenClaims, error) {
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		&AccessTokenClaims{},
+		func(token *jwt.Token) (any, error) {
+			if token.Method != jwt.SigningMethodHS256 {
+				return nil, fmt.Errorf(
+					"unexpected signing method: %s",
+					token.Method.Alg(),
+				)
+			}
+
+			return tm.secret, nil
+		},
+		jwt.WithIssuer("atlas-api"),
+		jwt.WithExpirationRequired(),
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("parse access token: %w", err)
+	}
+
+	claims, ok := token.Claims.(*AccessTokenClaims)
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("invalid access token")
+	}
+
+	return claims, nil
+}
