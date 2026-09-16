@@ -23,9 +23,14 @@ func New(addr string, db *pgxpool.Pool, frontendURL string, authHandler *auth.Ha
 	mux.HandleFunc("GET /api/v1/ready", health.ReadinessHandler(db))
 
 	mux.HandleFunc(
-	"POST /api/v1/auth/register",
-	authHandler.Register,
-)
+		"POST /api/v1/auth/register",
+		authHandler.Register,
+	)
+
+	mux.HandleFunc(
+		"POST /api/v1/auth/login",
+		authHandler.Login,
+	)
 
 	httpServer := &http.Server{
 		Addr:              addr,

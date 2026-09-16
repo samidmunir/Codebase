@@ -75,14 +75,14 @@ func (r *Repository) Create(
 	)
 
 	if err != nil {
-	var pgErr *pgconn.PgError
+		var pgErr *pgconn.PgError
 
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-		return nil, ErrEmailExists
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, ErrEmailExists
+		}
+
+		return nil, fmt.Errorf("create user: %w", err)
 	}
-
-	return nil, fmt.Errorf("create user: %w", err)
-}
 
 	return createdUser, nil
 }

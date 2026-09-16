@@ -71,3 +71,53 @@ func writeJSON(
 
 	_ = json.NewEncoder(w).Encode(data)
 }
+
+func (h *Handler) Login(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	var req LoginRequest
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{
+			"error": "invalid request body",
+		})
+		return
+	}
+
+	response, err := h.service.Login(
+		r.Context(),
+		req,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrInvalidInput):
+			writeJSON(w, http.StatusBadRequest, map[string]any{
+				"error": "email and password are required",
+			})
+
+		case errors.Is(err, ErrInvalidCredentials):
+			writeJSON(w, http.StatusUnauthorized, map[string]any{
+				"error": "invalid email or password",
+			})
+
+		case errors.Is(err, ErrAccountDisabled):
+			writeJSON(w, http.StatusForbidden, map[string]any{
+				"error": "account is disabled",
+			})
+
+		default:
+			writeJSON(w, http.StatusInternalServerError, map[string]any{
+				"error": "internal server error",
+			})
+		}
+
+		return
+	}
+
+	writeJSON(w, http.StatusOK, response)
+}

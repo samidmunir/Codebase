@@ -9,12 +9,14 @@ import (
 )
 
 type Service struct {
-	users *users.Repository
+	users  *users.Repository
+	tokens *TokenManager
 }
 
-func NewService(users *users.Repository) *Service {
+func NewService(users *users.Repository, tokens *TokenManager) *Service {
 	return &Service{
-		users: users,
+		users:  users,
+		tokens: tokens,
 	}
 }
 
@@ -66,13 +68,13 @@ func (s *Service) Register(
 	}
 
 	createdUser, err := s.users.Create(ctx, user)
-if err != nil {
-	if errors.Is(err, users.ErrEmailExists) {
-		return nil, ErrEmailInUse
-	}
+	if err != nil {
+		if errors.Is(err, users.ErrEmailExists) {
+			return nil, ErrEmailInUse
+		}
 
-	return nil, err
-}
+		return nil, err
+	}
 
 	return &UserResponse{
 		ID:         createdUser.ID,
@@ -82,5 +84,61 @@ if err != nil {
 		Timezone:   createdUser.Timezone,
 		IsVerified: createdUser.IsVerified,
 		CreatedAt:  createdUser.CreatedAt,
+	}, nil
+}
+
+func (s *Service) Login(
+	ctx context.Context,
+	req LoginRequest,
+) (*LoginResponse, error) {
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+
+	if email == "" || req.Password == "" {
+		return nil, ErrInvalidInput
+	}
+
+	user, err := s.users.FindByEmail(ctx, email)
+
+	if errors.Is(err, users.ErrUserNotFound) {
+		return nil, ErrInvalidCredentials
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !user.IsActive {
+		return nil, ErrAccountDisabled
+	}
+
+	if err := CheckPassword(
+		req.Password,
+		user.PasswordHash,
+	); err != nil {
+		return nil, ErrInvalidCredentials
+	}
+
+	accessToken, err := s.tokens.GenerateAccessToken(
+		user.ID,
+		user.Email,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginResponse{
+		Message:     "login successful",
+		AccessToken: accessToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   int(s.tokens.AccessTokenTTL().Seconds()),
+		User: UserResponse{
+			ID:         user.ID,
+			Email:      user.Email,
+			FirstName:  user.FirstName,
+			LastName:   user.LastName,
+			Timezone:   user.Timezone,
+			IsVerified: user.IsVerified,
+			CreatedAt:  user.CreatedAt,
+		},
 	}, nil
 }

@@ -38,11 +38,13 @@ func main() {
 
 	userRepository := users.NewRepository(db)
 
-	authService := auth.NewService(userRepository)
+	tokenManager := auth.NewTokenManager(cfg.JWTSecret, time.Duration(cfg.AccessTokenMinutes)*time.Minute)
+
+	authService := auth.NewService(userRepository, tokenManager)
 
 	authHandler := auth.NewHandler(authService)
 
-	srv := server.New(":" + cfg.Port, db, cfg.FrontendURL, authHandler)
+	srv := server.New(":"+cfg.Port, db, cfg.FrontendURL, authHandler)
 
 	serverErrors := make(chan error, 1)
 
