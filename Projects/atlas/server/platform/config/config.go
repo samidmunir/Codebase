@@ -10,6 +10,10 @@ type Config struct {
 	DatabaseURL string
 	Environment string
 	FrontendURL string
+
+	JWTSecret          string
+	AccessTokenMinutes int
+	RefreshTokenDays   int
 }
 
 func Load() (*Config, error) {
