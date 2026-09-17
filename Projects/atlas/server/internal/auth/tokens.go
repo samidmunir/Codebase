@@ -6,6 +6,11 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 )
 
 type TokenManager struct {
@@ -95,4 +100,23 @@ func (tm *TokenManager) ValidateAccessToken(
 	}
 
 	return claims, nil
+}
+
+func GenerateRefreshToken() (string, error) {
+	bytes := make([]byte, 32)
+
+	if _, err := rand.Read(bytes); err != nil {
+		return "", fmt.Errorf(
+			"generate refresh token: %w",
+			err,
+		)
+	}
+
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
+}
+
+func HashRefreshToken(token string) string {
+	hash := sha256.Sum256([]byte(token))
+
+	return hex.EncodeToString(hash[:])
 }

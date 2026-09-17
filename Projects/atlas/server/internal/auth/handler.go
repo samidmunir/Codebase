@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 )
 
@@ -88,9 +89,30 @@ func (h *Handler) Login(
 		return
 	}
 
-	response, err := h.service.Login(
+	userAgent := r.UserAgent()
+
+	var userAgentPtr *string
+
+	if userAgent != "" {
+		userAgentPtr = &userAgent
+	}
+
+	ipAddress := clientIP(r)
+
+	metadata := SessionMetadata{
+		UserAgent: userAgentPtr,
+		IPAddress: ipAddress,
+	}
+
+	response, refreshToken, err := h.service.Login(
 		r.Context(),
 		req,
+		metadata,
+	)
+
+	h.setRefreshCookie(
+		w,
+		refreshToken,
 	)
 
 	if err != nil {
@@ -183,5 +205,102 @@ func (h *Handler) Me(
 		MeResponse{
 			User: *user,
 		},
+	)
+}
+
+func (h *Handler) setRefreshCookie(
+	w http.ResponseWriter,
+	token string,
+) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "atlas_refresh_token",
+		Value:    token,
+		Path:     "/api/v1/auth",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge: int(
+			h.service.refreshTokenTTL.Seconds(),
+		),
+	})
+}
+
+func clientIP(r *http.Request) *string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+
+	if err != nil || host == "" {
+		return nil
+	}
+
+	return &host
+}
+
+func (h *Handler) Refresh(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	cookie, err := r.Cookie(
+		"atlas_refresh_token",
+	)
+
+	if err != nil {
+		writeJSON(
+			w,
+			http.StatusUnauthorized,
+			map[string]any{
+				"error": "refresh token required",
+			},
+		)
+		return
+	}
+
+	response, newRefreshToken, err :=
+		h.service.Refresh(
+			r.Context(),
+			cookie.Value,
+		)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrInvalidSession):
+			writeJSON(
+				w,
+				http.StatusUnauthorized,
+				map[string]any{
+					"error": "invalid or expired session",
+				},
+			)
+
+		case errors.Is(err, ErrAccountDisabled):
+			writeJSON(
+				w,
+				http.StatusForbidden,
+				map[string]any{
+					"error": "account is disabled",
+				},
+			)
+
+		default:
+			writeJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]any{
+					"error": "internal server error",
+				},
+			)
+		}
+
+		return
+	}
+
+	h.setRefreshCookie(
+		w,
+		newRefreshToken,
+	)
+
+	writeJSON(
+		w,
+		http.StatusOK,
+		response,
 	)
 }

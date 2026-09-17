@@ -7,4 +7,5 @@ var (
 	ErrEmailInUse         = errors.New("email already in use")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrAccountDisabled    = errors.New("account disabled")
+	ErrInvalidSession     = errors.New("invalid session")
 )

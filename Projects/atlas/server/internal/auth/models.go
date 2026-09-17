@@ -45,3 +45,14 @@ type LoginResponse struct {
 type MeResponse struct {
 	User UserResponse `json:"user"`
 }
+
+type SessionMetadata struct {
+	UserAgent *string
+	IPAddress *string
+}
+
+type RefreshResponse struct {
+	AccessToken string `json:"accessToken"`
+	TokenType   string `json:"tokenType"`
+	ExpiresIn   int    `json:"expiresIn"`
+}

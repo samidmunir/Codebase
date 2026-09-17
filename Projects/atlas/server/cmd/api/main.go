@@ -38,9 +38,16 @@ func main() {
 
 	userRepository := users.NewRepository(db)
 
+	sessionRepository := auth.NewSessionRepository(db)
+
 	tokenManager := auth.NewTokenManager(cfg.JWTSecret, time.Duration(cfg.AccessTokenMinutes)*time.Minute)
 
-	authService := auth.NewService(userRepository, tokenManager)
+	authService := auth.NewService(
+		userRepository,
+		sessionRepository,
+		tokenManager,
+		time.Duration(cfg.RefreshTokenDays)*24*time.Hour,
+	)
 
 	authHandler := auth.NewHandler(authService)
 

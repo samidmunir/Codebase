@@ -4,20 +4,25 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/users"
 )
 
 type Service struct {
-	users  *users.Repository
-	tokens *TokenManager
+	users           *users.Repository
+	sessions        *SessionRepository
+	tokens          *TokenManager
+	refreshTokenTTL time.Duration
 }
 
-func NewService(users *users.Repository, tokens *TokenManager) *Service {
+func NewService(users *users.Repository, sessions *SessionRepository, tokens *TokenManager, refreshTokenTTL time.Duration) *Service {
 	return &Service{
-		users:  users,
-		tokens: tokens,
+		users:           users,
+		sessions:        sessions,
+		tokens:          tokens,
+		refreshTokenTTL: refreshTokenTTL,
 	}
 }
 
@@ -91,32 +96,33 @@ func (s *Service) Register(
 func (s *Service) Login(
 	ctx context.Context,
 	req LoginRequest,
-) (*LoginResponse, error) {
+	metadata SessionMetadata,
+) (*LoginResponse, string, error) {
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 
 	if email == "" || req.Password == "" {
-		return nil, ErrInvalidInput
+		return nil, "", ErrInvalidInput
 	}
 
 	user, err := s.users.FindByEmail(ctx, email)
 
 	if errors.Is(err, users.ErrUserNotFound) {
-		return nil, ErrInvalidCredentials
+		return nil, "", ErrInvalidCredentials
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	if !user.IsActive {
-		return nil, ErrAccountDisabled
+		return nil, "", ErrAccountDisabled
 	}
 
 	if err := CheckPassword(
 		req.Password,
 		user.PasswordHash,
 	); err != nil {
-		return nil, ErrInvalidCredentials
+		return nil, "", ErrInvalidCredentials
 	}
 
 	accessToken, err := s.tokens.GenerateAccessToken(
@@ -124,14 +130,42 @@ func (s *Service) Login(
 		user.Email,
 	)
 	if err != nil {
-		return nil, err
+		return nil, "", err
+	}
+
+	refreshToken, err := GenerateRefreshToken()
+	if err != nil {
+		return nil, "", err
+	}
+
+	refreshTokenHash := HashRefreshToken(refreshToken)
+
+	expiresAt := time.Now().Add(
+		s.refreshTokenTTL,
+	)
+
+	_, err = s.sessions.Create(
+		ctx,
+		&Session{
+			UserID:           user.ID,
+			RefreshTokenHash: refreshTokenHash,
+			UserAgent:        metadata.UserAgent,
+			IPAddress:        metadata.IPAddress,
+			ExpiresAt:        expiresAt,
+		},
+	)
+
+	if err != nil {
+		return nil, "", err
 	}
 
 	return &LoginResponse{
 		Message:     "login successful",
 		AccessToken: accessToken,
 		TokenType:   "Bearer",
-		ExpiresIn:   int(s.tokens.AccessTokenTTL().Seconds()),
+		ExpiresIn: int(
+			s.tokens.AccessTokenTTL().Seconds(),
+		),
 		User: UserResponse{
 			ID:         user.ID,
 			Email:      user.Email,
@@ -141,7 +175,7 @@ func (s *Service) Login(
 			IsVerified: user.IsVerified,
 			CreatedAt:  user.CreatedAt,
 		},
-	}, nil
+	}, refreshToken, nil
 }
 
 func (s *Service) Me(
@@ -171,4 +205,95 @@ func (s *Service) Me(
 		IsVerified: user.IsVerified,
 		CreatedAt:  user.CreatedAt,
 	}, nil
+}
+
+func (s *Service) Refresh(
+	ctx context.Context,
+	refreshToken string,
+) (*RefreshResponse, string, error) {
+	if refreshToken == "" {
+		return nil, "", ErrInvalidSession
+	}
+
+	tokenHash := HashRefreshToken(refreshToken)
+
+	session, err := s.sessions.FindByTokenHash(
+		ctx,
+		tokenHash,
+	)
+
+	if errors.Is(err, ErrSessionNotFound) {
+		return nil, "", ErrInvalidSession
+	}
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	if session.RevokedAt != nil {
+		return nil, "", ErrInvalidSession
+	}
+
+	if time.Now().After(session.ExpiresAt) {
+		return nil, "", ErrInvalidSession
+	}
+
+	user, err := s.users.FindByID(
+		ctx,
+		session.UserID,
+	)
+
+	if errors.Is(err, users.ErrUserNotFound) {
+		return nil, "", ErrInvalidSession
+	}
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	if !user.IsActive {
+		return nil, "", ErrAccountDisabled
+	}
+
+	accessToken, err := s.tokens.GenerateAccessToken(
+		user.ID,
+		user.Email,
+	)
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	newRefreshToken, err := GenerateRefreshToken()
+	if err != nil {
+		return nil, "", err
+	}
+
+	newHash := HashRefreshToken(
+		newRefreshToken,
+	)
+
+	newExpiration := time.Now().Add(
+		s.refreshTokenTTL,
+	)
+
+	err = s.sessions.RotateToken(
+		ctx,
+		session.ID,
+		tokenHash,
+		newHash,
+		newExpiration,
+	)
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	return &RefreshResponse{
+		AccessToken: accessToken,
+		TokenType:   "Bearer",
+		ExpiresIn: int(
+			s.tokens.AccessTokenTTL().Seconds(),
+		),
+	}, newRefreshToken, nil
 }
