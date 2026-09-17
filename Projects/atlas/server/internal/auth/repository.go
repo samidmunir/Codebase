@@ -179,3 +179,29 @@ WHERE id = $3
 
 	return nil
 }
+
+func (r *SessionRepository) Revoke(
+	ctx context.Context,
+	sessionID uuid.UUID,
+) error {
+	query := `
+		UPDATE sessions
+		SET
+			revoked_at = NOW(),
+			updated_at = NOW()
+		WHERE id = $1
+		  AND revoked_at IS NULL
+	`
+
+	_, err := r.db.Exec(
+		ctx,
+		query,
+		sessionID,
+	)
+
+	if err != nil {
+		return fmt.Errorf("revoke session: %w", err)
+	}
+
+	return nil
+}

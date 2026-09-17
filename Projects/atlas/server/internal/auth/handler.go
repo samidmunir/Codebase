@@ -304,3 +304,56 @@ func (h *Handler) Refresh(
 		response,
 	)
 }
+
+func (h *Handler) clearRefreshCookie(
+	w http.ResponseWriter,
+) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "atlas_refresh_token",
+		Value:    "",
+		Path:     "/api/v1/auth",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+}
+
+func (h *Handler) Logout(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	var refreshToken string
+
+	cookie, err := r.Cookie(
+		"atlas_refresh_token",
+	)
+
+	if err == nil {
+		refreshToken = cookie.Value
+	}
+
+	if err := h.service.Logout(
+		r.Context(),
+		refreshToken,
+	); err != nil {
+		writeJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]any{
+				"error": "internal server error",
+			},
+		)
+		return
+	}
+
+	h.clearRefreshCookie(w)
+
+	writeJSON(
+		w,
+		http.StatusOK,
+		map[string]any{
+			"message": "logout successful",
+		},
+	)
+}

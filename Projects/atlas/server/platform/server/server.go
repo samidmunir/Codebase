@@ -44,6 +44,11 @@ func New(addr string, db *pgxpool.Pool, frontendURL string, authHandler *auth.Ha
 		authHandler.Refresh,
 	)
 
+	mux.HandleFunc(
+		"POST /api/v1/auth/logout",
+		authHandler.Logout,
+	)
+
 	httpServer := &http.Server{
 		Addr:              addr,
 		Handler:           corsMiddleware(mux, frontendURL),

@@ -297,3 +297,40 @@ func (s *Service) Refresh(
 		),
 	}, newRefreshToken, nil
 }
+
+func (s *Service) Logout(
+	ctx context.Context,
+	refreshToken string,
+) error {
+	if refreshToken == "" {
+		return nil
+	}
+
+	tokenHash := HashRefreshToken(refreshToken)
+
+	session, err := s.sessions.FindByTokenHash(
+		ctx,
+		tokenHash,
+	)
+
+	if errors.Is(err, ErrSessionNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if session.RevokedAt != nil {
+		return nil
+	}
+
+	if err := s.sessions.Revoke(
+		ctx,
+		session.ID,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
