@@ -1,29 +1,26 @@
-import { ApiStatus } from "../components/common/ApiStatus";
+import { useAuth } from "../features/auth";
 
-import { login } from "../features/auth";
+export default function HomePage() {
+  const { user, isAuthenticated, isLoading } = useAuth();
 
-async function testLogin() {
-  try {
-    const response = await login({
-      email: "samidmunir@outlook.com",
-      password: "SINEcos8tan",
-    });
-
-    console.log("Atlas login:", response);
-  } catch (error) {
-    console.error("Atlas login failed:", error);
+  if (isLoading) {
+    return <p>Restoring Atlas session...</p>;
   }
-}
 
-export function HomePage() {
   return (
     <main>
       <h1>Atlas</h1>
-      <p>Your personal operating system.</p>
 
-      <ApiStatus />
+      <p>
+        Authentication:{" "}
+        {isAuthenticated ? "Authenticated" : "Not authenticated"}
+      </p>
 
-      <button onClick={testLogin}>Test Atlas Login</button>
+      {user && (
+        <p>
+          Welcome, {user.firstName} {user.lastName}
+        </p>
+      )}
     </main>
   );
 }
