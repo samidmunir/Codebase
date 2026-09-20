@@ -4,13 +4,18 @@ import {
   getMe,
   login as loginRequest,
   logout as logoutRequest,
-  refresh,
   register as registerRequest,
 } from "../api/authApi";
 
 import type { LoginRequest, RegisterRequest, User } from "../types/auth.types";
 
 import { AuthContext, type AuthContextValue } from "./AuthContext";
+
+import {
+  clearAccessToken,
+  refreshAccessToken,
+  setAccessToken as storeAccessToken,
+} from "../services/tokenManager";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -28,17 +33,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     let cancelled = false;
 
-    async function restoreSession() {
+    async function initializeAuth() {
       try {
-        const refreshResponse = await refresh();
-
-        if (cancelled) {
-          return;
-        }
-
-        const token = refreshResponse.accessToken;
-
-        setAccessToken(token);
+        const token = await refreshAccessToken();
 
         const meResponse = await getMe(token);
 
@@ -46,9 +43,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return;
         }
 
+        setAccessToken(token);
         setUser(meResponse.user);
       } catch {
         if (!cancelled) {
+          clearAccessToken();
+
           setAccessToken(null);
           setUser(null);
         }
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     }
 
-    void restoreSession();
+    void initializeAuth();
 
     return () => {
       cancelled = true;
@@ -68,6 +68,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = useCallback(async (credentials: LoginRequest) => {
     const response = await loginRequest(credentials);
+
+    storeAccessToken(response.accessToken);
 
     setAccessToken(response.accessToken);
     setUser(response.user);
@@ -81,6 +83,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await logoutRequest();
     } finally {
+      clearAccessToken();
+
       setAccessToken(null);
       setUser(null);
     }

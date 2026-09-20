@@ -30,14 +30,14 @@ func setupIntegrationTest(
 	databaseURL := os.Getenv("TEST_DATABASE_URL")
 
 	if databaseURL == "" {
-	t.Fatal("TEST_DATABASE_URL must be set")
-}
+		t.Fatal("TEST_DATABASE_URL must be set")
+	}
 
-if !strings.Contains(databaseURL, "atlas_test") {
-	t.Fatal(
-		"refusing to run integration tests against a non-test database",
-	)
-}
+	if !strings.Contains(databaseURL, "atlas_test") {
+		t.Fatal(
+			"refusing to run integration tests against a non-test database",
+		)
+	}
 
 	if databaseURL == "" {
 		t.Fatal(
@@ -381,18 +381,17 @@ func TestIntegrationLogoutRevokesSession(t *testing.T) {
 	}
 
 	_, _, err = env.service.Refresh(
-	context.Background(),
-	refreshToken,
-)
-
-if !errors.Is(err, ErrInvalidSession) {
-	t.Fatalf(
-		"expected revoked refresh token to be rejected, got %v",
-		err,
+		context.Background(),
+		refreshToken,
 	)
-}
-}
 
+	if !errors.Is(err, ErrInvalidSession) {
+		t.Fatalf(
+			"expected revoked refresh token to be rejected, got %v",
+			err,
+		)
+	}
+}
 
 func TestIntegrationDuplicateRegistrationRejected(t *testing.T) {
 	env := setupIntegrationTest(t)
