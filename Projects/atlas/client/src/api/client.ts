@@ -1,5 +1,5 @@
-import { apiConfig } from "./config";
 import { ApiError } from "./ApiError";
+import { apiConfig } from "./config";
 
 interface RequestOptions extends RequestInit {
   accessToken?: string | null;
@@ -30,21 +30,33 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    let message = "Something went wrong.";
+    throw await createApiError(response);
+  }
 
-    try {
-      const body = (await response.json()) as {
-        error?: string;
-      };
+  return parseResponse<T>(response);
+}
 
-      if (body.error) {
-        message = body.error;
-      }
-    } catch {
-      // Response wasn't JSON.
+async function createApiError(response: Response): Promise<ApiError> {
+  let message = "Something went wrong.";
+
+  try {
+    const body = (await response.json()) as {
+      error?: string;
+    };
+
+    if (body.error) {
+      message = body.error;
     }
+  } catch {
+    // Response wasn't JSON.
+  }
 
-    throw new ApiError(message, response.status);
+  return new ApiError(message, response.status);
+}
+
+async function parseResponse<T>(response: Response): Promise<T> {
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return (await response.json()) as T;

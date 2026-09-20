@@ -37,7 +37,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const token = await refreshAccessToken();
 
-        const meResponse = await getMe(token);
+        const meResponse = await getMe();
 
         if (cancelled) {
           return;

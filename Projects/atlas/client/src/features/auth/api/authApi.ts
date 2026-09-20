@@ -1,3 +1,4 @@
+import { authenticatedApiRequest } from "../../../api/authenticatedClient";
 import { apiRequest } from "../../../api/client";
 
 import type {
@@ -24,10 +25,9 @@ export function login(data: LoginRequest): Promise<LoginResponse> {
   });
 }
 
-export function getMe(accessToken: string): Promise<MeResponse> {
-  return apiRequest<MeResponse>("/auth/me", {
+export function getMe(): Promise<MeResponse> {
+  return authenticatedApiRequest<MeResponse>("/auth/me", {
     method: "GET",
-    accessToken,
   });
 }
 
