@@ -21,6 +21,8 @@ export function LoginPage() {
 
   const registrationSuccess = location.state?.registrationSuccess === true;
 
+  const from = location.state?.from?.pathname ?? "/";
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -37,7 +39,9 @@ export function LoginPage() {
         password,
       });
 
-      navigate("/");
+      navigate(from, {
+        replace: true,
+      });
     } catch (error) {
       if (error instanceof ApiError) {
         setError(error.message);

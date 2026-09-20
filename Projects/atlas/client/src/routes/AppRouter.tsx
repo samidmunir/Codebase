@@ -1,27 +1,47 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import HomePage from "../pages/HomePage";
-import { NotFoundPage } from "../pages/NotFoundPage";
+import { Route, Routes } from "react-router-dom";
+
 import { LoginPage, RegisterPage } from "../features/auth";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <HomePage />,
-  },
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
-  {
-    path: "*",
-    element: <NotFoundPage />,
-  },
-]);
+import { DashboardPage } from "../features/dashboard/pages/DashboardPage";
 
-export function AppRouter() {
-  return <RouterProvider router={router} />;
+import { AppLayout } from "../layouts/AppLayout";
+
+import CalendarPage from "../pages/CalendarPage";
+import GoalsPage from "../pages/GoalsPage";
+import HabitsPage from "../pages/HabitsPage";
+import NotFoundPage from "../pages/NotFoundPage";
+import ProjectsPage from "../pages/ProjectsPage";
+import TasksPage from "../pages/TasksPage";
+
+import { ProtectedRoute } from "./ProtectedRoute";
+import { PublicRoute } from "./PublicRoute";
+
+export default function AppRouter() {
+  return (
+    <Routes>
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<LoginPage />} />
+
+        <Route path="/register" element={<RegisterPage />} />
+      </Route>
+
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<DashboardPage />} />
+
+          <Route path="projects" element={<ProjectsPage />} />
+
+          <Route path="tasks" element={<TasksPage />} />
+
+          <Route path="goals" element={<GoalsPage />} />
+
+          <Route path="habits" element={<HabitsPage />} />
+
+          <Route path="calendar" element={<CalendarPage />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
 }
