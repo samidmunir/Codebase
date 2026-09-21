@@ -128,8 +128,9 @@ func (r *Repository) GetByID(
 func (r *Repository) List(
 	ctx context.Context,
 	userID string,
+	filter ListFilter,
 ) ([]Project, error) {
-	const query = `
+	query := `
 		SELECT
 			id,
 			user_id,
@@ -145,13 +146,67 @@ func (r *Repository) List(
 			updated_at
 		FROM projects
 		WHERE user_id = $1
-		  AND archived_at IS NULL
-		ORDER BY updated_at DESC
 	`
 
-	rows, err := r.db.Query(ctx, query, userID)
+	args := []any{userID}
+	argPosition := 2
+
+	if filter.Archived {
+		query += ` AND archived_at IS NOT NULL`
+	} else {
+		query += ` AND archived_at IS NULL`
+	}
+
+	if filter.Status != nil {
+		query += fmt.Sprintf(
+			" AND status = $%d",
+			argPosition,
+		)
+
+		args = append(args, *filter.Status)
+		argPosition++
+	}
+
+	if filter.Priority != nil {
+		query += fmt.Sprintf(
+			" AND priority = $%d",
+			argPosition,
+		)
+
+		args = append(args, *filter.Priority)
+		argPosition++
+	}
+
+	if filter.Search != "" {
+		query += fmt.Sprintf(
+			` AND (
+				name ILIKE $%d
+				OR description ILIKE $%d
+			)`,
+			argPosition,
+			argPosition,
+		)
+
+		args = append(
+			args,
+			"%"+filter.Search+"%",
+		)
+
+		argPosition++
+	}
+
+	query += " ORDER BY " +
+		projectSortColumn(filter.Sort) +
+		" " +
+		projectSortDirection(filter.Order)
+
+	rows, err := r.db.Query(
+		ctx,
+		query,
+		args...,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("list projects: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -174,17 +229,53 @@ func (r *Repository) List(
 			&project.CreatedAt,
 			&project.UpdatedAt,
 		); err != nil {
-			return nil, fmt.Errorf("scan project: %w", err)
+			return nil, err
 		}
 
-		projects = append(projects, project)
+		projects = append(
+			projects,
+			project,
+		)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate projects: %w", err)
+		return nil, err
 	}
 
 	return projects, nil
+}
+
+func projectSortColumn(
+	sort SortField,
+) string {
+	switch sort {
+	case SortCreatedAt:
+		return "created_at"
+
+	case SortName:
+		return "name"
+
+	case SortStartDate:
+		return "start_date"
+
+	case SortTargetDate:
+		return "target_date"
+
+	case SortUpdatedAt:
+		fallthrough
+	default:
+		return "updated_at"
+	}
+}
+
+func projectSortDirection(
+	order SortOrder,
+) string {
+	if order == SortAscending {
+		return "ASC"
+	}
+
+	return "DESC"
 }
 
 func (r *Repository) Update(

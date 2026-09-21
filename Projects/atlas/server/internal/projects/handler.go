@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,6 +28,7 @@ type ProjectService interface {
 	List(
 		ctx context.Context,
 		userID string,
+		filter ListFilter,
 	) ([]Project, error)
 
 	Update(
@@ -108,7 +110,9 @@ func handleServiceError(
 		errors.Is(err, ErrProjectDescriptionTooLong),
 		errors.Is(err, ErrInvalidProjectStatus),
 		errors.Is(err, ErrInvalidProjectPriority),
-		errors.Is(err, ErrInvalidProjectDates):
+		errors.Is(err, ErrInvalidProjectDates),
+		errors.Is(err, ErrInvalidProjectSort),
+		errors.Is(err, ErrInvalidSortOrder):
 
 		writeError(
 			w,
@@ -186,7 +190,6 @@ func (h *Handler) List(
 	r *http.Request,
 ) {
 	userID, ok := auth.UserIDFromContext(r.Context())
-
 	if !ok || userID == uuid.Nil {
 		writeError(
 			w,
@@ -196,9 +199,42 @@ func (h *Handler) List(
 		return
 	}
 
+	query := r.URL.Query()
+
+	filter := ListFilter{
+		Search: query.Get("search"),
+		Sort:   SortField(query.Get("sort")),
+		Order:  SortOrder(query.Get("order")),
+	}
+
+	if status := query.Get("status"); status != "" {
+		value := Status(status)
+		filter.Status = &value
+	}
+
+	if priority := query.Get("priority"); priority != "" {
+		value := Priority(priority)
+		filter.Priority = &value
+	}
+
+	if archived := query.Get("archived"); archived != "" {
+		value, err := strconv.ParseBool(archived)
+		if err != nil {
+			writeError(
+				w,
+				http.StatusBadRequest,
+				"invalid archived value",
+			)
+			return
+		}
+
+		filter.Archived = value
+	}
+
 	projects, err := h.service.List(
 		r.Context(),
 		userID.String(),
+		filter,
 	)
 
 	if err != nil {

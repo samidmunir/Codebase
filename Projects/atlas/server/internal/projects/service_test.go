@@ -10,7 +10,11 @@ import (
 type fakeProjectRepository struct {
 	createFn  func(context.Context, *Project) error
 	getByIDFn func(context.Context, string, string) (*Project, error)
-	listFn    func(context.Context, string) ([]Project, error)
+	listFn    func(
+		context.Context,
+		string,
+		ListFilter,
+	) ([]Project, error)
 	updateFn  func(context.Context, *Project) error
 	archiveFn func(context.Context, string, string) error
 	restoreFn func(context.Context, string, string) error
@@ -42,9 +46,14 @@ func (f *fakeProjectRepository) GetByID(
 func (f *fakeProjectRepository) List(
 	ctx context.Context,
 	userID string,
+	filter ListFilter,
 ) ([]Project, error) {
 	if f.listFn != nil {
-		return f.listFn(ctx, userID)
+		return f.listFn(
+			ctx,
+			userID,
+			filter,
+		)
 	}
 
 	return []Project{}, nil
@@ -762,5 +771,141 @@ func TestServiceUpdateDoesNotPersistInvalidProject(
 		t.Fatal(
 			"repository Update() should not be called for invalid input",
 		)
+	}
+}
+
+func TestServiceListUsesDefaults(t *testing.T) {
+	repo := &fakeProjectRepository{
+		listFn: func(
+			ctx context.Context,
+			userID string,
+			filter ListFilter,
+		) ([]Project, error) {
+			if filter.Sort != SortUpdatedAt {
+				t.Fatalf(
+					"expected sort %q, got %q",
+					SortUpdatedAt,
+					filter.Sort,
+				)
+			}
+
+			if filter.Order != SortDescending {
+				t.Fatalf(
+					"expected order %q, got %q",
+					SortDescending,
+					filter.Order,
+				)
+			}
+
+			return []Project{}, nil
+		},
+	}
+
+	service := NewService(repo)
+
+	_, err := service.List(
+		context.Background(),
+		"user-123",
+		ListFilter{},
+	)
+
+	if err != nil {
+		t.Fatalf("List() error = %v", err)
+	}
+}
+
+func TestServiceListValidation(t *testing.T) {
+	invalidStatus := Status("invalid")
+	invalidPriority := Priority("invalid")
+
+	tests := []struct {
+		name    string
+		filter  ListFilter
+		wantErr error
+	}{
+		{
+			name: "invalid status",
+			filter: ListFilter{
+				Status: &invalidStatus,
+			},
+			wantErr: ErrInvalidProjectStatus,
+		},
+		{
+			name: "invalid priority",
+			filter: ListFilter{
+				Priority: &invalidPriority,
+			},
+			wantErr: ErrInvalidProjectPriority,
+		},
+		{
+			name: "invalid sort",
+			filter: ListFilter{
+				Sort: SortField("banana"),
+			},
+			wantErr: ErrInvalidProjectSort,
+		},
+		{
+			name: "invalid order",
+			filter: ListFilter{
+				Order: SortOrder("sideways"),
+			},
+			wantErr: ErrInvalidSortOrder,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service := NewService(
+				&fakeProjectRepository{},
+			)
+
+			_, err := service.List(
+				context.Background(),
+				"user-123",
+				tt.filter,
+			)
+
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf(
+					"expected error %v, got %v",
+					tt.wantErr,
+					err,
+				)
+			}
+		})
+	}
+}
+
+func TestServiceListTrimsSearch(t *testing.T) {
+	repo := &fakeProjectRepository{
+		listFn: func(
+			ctx context.Context,
+			userID string,
+			filter ListFilter,
+		) ([]Project, error) {
+			if filter.Search != "atlas" {
+				t.Fatalf(
+					"expected search %q, got %q",
+					"atlas",
+					filter.Search,
+				)
+			}
+
+			return []Project{}, nil
+		},
+	}
+
+	service := NewService(repo)
+
+	_, err := service.List(
+		context.Background(),
+		"user-123",
+		ListFilter{
+			Search: "   atlas   ",
+		},
+	)
+
+	if err != nil {
+		t.Fatalf("List() error = %v", err)
 	}
 }

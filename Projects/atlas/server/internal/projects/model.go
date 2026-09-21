@@ -34,3 +34,29 @@ type Project struct {
 	CreatedAt   time.Time  `json:"createdAt"`
 	UpdatedAt   time.Time  `json:"updatedAt"`
 }
+
+type ListFilter struct {
+	Status   *Status
+	Priority *Priority
+	Archived bool
+	Search   string
+	Sort     SortField
+	Order    SortOrder
+}
+
+type SortField string
+
+const (
+	SortUpdatedAt  SortField = "updatedAt"
+	SortCreatedAt  SortField = "createdAt"
+	SortName       SortField = "name"
+	SortStartDate  SortField = "startDate"
+	SortTargetDate SortField = "targetDate"
+)
+
+type SortOrder string
+
+const (
+	SortAscending  SortOrder = "asc"
+	SortDescending SortOrder = "desc"
+)

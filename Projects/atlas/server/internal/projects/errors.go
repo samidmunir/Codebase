@@ -11,4 +11,6 @@ var (
 	ErrInvalidProjectStatus      = errors.New("invalid project status")
 	ErrInvalidProjectPriority    = errors.New("invalid project priority")
 	ErrInvalidProjectDates       = errors.New("project target date cannot be before start date")
+	ErrInvalidProjectSort        = errors.New("invalid project sort field")
+	ErrInvalidSortOrder          = errors.New("invalid sort order")
 )

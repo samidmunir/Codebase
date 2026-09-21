@@ -19,6 +19,7 @@ type ProjectRepository interface {
 	List(
 		ctx context.Context,
 		userID string,
+		filter ListFilter,
 	) ([]Project, error)
 
 	Update(
@@ -229,8 +230,41 @@ func (s *Service) GetByID(
 func (s *Service) List(
 	ctx context.Context,
 	userID string,
+	filter ListFilter,
 ) ([]Project, error) {
-	return s.repository.List(ctx, userID)
+	if filter.Status != nil &&
+		!isValidStatus(*filter.Status) {
+		return nil, ErrInvalidProjectStatus
+	}
+
+	if filter.Priority != nil &&
+		!isValidPriority(*filter.Priority) {
+		return nil, ErrInvalidProjectPriority
+	}
+
+	filter.Search = strings.TrimSpace(filter.Search)
+
+	if filter.Sort == "" {
+		filter.Sort = SortUpdatedAt
+	}
+
+	if !isValidSortField(filter.Sort) {
+		return nil, ErrInvalidProjectSort
+	}
+
+	if filter.Order == "" {
+		filter.Order = SortDescending
+	}
+
+	if !isValidSortOrder(filter.Order) {
+		return nil, ErrInvalidSortOrder
+	}
+
+	return s.repository.List(
+		ctx,
+		userID,
+		filter,
+	)
 }
 
 func (s *Service) Archive(
@@ -355,4 +389,26 @@ func (s *Service) Update(
 	}
 
 	return project, nil
+}
+
+func isValidSortField(sort SortField) bool {
+	switch sort {
+	case SortUpdatedAt,
+		SortCreatedAt,
+		SortName,
+		SortStartDate,
+		SortTargetDate:
+		return true
+	default:
+		return false
+	}
+}
+
+func isValidSortOrder(order SortOrder) bool {
+	switch order {
+	case SortAscending, SortDescending:
+		return true
+	default:
+		return false
+	}
 }

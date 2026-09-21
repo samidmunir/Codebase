@@ -276,7 +276,11 @@ func TestRepositoryList(t *testing.T) {
 		t.Fatalf("create Project B: %v", err)
 	}
 
-	results, err := repo.List(ctx, userA)
+	results, err := repo.List(
+		ctx,
+		userA,
+		ListFilter{},
+	)
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}
@@ -404,7 +408,11 @@ func TestRepositoryArchive(t *testing.T) {
 		t.Fatal("expected ArchivedAt to be populated")
 	}
 
-	results, err := repo.List(ctx, userID)
+	results, err := repo.List(
+		ctx,
+		userID,
+		ListFilter{},
+	)
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}
@@ -468,7 +476,11 @@ func TestRepositoryRestore(t *testing.T) {
 		t.Fatal("expected ArchivedAt to be nil after restore")
 	}
 
-	results, err := repo.List(ctx, userID)
+	results, err := repo.List(
+		ctx,
+		userID,
+		ListFilter{},
+	)
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}
@@ -538,5 +550,90 @@ func TestRepositoryArchiveRejectsOtherUser(t *testing.T) {
 
 	if found.ArchivedAt != nil {
 		t.Fatal("project was archived by another user")
+	}
+}
+
+func TestRepositoryListWithFilters(t *testing.T) {
+	db := setupTestDB(t)
+	ctx := context.Background()
+
+	cleanupTestData(t, ctx, db)
+
+	repository := NewRepository(db)
+
+	userID := createTestUser(
+		t,
+		ctx,
+		db,
+		"project-list-filters@example.com",
+	)
+
+	active := StatusActive
+	high := PriorityHigh
+
+	projects := []*Project{
+		{
+			UserID:   userID,
+			Name:     "Atlas Backend",
+			Status:   StatusActive,
+			Priority: PriorityHigh,
+		},
+		{
+			UserID:   userID,
+			Name:     "Atlas UI",
+			Status:   StatusPlanning,
+			Priority: PriorityHigh,
+		},
+		{
+			UserID:   userID,
+			Name:     "Other Project",
+			Status:   StatusActive,
+			Priority: PriorityLow,
+		},
+	}
+
+	for _, project := range projects {
+		if err := repository.Create(
+			ctx,
+			project,
+		); err != nil {
+			t.Fatalf(
+				"Create() error = %v",
+				err,
+			)
+		}
+	}
+
+	result, err := repository.List(
+		ctx,
+		userID,
+		ListFilter{
+			Status:   &active,
+			Priority: &high,
+			Search:   "atlas",
+			Sort:     SortName,
+			Order:    SortAscending,
+		},
+	)
+
+	if err != nil {
+		t.Fatalf(
+			"List() error = %v",
+			err,
+		)
+	}
+
+	if len(result) != 1 {
+		t.Fatalf(
+			"expected 1 project, got %d",
+			len(result),
+		)
+	}
+
+	if result[0].Name != "Atlas Backend" {
+		t.Fatalf(
+			"expected Atlas Backend, got %q",
+			result[0].Name,
+		)
 	}
 }

@@ -27,6 +27,7 @@ type fakeProjectService struct {
 	listFn func(
 		context.Context,
 		string,
+		ListFilter,
 	) ([]Project, error)
 
 	updateFn func(
@@ -76,9 +77,14 @@ func (f *fakeProjectService) GetByID(
 func (f *fakeProjectService) List(
 	ctx context.Context,
 	userID string,
+	filter ListFilter,
 ) ([]Project, error) {
 	if f.listFn != nil {
-		return f.listFn(ctx, userID)
+		return f.listFn(
+			ctx,
+			userID,
+			filter,
+		)
 	}
 
 	return []Project{}, nil
@@ -408,6 +414,125 @@ func TestHandlerGetByIDMapsNotFound(t *testing.T) {
 		t.Fatalf(
 			"expected status %d, got %d",
 			http.StatusNotFound,
+			recorder.Code,
+		)
+	}
+}
+
+func TestHandlerListParsesFilters(t *testing.T) {
+	userID := uuid.New()
+
+	status := StatusActive
+	priority := PriorityHigh
+
+	service := &fakeProjectService{
+		listFn: func(
+			ctx context.Context,
+			gotUserID string,
+			filter ListFilter,
+		) ([]Project, error) {
+			if gotUserID != userID.String() {
+				t.Fatalf(
+					"expected user ID %q, got %q",
+					userID.String(),
+					gotUserID,
+				)
+			}
+
+			if filter.Status == nil ||
+				*filter.Status != status {
+				t.Fatalf(
+					"expected status %q",
+					status,
+				)
+			}
+
+			if filter.Priority == nil ||
+				*filter.Priority != priority {
+				t.Fatalf(
+					"expected priority %q",
+					priority,
+				)
+			}
+
+			if !filter.Archived {
+				t.Fatal(
+					"expected archived to be true",
+				)
+			}
+
+			if filter.Search != "atlas" {
+				t.Fatalf(
+					"expected search %q, got %q",
+					"atlas",
+					filter.Search,
+				)
+			}
+
+			if filter.Sort != SortName {
+				t.Fatalf(
+					"expected sort %q, got %q",
+					SortName,
+					filter.Sort,
+				)
+			}
+
+			if filter.Order != SortAscending {
+				t.Fatalf(
+					"expected order %q, got %q",
+					SortAscending,
+					filter.Order,
+				)
+			}
+
+			return []Project{}, nil
+		},
+	}
+
+	handler := NewHandler(service)
+
+	req := authenticatedRequest(
+		http.MethodGet,
+		"/api/v1/projects?status=active&priority=high&archived=true&search=atlas&sort=name&order=asc",
+		nil,
+		userID,
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.List(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf(
+			"expected status %d, got %d",
+			http.StatusOK,
+			recorder.Code,
+		)
+	}
+}
+
+func TestHandlerListRejectsInvalidArchivedValue(
+	t *testing.T,
+) {
+	handler := NewHandler(
+		&fakeProjectService{},
+	)
+
+	req := authenticatedRequest(
+		http.MethodGet,
+		"/api/v1/projects?archived=banana",
+		nil,
+		uuid.New(),
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.List(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf(
+			"expected status %d, got %d",
+			http.StatusBadRequest,
 			recorder.Code,
 		)
 	}
