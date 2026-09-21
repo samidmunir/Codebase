@@ -10,13 +10,21 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/auth"
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/health"
+
+	"github.com/samidmunir/Codebase/projects/atlas/server/internal/projects"
 )
 
 type Server struct {
 	httpServer *http.Server
 }
 
-func New(addr string, db *pgxpool.Pool, frontendURL string, authHandler *auth.Handler) *Server {
+func New(
+	addr string,
+	db *pgxpool.Pool,
+	frontendURL string,
+	authHandler *auth.Handler,
+	projectHandler *projects.Handler,
+) *Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /api/v1/health", health.Handler)
@@ -48,6 +56,48 @@ func New(addr string, db *pgxpool.Pool, frontendURL string, authHandler *auth.Ha
 		"POST /api/v1/auth/logout",
 		authHandler.Logout,
 	)
+
+	mux.Handle(
+	"POST /api/v1/projects",
+	authHandler.Authenticate(
+		http.HandlerFunc(projectHandler.Create),
+	),
+)
+
+mux.Handle(
+	"GET /api/v1/projects",
+	authHandler.Authenticate(
+		http.HandlerFunc(projectHandler.List),
+	),
+)
+
+mux.Handle(
+	"GET /api/v1/projects/{id}",
+	authHandler.Authenticate(
+		http.HandlerFunc(projectHandler.GetByID),
+	),
+)
+
+mux.Handle(
+	"PATCH /api/v1/projects/{id}",
+	authHandler.Authenticate(
+		http.HandlerFunc(projectHandler.Update),
+	),
+)
+
+mux.Handle(
+	"POST /api/v1/projects/{id}/archive",
+	authHandler.Authenticate(
+		http.HandlerFunc(projectHandler.Archive),
+	),
+)
+
+mux.Handle(
+	"POST /api/v1/projects/{id}/restore",
+	authHandler.Authenticate(
+		http.HandlerFunc(projectHandler.Restore),
+	),
+)
 
 	httpServer := &http.Server{
 		Addr:              addr,

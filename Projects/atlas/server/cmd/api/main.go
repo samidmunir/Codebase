@@ -10,6 +10,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/auth"
+	"github.com/samidmunir/Codebase/projects/atlas/server/internal/projects"
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/users"
 	"github.com/samidmunir/Codebase/projects/atlas/server/platform/config"
 	"github.com/samidmunir/Codebase/projects/atlas/server/platform/database"
@@ -38,20 +39,34 @@ func main() {
 
 	userRepository := users.NewRepository(db)
 
-	sessionRepository := auth.NewSessionRepository(db)
+sessionRepository := auth.NewSessionRepository(db)
 
-	tokenManager := auth.NewTokenManager(cfg.JWTSecret, time.Duration(cfg.AccessTokenMinutes)*time.Minute)
+tokenManager := auth.NewTokenManager(
+	cfg.JWTSecret,
+	time.Duration(cfg.AccessTokenMinutes)*time.Minute,
+)
 
-	authService := auth.NewService(
-		userRepository,
-		sessionRepository,
-		tokenManager,
-		time.Duration(cfg.RefreshTokenDays)*24*time.Hour,
-	)
+authService := auth.NewService(
+	userRepository,
+	sessionRepository,
+	tokenManager,
+	time.Duration(cfg.RefreshTokenDays)*24*time.Hour,
+)
 
-	authHandler := auth.NewHandler(authService)
+authHandler := auth.NewHandler(authService)
 
-	srv := server.New(":"+cfg.Port, db, cfg.FrontendURL, authHandler)
+// Projects dependencies
+projectRepository := projects.NewRepository(db)
+projectService := projects.NewService(projectRepository)
+projectHandler := projects.NewHandler(projectService)
+
+srv := server.New(
+	":"+cfg.Port,
+	db,
+	cfg.FrontendURL,
+	authHandler,
+	projectHandler,
+)
 
 	serverErrors := make(chan error, 1)
 
