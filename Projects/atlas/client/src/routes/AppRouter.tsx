@@ -10,7 +10,8 @@ import CalendarPage from "../pages/CalendarPage";
 import GoalsPage from "../pages/GoalsPage";
 import HabitsPage from "../pages/HabitsPage";
 import NotFoundPage from "../pages/NotFoundPage";
-import ProjectsPage from "../pages/ProjectsPage";
+import ProjectsPage from "../features/projects/pages/ProjectsPage";
+import ProjectDetailPage from "../features/projects/pages/ProjectDetailPage";
 import TasksPage from "../pages/TasksPage";
 
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -30,6 +31,7 @@ export default function AppRouter() {
           <Route index element={<DashboardPage />} />
 
           <Route path="projects" element={<ProjectsPage />} />
+          <Route path="projects/:projectId" element={<ProjectDetailPage />} />
 
           <Route path="tasks" element={<TasksPage />} />
 

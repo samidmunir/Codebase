@@ -62,12 +62,12 @@ func NewHandler(service ProjectService) *Handler {
 }
 
 type createProjectRequest struct {
-	Name        string     `json:"name"`
-	Description *string    `json:"description"`
-	Status      *Status    `json:"status"`
-	Priority    *Priority  `json:"priority"`
-	StartDate   *time.Time `json:"startDate"`
-	TargetDate  *time.Time `json:"targetDate"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	Status      *Status   `json:"status"`
+	Priority    *Priority `json:"priority"`
+	StartDate   *string   `json:"startDate"`
+	TargetDate  *string   `json:"targetDate"`
 }
 
 func writeJSON(
@@ -158,6 +158,26 @@ func (h *Handler) Create(
 		return
 	}
 
+	startDate, err := parseOptionalDate(request.StartDate)
+	if err != nil {
+		writeError(
+			w,
+			http.StatusBadRequest,
+			"invalid startDate",
+		)
+		return
+	}
+
+	targetDate, err := parseOptionalDate(request.TargetDate)
+	if err != nil {
+		writeError(
+			w,
+			http.StatusBadRequest,
+			"invalid targetDate",
+		)
+		return
+	}
+
 	project, err := h.service.Create(
 		r.Context(),
 		userID.String(),
@@ -166,8 +186,8 @@ func (h *Handler) Create(
 			Description: request.Description,
 			Status:      request.Status,
 			Priority:    request.Priority,
-			StartDate:   request.StartDate,
-			TargetDate:  request.TargetDate,
+			StartDate:   startDate,
+			TargetDate:  targetDate,
 		},
 	)
 
@@ -337,13 +357,48 @@ func parseNullableTime(
 		return nil, true, nil
 	}
 
-	var parsed time.Time
+	var date string
 
-	if err := json.Unmarshal(raw, &parsed); err != nil {
+	if err := json.Unmarshal(
+		raw,
+		&date,
+	); err != nil {
+		return nil, false, err
+	}
+
+	if date == "" {
+		return nil, false, errors.New(
+			"date cannot be empty",
+		)
+	}
+
+	parsed, err := time.Parse(
+		"2006-01-02",
+		date,
+	)
+	if err != nil {
 		return nil, false, err
 	}
 
 	return &parsed, false, nil
+}
+
+func parseOptionalDate(
+	value *string,
+) (*time.Time, error) {
+	if value == nil || *value == "" {
+		return nil, nil
+	}
+
+	parsed, err := time.Parse(
+		"2006-01-02",
+		*value,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &parsed, nil
 }
 
 func (h *Handler) Update(
