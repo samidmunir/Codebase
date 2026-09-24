@@ -10,8 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/auth"
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/health"
-
 	"github.com/samidmunir/Codebase/projects/atlas/server/internal/projects"
+	"github.com/samidmunir/Codebase/projects/atlas/server/internal/tasks"
 )
 
 type Server struct {
@@ -24,6 +24,7 @@ func New(
 	frontendURL string,
 	authHandler *auth.Handler,
 	projectHandler *projects.Handler,
+	taskHandler *tasks.Handler,
 ) *Server {
 	mux := http.NewServeMux()
 
@@ -58,46 +59,83 @@ func New(
 	)
 
 	mux.Handle(
-	"POST /api/v1/projects",
-	authHandler.Authenticate(
-		http.HandlerFunc(projectHandler.Create),
-	),
-)
+		"POST /api/v1/projects",
+		authHandler.Authenticate(
+			http.HandlerFunc(projectHandler.Create),
+		),
+	)
 
-mux.Handle(
-	"GET /api/v1/projects",
-	authHandler.Authenticate(
-		http.HandlerFunc(projectHandler.List),
-	),
-)
+	mux.Handle(
+		"GET /api/v1/projects",
+		authHandler.Authenticate(
+			http.HandlerFunc(projectHandler.List),
+		),
+	)
 
-mux.Handle(
-	"GET /api/v1/projects/{id}",
-	authHandler.Authenticate(
-		http.HandlerFunc(projectHandler.GetByID),
-	),
-)
+	mux.Handle(
+		"GET /api/v1/projects/{id}",
+		authHandler.Authenticate(
+			http.HandlerFunc(projectHandler.GetByID),
+		),
+	)
 
-mux.Handle(
-	"PATCH /api/v1/projects/{id}",
-	authHandler.Authenticate(
-		http.HandlerFunc(projectHandler.Update),
-	),
-)
+	mux.Handle(
+		"PATCH /api/v1/projects/{id}",
+		authHandler.Authenticate(
+			http.HandlerFunc(projectHandler.Update),
+		),
+	)
 
-mux.Handle(
-	"POST /api/v1/projects/{id}/archive",
-	authHandler.Authenticate(
-		http.HandlerFunc(projectHandler.Archive),
-	),
-)
+	mux.Handle(
+		"POST /api/v1/projects/{id}/archive",
+		authHandler.Authenticate(
+			http.HandlerFunc(projectHandler.Archive),
+		),
+	)
 
-mux.Handle(
-	"POST /api/v1/projects/{id}/restore",
-	authHandler.Authenticate(
-		http.HandlerFunc(projectHandler.Restore),
-	),
-)
+	mux.Handle(
+		"POST /api/v1/projects/{id}/restore",
+		authHandler.Authenticate(
+			http.HandlerFunc(projectHandler.Restore),
+		),
+	)
+
+	// Tasks routes
+
+	mux.Handle(
+		"POST /api/v1/tasks",
+		authHandler.Authenticate(
+			http.HandlerFunc(taskHandler.Create),
+		),
+	)
+
+	mux.Handle(
+		"GET /api/v1/tasks",
+		authHandler.Authenticate(
+			http.HandlerFunc(taskHandler.List),
+		),
+	)
+
+	mux.Handle(
+		"GET /api/v1/tasks/{id}",
+		authHandler.Authenticate(
+			http.HandlerFunc(taskHandler.GetByID),
+		),
+	)
+
+	mux.Handle(
+		"PATCH /api/v1/tasks/{id}",
+		authHandler.Authenticate(
+			http.HandlerFunc(taskHandler.Update),
+		),
+	)
+
+	mux.Handle(
+		"DELETE /api/v1/tasks/{id}",
+		authHandler.Authenticate(
+			http.HandlerFunc(taskHandler.Delete),
+		),
+	)
 
 	httpServer := &http.Server{
 		Addr:              addr,

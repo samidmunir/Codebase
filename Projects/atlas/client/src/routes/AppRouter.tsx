@@ -12,7 +12,8 @@ import HabitsPage from "../pages/HabitsPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import ProjectsPage from "../features/projects/pages/ProjectsPage";
 import ProjectDetailPage from "../features/projects/pages/ProjectDetailPage";
-import TasksPage from "../pages/TasksPage";
+import TasksPage from "../features/tasks/pages/TasksPage";
+import TaskDetailPage from "../features/tasks/pages/TaskDetailPage";
 
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
@@ -34,6 +35,7 @@ export default function AppRouter() {
           <Route path="projects/:projectId" element={<ProjectDetailPage />} />
 
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="tasks/:taskId" element={<TaskDetailPage />} />
 
           <Route path="goals" element={<GoalsPage />} />
 
