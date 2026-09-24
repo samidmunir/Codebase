@@ -4,8 +4,15 @@ import { Link, useParams } from "react-router-dom";
 import { getProject } from "../../projects/api/projectsApi";
 import type { Project } from "../../projects/types/project.types";
 
-import { getTask } from "../api/tasksApi";
-import type { Task, TaskPriority, TaskStatus } from "../types/task.types";
+import EditTaskModal from "../components/EditTaskModal";
+import { getTask, updateTask } from "../api/tasksApi";
+
+import type {
+  Task,
+  TaskPriority,
+  TaskStatus,
+  UpdateTaskInput,
+} from "../types/task.types";
 
 import "../styles/tasks.css";
 
@@ -59,6 +66,9 @@ export default function TaskDetailPage() {
     taskId: string;
   }>();
 
+  /*
+   * Task detail state
+   */
   const [task, setTask] = useState<Task | null>(null);
 
   const [project, setProject] = useState<Project | null>(null);
@@ -67,6 +77,21 @@ export default function TaskDetailPage() {
 
   const [error, setError] = useState<string | null>(null);
 
+  /*
+   * Edit Task state
+   *
+   * These MUST live inside TaskDetailPage because
+   * the edit handlers depend on component state.
+   */
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const [isUpdatingTask, setIsUpdatingTask] = useState(false);
+
+  const [updateError, setUpdateError] = useState<string | null>(null);
+
+  /*
+   * Load Task + associated Project.
+   */
   useEffect(() => {
     if (!taskId) {
       return;
@@ -122,11 +147,71 @@ export default function TaskDetailPage() {
   }, [taskId]);
 
   /*
-   * The route normally guarantees a taskId because this
-   * page is mounted at /tasks/:taskId.
+   * Edit Task handlers
+   */
+  const handleOpenEdit = () => {
+    setUpdateError(null);
+    setIsEditOpen(true);
+  };
+
+  const handleCloseEdit = () => {
+    if (isUpdatingTask) {
+      return;
+    }
+
+    setUpdateError(null);
+    setIsEditOpen(false);
+  };
+
+  const handleUpdateTask = async (input: UpdateTaskInput) => {
+    if (!task) {
+      return;
+    }
+
+    try {
+      setIsUpdatingTask(true);
+      setUpdateError(null);
+
+      const updatedTask = await updateTask(task.id, input);
+
+      setTask(updatedTask);
+
+      /*
+       * Refresh the associated Project so the
+       * displayed Project name remains accurate
+       * after reassignment.
+       */
+      if (updatedTask.projectId) {
+        try {
+          const updatedProject = await getProject(updatedTask.projectId);
+
+          setProject(updatedProject);
+        } catch (projectError) {
+          console.error("Failed to refresh task project:", projectError);
+
+          setProject(null);
+        }
+      } else {
+        setProject(null);
+      }
+
+      setIsEditOpen(false);
+    } catch (err) {
+      console.error("Failed to update task:", err);
+
+      setUpdateError(
+        err instanceof Error ? err.message : "Unable to update task.",
+      );
+    } finally {
+      setIsUpdatingTask(false);
+    }
+  };
+
+  /*
+   * The route normally guarantees taskId because
+   * this page is mounted at /tasks/:taskId.
    *
-   * We still handle the missing-ID case explicitly so the
-   * component never remains stuck in its loading state.
+   * We still handle the missing-ID case explicitly.
    */
   if (!taskId) {
     return (
@@ -196,10 +281,11 @@ export default function TaskDetailPage() {
         </div>
 
         <div className="task-detail-actions">
-          {/*
-            Enabled in #4G.5B.
-          */}
-          <button type="button" className="tasks-secondary-button" disabled>
+          <button
+            type="button"
+            className="tasks-secondary-button"
+            onClick={handleOpenEdit}
+          >
             Edit Task
           </button>
         </div>
@@ -278,6 +364,17 @@ export default function TaskDetailPage() {
           </div>
         </article>
       </section>
+
+      {isEditOpen && (
+        <EditTaskModal
+          key={task.id}
+          task={task}
+          isSubmitting={isUpdatingTask}
+          error={updateError}
+          onClose={handleCloseEdit}
+          onSubmit={handleUpdateTask}
+        />
+      )}
     </main>
   );
 }
