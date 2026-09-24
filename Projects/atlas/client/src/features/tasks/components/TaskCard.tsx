@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 interface TaskCardProps {
   task: Task;
+  projectName: string | null;
 }
 
 const statusLabels: Record<TaskStatus, string> = {
@@ -34,7 +35,7 @@ function formatDueDate(dueDate: string | null): string {
   }).format(date);
 }
 
-export default function TaskCard({ task }: TaskCardProps) {
+export default function TaskCard({ task, projectName }: TaskCardProps) {
   return (
     <article className="task-card">
       <div className="task-card-top">
@@ -61,7 +62,16 @@ export default function TaskCard({ task }: TaskCardProps) {
         <div className="task-card-footer__meta">
           <span>Due: {formatDueDate(task.dueDate)}</span>
 
-          <span>{task.projectId ? "Project task" : "Standalone"}</span>
+          <span
+            className="task-card-project"
+            title={projectName ?? "Standalone"}
+          >
+            <span className="task-card-project__icon" aria-hidden="true">
+              ◇
+            </span>
+
+            {projectName ?? "Standalone"}
+          </span>
         </div>
 
         <Link

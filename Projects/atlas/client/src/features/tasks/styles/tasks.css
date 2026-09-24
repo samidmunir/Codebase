@@ -1458,3 +1458,34 @@
     width: 100%;
   }
 }
+
+/* =========================================
+   Task Card Project
+   ========================================= */
+
+.task-card-project {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  min-width: 0;
+
+  color: #aeb5c0;
+
+  font-weight: 500;
+}
+
+.task-card-project__icon {
+  flex-shrink: 0;
+
+  color: #727b8b;
+
+  font-size: 0.8rem;
+}
+
+.task-card-project {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

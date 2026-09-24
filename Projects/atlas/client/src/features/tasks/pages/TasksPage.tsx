@@ -6,6 +6,10 @@ import TasksHeader from "../components/TasksHeader";
 import TaskSummary from "../components/TaskSummary";
 import TaskToolbar from "../components/TaskToolbar";
 
+import { getProjects } from "../../projects/api/projectsApi";
+
+import type { Project } from "../../projects/types/project.types";
+
 import type {
   CreateTaskInput,
   Task,
@@ -23,6 +27,8 @@ const DEFAULT_FILTERS: TaskListFilters = {
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const [filters, setFilters] = useState<TaskListFilters>(DEFAULT_FILTERS);
 
@@ -89,6 +95,36 @@ export default function TasksPage() {
   };
 
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchProjects = async () => {
+      try {
+        const data = await getProjects({
+          archived: false,
+          sort: "name",
+          order: "asc",
+        });
+
+        if (!cancelled) {
+          setProjects(data);
+        }
+      } catch (err) {
+        console.error("Failed to load projects for tasks:", err);
+
+        if (!cancelled) {
+          setProjects([]);
+        }
+      }
+    };
+
+    void fetchProjects();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const timeout = window.setTimeout(
       () => {
         void loadTasks(filters);
@@ -104,6 +140,10 @@ export default function TasksPage() {
   const handleClearFilters = () => {
     setFilters(DEFAULT_FILTERS);
   };
+
+  const projectNames = new Map(
+    projects.map((project) => [project.id, project.name]),
+  );
 
   return (
     <main className="tasks-page">
@@ -148,7 +188,15 @@ export default function TasksPage() {
       ) : (
         <section className="tasks-grid" aria-label="Tasks">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              projectName={
+                task.projectId
+                  ? (projectNames.get(task.projectId) ?? "Project unavailable")
+                  : null
+              }
+            />
           ))}
         </section>
       )}
