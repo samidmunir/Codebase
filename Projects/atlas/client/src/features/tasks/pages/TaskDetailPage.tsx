@@ -89,6 +89,10 @@ export default function TaskDetailPage() {
 
   const [updateError, setUpdateError] = useState<string | null>(null);
 
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  const [statusError, setStatusError] = useState<string | null>(null);
+
   /*
    * Load Task + associated Project.
    */
@@ -207,6 +211,31 @@ export default function TaskDetailPage() {
     }
   };
 
+  const handleStatusChange = async (status: TaskStatus) => {
+    if (!task || task.status === status) {
+      return;
+    }
+
+    try {
+      setIsUpdatingStatus(true);
+      setStatusError(null);
+
+      const updatedTask = await updateTask(task.id, {
+        status,
+      });
+
+      setTask(updatedTask);
+    } catch (err) {
+      console.error("Failed to update task status:", err);
+
+      setStatusError(
+        err instanceof Error ? err.message : "Unable to update task status.",
+      );
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   /*
    * The route normally guarantees taskId because
    * this page is mounted at /tasks/:taskId.
@@ -281,15 +310,77 @@ export default function TaskDetailPage() {
         </div>
 
         <div className="task-detail-actions">
+          {task.status === "todo" && (
+            <>
+              <button
+                type="button"
+                className="tasks-secondary-button"
+                onClick={() => void handleStatusChange("in_progress")}
+                disabled={isUpdatingStatus}
+              >
+                {isUpdatingStatus ? "Updating..." : "Start Task"}
+              </button>
+
+              <button
+                type="button"
+                className="task-complete-button"
+                onClick={() => void handleStatusChange("completed")}
+                disabled={isUpdatingStatus}
+              >
+                {isUpdatingStatus ? "Updating..." : "Complete Task"}
+              </button>
+            </>
+          )}
+
+          {task.status === "in_progress" && (
+            <>
+              <button
+                type="button"
+                className="tasks-secondary-button"
+                onClick={() => void handleStatusChange("todo")}
+                disabled={isUpdatingStatus}
+              >
+                Move to To Do
+              </button>
+
+              <button
+                type="button"
+                className="task-complete-button"
+                onClick={() => void handleStatusChange("completed")}
+                disabled={isUpdatingStatus}
+              >
+                {isUpdatingStatus ? "Updating..." : "Complete Task"}
+              </button>
+            </>
+          )}
+
+          {task.status === "completed" && (
+            <button
+              type="button"
+              className="task-reopen-button"
+              onClick={() => void handleStatusChange("in_progress")}
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? "Updating..." : "Reopen Task"}
+            </button>
+          )}
+
           <button
             type="button"
             className="tasks-secondary-button"
             onClick={handleOpenEdit}
+            disabled={isUpdatingStatus}
           >
             Edit Task
           </button>
         </div>
       </header>
+
+      {statusError && (
+        <div className="task-lifecycle-error" role="alert">
+          {statusError}
+        </div>
+      )}
 
       <section className="task-detail-grid">
         <article className="task-detail-panel">
