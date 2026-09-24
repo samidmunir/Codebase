@@ -1299,3 +1299,162 @@
   font-size: 0.8rem;
   line-height: 1.5;
 }
+
+/* =========================================
+   Delete Task
+   ========================================= */
+
+.task-delete-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 2.65rem;
+
+  border: 1px solid rgba(255, 112, 112, 0.25);
+  border-radius: 0.7rem;
+
+  padding: 0.65rem 0.9rem;
+
+  background: rgba(255, 112, 112, 0.06);
+  color: #e9a0a0;
+
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.task-delete-trigger:hover:not(:disabled) {
+  border-color: rgba(255, 112, 112, 0.45);
+
+  background: rgba(255, 112, 112, 0.11);
+  color: #ffc0c0;
+}
+
+.task-delete-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.task-delete-modal {
+  width: min(500px, 100%);
+
+  border: 1px solid #292f3b;
+  border-radius: 1rem;
+
+  overflow: hidden;
+
+  background: #101319;
+
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.task-delete-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+
+  padding: 1.5rem;
+
+  border-bottom: 1px solid #20242d;
+}
+
+.task-delete-modal__header h2 {
+  margin: 0.3rem 0 0;
+
+  color: #f0f2f5;
+
+  font-size: 1.35rem;
+}
+
+.task-delete-modal__body {
+  padding: 1.5rem;
+}
+
+.task-delete-modal__body > p {
+  margin: 0;
+
+  color: #9299a6;
+
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.task-delete-modal__task {
+  margin: 1rem 0;
+
+  border: 1px solid #292f3b;
+  border-radius: 0.7rem;
+
+  padding: 0.85rem 1rem;
+
+  overflow-wrap: anywhere;
+
+  background: #0c0f14;
+  color: #e5e8ed;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.task-delete-modal__warning {
+  color: #d69a9a !important;
+}
+
+.task-delete-modal__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.task-delete-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 2.65rem;
+
+  border: 1px solid rgba(255, 112, 112, 0.4);
+  border-radius: 0.7rem;
+
+  padding: 0.65rem 0.9rem;
+
+  background: rgba(255, 112, 112, 0.13);
+  color: #ffc0c0;
+
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.task-delete-button:hover:not(:disabled) {
+  background: rgba(255, 112, 112, 0.2);
+}
+
+.task-delete-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 520px) {
+  .task-delete-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .task-delete-modal__actions button {
+    width: 100%;
+  }
+}

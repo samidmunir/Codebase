@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { getProject } from "../../projects/api/projectsApi";
 import type { Project } from "../../projects/types/project.types";
 
 import EditTaskModal from "../components/EditTaskModal";
-import { getTask, updateTask } from "../api/tasksApi";
+import { deleteTask, getTask, updateTask } from "../api/tasksApi";
 
 import type {
   Task,
@@ -13,6 +13,7 @@ import type {
   TaskStatus,
   UpdateTaskInput,
 } from "../types/task.types";
+import DeleteTaskModal from "../components/DeleteTaskModal";
 
 import "../styles/tasks.css";
 
@@ -92,6 +93,53 @@ export default function TaskDetailPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const [statusError, setStatusError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
+
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const [isDeletingTask, setIsDeletingTask] = useState(false);
+
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleOpenDelete = () => {
+    setDeleteError(null);
+    setIsDeleteOpen(true);
+  };
+
+  const handleCloseDelete = () => {
+    if (isDeletingTask) {
+      return;
+    }
+
+    setDeleteError(null);
+    setIsDeleteOpen(false);
+  };
+
+  const handleDeleteTask = async () => {
+    if (!task) {
+      return;
+    }
+
+    try {
+      setIsDeletingTask(true);
+      setDeleteError(null);
+
+      await deleteTask(task.id);
+
+      navigate("/tasks", {
+        replace: true,
+      });
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+
+      setDeleteError(
+        err instanceof Error ? err.message : "Unable to delete task.",
+      );
+
+      setIsDeletingTask(false);
+    }
+  };
 
   /*
    * Load Task + associated Project.
@@ -373,6 +421,14 @@ export default function TaskDetailPage() {
           >
             Edit Task
           </button>
+          <button
+            type="button"
+            className="task-delete-trigger"
+            onClick={handleOpenDelete}
+            disabled={isUpdatingStatus || isUpdatingTask}
+          >
+            Delete
+          </button>
         </div>
       </header>
 
@@ -464,6 +520,15 @@ export default function TaskDetailPage() {
           error={updateError}
           onClose={handleCloseEdit}
           onSubmit={handleUpdateTask}
+        />
+      )}
+      {isDeleteOpen && (
+        <DeleteTaskModal
+          taskTitle={task.title}
+          isDeleting={isDeletingTask}
+          error={deleteError}
+          onClose={handleCloseDelete}
+          onConfirm={handleDeleteTask}
         />
       )}
     </main>
