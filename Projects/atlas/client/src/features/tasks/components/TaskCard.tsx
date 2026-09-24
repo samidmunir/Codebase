@@ -1,4 +1,5 @@
 import type { Task, TaskPriority, TaskStatus } from "../types/task.types";
+import { Link } from "react-router-dom";
 
 interface TaskCardProps {
   task: Task;
@@ -57,9 +58,20 @@ export default function TaskCard({ task }: TaskCardProps) {
       </div>
 
       <footer className="task-card-footer">
-        <span>Due: {formatDueDate(task.dueDate)}</span>
+        <div className="task-card-footer__meta">
+          <span>Due: {formatDueDate(task.dueDate)}</span>
 
-        <span>{task.projectId ? "Project task" : "Standalone"}</span>
+          <span>{task.projectId ? "Project task" : "Standalone"}</span>
+        </div>
+
+        <Link
+          to={`/tasks/${task.id}`}
+          className="task-card__view"
+          aria-label={`View ${task.title}`}
+        >
+          View
+          <span aria-hidden="true">→</span>
+        </Link>
       </footer>
     </article>
   );
