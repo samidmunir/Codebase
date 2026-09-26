@@ -7,7 +7,9 @@ import {
 } from '@vector/sim-core';
 import { airlines, performanceCatalog } from '../airspaces/registry';
 import { RadarTracker } from '../scope/radar-tracker';
-import { DemoTraffic } from './demo-traffic';
+
+/** Sim time run before the session starts, so traffic is already spread out. */
+const WARM_UP_SEC = 300;
 
 export interface SessionStatus {
   utcTime: Date;
@@ -30,7 +32,6 @@ export interface SessionStatus {
 export class ScopeSession {
   readonly engine: SimEngine;
   readonly radar: RadarTracker;
-  private readonly demo: DemoTraffic;
   private readonly listeners = new Set<() => void>();
   private status: SessionStatus;
   /** Bumped when the departure queue changes. */
@@ -53,15 +54,15 @@ export class ScopeSession {
       if (event.type.startsWith('departure') || event.type === 'tookOff') this.queueVersion++;
     });
     this.radar = new RadarTracker(settings['radar.sweepIntervalSec'], pack.airspace.radar.position);
-    this.demo = new DemoTraffic(this.engine, pack);
-    this.demo.seed();
+    // Start with traffic already under way: arrivals spread along their routes.
+    for (let i = 0; i < WARM_UP_SEC / this.engine.config.tickSeconds; i++) this.engine.step();
     this.radar.update(this.engine.displayTimeSec, this.engine.listAircraft());
     this.status = this.readStatus();
   }
 
   /** Advances by real elapsed time. Returns true if any radar target changed. */
   frame(realElapsedMs: number): boolean {
-    if (this.engine.advance(realElapsedMs) > 0) this.demo.update();
+    this.engine.advance(realElapsedMs);
     const swept = this.radar.update(this.engine.displayTimeSec, this.engine.listAircraft());
     this.refreshStatus();
     return swept;

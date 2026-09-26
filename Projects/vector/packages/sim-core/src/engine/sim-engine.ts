@@ -31,6 +31,7 @@ import {
   altitudeWords,
   capitalize,
   frequencyWords,
+  procedureWords,
   runwayWords,
   spokenCallsign,
 } from '../comms/phraseology';
@@ -744,7 +745,7 @@ export class SimEngine {
 
     const facility = pack.airspace.controllers.approach.approachCallsign;
     const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
-    const star = route.star.replace(/(\d)$/, ' $1');
+    const star = procedureWords(route.star);
     this.transmit(
       'pilot',
       aircraft.id,
@@ -997,7 +998,7 @@ export class SimEngine {
     const navigation = aircraft.navigation;
     const procedure =
       navigation.mode === 'procedure' && navigation.name !== 'Runway heading'
-        ? `, ${navigation.name.replace(/(\d)$/, ' $1')} departure`
+        ? `, ${procedureWords(navigation.name)} departure`
         : '';
     const facility = this.airspace.airspace.controllers.approach.departureCallsign;
     const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);

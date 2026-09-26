@@ -4,6 +4,7 @@ import {
   altitudeOptions,
   centerHandoff,
   directToOptions,
+  ilsClearance,
   ilsRunways,
   isDeparting,
   minimumVectoringAltitude,
@@ -254,21 +255,13 @@ export function CommandPanel(props: CommandPanelProps) {
             )}
 
             {activeTab === 'approach' && (
-              <div className="option-grid option-grid--runways">
-                {runways.map((runway) => (
-                  <button
-                    key={runway}
-                    type="button"
-                    aria-pressed={draft.ilsRunway === runway}
-                    onClick={() =>
-                      update({ ilsRunway: draft.ilsRunway === runway ? undefined : runway })
-                    }
-                  >
-                    <span className="option__caption">ILS</span>
-                    {runway}
-                  </button>
-                ))}
-              </div>
+              <ApproachTab
+                session={session}
+                aircraft={aircraft}
+                runways={runways}
+                draft={draft}
+                update={update}
+              />
             )}
 
             {activeTab === 'handoff' && (
@@ -457,6 +450,70 @@ function HandoffTab({
       </button>
       <p className="command-panel__hint">
         Hand departures to Center once they are climbing out of your airspace.
+      </p>
+    </div>
+  );
+}
+
+function ApproachTab({
+  session,
+  aircraft,
+  runways,
+  draft,
+  update,
+}: {
+  session: ScopeSession;
+  aircraft: Readonly<AircraftState>;
+  runways: string[];
+  draft: InstructionDraft;
+  update: (patch: Partial<InstructionDraft>) => void;
+}) {
+  const destination = aircraft.flightPlan.destination;
+  const inUse = session.engine.activeRunways[destination]?.arrivals ?? [];
+  const showEligibility = session.engine.settings['approaches.showEligibility'];
+  // Runways in use first.
+  const ordered = [...runways].sort(
+    (a, b) => Number(inUse.includes(b)) - Number(inUse.includes(a)),
+  );
+
+  return (
+    <div className="approach-tab">
+      <div className="option-grid option-grid--runways">
+        {ordered.map((runway) => {
+          const clearance = ilsClearance(session.pack, destination, runway);
+          const eligibility =
+            showEligibility && clearance
+              ? session.engine.ilsEligibility(aircraft.id, clearance)
+              : undefined;
+          return (
+            <button
+              key={runway}
+              type="button"
+              aria-pressed={draft.ilsRunway === runway}
+              className={inUse.includes(runway) ? 'option--in-use' : undefined}
+              title={
+                eligibility && !eligibility.ok
+                  ? `Pilot would be unable: ${eligibility.reason}`
+                  : undefined
+              }
+              onClick={() => update({ ilsRunway: draft.ilsRunway === runway ? undefined : runway })}
+            >
+              <span className="option__caption">{inUse.includes(runway) ? 'IN USE' : 'ILS'}</span>
+              {runway}
+              {eligibility && (
+                <span
+                  className={eligibility.ok ? 'option__eligible' : 'option__ineligible'}
+                  aria-hidden="true"
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <p className="command-panel__hint">
+        {showEligibility
+          ? 'Green: the pilot can accept the approach from here. Red: the pilot would be unable (hover for why).'
+          : 'The pilot accepts the approach only from a position they can fly it; otherwise they reply unable.'}
       </p>
     </div>
   );

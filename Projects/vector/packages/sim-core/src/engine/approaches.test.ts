@@ -65,6 +65,7 @@ describe('ILS eligibility', () => {
   it.each<[string, Partial<AircraftState>, RegExp]>([
     ['too far out', { position: onFinal(28, 2) }, /too far out/],
     ['too close in', { position: onFinal(3, 0.3) }, /too close/],
+    ['beyond the runway', { position: onFinal(-4, 0) }, /not in position/],
     ['outside localizer coverage', { position: onFinal(22, 6) }, /not in position/],
     [
       'a steep intercept',
@@ -220,7 +221,9 @@ describe('arrivals', () => {
     }
     const checkIns = engine.comms.filter((c) => c.text.startsWith('New York Approach,'));
     expect(checkIns.length).toBe(entered.length);
-    expect(checkIns[0]!.text).toMatch(/, [A-Z]+ \d arrival\.$/);
+    expect(checkIns[0]!.text).toMatch(
+      /, [A-Z]+ (one|two|three|four|five|six|seven|eight|niner) arrival\.$/,
+    );
   });
 
   it('never brings widebodies into LaGuardia', () => {

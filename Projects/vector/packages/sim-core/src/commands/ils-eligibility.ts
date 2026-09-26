@@ -67,6 +67,8 @@ export function ilsEligibility(
   );
   const [minDistance, maxDistance] = settings['approaches.interceptDistanceNm'];
 
+  // Beyond the runway (the wrong side of the airport) is a position problem, not distance.
+  if (geometry.alongTrackNm <= 0) return reject('position', 'not in position for the localizer');
   if (geometry.alongTrackNm < minDistance)
     return reject('distance', 'too close to the runway for the approach');
   if (geometry.alongTrackNm > maxDistance)
