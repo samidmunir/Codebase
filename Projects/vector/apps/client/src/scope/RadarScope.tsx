@@ -186,6 +186,9 @@ export function RadarScope({
         targets: session.radar.list(),
         playerId: PLAYER_ID,
         airports: controlledAirports,
+        trackOf: (id: string) => session.engine.track(id),
+        tickSeconds: session.engine.config.tickSeconds,
+        simTimeSec: session.engine.displayTimeSec,
         scopeCenter: session.pack.airspace.radar.position,
         // Drawn out to the boundary: the scope shows the whole region's radar picture.
         sweepRadiusNm: Math.max(session.pack.airspace.radar.rangeNm, session.pack.boundaryRadiusNm),

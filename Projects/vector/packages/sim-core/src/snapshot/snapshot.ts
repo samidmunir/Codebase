@@ -1,3 +1,4 @@
+import { trackPointSchema } from '../aircraft/track';
 import { resolveSettings } from '@vector/shared';
 import { z } from 'zod';
 import { aircraftStateSchema } from '../aircraft/aircraft';
@@ -64,6 +65,8 @@ export const simStateSchema = z.object({
     violations: [],
     nextViolationNumber: 1,
   }),
+  /** Each aircraft's path since it became the player's traffic, by aircraft id. */
+  tracks: z.record(z.string(), z.array(trackPointSchema)).default({}),
 });
 
 export type SimState = z.infer<typeof simStateSchema>;

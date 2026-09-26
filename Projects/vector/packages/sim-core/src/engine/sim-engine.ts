@@ -23,6 +23,7 @@ import {
   ilsEligibility,
   type IlsEligibility,
 } from '../commands/ils-eligibility';
+import { TRACK_SAMPLE_SEC, trackPoint, type TrackPoint } from '../aircraft/track';
 import { machToIas } from '../atmosphere/isa';
 import { arrivalRouteFrom, type ArrivalRoute } from '../traffic/arrival-route';
 import { isHemisphericLevel, requestedCruiseAltitude } from '../traffic/cruise-levels';
@@ -178,6 +179,7 @@ export class SimEngine {
         comms: [],
         nextMessageNumber: 1,
         separation: emptySeparationState(),
+        tracks: {},
       },
       options,
     );
@@ -355,8 +357,33 @@ export class SimEngine {
       this.emit({ type: 'landed', aircraftId: aircraft.id, airport, runway });
       this.removeAircraft(aircraft.id);
     }
+    this.recordTracks();
     this.removeExitedAircraft();
     this.checkSeparation();
+  }
+
+  // ---- Tracks ---------------------------------------------------------------------
+
+  /**
+   * The path an aircraft has flown since it first became the player's
+   * traffic (entering the airspace, or radar contact for a departure),
+   * oldest first. Empty before then.
+   */
+  track(aircraftId: string): readonly Readonly<TrackPoint>[] {
+    return this.state.tracks[aircraftId] ?? [];
+  }
+
+  private recordTracks(): void {
+    const sampleTicks = Math.max(1, Math.round(TRACK_SAMPLE_SEC / this.state.config.tickSeconds));
+    for (const aircraft of this.state.aircraft) {
+      const track = this.state.tracks[aircraft.id];
+      if (!track) {
+        if (aircraft.owner === this.state.playerId)
+          this.state.tracks[aircraft.id] = [trackPoint(this.state.tick, aircraft)];
+      } else if (this.state.tick - track.at(-1)![0] >= sampleTicks) {
+        track.push(trackPoint(this.state.tick, aircraft));
+      }
+    }
   }
 
   // ---- Separation ------------------------------------------------------------------
@@ -1376,6 +1403,7 @@ export class SimEngine {
     const index = this.state.aircraft.findIndex((aircraft) => aircraft.id === id);
     if (index === -1) throw new Error(`Unknown aircraft "${id}"`);
     this.state.aircraft.splice(index, 1);
+    delete this.state.tracks[id];
     this.state.pendingInstructions = this.state.pendingInstructions.filter(
       (p) => p.aircraftId !== id,
     );

@@ -1,3 +1,4 @@
+import type { TrackPoint } from '@vector/sim-core';
 import type { UserSettings } from '@vector/shared';
 import {
   bearingTrue,
@@ -13,6 +14,7 @@ import { dataBlockLines } from '../data-block';
 import type { RadarTarget } from '../radar-tracker';
 import type { RoutePreview } from '../route-preview';
 import { trafficCategory } from '../traffic-category';
+import { heatColor, heatValue } from './heat-scale';
 import { withAlpha, type ScopePalette } from './palette';
 
 /** Pixels per leader line length step (STARS uses discrete lengths). */
@@ -28,6 +30,11 @@ export interface TrafficFrame {
   playerId: string;
   /** The airspace's airports, to tell arrivals, departures and overflights apart. */
   airports: ReadonlySet<string>;
+  /** Each aircraft's recorded path since it entered the airspace, for heat trails. */
+  trackOf: (aircraftId: string) => readonly Readonly<TrackPoint>[];
+  /** Sim seconds per tick, and the current sim time (for trail ages). */
+  tickSeconds: number;
+  simTimeSec: number;
   /** Radar antenna the sweep rotates around, and its range. */
   scopeCenter: LatLon;
   sweepRadiusNm: number;
@@ -89,6 +96,7 @@ export function drawTrafficLayer(
   ctx.clearRect(0, 0, camera.width, camera.height);
 
   if (settings['display.sweepEffect']) drawSweep(ctx, frame);
+  if (settings['display.heatTrail']) drawHeatTrails(ctx, frame);
   if (frame.route) drawRoute(ctx, frame, frame.route);
 
   // Conflict Alert state per aircraft: an actual loss outranks a prediction.
@@ -547,4 +555,71 @@ export function hitTest(hits: readonly TargetHitArea[], point: ScreenPoint): str
     }
   }
   return undefined;
+}
+
+/** Heat trail colors are drawn in this many bands (one canvas path each). */
+const HEAT_BANDS = 16;
+const HEAT_TRAIL_WIDTH_PX = 2.5;
+
+/**
+ * Each aircraft's whole path since it entered the airspace, colored by the
+ * heat mode, ending at its current radar position.
+ */
+function drawHeatTrails(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
+  const { camera, settings } = frame;
+  const mode = settings['display.heatTrailColorBy'];
+  const onlySelected = settings['display.heatTrailAircraft'] === 'selected';
+  const bands: { x1: number; y1: number; x2: number; y2: number }[][] = Array.from(
+    { length: HEAT_BANDS },
+    () => [],
+  );
+
+  for (const target of frame.targets) {
+    if (onlySelected && target.id !== frame.selectedId) continue;
+    // Only what the radar has shown so far: the trail ends at the painted target.
+    const track = frame
+      .trackOf(target.id)
+      .filter((point) => point[0] * frame.tickSeconds <= target.seenAtSec);
+    if (track.length === 0) continue;
+    let previous = project(camera, { lat: track[0]![1], lon: track[0]![2] });
+    const segment = (to: { x: number; y: number }, heat: number) => {
+      const band = Math.min(HEAT_BANDS - 1, Math.floor(heat * HEAT_BANDS));
+      bands[band]!.push({ x1: previous.x, y1: previous.y, x2: to.x, y2: to.y });
+      previous = to;
+    };
+    for (const [tick, lat, lon, altitudeFt, groundSpeedKts] of track.slice(1)) {
+      segment(
+        project(camera, { lat, lon }),
+        heatValue(mode, {
+          ageSec: frame.simTimeSec - tick * frame.tickSeconds,
+          altitudeFt,
+          groundSpeedKts,
+        }),
+      );
+    }
+    segment(
+      project(camera, target.position),
+      heatValue(mode, {
+        ageSec: frame.simTimeSec - target.seenAtSec,
+        altitudeFt: target.altitudeFt,
+        groundSpeedKts: target.groundSpeedKts,
+      }),
+    );
+  }
+
+  ctx.save();
+  ctx.globalAlpha = settings['display.heatTrailOpacity'] / 100;
+  ctx.lineWidth = HEAT_TRAIL_WIDTH_PX;
+  ctx.lineCap = 'round';
+  bands.forEach((segments, band) => {
+    if (segments.length === 0) return;
+    ctx.strokeStyle = heatColor((band + 0.5) / HEAT_BANDS);
+    ctx.beginPath();
+    for (const { x1, y1, x2, y2 } of segments) {
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+    }
+    ctx.stroke();
+  });
+  ctx.restore();
 }

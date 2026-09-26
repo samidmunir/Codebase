@@ -19,6 +19,8 @@ export interface RadarTarget {
   navigatingTo: string | undefined;
   /** Previous returns, newest first. */
   history: LatLon[];
+  /** Sim time of this return, in seconds. */
+  seenAtSec: number;
 }
 
 interface TrackedTarget extends RadarTarget {
@@ -77,12 +79,16 @@ export class RadarTracker {
     return Math.floor(timeSec / this.intervalSec - azimuth);
   }
 
+  /** Sim time of the update being processed. */
+  private updateTimeSec = 0;
+
   /**
    * Updates targets the beam has passed since the last call. Pass a smooth time
    * (e.g. the engine's display time) so targets refresh right as the beam
    * crosses them. Returns true when anything changed.
    */
   update(timeSec: number, aircraft: readonly Readonly<AircraftState>[]): boolean {
+    this.updateTimeSec = timeSec;
     let changed = false;
     const seen = new Set<string>();
 
@@ -145,6 +151,7 @@ export class RadarTracker {
       headingDeg: plane.headingDeg,
       navigatingTo: navigatingTo(plane),
       history: previous ? [previous.position, ...previous.history].slice(0, MAX_HISTORY) : [],
+      seenAtSec: this.updateTimeSec,
       scan,
     });
   }

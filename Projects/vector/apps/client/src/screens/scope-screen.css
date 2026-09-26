@@ -685,3 +685,32 @@
   opacity: 0;
   cursor: pointer;
 }
+
+/* ---- Heat trail legend ----------------------------------------------------------------- */
+
+.layer-select .segmented-control--three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.layer-select .segmented-control button:disabled {
+  opacity: 0.4;
+}
+
+.heat-legend {
+  display: grid;
+  gap: 4px;
+  padding: 2px 0 8px;
+}
+
+.heat-legend__bar {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.heat-legend__labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-faint);
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+}

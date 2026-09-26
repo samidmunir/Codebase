@@ -1,4 +1,5 @@
 import { USER_SETTINGS, type UserSettings } from '@vector/shared';
+import { HEAT_GRADIENT_CSS, HEAT_LEGEND } from '../../scope/render/heat-scale';
 import { userSettings } from '../../settings/user-settings-store';
 
 type BooleanKey = {
@@ -93,6 +94,56 @@ export function MapLayersPanel({ settings, onClose }: MapLayersPanelProps) {
           </label>
         ))}
         <p className="scope-panel__note">Traffic you don’t control is always grey.</p>
+      </section>
+
+      <section className="scope-panel__section">
+        <h3>Heat trails</h3>
+        <Toggle settingKey="display.heatTrail" settings={settings} />
+        <div className="layer-select">
+          <span>Color by</span>
+          <div
+            className="segmented-control segmented-control--three"
+            role="radiogroup"
+            aria-label="Heat trail colors"
+          >
+            {USER_SETTINGS['display.heatTrailColorBy'].options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={settings['display.heatTrailColorBy'] === option.value}
+                disabled={!settings['display.heatTrail']}
+                onClick={() => userSettings.update({ 'display.heatTrailColorBy': option.value })}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="heat-legend" aria-hidden="true">
+          <span className="heat-legend__bar" style={{ background: HEAT_GRADIENT_CSS }} />
+          <span className="heat-legend__labels">
+            <span>{HEAT_LEGEND[settings['display.heatTrailColorBy']][0]}</span>
+            <span>{HEAT_LEGEND[settings['display.heatTrailColorBy']][1]}</span>
+          </span>
+        </div>
+        <div className="layer-select">
+          <span>Show for</span>
+          <div className="segmented-control" role="radiogroup" aria-label="Heat trails for">
+            {USER_SETTINGS['display.heatTrailAircraft'].options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={settings['display.heatTrailAircraft'] === option.value}
+                disabled={!settings['display.heatTrail']}
+                onClick={() => userSettings.update({ 'display.heatTrailAircraft': option.value })}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="scope-panel__section">

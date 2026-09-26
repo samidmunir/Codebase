@@ -70,6 +70,45 @@ export const USER_SETTINGS = {
     step: 1,
     default: 2,
   }),
+  'display.heatTrail': setting.boolean({
+    category: 'display',
+    label: 'Heat trail',
+    description:
+      'Draw each aircraft’s whole path since it entered your airspace, colored as a heat map (in addition to the short history trail).',
+    default: true,
+  }),
+  'display.heatTrailColorBy': setting.select({
+    category: 'display',
+    label: 'Heat trail colors',
+    description:
+      'Age: hot where the aircraft is now, cooling toward where it entered. Altitude: hot low, cool high. Speed: hot fast, cool slow.',
+    options: [
+      { value: 'age', label: 'Age' },
+      { value: 'altitude', label: 'Altitude' },
+      { value: 'speed', label: 'Speed' },
+    ],
+    default: 'age',
+  }),
+  'display.heatTrailAircraft': setting.select({
+    category: 'display',
+    label: 'Heat trails for',
+    description: 'Every aircraft on the scope, or only the one you have selected.',
+    options: [
+      { value: 'all', label: 'All aircraft' },
+      { value: 'selected', label: 'Selected' },
+    ],
+    default: 'all',
+  }),
+  'display.heatTrailOpacity': setting.number({
+    category: 'display',
+    label: 'Heat trail opacity',
+    description: 'How strongly heat trails are drawn.',
+    min: 10,
+    max: 100,
+    step: 5,
+    unit: '%',
+    default: 55,
+  }),
   'display.headingVector': setting.boolean({
     category: 'display',
     label: 'Heading vector',
