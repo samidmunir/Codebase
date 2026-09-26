@@ -1,0 +1,621 @@
+{
+  "schemaVersion": 1,
+  "aircraft": [
+    {
+      "icao": "A320",
+      "name": "Airbus A320",
+      "wakeCategory": "large",
+      "ceilingFt": 39000,
+      "speeds": {
+        "initialClimb": 165,
+        "climb": 290,
+        "descent": 280,
+        "approach": 180,
+        "final": 137,
+        "max": 350
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1300
+        },
+        {
+          "altitudeFt": 37000,
+          "fpm": 700
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.6,
+      "decelerationKtPerSec": 1.0
+    },
+    {
+      "icao": "A321",
+      "name": "Airbus A321",
+      "wakeCategory": "large",
+      "ceilingFt": 39000,
+      "speeds": {
+        "initialClimb": 170,
+        "climb": 300,
+        "descent": 290,
+        "approach": 180,
+        "final": 142,
+        "max": 350
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1300
+        },
+        {
+          "altitudeFt": 37000,
+          "fpm": 700
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.5,
+      "decelerationKtPerSec": 1.0
+    },
+    {
+      "icao": "A333",
+      "name": "Airbus A330-300",
+      "wakeCategory": "heavy",
+      "ceilingFt": 41000,
+      "speeds": {
+        "initialClimb": 170,
+        "climb": 300,
+        "descent": 290,
+        "approach": 180,
+        "final": 140,
+        "max": 330
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2200
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 1700
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1100
+        },
+        {
+          "altitudeFt": 40000,
+          "fpm": 500
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.2,
+      "decelerationKtPerSec": 0.8
+    },
+    {
+      "icao": "B738",
+      "name": "Boeing 737-800",
+      "wakeCategory": "large",
+      "ceilingFt": 41000,
+      "speeds": {
+        "initialClimb": 165,
+        "climb": 290,
+        "descent": 280,
+        "approach": 180,
+        "final": 145,
+        "max": 340
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1300
+        },
+        {
+          "altitudeFt": 37000,
+          "fpm": 700
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.6,
+      "decelerationKtPerSec": 1.0
+    },
+    {
+      "icao": "B739",
+      "name": "Boeing 737-900",
+      "wakeCategory": "large",
+      "ceilingFt": 41000,
+      "speeds": {
+        "initialClimb": 170,
+        "climb": 290,
+        "descent": 280,
+        "approach": 180,
+        "final": 150,
+        "max": 340
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1300
+        },
+        {
+          "altitudeFt": 37000,
+          "fpm": 700
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.5,
+      "decelerationKtPerSec": 1.0
+    },
+    {
+      "icao": "B752",
+      "name": "Boeing 757-200",
+      "wakeCategory": "b757",
+      "ceilingFt": 42000,
+      "speeds": {
+        "initialClimb": 165,
+        "climb": 290,
+        "descent": 290,
+        "approach": 180,
+        "final": 137,
+        "max": 350
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 3200
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2800
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 2200
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1500
+        },
+        {
+          "altitudeFt": 39000,
+          "fpm": 800
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.8,
+      "decelerationKtPerSec": 1.0
+    },
+    {
+      "icao": "B763",
+      "name": "Boeing 767-300",
+      "wakeCategory": "heavy",
+      "ceilingFt": 43000,
+      "speeds": {
+        "initialClimb": 170,
+        "climb": 300,
+        "descent": 290,
+        "approach": 180,
+        "final": 140,
+        "max": 360
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2200
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 1700
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1100
+        },
+        {
+          "altitudeFt": 40000,
+          "fpm": 500
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.3,
+      "decelerationKtPerSec": 0.9
+    },
+    {
+      "icao": "B77W",
+      "name": "Boeing 777-300ER",
+      "wakeCategory": "heavy",
+      "ceilingFt": 43000,
+      "speeds": {
+        "initialClimb": 180,
+        "climb": 310,
+        "descent": 300,
+        "approach": 190,
+        "final": 150,
+        "max": 330
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2200
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 1700
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1100
+        },
+        {
+          "altitudeFt": 40000,
+          "fpm": 500
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.2,
+      "decelerationKtPerSec": 0.8
+    },
+    {
+      "icao": "B789",
+      "name": "Boeing 787-9",
+      "wakeCategory": "heavy",
+      "ceilingFt": 43000,
+      "speeds": {
+        "initialClimb": 175,
+        "climb": 310,
+        "descent": 300,
+        "approach": 190,
+        "final": 145,
+        "max": 330
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2200
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 1700
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1100
+        },
+        {
+          "altitudeFt": 40000,
+          "fpm": 500
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.3,
+      "decelerationKtPerSec": 0.8
+    },
+    {
+      "icao": "CRJ9",
+      "name": "Bombardier CRJ900",
+      "wakeCategory": "large",
+      "ceilingFt": 41000,
+      "speeds": {
+        "initialClimb": 160,
+        "climb": 290,
+        "descent": 290,
+        "approach": 170,
+        "final": 140,
+        "max": 330
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 3000
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2600
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1400
+        },
+        {
+          "altitudeFt": 39000,
+          "fpm": 600
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.6,
+      "decelerationKtPerSec": 1.1
+    },
+    {
+      "icao": "E175",
+      "name": "Embraer E175",
+      "wakeCategory": "large",
+      "ceilingFt": 41000,
+      "speeds": {
+        "initialClimb": 150,
+        "climb": 280,
+        "descent": 280,
+        "approach": 170,
+        "final": 130,
+        "max": 320
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 3000
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2600
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1400
+        },
+        {
+          "altitudeFt": 39000,
+          "fpm": 600
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.7,
+      "decelerationKtPerSec": 1.1
+    }
+  ]
+}

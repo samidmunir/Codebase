@@ -2,6 +2,16 @@
 //
 // This package must stay free of DOM, Node and network APIs so the same engine
 // can run in the browser (v1) and on the server (future multiplayer).
-// ESLint enforces this boundary. The engine itself arrives in Milestone 2.
+// ESLint enforces this boundary.
 
-export const SIM_CORE_VERSION = '0.0.0';
+export * from './aircraft/aircraft';
+export * from './aircraft/flight-model';
+export * from './atmosphere/isa';
+export * from './engine/config';
+export * from './engine/events';
+export * from './engine/sim-engine';
+export * from './math/angles';
+export * from './math/geo';
+export * from './performance/performance';
+export * from './random/seeded-random';
+export * from './snapshot/snapshot';
