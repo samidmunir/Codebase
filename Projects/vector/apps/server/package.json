@@ -1,0 +1,23 @@
+{
+  "name": "@vector/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@vector/shared": "*",
+    "fastify": "^5.12.5",
+    "pg": "^8.23.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15"
+  }
+}
