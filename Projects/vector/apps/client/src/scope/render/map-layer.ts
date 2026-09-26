@@ -6,16 +6,37 @@ import {
   normalizeHeading,
   type AirspacePack,
 } from '@vector/sim-core';
-import { pixelsPerNm, project, type Camera } from '../camera';
+import { pixelsPerNm, project, unproject, type Camera } from '../camera';
 import { shortAirport } from '../data-block';
 import type { ScopePalette } from './palette';
 
 type Point = [number, number];
 
 const FINAL_COURSE_NM = 12;
-const MAX_RANGE_RING_NM = 60;
+/** Pixels per NM above which other airports' names are drawn. */
+const OTHER_AIRPORT_LABEL_SCALE = 3;
+
+type Box = { minX: number; minY: number; maxX: number; maxY: number };
+/** Geographic bounds of each line, cached, so off-screen lines are skipped quickly. */
+const bounds = new WeakMap<readonly Point[], Box>();
+function boundsOf(points: readonly Point[]): Box {
+  let box = bounds.get(points);
+  if (!box) {
+    box = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+    for (const [lon, lat] of points) {
+      box.minX = Math.min(box.minX, lon);
+      box.maxX = Math.max(box.maxX, lon);
+      box.minY = Math.min(box.minY, lat);
+      box.maxY = Math.max(box.maxY, lat);
+    }
+    bounds.set(points, box);
+  }
+  return box;
+}
 /** Pixels per NM above which fix names are drawn (below, they clutter the scope). */
 const WAYPOINT_LABEL_SCALE = 18;
+/** Pixels per NM below which plain waypoints are hidden (navaids stay). */
+const WAYPOINT_SYMBOL_SCALE = 4;
 const NAVAID_LABEL_SCALE = 8;
 
 /** Draws the video map: everything that only changes with the view or settings. */
@@ -32,7 +53,29 @@ export function drawMapLayer(
   const scale = pixelsPerNm(camera);
   const toScreen = ([lon, lat]: Point) => project(camera, { lat, lon });
 
+  // The visible area in lon/lat (with a margin), to skip lines entirely off screen.
+  const corners = [
+    unproject(camera, { x: -50, y: -50 }),
+    unproject(camera, { x: camera.width + 50, y: camera.height + 50 }),
+  ];
+  const view: Box = {
+    minX: Math.min(corners[0]!.lon, corners[1]!.lon),
+    maxX: Math.max(corners[0]!.lon, corners[1]!.lon),
+    minY: Math.min(corners[0]!.lat, corners[1]!.lat),
+    maxY: Math.max(corners[0]!.lat, corners[1]!.lat),
+  };
+  const visible = (points: readonly Point[]) => {
+    const box = boundsOf(points);
+    return (
+      box.maxX >= view.minX &&
+      box.minX <= view.maxX &&
+      box.maxY >= view.minY &&
+      box.minY <= view.maxY
+    );
+  };
+
   const strokePath = (points: readonly Point[], close = false) => {
+    if (!visible(points)) return;
     ctx.beginPath();
     points.forEach((point, i) => {
       const { x, y } = toScreen(point);
@@ -46,16 +89,17 @@ export function drawMapLayer(
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
 
-  if (settings['map.minimumVectoringAltitudes']) {
-    ctx.strokeStyle = palette.mva;
+  const drawAltitudeSectors = (kind: 'mva' | 'mia', color: string, labelScale: number) => {
+    ctx.strokeStyle = color;
     ctx.lineWidth = 1;
-    ctx.fillStyle = palette.mva;
+    ctx.fillStyle = color;
     ctx.font = '500 11px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (const sector of pack.videoMap.minimumVectoringAltitudes) {
+      if (sector.kind !== kind || !visible(sector.exterior)) continue;
       strokePath(sector.exterior, true);
-      if (scale > 6) {
+      if (scale > labelScale) {
         const [lon, lat] = sector.exterior
           .reduce<Point>(([a, b], [x, y]) => [a + x, b + y], [0, 0])
           .map((sum) => sum / sector.exterior.length) as Point;
@@ -63,6 +107,28 @@ export function drawMapLayer(
         ctx.fillText(String(sector.minimumAltitudeFt / 100), x, y);
       }
     }
+  };
+  if (settings['map.minimumIfrAltitudes']) drawAltitudeSectors('mia', palette.mia, 2);
+  if (settings['map.minimumVectoringAltitudes']) drawAltitudeSectors('mva', palette.mva, 6);
+
+  if (settings['map.airwaysLow'] || settings['map.airwaysHigh']) {
+    ctx.lineWidth = 1;
+    for (const airway of pack.videoMap.airways) {
+      if (airway.level === 'low' ? !settings['map.airwaysLow'] : !settings['map.airwaysHigh'])
+        continue;
+      ctx.strokeStyle = airway.level === 'low' ? palette.airwayLow : palette.airwayHigh;
+      strokePath(airway.line);
+    }
+  }
+
+  if (settings['map.artccBoundaries']) {
+    ctx.strokeStyle = palette.artccBoundary;
+    ctx.lineWidth = 1.25;
+    ctx.setLineDash([14, 5, 2, 5]);
+    for (const boundary of pack.videoMap.artccBoundaries) {
+      if (boundary.level === 'high') strokePath(boundary.ring, true);
+    }
+    ctx.setLineDash([]);
   }
 
   if (settings['map.geography']) {
@@ -77,12 +143,20 @@ export function drawMapLayer(
     for (const area of pack.videoMap.classB) strokePath(area.ring, true);
   }
 
+  if (settings['map.classC']) {
+    ctx.strokeStyle = palette.classC;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    for (const area of pack.videoMap.classC) strokePath(area.ring, true);
+    ctx.setLineDash([]);
+  }
+
   if (settings['display.rangeRings']) {
     const spacing = settings['display.rangeRingSpacingNm'];
     ctx.strokeStyle = palette.rangeRing;
     ctx.lineWidth = 1;
     const center = project(camera, pack.airspace.center);
-    for (let radius = spacing; radius <= MAX_RANGE_RING_NM; radius += spacing) {
+    for (let radius = spacing; radius <= pack.boundaryRadiusNm; radius += spacing) {
       ctx.beginPath();
       ctx.arc(center.x, center.y, radius * scale, 0, Math.PI * 2);
       ctx.stroke();
@@ -139,6 +213,7 @@ export function drawMapLayer(
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
     for (const fix of pack.fixes) {
+      if (fix.kind === 'waypoint' && scale < WAYPOINT_SYMBOL_SCALE) continue;
       if (distanceNm(pack.airspace.center, fix.position) > radius + 5) continue;
       const { x, y } = project(camera, fix.position);
       if (x < -20 || y < -20 || x > camera.width + 20 || y > camera.height + 20) continue;
@@ -165,6 +240,30 @@ export function drawMapLayer(
         ctx.fillText(fix.ident, x + 5, y - 3);
       }
     }
+  }
+
+  if (settings['map.otherAirports']) {
+    ctx.strokeStyle = palette.otherAirport;
+    ctx.fillStyle = palette.otherAirport;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'butt';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (const airport of pack.videoMap.airports) {
+      const { x, y } = project(camera, airport.position);
+      if (x < -40 || y < -40 || x > camera.width + 40 || y > camera.height + 40) continue;
+      for (const [a, b] of airport.runways) {
+        const start = toScreen(a);
+        const end = toScreen(b);
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+      }
+      if (scale > OTHER_AIRPORT_LABEL_SCALE) ctx.fillText(shortAirport(airport.icao), x + 8, y - 8);
+    }
+    ctx.lineCap = 'round';
   }
 
   if (settings['map.runways']) {

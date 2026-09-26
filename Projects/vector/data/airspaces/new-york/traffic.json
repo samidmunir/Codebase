@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "notes": "Curated operations profile. Runway configurations are common real-world New York flows, and airline and destination weights approximate each airport's real traffic. Not FAA-published data.",
+  "notes": "Curated operations profile. Runway configurations are common real-world New York flows, and airline and destination weights approximate each airport's real traffic. Not FAA-published data. cityPositions are the airports' reference points, for trip lengths and cruise levels.",
   "departureGates": {
     "north": [
       "GAYEL",
@@ -625,6 +625,124 @@
           "gate": "transatlantic"
         }
       ]
+    }
+  },
+  "cityPositions": {
+    "CYYZ": {
+      "lat": 43.6772,
+      "lon": -79.6306
+    },
+    "EDDF": {
+      "lat": 50.0333,
+      "lon": 8.5706
+    },
+    "EGLL": {
+      "lat": 51.47,
+      "lon": -0.4543
+    },
+    "KATL": {
+      "lat": 33.6367,
+      "lon": -84.4281
+    },
+    "KBOS": {
+      "lat": 42.3643,
+      "lon": -71.0052
+    },
+    "KBUF": {
+      "lat": 42.9405,
+      "lon": -78.7322
+    },
+    "KCLT": {
+      "lat": 35.214,
+      "lon": -80.9431
+    },
+    "KDCA": {
+      "lat": 38.8521,
+      "lon": -77.0377
+    },
+    "KDEN": {
+      "lat": 39.8561,
+      "lon": -104.6737
+    },
+    "KDFW": {
+      "lat": 32.8998,
+      "lon": -97.0403
+    },
+    "KDTW": {
+      "lat": 42.2124,
+      "lon": -83.3534
+    },
+    "KFLL": {
+      "lat": 26.0726,
+      "lon": -80.1527
+    },
+    "KIAH": {
+      "lat": 29.9844,
+      "lon": -95.3414
+    },
+    "KLAS": {
+      "lat": 36.084,
+      "lon": -115.1537
+    },
+    "KLAX": {
+      "lat": 33.9416,
+      "lon": -118.4085
+    },
+    "KMCO": {
+      "lat": 28.4312,
+      "lon": -81.3081
+    },
+    "KMIA": {
+      "lat": 25.7959,
+      "lon": -80.287
+    },
+    "KMSP": {
+      "lat": 44.8848,
+      "lon": -93.2223
+    },
+    "KORD": {
+      "lat": 41.9742,
+      "lon": -87.9073
+    },
+    "KPHX": {
+      "lat": 33.4342,
+      "lon": -112.0116
+    },
+    "KPIT": {
+      "lat": 40.4915,
+      "lon": -80.2329
+    },
+    "KPWM": {
+      "lat": 43.6462,
+      "lon": -70.3093
+    },
+    "KRDU": {
+      "lat": 35.8801,
+      "lon": -78.788
+    },
+    "KROC": {
+      "lat": 43.1189,
+      "lon": -77.6724
+    },
+    "KSEA": {
+      "lat": 47.4502,
+      "lon": -122.3088
+    },
+    "KSFO": {
+      "lat": 37.6213,
+      "lon": -122.379
+    },
+    "KSYR": {
+      "lat": 43.1112,
+      "lon": -76.1063
+    },
+    "LFPG": {
+      "lat": 49.0097,
+      "lon": 2.5479
+    },
+    "TJSJ": {
+      "lat": 18.4394,
+      "lon": -66.0018
     }
   }
 }

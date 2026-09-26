@@ -20,6 +20,7 @@ import {
 import type { LeaderDirection } from '../../../scope/render/traffic-layer';
 import { useUserSettings } from '../../../settings/user-settings-store';
 import type { ScopeSession } from '../../../sim/scope-session';
+import { formatAltitudeLabel } from '../format';
 import { HeadingDial } from './HeadingDial';
 
 type Tab = 'heading' | 'altitude' | 'speed' | 'direct' | 'approach' | 'handoff';
@@ -31,6 +32,8 @@ interface CommandPanelProps {
   onDraftChange: (draft: InstructionDraft) => void;
   leaderDirection: LeaderDirection;
   onLeaderDirectionChange: (direction: LeaderDirection) => void;
+  /** A direct-to fix is hovered or focused (undefined when it no longer is). */
+  onFixHover?: (ident: string | undefined) => void;
   onClose: () => void;
 }
 
@@ -70,11 +73,14 @@ export function CommandPanel(props: CommandPanelProps) {
     if (result.ok) onDraftChange(EMPTY_DRAFT);
   };
 
+  const altitudeLabel = (altitudeFt: number) =>
+    formatAltitudeLabel(altitudeFt, pack.airspace.transitionAltitudeFt);
+
   const owner =
     aircraft.owner === session.engine.playerId
       ? 'Your frequency'
-      : aircraft.owner === pack.airspace.controllers.center.id
-        ? 'New York Center'
+      : pack.isCenter(aircraft.owner)
+        ? pack.centers.find((center) => center.id === aircraft.owner)!.callsign
         : aircraft.owner.endsWith('_TWR')
           ? `${pack.airport(aircraft.owner.replace('_TWR', '')).towerCallsign}`
           : aircraft.owner;
@@ -88,6 +94,11 @@ export function CommandPanel(props: CommandPanelProps) {
           <span className="command-panel__route">
             {aircraft.aircraftType} · {aircraft.flightPlan.origin} →{' '}
             {aircraft.flightPlan.destination}
+            {aircraft.flightPlan.requestedAltitudeFt !== undefined && (
+              <span className="command-panel__requested" title="Requested cruising altitude">
+                Requests {altitudeLabel(aircraft.flightPlan.requestedAltitudeFt)}
+              </span>
+            )}
           </span>
         </div>
         <button
@@ -104,11 +115,11 @@ export function CommandPanel(props: CommandPanelProps) {
         <div>
           <dt>Alt</dt>
           <dd>
-            {formatFeet(Math.round(aircraft.altitudeFt / 100) * 100)}
+            {altitudeLabel(aircraft.altitudeFt)}
             {aircraft.targets.altitudeFt !== Math.round(aircraft.altitudeFt) && (
               <span className="command-panel__target">
                 {' '}
-                → {formatFeet(aircraft.targets.altitudeFt)}
+                → {altitudeLabel(aircraft.targets.altitudeFt)}
               </span>
             )}
           </dd>
@@ -187,6 +198,8 @@ export function CommandPanel(props: CommandPanelProps) {
 
             {activeTab === 'altitude' && (
               <AltitudeTab
+                label={altitudeLabel}
+                requested={aircraft.flightPlan.requestedAltitudeFt}
                 options={altitudeOptions(pack, performance)}
                 mva={minimumVectoringAltitude(pack, aircraft.position)}
                 current={aircraft.targets.altitudeFt}
@@ -240,6 +253,10 @@ export function CommandPanel(props: CommandPanelProps) {
                             <button
                               type="button"
                               aria-pressed={draft.directTo === fix.ident}
+                              onMouseEnter={() => props.onFixHover?.(fix.ident)}
+                              onMouseLeave={() => props.onFixHover?.(undefined)}
+                              onFocus={() => props.onFixHover?.(fix.ident)}
+                              onBlur={() => props.onFixHover?.(undefined)}
                               onClick={() =>
                                 update({
                                   directTo: draft.directTo === fix.ident ? undefined : fix.ident,
@@ -395,6 +412,8 @@ function HeadingTab({
 }
 
 function AltitudeTab(props: {
+  label: (altitudeFt: number) => string;
+  requested: number | undefined;
   options: number[];
   mva: number | undefined;
   current: number;
@@ -411,16 +430,19 @@ function AltitudeTab(props: {
             aria-pressed={props.selected === altitude}
             className={[
               props.current === altitude ? 'option--current' : '',
+              props.requested === altitude ? 'option--requested' : '',
               props.mva !== undefined && altitude < props.mva ? 'option--below-mva' : '',
             ].join(' ')}
             title={
               props.mva !== undefined && altitude < props.mva
                 ? 'Below the minimum vectoring altitude here'
-                : undefined
+                : props.requested === altitude
+                  ? 'Requested cruising altitude'
+                  : undefined
             }
             onClick={() => props.onSelect(altitude)}
           >
-            {formatFeet(altitude)}
+            {props.label(altitude)}
           </button>
         ))}
       </div>
@@ -459,7 +481,8 @@ function HandoffTab({
         <span className="handoff-option__frequency">{formatFrequency(handoff.frequencyMhz)}</span>
       </button>
       <p className="command-panel__hint">
-        Hand departures to Center once they are climbing out of your airspace.
+        Hand departures and overflights to the Center they are leaving into, before they cross the
+        boundary.
       </p>
     </div>
   );

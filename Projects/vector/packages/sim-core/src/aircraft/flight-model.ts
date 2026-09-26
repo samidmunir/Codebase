@@ -1,3 +1,4 @@
+import { machToIas } from '../atmosphere/isa';
 import { z } from 'zod';
 import { clamp, normalizeHeading, toRadians, turnDelta } from '../math/angles';
 import { destinationPoint, magneticToTrue } from '../math/geo';
@@ -63,11 +64,17 @@ export function effectiveTargetSpeed(
   return target;
 }
 
-/** The speed a pilot flies when not assigned one: normal descent speed when descending, otherwise climb speed. */
+/**
+ * The speed a pilot flies when not assigned one: normal descent speed when
+ * descending, otherwise climb speed. High up, the cruise Mach number limits
+ * it (the indicated airspeed for a Mach number falls with altitude).
+ */
 export function normalSpeed(aircraft: AircraftState, performance: AircraftPerformance): number {
-  return aircraft.targets.altitudeFt < aircraft.altitudeFt - 50
-    ? performance.speeds.descent
-    : performance.speeds.climb;
+  const scheduled =
+    aircraft.targets.altitudeFt < aircraft.altitudeFt - 50
+      ? performance.speeds.descent
+      : performance.speeds.climb;
+  return Math.min(scheduled, Math.round(machToIas(performance.cruiseMach, aircraft.altitudeFt)));
 }
 
 /**

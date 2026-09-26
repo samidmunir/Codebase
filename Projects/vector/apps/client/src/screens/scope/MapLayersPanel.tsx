@@ -9,11 +9,17 @@ const MAP_LAYERS: BooleanKey[] = [
   'map.geography',
   'map.runways',
   'map.airportLabels',
+  'map.otherAirports',
   'map.finalApproachCourses',
   'map.fixes',
   'map.classB',
+  'map.classC',
   'map.sectorBoundary',
+  'map.artccBoundaries',
+  'map.airwaysHigh',
+  'map.airwaysLow',
   'map.minimumVectoringAltitudes',
+  'map.minimumIfrAltitudes',
 ];
 
 const DISPLAY_OPTIONS: BooleanKey[] = [

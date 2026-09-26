@@ -362,6 +362,33 @@ export function parseProcedureRecord(line: string): CifpProcedureRecord {
   };
 }
 
+// ---- Enroute airways -----------------------------------------------------------
+
+export interface CifpAirwayPoint {
+  /** Airway identifier, e.g. 'J60', 'Q480', 'V16'. */
+  route: string;
+  sequence: number;
+  fix: string;
+  /** Section code of the fix ('EA', 'D ', 'DB'). */
+  fixSection: string;
+  /** This point ends a continuous stretch of the airway (column 41 'E'). */
+  endsSegment: boolean;
+  /** 'H' high, 'L' low, 'B' both (column 46). */
+  level: string;
+}
+
+/** An enroute airway (ER) primary record. */
+export function parseAirwayPoint(line: string): CifpAirwayPoint {
+  return {
+    route: trimmed(line, 14, 18),
+    sequence: Number(col(line, 26, 29)),
+    fix: trimmed(line, 30, 34),
+    fixSection: col(line, 37, 38),
+    endsSegment: col(line, 41) === 'E',
+    level: col(line, 46),
+  };
+}
+
 // ---- Whole file --------------------------------------------------------------
 
 export interface CifpData {
@@ -370,12 +397,25 @@ export interface CifpData {
   localizers: CifpLocalizer[];
   fixes: CifpFix[];
   procedures: CifpProcedureRecord[];
+  /** Every airport and runway in the file (for the video map's other airports). */
+  allAirports: CifpAirport[];
+  allRunways: CifpRunway[];
+  airways: CifpAirwayPoint[];
 }
 
 /** Parses the records Vector needs, for the given airports' terminal data plus all enroute fixes and navaids. */
 export function parseCifp(content: string, airports: readonly string[]): CifpData {
   const wanted = new Set(airports);
-  const data: CifpData = { airports: [], runways: [], localizers: [], fixes: [], procedures: [] };
+  const data: CifpData = {
+    airports: [],
+    runways: [],
+    localizers: [],
+    fixes: [],
+    procedures: [],
+    allAirports: [],
+    allRunways: [],
+    airways: [],
+  };
 
   for (const line of content.split(/\r?\n/)) {
     if (!line.startsWith('S')) continue;
@@ -384,6 +424,9 @@ export function parseCifp(content: string, airports: readonly string[]): CifpDat
     if (section === 'EA' && isPrimary(line, 22)) data.fixes.push(parseWaypoint(line));
     else if (section === 'D ' && isPrimary(line, 22)) data.fixes.push(parseVhfNavaid(line));
     else if (section === 'DB' && isPrimary(line, 22)) data.fixes.push(parseNdb(line));
+    else if (section === 'ER' && isPrimary(line, 39)) data.airways.push(parseAirwayPoint(line));
+    else if (section === 'PA' && isPrimary(line, 22)) data.allAirports.push(parseAirport(line));
+    else if (section === 'PG' && isPrimary(line, 22)) data.allRunways.push(parseRunway(line));
 
     if (!section.startsWith('P') || !wanted.has(trimmed(line, 7, 10))) continue;
 

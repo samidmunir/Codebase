@@ -23,7 +23,9 @@ import {
   ilsEligibility,
   type IlsEligibility,
 } from '../commands/ils-eligibility';
-import { arrivalRouteFrom } from '../traffic/arrival-route';
+import { machToIas } from '../atmosphere/isa';
+import { arrivalRouteFrom, type ArrivalRoute } from '../traffic/arrival-route';
+import { isHemisphericLevel, requestedCruiseAltitude } from '../traffic/cruise-levels';
 import {
   emptySeparationState,
   updateSeparation,
@@ -58,6 +60,7 @@ import {
   queuedAt,
   weightedPick,
   airlineMix,
+  tripBetween,
   type ActiveRunways,
   type DepartureEntry,
 } from '../traffic/operations';
@@ -109,12 +112,13 @@ const EXIT_MARGIN_NM = 10;
 const STABILIZED_CROSS_TRACK_NM = 0.1;
 const STABILIZED_SPEED_MARGIN_KTS = 10;
 const DEFAULT_MISSED_APPROACH_ALTITUDE_FT = 3_000;
-/** Altitudes arrivals are typically handed over at, when the STAR doesn't publish one. */
-const ARRIVAL_ENTRY_ALTITUDES_FT = [11_000, 12_000, 13_000];
+/** Arrival descent profile: about 300 ft per NM, leveling off this far from the airport. */
+const ARRIVAL_PROFILE_FT_PER_NM = 300;
+const ARRIVAL_PROFILE_LEVEL_NM = 25;
+/** Arrivals never enter lower than this. */
+const ARRIVAL_MIN_ENTRY_ALTITUDE_FT = 6_000;
 /** Transits enter and leave at least this far apart around the airspace (degrees). */
 const MIN_TRANSIT_TURN_DEG = 110;
-/** Level altitudes transits cross at. */
-const TRANSIT_ALTITUDES_FT = [9_000, 10_000, 11_000, 12_000, 13_000, 14_000, 15_000];
 /** New arrivals wait if another aircraft is this close to the entry point at a similar altitude. */
 const ARRIVAL_ENTRY_SPACING_NM = 6;
 /** Line-up and takeoff roll after a takeoff clearance. */
@@ -377,6 +381,10 @@ export class SimEngine {
       this.state.aircraft,
       {
         lateralNm: settings['separation.lateralNm'],
+        enrouteLateralNm: settings['separation.enrouteLateralNm'],
+        // Without an airspace there is no radar site: everything counts as the terminal area.
+        terminalRangeNm: this.airspace ? settings['separation.terminalRangeNm'] : Infinity,
+        radarPosition: this.airspace?.airspace.radar.position ?? { lat: 0, lon: 0 },
         verticalFt: settings['separation.verticalFt'],
         lookaheadSec: settings['separation.conflictAlertLookaheadSec'],
         playerId: this.state.playerId,
@@ -813,11 +821,11 @@ export class SimEngine {
     const allTraffic = Object.values(pack.traffic.airports);
     const citiesToward = (gate: string) =>
       allTraffic.flatMap((t) => t.destinations).filter((d) => d.gate === gate);
-    const from = citiesToward(entryGate.name);
-    const to = citiesToward(exitGate.name);
-    if (from.length === 0 || to.length === 0) return false;
-    const origin = weightedPick(random, from).icao;
-    const destination = weightedPick(random, to).icao;
+    const fromCities = citiesToward(entryGate.name);
+    const toCities = citiesToward(exitGate.name);
+    if (fromCities.length === 0 || toCities.length === 0) return false;
+    const origin = weightedPick(random, fromCities).icao;
+    const destination = weightedPick(random, toCities).icao;
 
     const airline = weightedPick(
       random,
@@ -840,7 +848,21 @@ export class SimEngine {
     }
 
     const entry = destinationPoint(center, entryBearing, pack.boundaryRadiusNm - 1);
-    const altitude = random.pick(TRANSIT_ALTITUDES_FT);
+    const aircraftType = random.pick(types);
+    const performance = this.performance.get(aircraftType);
+    const variation = this.state.world.magneticVariationDeg;
+    // Cruising at the level filed for the whole trip, which suits the direction it crosses in.
+    const from = pack.traffic.cityPositions[origin];
+    const to = pack.traffic.cityPositions[destination];
+    const crossingCourse = trueToMagnetic(bearingTrue(entry, exitFix.position), variation);
+    let altitude = requestedCruiseAltitude(
+      random,
+      from && to ? distanceNm(from, to) : 600,
+      crossingCourse,
+      performance.ceilingFt,
+    );
+    if (!isHemisphericLevel(altitude, crossingCourse)) altitude -= 1_000;
+    altitude = Math.min(altitude, pack.airspace.boundary.ceilingFt - 1_000);
     const crowded = this.state.aircraft.some(
       (other) =>
         distanceNm(other.position, entry) < ARRIVAL_ENTRY_SPACING_NM &&
@@ -848,19 +870,21 @@ export class SimEngine {
     );
     if (crowded) return false;
 
-    const variation = this.state.world.magneticVariationDeg;
     const aircraft = this.addAircraft({
       callsign,
       ...(info ? { telephony: info.telephony } : {}),
-      aircraftType: random.pick(types),
+      aircraftType,
       squawk: `${random.int(1, 6)}${random.int(0, 7)}${random.int(0, 7)}${random.int(0, 7)}`,
-      flightPlan: { origin, destination, route: [exitFix.ident] },
+      flightPlan: { origin, destination, route: [exitFix.ident], requestedAltitudeFt: altitude },
       phase: 'enroute',
       owner: this.state.playerId,
       position: entry,
       altitudeFt: altitude,
-      headingDeg: Math.round(trueToMagnetic(bearingTrue(entry, exitFix.position), variation)) % 360,
-      iasKts: 280,
+      headingDeg: Math.round(crossingCourse) % 360,
+      iasKts: Math.min(
+        performance.speeds.climb,
+        Math.round(machToIas(performance.cruiseMach, altitude)),
+      ),
       targets: { speedMode: 'normal' },
     });
     this.mutableAircraft(aircraft.id).navigation = {
@@ -869,9 +893,12 @@ export class SimEngine {
       position: { ...exitFix.position },
     };
 
-    const facility = pack.airspace.controllers.approach.approachCallsign;
     const spoken = spokenCallsign(aircraft.callsign, aircraft.telephony);
-    this.transmit('pilot', aircraft.id, `${facility}, ${spoken}, ${altitudeWords(altitude)}.`);
+    this.transmit(
+      'pilot',
+      aircraft.id,
+      `${this.checkInFacility(altitude)}, ${spoken}, ${altitudeWords(altitude)}.`,
+    );
     this.emit({ type: 'transitEntered', aircraftId: aircraft.id, exitFix: exitFix.ident });
     return true;
   }
@@ -913,6 +940,7 @@ export class SimEngine {
         random: this.rng,
         callsignsInUse: inUse,
         hasPerformance: (type) => this.performance.has(type),
+        ceilingFt: (type) => this.performance.get(type).ceilingFt,
         fleetMix: this.state.settings['traffic.fleetMix'],
       },
       { ...operations, nextDepartureNumber: 1 },
@@ -929,9 +957,11 @@ export class SimEngine {
     );
     if (!route) return false;
 
-    const altitude = Math.min(
-      pack.airspace.boundary.ceilingFt - 1_000,
-      route.crossingAltitudeFt ?? this.rng.pick(ARRIVAL_ENTRY_ALTITUDES_FT),
+    const altitude = this.arrivalEntryAltitude(
+      route,
+      airport,
+      flight.destination,
+      flight.aircraftType,
     );
     const crowded = this.state.aircraft.some(
       (other) =>
@@ -940,6 +970,7 @@ export class SimEngine {
     );
     if (crowded) return false;
 
+    const performance = this.performance.get(flight.aircraftType);
     const firstFix = route.legs.find((leg) => leg.position)!;
     const heading =
       Math.round(
@@ -959,7 +990,13 @@ export class SimEngine {
       position: route.entry,
       altitudeFt: altitude,
       headingDeg: heading,
-      iasKts: altitude >= 10_000 ? 280 : 250,
+      iasKts:
+        altitude >= 10_000
+          ? Math.min(
+              performance.speeds.descent,
+              Math.round(machToIas(performance.cruiseMach, altitude)),
+            )
+          : 250,
       targets: { speedMode: 'normal' },
     });
     this.mutableAircraft(aircraft.id).navigation = {
@@ -970,7 +1007,7 @@ export class SimEngine {
       legStart: { ...route.entry },
     };
 
-    const facility = pack.airspace.controllers.approach.approachCallsign;
+    const facility = this.checkInFacility(altitude);
     const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
     const star = procedureWords(route.star);
     this.transmit(
@@ -980,6 +1017,50 @@ export class SimEngine {
     );
     this.emit({ type: 'arrivalEntered', aircraftId: aircraft.id, airport, star: route.star });
     return true;
+  }
+
+  /**
+   * Who pilots call when they check in: Center at the flight levels, Approach
+   * below (the player works both in this airspace).
+   */
+  private checkInFacility(altitudeFt: number): string {
+    const { controllers, transitionAltitudeFt } = this.airspace!.airspace;
+    return altitudeFt >= transitionAltitudeFt
+      ? controllers.center.callsign
+      : controllers.approach.approachCallsign;
+  }
+
+  /**
+   * Where an arrival enters: at its cruise level, unless that is above a
+   * normal descent profile for the track still to fly (then on the profile).
+   * Descending it is the player's job.
+   */
+  private arrivalEntryAltitude(
+    route: ArrivalRoute,
+    airport: string,
+    originCity: string,
+    aircraftType: string,
+  ): number {
+    const pack = this.airspace!;
+    const field = pack.airport(airport);
+    const lastFix = [...route.legs].reverse().find((leg) => leg.position)?.position;
+    const trackNm = route.routeDistanceNm + (lastFix ? distanceNm(lastFix, field.position) : 0);
+    const trip = tripBetween(pack, field.position, originCity);
+    const cruise = requestedCruiseAltitude(
+      this.rng,
+      trip.distanceNm,
+      // Flying in from the city: the reverse course.
+      trueToMagnetic(trip.courseDeg + 180, this.state.world.magneticVariationDeg),
+      this.performance.get(aircraftType).ceilingFt,
+    );
+    const profile =
+      field.elevationFt +
+      Math.max(0, trackNm - ARRIVAL_PROFILE_LEVEL_NM) * ARRIVAL_PROFILE_FT_PER_NM;
+    const altitude = Math.floor(Math.min(cruise, profile) / 1_000) * 1_000;
+    return Math.max(
+      ARRIVAL_MIN_ENTRY_ALTITUDE_FT,
+      Math.min(altitude, pack.airspace.boundary.ceilingFt - 1_000),
+    );
   }
 
   // ---- Airport operations ------------------------------------------------------
@@ -1104,6 +1185,7 @@ export class SimEngine {
         random: this.rng,
         callsignsInUse: inUse,
         hasPerformance: (type) => this.performance.has(type),
+        ceilingFt: (type) => this.performance.get(type).ceilingFt,
         fleetMix: this.state.settings['traffic.fleetMix'],
       },
       operations,
@@ -1186,6 +1268,7 @@ export class SimEngine {
         origin: entry.airport,
         destination: entry.destination,
         route: [...(procedure.sid ? [procedure.sid] : []), entry.gateFix],
+        ...(entry.requestedAltitudeFt ? { requestedAltitudeFt: entry.requestedAltitudeFt } : {}),
       },
       phase: 'departure',
       owner: towerId(entry.airport),
@@ -1242,9 +1325,8 @@ export class SimEngine {
     if (!this.airspace) return;
     const { center } = this.airspace.airspace;
     const radius = this.airspace.boundaryRadiusNm;
-    const centerId = this.airspace.airspace.controllers.center.id;
     for (const aircraft of [...this.state.aircraft]) {
-      const handedOff = aircraft.owner === centerId;
+      const handedOff = this.airspace.isCenter(aircraft.owner);
       const margin = handedOff ? EXIT_MARGIN_HANDED_OFF_NM : EXIT_MARGIN_NM;
       if (distanceNm(center, aircraft.position) > radius + margin) {
         this.emit({

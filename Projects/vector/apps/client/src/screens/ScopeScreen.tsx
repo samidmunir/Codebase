@@ -155,9 +155,12 @@ function Scope({ session }: { session: ScopeSession }) {
 
   // The selected aircraft, if it is still on the scope (it may have landed or left).
   const selected = selection ? session.engine.getAircraft(selection.id) : undefined;
+  // The fix hovered in the direct-to list, highlighted on the scope.
+  const [hoveredFix, setHoveredFix] = useState<string | undefined>(undefined);
   const selectedIdRef = useRef<string | undefined>(undefined);
   const select = useCallback((id: string | undefined) => {
     if (id !== undefined && id !== selectedIdRef.current) playSelectSound();
+    if (id !== selectedIdRef.current) setHoveredFix(undefined);
     selectedIdRef.current = id;
     setSelection((current) =>
       id === undefined ? undefined : current?.id === id ? current : { id, draft: EMPTY_DRAFT },
@@ -245,6 +248,7 @@ function Scope({ session }: { session: ScopeSession }) {
         onSelect={select}
         leaderDirections={leaderDirections}
         preview={preview}
+        highlightFix={selected ? hoveredFix : undefined}
       />
       <div className="scope-vignette" aria-hidden="true" />
 
@@ -285,6 +289,7 @@ function Scope({ session }: { session: ScopeSession }) {
           onLeaderDirectionChange={(direction) =>
             setLeaderDirections((current) => new Map(current).set(selected.id, direction))
           }
+          onFixHover={setHoveredFix}
           onClose={() => select(undefined)}
         />
       )}

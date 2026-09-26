@@ -11,6 +11,8 @@ export interface RadarTarget {
   altitudeFt: number;
   groundSpeedKts: number;
   verticalSpeedFpm: number;
+  /** Altitude the aircraft is cleared to (its target). */
+  assignedAltitudeFt: number;
   headingDeg: number;
   /** Where the aircraft is navigating when not on a plain heading: a fix, or an ILS ('ILS22L'). */
   navigatingTo: string | undefined;
@@ -39,7 +41,7 @@ export function navigatingTo(aircraft: Readonly<AircraftState>): string | undefi
 }
 
 /** Returns kept per target; trails show as many of these as the display setting allows. */
-const MAX_HISTORY = 10;
+const MAX_HISTORY = 20;
 
 /**
  * A rotating radar. The beam turns once per interval, clockwise from north,
@@ -137,6 +139,7 @@ export class RadarTracker {
       altitudeFt: plane.altitudeFt,
       groundSpeedKts: groundSpeedKts(plane),
       verticalSpeedFpm: plane.verticalSpeedFpm,
+      assignedAltitudeFt: plane.targets.altitudeFt,
       headingDeg: plane.headingDeg,
       navigatingTo: navigatingTo(plane),
       history: previous ? [previous.position, ...previous.history].slice(0, MAX_HISTORY) : [],

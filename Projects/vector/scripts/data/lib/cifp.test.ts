@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseCifp, parseLatitude, parseLongitude, parseVariation } from './cifp';
+import { parseAirwayPoint, parseCifp, parseLatitude, parseLongitude, parseVariation } from './cifp';
 
 // Real records from FAA CIFP cycle 2609 (public domain).
 const sample = readFileSync(new URL('./fixtures/cifp-sample.txt', import.meta.url), 'latin1');
@@ -134,5 +134,28 @@ describe('procedures', () => {
     });
     expect(tnnis).toMatchObject({ fix: 'TNNIS', altitude: { type: 'atOrAbove', ft: 5000 } });
     expect(manual).toMatchObject({ pathTerminator: 'FM', courseDeg: 45 });
+  });
+});
+
+describe('parseAirwayPoint', () => {
+  it('reads an enroute airway record', () => {
+    const line =
+      'SUSAER       Q1          0110ETCHYK2EA0E    RH                        3454052133'.padEnd(
+        132,
+      );
+    expect(parseAirwayPoint(line)).toEqual({
+      route: 'Q1',
+      sequence: 110,
+      fix: 'ETCHY',
+      fixSection: 'EA',
+      endsSegment: false,
+      level: 'H',
+    });
+    const end = 'SUSAER       J60         0200PYE  K2D 0VE   RH'.padEnd(132);
+    expect(parseAirwayPoint(end)).toMatchObject({
+      fix: 'PYE',
+      fixSection: 'D ',
+      endsSegment: true,
+    });
   });
 });

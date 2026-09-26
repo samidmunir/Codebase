@@ -63,15 +63,21 @@ describe('command options', () => {
     ).toEqual([]);
   });
 
-  it('hands departures to the nearest New York Center site on the right altitude band', () => {
-    const departure = aircraft({ flightPlan: { origin: 'KJFK', destination: 'KBOS', route: [] } });
-    expect(isDeparting(pack, departure)).toBe(true);
-    expect(centerHandoff(pack, departure)).toMatchObject({
+  it('hands off to the Center the aircraft is leaving into', () => {
+    const plan = { origin: 'KJFK', destination: 'KBOS', route: [] };
+    const heading = (headingDeg: number) =>
+      aircraft({ flightPlan: plan, headingDeg, altitudeFt: 24_000 });
+    expect(isDeparting(pack, heading(360))).toBe(true);
+    // North toward Albany is Boston Center; southwest toward Baltimore is Washington Center.
+    expect(centerHandoff(pack, heading(360))).toMatchObject({
       type: 'handoff',
-      to: 'ZNY',
-      facility: 'New York Center',
+      to: 'ZBW',
+      facility: 'Boston Center',
       frequencyMhz: expect.any(Number),
     });
+    expect(centerHandoff(pack, heading(225))).toMatchObject({ to: 'ZDC' });
+    // East over the Atlantic stays with New York Center.
+    expect(centerHandoff(pack, heading(110))).toMatchObject({ to: 'ZNY' });
   });
 
   it('offers route fixes first, then the rest in distance rings, alphabetical within each', () => {
@@ -122,7 +128,8 @@ describe('command options', () => {
   it('offers altitudes up to the top of the airspace', () => {
     const altitudes = altitudeOptions(pack, a320);
     expect(altitudes[0]).toBe(2_000);
-    expect(altitudes.at(-1)).toBe(17_000);
+    // The A320's ceiling (FL390) is below the top of the airspace (FL450).
+    expect(altitudes.at(-1)).toBe(39_000);
   });
 
   it('offers speeds in 10 kt steps, capped at 250 below 10,000 ft', () => {

@@ -8,6 +8,7 @@ import { destinationPoint } from '../math/geo';
 import { NEW_YORK_WORLD, newAircraft, performance } from '../testing/fixtures';
 
 const CENTER = { lat: 40.4, lon: -73.3 };
+const JFK_RADAR = { lat: 40.63859, lon: -73.76976 };
 
 function createEngine(overrides: Partial<SessionSettings> = {}) {
   return SimEngine.create({
@@ -166,6 +167,9 @@ describe('in-trail separation on final', () => {
     }) as AircraftState;
   const settings = {
     lateralNm: 3,
+    enrouteLateralNm: 5,
+    terminalRangeNm: 40,
+    radarPosition: JFK_RADAR,
     verticalFt: 1_000,
     lookaheadSec: 40,
     playerId: 'N90',
@@ -179,5 +183,13 @@ describe('in-trail separation on final', () => {
   it('requires the full minimum farther out or on different runways', () => {
     expect(requiredLateralNm(onFinal(9), onFinal(12), settings)).toBe(3);
     expect(requiredLateralNm(onFinal(6), onFinal(8.7, '22R'), settings)).toBe(3);
+  });
+
+  it('requires the en route minimum away from the radar', () => {
+    const far = (lat: number): AircraftState =>
+      ({ ...onFinal(20), position: { lat, lon: -75.2 }, id: `F${lat}` }) as AircraftState;
+    expect(requiredLateralNm(far(41.5), far(41.55), settings)).toBe(5);
+    // One near the radar and one far out: still the en route minimum.
+    expect(requiredLateralNm(onFinal(9), far(41.5), settings)).toBe(5);
   });
 });

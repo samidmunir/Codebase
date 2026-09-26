@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react';
 import type { UserSettings } from '@vector/shared';
-import { distanceNm, type LatLon } from '@vector/sim-core';
+import type { LatLon } from '@vector/sim-core';
 import type { ScopeSession } from '../sim/scope-session';
 import {
   clampZoom,
@@ -36,6 +36,8 @@ interface RadarScopeProps {
   onSelect: (aircraftId: string | undefined) => void;
   leaderDirections: ReadonlyMap<string, LeaderDirection>;
   preview: InstructionPreview | undefined;
+  /** A fix to highlight on the map, e.g. while hovering it in the direct-to list. */
+  highlightFix?: string | undefined;
   ref?: Ref<RadarScopeHandle>;
 }
 
@@ -67,6 +69,7 @@ export function RadarScope({
   onSelect,
   leaderDirections,
   preview,
+  highlightFix,
   ref,
 }: RadarScopeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,16 +83,15 @@ export function RadarScope({
   const hoveredRef = useRef<string | undefined>(undefined);
   const gestureRef = useRef<Gesture | undefined>(undefined);
   const callbacksRef = useRef({ onCameraChange, onCursorChange, onSelect });
-  const selectionRef = useRef({ selectedId, leaderDirections, preview });
+  const selectionRef = useRef({ selectedId, leaderDirections, preview, highlightFix });
   useEffect(() => {
     callbacksRef.current = { onCameraChange, onCursorChange, onSelect };
-    selectionRef.current = { selectedId, leaderDirections, preview };
+    selectionRef.current = { selectedId, leaderDirections, preview, highlightFix };
   });
 
-  const boundaryRadiusNm = () => {
-    const [lon, lat] = session.pack.airspace.boundary.ring[0]!;
-    return distanceNm(session.pack.airspace.center, { lat, lon });
-  };
+  /** Radius shown when the scope opens or is recentered. */
+  const viewRadiusNm = () =>
+    Math.min(settingsRef.current['display.scopeRangeNm'], session.pack.boundaryRadiusNm);
 
   const setCamera = (camera: Camera) => {
     cameraRef.current = camera;
@@ -98,7 +100,7 @@ export function RadarScope({
 
   const fittedCamera = (width: number, height: number): Camera => {
     const base: Camera = { center: session.pack.airspace.center, zoom: 9, width, height };
-    return { ...base, zoom: zoomToFit(base, boundaryRadiusNm() + FIT_MARGIN_NM) };
+    return { ...base, zoom: zoomToFit(base, viewRadiusNm() + FIT_MARGIN_NM) };
   };
 
   useImperativeHandle(ref, () => ({
@@ -183,11 +185,15 @@ export function RadarScope({
         targets: session.radar.list(),
         playerId: PLAYER_ID,
         scopeCenter: session.pack.airspace.radar.position,
-        sweepRadiusNm: session.pack.airspace.radar.rangeNm,
+        // Drawn out to the boundary: the scope shows the whole region's radar picture.
+        sweepRadiusNm: Math.max(session.pack.airspace.radar.rangeNm, session.pack.boundaryRadiusNm),
         sweepProgress: session.radar.sweepProgress(session.engine.displayTimeSec),
         timeShare: Math.floor(now / TIME_SHARE_MS) % 2 === 0 ? 0 : 1,
         hoveredId: hoveredRef.current,
         ...selectionRef.current,
+        highlightFix: selectionRef.current.highlightFix
+          ? session.pack.fix(selectionRef.current.highlightFix)
+          : undefined,
         route: (() => {
           const id = selectionRef.current.selectedId;
           const aircraft = id ? session.engine.getAircraft(id) : undefined;

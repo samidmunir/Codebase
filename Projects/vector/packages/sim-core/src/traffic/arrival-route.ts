@@ -16,6 +16,8 @@ export interface ArrivalRoute {
   legs: ResolvedLeg[];
   /** Published altitude at the first fix inside the boundary, if the STAR gives one. */
   crossingAltitudeFt: number | undefined;
+  /** Distance flown from the entry point along the route's fixes, in NM. */
+  routeDistanceNm: number;
 }
 
 /** Arrivals appear this far inside the boundary so they are clearly the player's traffic. */
@@ -63,7 +65,7 @@ export function arrivalRoutes(
         ...(runwayTransition?.legs ?? []),
       ]);
       // Find the first leg whose fix is inside the boundary, coming from one outside.
-      const index = legs.findIndex(
+      const crossing = legs.findIndex(
         (leg, i) =>
           i > 0 &&
           leg.position !== undefined &&
@@ -72,19 +74,44 @@ export function arrivalRoutes(
             .slice(0, i)
             .some((earlier) => earlier.position && distanceNm(center, earlier.position) > radius),
       );
-      if (index === -1) continue;
-      const previous = [...legs.slice(0, index)].reverse().find((leg) => leg.position)!;
+      // A route that starts inside the boundary is joined from outside: the
+      // aircraft enters on the boundary, flying inbound to its first fix.
+      const firstFixIndex = legs.findIndex((leg) => leg.position !== undefined);
+      const startsInside =
+        crossing === -1 &&
+        firstFixIndex !== -1 &&
+        distanceNm(center, legs[firstFixIndex]!.position!) <= radius;
+      if (crossing === -1 && !startsInside) continue;
+      const index = startsInside ? firstFixIndex : crossing;
       const firstInside = legs[index]!;
       const altitude = star.commonRoutes
         .concat(transition ? [transition] : [])
         .flatMap((segment) => segment.legs)
         .find((leg) => leg.fix === firstInside.fix)?.altitude;
 
+      const entry = startsInside
+        ? destinationPoint(center, bearingTrue(center, firstInside.position!), radius)
+        : boundaryCrossing(
+            [...legs.slice(0, index)].reverse().find((leg) => leg.position)!.position!,
+            firstInside.position!,
+            center,
+            radius,
+          );
+      const remaining = legs.slice(index);
+      let routeDistanceNm = 0;
+      let from = entry;
+      for (const leg of remaining) {
+        if (!leg.position) continue;
+        routeDistanceNm += distanceNm(from, leg.position);
+        from = leg.position;
+      }
+
       routes.push({
         star: star.id,
         transition: transition?.name,
-        entry: boundaryCrossing(previous.position!, firstInside.position!, center, radius),
-        legs: legs.slice(index),
+        entry,
+        legs: remaining,
+        routeDistanceNm,
         crossingAltitudeFt:
           altitude?.type === 'at' || altitude?.type === 'atOrBelow'
             ? altitude.ft

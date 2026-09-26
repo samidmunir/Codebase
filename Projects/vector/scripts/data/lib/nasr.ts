@@ -117,3 +117,56 @@ export function parseCenterSites(content: string, artcc: string): CenterSite[] {
   }
   return [...sites.values()].filter((site) => site.frequencies.length > 0);
 }
+
+// ---- ARTCC boundaries (ARB.txt) ------------------------------------------------
+
+export interface ArtccBoundary {
+  /** ARTCC identifier, e.g. 'ZNY'. */
+  artcc: string;
+  /** ARTCC name, e.g. 'NEW YORK'. */
+  name: string;
+  /** Low (below FL180) or high altitude stratum. */
+  level: 'low' | 'high';
+  /** Closed ring of [lon, lat] points. */
+  ring: [number, number][];
+}
+
+/** '39-41-00.0N' -> 39.6833, '073-10-00.0W' -> -73.1667. */
+export function parseDmsCoordinate(value: string): number {
+  const match = /^(\d{2,3})-(\d{2})-(\d{2}(?:\.\d+)?)([NSEW])$/.exec(value.trim());
+  if (!match) throw new Error(`Bad coordinate "${value}"`);
+  const [, d, m, s, hemisphere] = match;
+  const degrees = Number(d) + Number(m) / 60 + Number(s) / 3600;
+  return hemisphere === 'S' || hemisphere === 'W' ? -degrees : degrees;
+}
+
+/**
+ * ARTCC boundaries from the NASR ARB file for the given centers. Each record
+ * is one boundary point, in order; "POINT OF BEGINNING" closes a ring. Only
+ * the low and high strata are kept (not oceanic or FIR-only boundaries).
+ */
+export function parseArtccBoundaries(content: string, artccs: readonly string[]): ArtccBoundary[] {
+  const wanted = new Set(artccs);
+  const boundaries: ArtccBoundary[] = [];
+  let current: ArtccBoundary | undefined;
+  for (const line of content.split(/\r?\n/)) {
+    const artcc = line.slice(0, 3);
+    const stratum = line.slice(52, 62).trim();
+    if (!wanted.has(artcc) || (stratum !== 'LOW' && stratum !== 'HIGH')) continue;
+    const level = stratum === 'LOW' ? 'low' : 'high';
+    if (!current || current.artcc !== artcc || current.level !== level) {
+      current = { artcc, name: line.slice(12, 52).trim(), level, ring: [] };
+      boundaries.push(current);
+    }
+    const point: [number, number] = [
+      Math.round(parseDmsCoordinate(line.slice(76, 90)) * 1e5) / 1e5,
+      Math.round(parseDmsCoordinate(line.slice(62, 76)) * 1e5) / 1e5,
+    ];
+    current.ring.push(point);
+    if (line.slice(90).includes('POINT OF BEGINNING')) {
+      current.ring.push([...current.ring[0]!]);
+      current = undefined;
+    }
+  }
+  return boundaries.filter((boundary) => boundary.ring.length >= 4);
+}

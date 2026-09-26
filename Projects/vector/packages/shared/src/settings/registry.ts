@@ -41,14 +41,25 @@ export const USER_SETTINGS = {
     unit: 'px',
     default: 13,
   }),
+  'display.scopeRangeNm': setting.number({
+    category: 'display',
+    label: 'Scope range',
+    description:
+      'How far from the center the scope shows when it opens or is recentered (the whole region at the maximum).',
+    min: 30,
+    max: 150,
+    step: 10,
+    unit: 'NM',
+    default: 150,
+  }),
   'display.historyTrailLength': setting.number({
     category: 'display',
     label: 'History trail length',
     description: 'Number of previous radar positions shown behind each target.',
     min: 0,
-    max: 10,
+    max: 20,
     step: 1,
-    default: 5,
+    default: 8,
   }),
   'display.leaderLineLength': setting.number({
     category: 'display',
@@ -146,7 +157,38 @@ export const USER_SETTINGS = {
   'map.classB': setting.boolean({
     category: 'map',
     label: 'Class B airspace',
-    description: 'Show New York Class B airspace boundaries.',
+    description: 'Show Class B airspace boundaries (New York, Philadelphia and nearby).',
+    default: true,
+  }),
+  'map.classC': setting.boolean({
+    category: 'map',
+    label: 'Class C airspace',
+    description: 'Show Class C airspace around airports in the region.',
+    default: false,
+  }),
+  'map.airwaysHigh': setting.boolean({
+    category: 'map',
+    label: 'Jet and Q routes',
+    description: 'Show high-altitude airways (at and above FL180).',
+    default: false,
+  }),
+  'map.airwaysLow': setting.boolean({
+    category: 'map',
+    label: 'Victor and T routes',
+    description: 'Show low-altitude airways (below FL180).',
+    default: false,
+  }),
+  'map.otherAirports': setting.boolean({
+    category: 'map',
+    label: 'Other airports',
+    description: 'Show the region’s other airports and their runways, for orientation.',
+    default: true,
+  }),
+  'map.artccBoundaries': setting.boolean({
+    category: 'map',
+    label: 'Center boundaries',
+    description:
+      'Show where New York Center meets Boston, Washington and Cleveland Centers (high altitude).',
     default: true,
   }),
   'map.sectorBoundary': setting.boolean({
@@ -164,7 +206,13 @@ export const USER_SETTINGS = {
   'map.minimumVectoringAltitudes': setting.boolean({
     category: 'map',
     label: 'Minimum vectoring altitudes',
-    description: 'Show MVA sectors and their minimum altitudes.',
+    description: 'Show TRACON MVA sectors and their minimum altitudes.',
+    default: false,
+  }),
+  'map.minimumIfrAltitudes': setting.boolean({
+    category: 'map',
+    label: 'Minimum IFR altitudes',
+    description: 'Show Center MIA sectors, which apply outside the TRACON’s MVA chart.',
     default: false,
   }),
   'map.basemap': setting.boolean({
@@ -423,12 +471,33 @@ export const SESSION_SETTINGS = {
   'separation.lateralNm': setting.number({
     category: 'separation',
     label: 'Lateral separation',
-    description: 'Minimum horizontal distance between aircraft.',
+    description: 'Minimum horizontal distance between aircraft near the radar (terminal area).',
     min: 2.5,
     max: 10,
     step: 0.5,
     unit: 'NM',
     default: 3,
+  }),
+  'separation.enrouteLateralNm': setting.number({
+    category: 'separation',
+    label: 'En route lateral separation',
+    description:
+      'Minimum horizontal distance where either aircraft is beyond the terminal area (farther from the radar).',
+    min: 3,
+    max: 10,
+    step: 0.5,
+    unit: 'NM',
+    default: 5,
+  }),
+  'separation.terminalRangeNm': setting.number({
+    category: 'separation',
+    label: 'Terminal area range',
+    description: 'Within this distance of the radar site, the terminal lateral separation applies.',
+    min: 20,
+    max: 60,
+    step: 5,
+    unit: 'NM',
+    default: 40,
   }),
   'separation.verticalFt': setting.number({
     category: 'separation',

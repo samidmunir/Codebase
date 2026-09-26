@@ -10,6 +10,12 @@ export interface ScopePalette {
   runway: string;
   airportLabel: string;
   classB: string;
+  classC: string;
+  airwayHigh: string;
+  airwayLow: string;
+  otherAirport: string;
+  artccBoundary: string;
+  mia: string;
   boundary: string;
   rangeRing: string;
   finalCourse: string;
@@ -34,6 +40,12 @@ export function scopePalette(settings: UserSettings): ScopePalette {
     runway: '#d7ece2',
     airportLabel: '#9fc4b4',
     classB: '#4b4380',
+    classC: '#5a3f6e',
+    airwayHigh: 'rgba(90, 140, 200, 0.28)',
+    airwayLow: 'rgba(110, 160, 140, 0.22)',
+    otherAirport: '#5f7d72',
+    artccBoundary: 'rgba(140, 150, 200, 0.45)',
+    mia: 'rgba(190, 130, 90, 0.22)',
     boundary: '#2f4f9e',
     rangeRing: 'rgba(120, 190, 160, 0.10)',
     finalCourse: 'rgba(120, 200, 170, 0.35)',

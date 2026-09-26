@@ -38,6 +38,8 @@ export interface TrafficFrame {
   leaderDirections: ReadonlyMap<string, LeaderDirection>;
   /** Preview of the instruction being composed for the selected aircraft. */
   preview: InstructionPreview | undefined;
+  /** Fix highlighted on the map (hovered in the direct-to list). */
+  highlightFix?: { ident: string; position: LatLon } | undefined;
   /** The route the selected aircraft is flying. */
   route: RoutePreview | undefined;
   /** Conflict Alert state per aircraft, and the conflicting pairs. */
@@ -234,8 +236,88 @@ export function drawTrafficLayer(
     if (selected && frame.preview) drawPreview(ctx, frame, target.position, frame.preview);
   }
 
+  if (frame.highlightFix) {
+    const selected = frame.targets.find((t) => t.id === frame.selectedId);
+    drawHighlightedFix(ctx, frame, frame.highlightFix, selected?.position);
+  }
   if (frame.measure) drawMeasure(ctx, frame);
   return hits;
+}
+
+/** Period of the highlight ring's pulse. */
+const HIGHLIGHT_PULSE_MS = 1_200;
+
+/**
+ * A fix being considered for direct-to: a pulsing ring and crosshair with its
+ * name, and a line from the selected aircraft labeled with bearing and distance.
+ */
+function drawHighlightedFix(
+  ctx: CanvasRenderingContext2D,
+  frame: TrafficFrame,
+  fix: { ident: string; position: LatLon },
+  from: LatLon | undefined,
+): void {
+  const { camera, palette } = frame;
+  const point = project(camera, fix.position);
+  const pulse = (frame.nowMs % HIGHLIGHT_PULSE_MS) / HIGHLIGHT_PULSE_MS;
+  ctx.save();
+  ctx.strokeStyle = palette.measure;
+  ctx.fillStyle = palette.measure;
+  ctx.shadowColor = palette.measure;
+  ctx.shadowBlur = 10;
+
+  if (from) {
+    const start = project(camera, from);
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
+
+  // Expanding, fading ring, plus a steady ring and crosshair.
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 1 - pulse;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, 8 + pulse * 14, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+  ctx.stroke();
+  for (const [dx, dy] of [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ] as const) {
+    ctx.beginPath();
+    ctx.moveTo(point.x + dx * 10, point.y + dy * 10);
+    ctx.lineTo(point.x + dx * 15, point.y + dy * 15);
+    ctx.stroke();
+  }
+
+  ctx.font = '700 12px "JetBrains Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(fix.ident, point.x + 14, point.y - 8);
+  if (from) {
+    const bearing =
+      Math.round(trueToMagnetic(bearingTrue(from, fix.position), frame.magneticVariationDeg)) %
+        360 || 360;
+    ctx.font = '500 11px "JetBrains Mono", monospace';
+    ctx.textBaseline = 'top';
+    ctx.fillText(
+      `${String(bearing).padStart(3, '0')}° ${distanceNm(from, fix.position).toFixed(0)} NM`,
+      point.x + 14,
+      point.y - 6,
+    );
+  }
+  ctx.restore();
 }
 
 function drawRoute(ctx: CanvasRenderingContext2D, frame: TrafficFrame, route: RoutePreview): void {

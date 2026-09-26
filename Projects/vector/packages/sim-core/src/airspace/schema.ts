@@ -201,24 +201,51 @@ export const navdataFileSchema = z.object({
 
 // ---- Video map -----------------------------------------------------------------
 
+const controlledAirspaceAreaSchema = z.object({
+  /** Airspace name, e.g. 'NEW YORK' or 'PHILADELPHIA'. */
+  name: z.string().optional(),
+  floorFt: z.number().min(0),
+  ceilingFt: z.number().positive(),
+  ring: ringSchema,
+});
+
 export const videoMapFileSchema = z.object({
   schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
   shoreline: z.array(lineSchema),
-  classB: z.array(
-    z.object({
-      floorFt: z.number().min(0),
-      ceilingFt: z.number().positive(),
-      ring: ringSchema,
-    }),
-  ),
+  classB: z.array(controlledAirspaceAreaSchema),
+  classC: z.array(controlledAirspaceAreaSchema).default([]),
   minimumVectoringAltitudes: z.array(
     z.object({
       name: z.string(),
+      /**
+       * 'mva': a TRACON minimum vectoring altitude sector. 'mia': a Center
+       * minimum IFR altitude sector, used where no MVA sector applies.
+       */
+      kind: z.enum(['mva', 'mia']).default('mva'),
       minimumAltitudeFt: z.number().positive(),
       exterior: ringSchema,
       holes: z.array(ringSchema),
     }),
   ),
+  /** Jet and Q routes (high) and Victor and T routes (low), as drawn lines. */
+  airways: z
+    .array(z.object({ id: z.string(), level: z.enum(['high', 'low']), line: lineSchema }))
+    .default([]),
+  /** Other airports in the region, for orientation (not controlled in the session). */
+  airports: z
+    .array(
+      z.object({
+        icao: z.string(),
+        name: z.string(),
+        position: latLonSchema,
+        runways: z.array(z.tuple([pointSchema, pointSchema])),
+      }),
+    )
+    .default([]),
+  /** Air route traffic control center boundaries. */
+  artccBoundaries: z
+    .array(z.object({ artcc: z.string(), level: z.enum(['low', 'high']), ring: ringSchema }))
+    .default([]),
 });
 
 export type VideoMap = z.infer<typeof videoMapFileSchema>;
@@ -262,6 +289,8 @@ export const trafficFileSchema = z.object({
   /** Departure gates (exit directions) and their fixes. */
   departureGates: z.record(z.string(), z.array(z.string()).min(1)),
   airports: z.record(z.string(), airportTrafficSchema),
+  /** Where origin and destination cities are, for trip lengths and cruise levels. */
+  cityPositions: z.record(z.string(), latLonSchema).default({}),
 });
 
 export type TrafficProfile = z.infer<typeof trafficFileSchema>;
@@ -292,6 +321,14 @@ export const centerSiteSchema = z.object({
     .min(1),
 });
 
+const centerControllerSchema = z.object({
+  id: z.string(),
+  callsign: z.string(),
+  sites: z.array(centerSiteSchema).min(1),
+});
+
+export type CenterController = z.infer<typeof centerControllerSchema>;
+
 export const airspaceFileSchema = z.object({
   schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
   id: z.string().regex(/^[a-z0-9-]+$/),
@@ -308,6 +345,8 @@ export const airspaceFileSchema = z.object({
   }),
   /** Area the player controls. Arrivals enter and departures leave across it. */
   boundary: z.object({ ring: ringSchema, ceilingFt: z.number().positive() }),
+  /** Altitudes at and above this are flight levels (18,000 ft in the United States). */
+  transitionAltitudeFt: z.number().positive().default(18_000),
   airports: z.array(z.string()).min(1),
   controllers: z.object({
     approach: z.object({
@@ -315,11 +354,10 @@ export const airspaceFileSchema = z.object({
       approachCallsign: z.string(),
       departureCallsign: z.string(),
     }),
-    center: z.object({
-      id: z.string(),
-      callsign: z.string(),
-      sites: z.array(centerSiteSchema).min(1),
-    }),
+    /** The Center that owns the surrounding airspace. */
+    center: centerControllerSchema,
+    /** Neighboring Centers aircraft can be handed to where they leave into their airspace. */
+    adjacentCenters: z.array(centerControllerSchema).default([]),
   }),
   sources: z.array(
     z.object({ name: z.string(), url: z.string(), edition: z.string(), usedFor: z.string() }),
