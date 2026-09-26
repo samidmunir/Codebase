@@ -229,6 +229,18 @@ export const USER_SETTINGS = {
     ],
     default: 'radial',
   }),
+  'controls.directToRingNm': setting.select({
+    category: 'controls',
+    label: 'Direct-to distance rings',
+    description:
+      'The direct-to list groups fixes into rings of this width around the aircraft, alphabetical within each ring.',
+    options: [
+      { value: 5, label: '5 NM' },
+      { value: 10, label: '10 NM' },
+      { value: 20, label: '20 NM' },
+    ],
+    default: 10,
+  }),
   'controls.keys.togglePause': setting.keybinding({
     category: 'controls',
     label: 'Pause / resume',

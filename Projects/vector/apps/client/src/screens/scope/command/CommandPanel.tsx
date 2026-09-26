@@ -3,7 +3,7 @@ import { formatFrequency, headingDifference, type AircraftState } from '@vector/
 import {
   altitudeOptions,
   centerHandoff,
-  directToOptions,
+  directToGroups,
   ilsClearance,
   ilsRunways,
   isDeparting,
@@ -18,6 +18,7 @@ import {
   type InstructionDraft,
 } from '../../../commands/draft';
 import type { LeaderDirection } from '../../../scope/render/traffic-layer';
+import { useUserSettings } from '../../../settings/user-settings-store';
 import type { ScopeSession } from '../../../sim/scope-session';
 import { HeadingDial } from './HeadingDial';
 
@@ -41,6 +42,7 @@ const formatFeet = (ft: number) => ft.toLocaleString('en-US');
 
 export function CommandPanel(props: CommandPanelProps) {
   const { session, aircraft, draft, onDraftChange } = props;
+  const settings = useUserSettings();
   const { pack } = session;
   const performance = session.engine.performance.get(aircraft.aircraftType);
   const owned = aircraft.owner === session.engine.playerId;
@@ -227,31 +229,39 @@ export function CommandPanel(props: CommandPanelProps) {
             )}
 
             {activeTab === 'direct' && (
-              <ul className="fix-list">
-                {directToOptions(pack, aircraft).map(({ fix, distanceNm, bearingDeg, onRoute }) => (
-                  <li key={fix.ident}>
-                    <button
-                      type="button"
-                      aria-pressed={draft.directTo === fix.ident}
-                      onClick={() =>
-                        update({
-                          directTo: draft.directTo === fix.ident ? undefined : fix.ident,
-                          heading: undefined,
-                        })
-                      }
-                    >
-                      <span className="fix-list__ident">{fix.ident}</span>
-                      {onRoute && <span className="fix-list__tag">Route</span>}
-                      {fix.kind !== 'waypoint' && (
-                        <span className="fix-list__tag">{fix.kind.toUpperCase()}</span>
-                      )}
-                      <span className="fix-list__detail">
-                        {String(bearingDeg).padStart(3, '0')}° · {distanceNm.toFixed(1)} NM
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <div className="fix-groups">
+                {directToGroups(pack, aircraft, settings['controls.directToRingNm']).map(
+                  (group) => (
+                    <section key={group.title} className="fix-group" aria-label={group.title}>
+                      <h3 className="fix-group__title">{group.title}</h3>
+                      <ul className="fix-list">
+                        {group.fixes.map(({ fix, distanceNm, bearingDeg }) => (
+                          <li key={fix.ident}>
+                            <button
+                              type="button"
+                              aria-pressed={draft.directTo === fix.ident}
+                              onClick={() =>
+                                update({
+                                  directTo: draft.directTo === fix.ident ? undefined : fix.ident,
+                                  heading: undefined,
+                                })
+                              }
+                            >
+                              <span className="fix-list__ident">{fix.ident}</span>
+                              {fix.kind !== 'waypoint' && (
+                                <span className="fix-list__tag">{fix.kind.toUpperCase()}</span>
+                              )}
+                              <span className="fix-list__detail">
+                                {String(bearingDeg).padStart(3, '0')}° · {distanceNm.toFixed(1)} NM
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  ),
+                )}
+              </div>
             )}
 
             {activeTab === 'approach' && (
