@@ -116,17 +116,23 @@ export const USER_SETTINGS = {
     description: 'Color of video map lines.',
     default: '#2c5b4b',
   }),
-  'display.color.targets': setting.color({
+  'display.color.arrivals': setting.color({
     category: 'display',
-    label: 'Target color',
-    description: 'Color of aircraft targets you control.',
+    label: 'Arrival color',
+    description: 'Color of arrivals you control (targets, trails and data blocks).',
     default: '#4cf2a0',
   }),
-  'display.color.dataBlocks': setting.color({
+  'display.color.departures': setting.color({
     category: 'display',
-    label: 'Data block color',
-    description: 'Color of data blocks for aircraft you control.',
-    default: '#b8f5d8',
+    label: 'Departure color',
+    description: 'Color of departures you control (targets, trails and data blocks).',
+    default: '#62b8ff',
+  }),
+  'display.color.transits': setting.color({
+    category: 'display',
+    label: 'Overflight color',
+    description: 'Color of overflights you control (targets, trails and data blocks).',
+    default: '#d49bff',
   }),
 
   // ---- Map layers ----------------------------------------------------------

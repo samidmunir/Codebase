@@ -22,6 +22,12 @@ const MAP_LAYERS: BooleanKey[] = [
   'map.minimumIfrAltitudes',
 ];
 
+const TRAFFIC_COLORS = [
+  'display.color.arrivals',
+  'display.color.departures',
+  'display.color.transits',
+] as const;
+
 const DISPLAY_OPTIONS: BooleanKey[] = [
   'display.headingVector',
   'display.rangeRings',
@@ -70,6 +76,23 @@ export function MapLayersPanel({ settings, onClose }: MapLayersPanelProps) {
         {MAP_LAYERS.map((key) => (
           <Toggle key={key} settingKey={key} settings={settings} />
         ))}
+      </section>
+
+      <section className="scope-panel__section">
+        <h3>Traffic colors</h3>
+        {TRAFFIC_COLORS.map((key) => (
+          <label key={key} className="traffic-color" title={USER_SETTINGS[key].description}>
+            <span className="traffic-color__swatch" style={{ background: settings[key] }} />
+            <span>{USER_SETTINGS[key].label.replace(' color', 's')}</span>
+            <input
+              type="color"
+              value={settings[key]}
+              onChange={(event) => userSettings.update({ [key]: event.target.value })}
+              aria-label={USER_SETTINGS[key].label}
+            />
+          </label>
+        ))}
+        <p className="scope-panel__note">Traffic you don’t control is always grey.</p>
       </section>
 
       <section className="scope-panel__section">

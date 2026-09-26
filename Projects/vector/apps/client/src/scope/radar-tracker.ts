@@ -5,6 +5,7 @@ export interface RadarTarget {
   id: string;
   callsign: string;
   aircraftType: string;
+  origin: string;
   destination: string;
   owner: string;
   position: LatLon;
@@ -133,6 +134,7 @@ export class RadarTracker {
       id: plane.id,
       callsign: plane.callsign,
       aircraftType: plane.aircraftType,
+      origin: plane.flightPlan.origin,
       destination: plane.flightPlan.destination,
       owner: plane.owner,
       position: { ...plane.position },

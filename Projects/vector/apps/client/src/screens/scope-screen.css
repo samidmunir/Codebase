@@ -658,3 +658,30 @@
 .scope-dialog--settings .settings-view__content {
   min-height: 0;
 }
+
+/* ---- Traffic color legend ------------------------------------------------------------ */
+
+.traffic-color {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 0;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.traffic-color__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.traffic-color input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}

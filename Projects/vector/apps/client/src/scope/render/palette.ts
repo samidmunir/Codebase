@@ -1,10 +1,16 @@
 import type { UserSettings } from '@vector/shared';
+import type { TrafficCategory } from '../traffic-category';
+
+/** Data block text is a light tint of the target color, easier to read than the full color. */
+const DATA_BLOCK_TINT = 0.6;
+
+const trafficColors = (target: string) => ({ target, text: tint(target, DATA_BLOCK_TINT) });
 
 /** Colors for the scope. User-adjustable colors come from display settings. */
 export interface ScopePalette {
   mapLines: string;
-  targets: string;
-  dataBlocks: string;
+  /** Target and data block colors for the player's traffic, by category. */
+  traffic: Record<TrafficCategory, { target: string; text: string }>;
   unowned: string;
   unownedText: string;
   runway: string;
@@ -33,8 +39,11 @@ export interface ScopePalette {
 export function scopePalette(settings: UserSettings): ScopePalette {
   return {
     mapLines: settings['display.color.mapLines'],
-    targets: settings['display.color.targets'],
-    dataBlocks: settings['display.color.dataBlocks'],
+    traffic: {
+      arrival: trafficColors(settings['display.color.arrivals']),
+      departure: trafficColors(settings['display.color.departures']),
+      transit: trafficColors(settings['display.color.transits']),
+    },
     unowned: '#58786c',
     unownedText: '#6f8f83',
     runway: '#d7ece2',
@@ -65,4 +74,12 @@ export function scopePalette(settings: UserSettings): ScopePalette {
 export function withAlpha(hex: string, alpha: number): string {
   const value = Number.parseInt(hex.slice(1), 16);
   return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+}
+
+/** Mixes a '#rrggbb' color toward white by `amount` (0–1). */
+export function tint(hex: string, amount: number): string {
+  const value = Number.parseInt(hex.slice(1), 16);
+  const mix = (channel: number) => Math.round(channel + (255 - channel) * amount);
+  const [r, g, b] = [(value >> 16) & 255, (value >> 8) & 255, value & 255].map(mix);
+  return `#${[r, g, b].map((c) => c!.toString(16).padStart(2, '0')).join('')}`;
 }

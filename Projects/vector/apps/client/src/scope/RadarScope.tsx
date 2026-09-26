@@ -152,6 +152,7 @@ export function RadarScope({
   useEffect(() => {
     const mapContext = mapCanvasRef.current!.getContext('2d')!;
     const trafficContext = trafficCanvasRef.current!.getContext('2d')!;
+    const controlledAirports = new Set(session.pack.airspace.airports);
     let last = performance.now();
     let frameId = 0;
 
@@ -184,6 +185,7 @@ export function RadarScope({
         palette,
         targets: session.radar.list(),
         playerId: PLAYER_ID,
+        airports: controlledAirports,
         scopeCenter: session.pack.airspace.radar.position,
         // Drawn out to the boundary: the scope shows the whole region's radar picture.
         sweepRadiusNm: Math.max(session.pack.airspace.radar.rangeNm, session.pack.boundaryRadiusNm),

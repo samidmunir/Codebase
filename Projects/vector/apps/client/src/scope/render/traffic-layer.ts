@@ -12,6 +12,7 @@ import { pixelsPerNm, project, type Camera, type ScreenPoint } from '../camera';
 import { dataBlockLines } from '../data-block';
 import type { RadarTarget } from '../radar-tracker';
 import type { RoutePreview } from '../route-preview';
+import { trafficCategory } from '../traffic-category';
 import { withAlpha, type ScopePalette } from './palette';
 
 /** Pixels per leader line length step (STARS uses discrete lengths). */
@@ -25,6 +26,8 @@ export interface TrafficFrame {
   targets: readonly RadarTarget[];
   /** Controller the player works as; their aircraft are drawn bright. */
   playerId: string;
+  /** The airspace's airports, to tell arrivals, departures and overflights apart. */
+  airports: ReadonlySet<string>;
   /** Radar antenna the sweep rotates around, and its range. */
   scopeCenter: LatLon;
   sweepRadiusNm: number;
@@ -117,7 +120,8 @@ export function drawTrafficLayer(
     const hovered = target.id === frame.hoveredId;
     const selected = target.id === frame.selectedId;
     const alert = alertOf.get(target.id);
-    const color = alert === 'loss' ? palette.alert : owned ? palette.targets : palette.unowned;
+    const category = palette.traffic[trafficCategory(target, frame.airports)];
+    const color = alert === 'loss' ? palette.alert : owned ? category.target : palette.unowned;
     const position = project(camera, target.position);
 
     // History trail, fading with age.
@@ -208,10 +212,10 @@ export function drawTrafficLayer(
     ctx.fillStyle = owned
       ? hovered || selected
         ? palette.hover
-        : palette.dataBlocks
+        : category.text
       : palette.unownedText;
     if (owned) {
-      ctx.shadowColor = withAlpha(palette.dataBlocks, 0.5);
+      ctx.shadowColor = withAlpha(category.target, 0.5);
       ctx.shadowBlur = 6;
     }
     lines.forEach((text, i) => {
@@ -321,7 +325,14 @@ function drawHighlightedFix(
 }
 
 function drawRoute(ctx: CanvasRenderingContext2D, frame: TrafficFrame, route: RoutePreview): void {
-  const { camera, palette } = frame;
+  const { camera } = frame;
+  // In the selected aircraft's own color, so the route reads as belonging to it.
+  const selected = frame.targets.find((target) => target.id === frame.selectedId);
+  const palette = {
+    route: selected
+      ? frame.palette.traffic[trafficCategory(selected, frame.airports)].target
+      : frame.palette.route,
+  };
   const polyline = (points: readonly LatLon[]) => {
     ctx.beginPath();
     points.forEach((point, i) => {
