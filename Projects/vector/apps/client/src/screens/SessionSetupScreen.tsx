@@ -38,6 +38,7 @@ const ADVANCED_GROUPS: { label: string; keys: SessionKey[] }[] = [
   { label: 'Approaches', keys: keysIn('approaches.') },
   { label: 'Departures', keys: keysIn('departures.') },
   { label: 'Center', keys: keysIn('center.') },
+  { label: 'RP scoring', keys: keysIn('scoring.') },
   { label: 'Pilots', keys: keysIn('pilots.') },
   { label: 'Radar', keys: keysIn('radar.') },
   { label: 'Simulation', keys: keysIn('sim.') },

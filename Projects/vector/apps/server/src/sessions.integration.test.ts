@@ -106,10 +106,15 @@ describe.skipIf(!db)('saved sessions (integration)', () => {
       difficulty: 'easy',
       simTimeSec: 120,
       aircraftCount: 1,
+      rp: 0,
     });
 
     const list = await request(pilot, 'GET', '/api/sessions');
-    expect(list.json()).toMatchObject({ sessions: [{ id: summary.id }], limit: SESSION_LIMIT });
+    expect(list.json()).toMatchObject({
+      sessions: [{ id: summary.id }],
+      limit: SESSION_LIMIT,
+      careerRp: 0,
+    });
 
     const loaded = await request(pilot, 'GET', `/api/sessions/${summary.id}`);
     expect(loaded.statusCode).toBe(200);
@@ -148,6 +153,17 @@ describe.skipIf(!db)('saved sessions (integration)', () => {
       expect(response.statusCode).toBe(404);
     }
     expect((await request(pilot, 'GET', `/api/sessions/${id}`)).json().name).toBe('Morning push');
+  });
+
+  it('records each session’s RP and totals them for the career', async () => {
+    const withScore = (total: number) => {
+      const data = snapshot();
+      data.state.score.total = total;
+      return data;
+    };
+    expect((await save(pilot, 'Morning', withScore(250))).json().rp).toBe(250);
+    await save(pilot, 'Evening', withScore(-40));
+    expect((await request(pilot, 'GET', '/api/sessions')).json().careerRp).toBe(210);
   });
 
   it('requires sign-in', async () => {

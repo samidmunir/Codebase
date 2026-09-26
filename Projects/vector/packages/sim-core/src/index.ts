@@ -29,3 +29,4 @@ export * from './weather/wind';
 export * from './traffic/cruise-levels';
 export * from './aircraft/track';
 export * from './atc/center';
+export * from './scoring/score';

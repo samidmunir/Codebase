@@ -334,3 +334,8 @@
   color: var(--color-alert);
   border-color: rgba(255, 90, 90, 0.4);
 }
+
+.saved-sessions__career {
+  color: var(--color-target);
+  font-weight: 600;
+}

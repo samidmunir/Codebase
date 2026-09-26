@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import type { SessionStatus } from '../../sim/scope-session';
 import { shortAirport } from '../../scope/data-block';
 import { formatUtc } from './format';
+import { formatRp } from './score-format';
 
 interface ScopeTopBarProps {
   facility: string;
@@ -20,6 +21,8 @@ interface ScopeTopBarProps {
   onToggleTraffic: () => void;
   onSave: () => void;
   onOpenSettings: () => void;
+  scoreOpen: boolean;
+  onToggleScore: () => void;
 }
 
 export function ScopeTopBar(props: ScopeTopBarProps) {
@@ -67,6 +70,19 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
       </div>
 
       <div className="scope-topbar__controls">
+        <button
+          type="button"
+          className="scope-button scope-rp"
+          data-sign={status.rp < 0 ? 'minus' : 'plus'}
+          aria-pressed={props.scoreOpen}
+          onClick={props.onToggleScore}
+          title="RP this session"
+        >
+          <span key={status.scoreEventCount} className="scope-rp__value">
+            {formatRp(status.rp)}
+          </span>
+        </button>
+
         <button
           type="button"
           className="scope-button scope-button--icon"

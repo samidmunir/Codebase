@@ -8,6 +8,7 @@ import {
 } from '../../api/sessions-api';
 import type { ScopeSession } from '../../sim/scope-session';
 import { formatUtc } from './format';
+import { formatRp } from './score-format';
 
 interface SaveSessionDialogProps {
   session: ScopeSession;
@@ -86,8 +87,8 @@ export function SaveSessionDialog({ session, onClose, onSaved }: SaveSessionDial
       >
         <h2 id="save-session-title">Save session</h2>
         <p className="scope-dialog__detail">
-          {session.engine.listAircraft().length} aircraft · {formatUtc(session.engine.utcTime)}Z ·
-          the sim stays paused
+          {formatRp(session.engine.score.total)} · {session.engine.listAircraft().length} aircraft ·{' '}
+          {formatUtc(session.engine.utcTime)}Z · the sim stays paused
         </p>
         <label className="scope-dialog__field">
           <span>Name</span>
