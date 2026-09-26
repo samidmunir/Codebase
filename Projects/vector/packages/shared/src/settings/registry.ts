@@ -144,6 +144,12 @@ export const USER_SETTINGS = {
     description: 'Show coastlines, shorelines and major rivers.',
     default: true,
   }),
+  'map.minimumVectoringAltitudes': setting.boolean({
+    category: 'map',
+    label: 'Minimum vectoring altitudes',
+    description: 'Show MVA sectors and their minimum altitudes.',
+    default: false,
+  }),
   'map.basemap': setting.boolean({
     category: 'map',
     label: 'Real-world map',

@@ -117,6 +117,15 @@ describe('SimEngine aircraft', () => {
     ]);
   });
 
+  it('transfers ownership and changes phase', () => {
+    const engine = createEngine();
+    const aircraft = engine.addAircraft(newAircraft({ owner: 'KJFK_TWR', phase: 'departure' }));
+    engine.setOwner(aircraft.id, 'N90');
+    engine.setPhase(aircraft.id, 'enroute');
+    expect(engine.getAircraft(aircraft.id)).toMatchObject({ owner: 'N90', phase: 'enroute' });
+    expect(() => engine.setOwner('AC99', 'N90')).toThrow(/AC99/);
+  });
+
   it('stops notifying after unsubscribe', () => {
     const engine = createEngine();
     const events: SimEvent[] = [];

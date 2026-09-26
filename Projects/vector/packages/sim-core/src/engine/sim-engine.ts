@@ -2,7 +2,11 @@ import { defaultSettings, type SessionSettings } from '@vector/shared';
 import {
   aircraftStateSchema,
   aircraftTargetsSchema,
+  controllerIdSchema,
+  flightPhaseSchema,
   type AircraftState,
+  type ControllerId,
+  type FlightPhase,
   type AircraftTargets,
   type NewAircraft,
 } from '../aircraft/aircraft';
@@ -236,13 +240,27 @@ export class SimEngine {
    * instruction is allowed belongs to the command layer (Milestone 6).
    */
   setTargets(id: string, targets: Partial<AircraftTargets>): void {
-    const aircraft = this.state.aircraft.find((candidate) => candidate.id === id);
-    if (!aircraft) throw new Error(`Unknown aircraft "${id}"`);
+    const aircraft = this.mutableAircraft(id);
     const merged = { ...aircraft.targets, ...targets };
     aircraft.targets = aircraftTargetsSchema.parse({
       ...merged,
       headingDeg: normalizeHeading(merged.headingDeg),
     });
+  }
+
+  /** Transfers control of an aircraft to another controller (e.g. a handoff). */
+  setOwner(id: string, owner: ControllerId): void {
+    this.mutableAircraft(id).owner = controllerIdSchema.parse(owner);
+  }
+
+  setPhase(id: string, phase: FlightPhase): void {
+    this.mutableAircraft(id).phase = flightPhaseSchema.parse(phase);
+  }
+
+  private mutableAircraft(id: string): AircraftState {
+    const aircraft = this.state.aircraft.find((candidate) => candidate.id === id);
+    if (!aircraft) throw new Error(`Unknown aircraft "${id}"`);
+    return aircraft;
   }
 
   // ---- Events --------------------------------------------------------------
