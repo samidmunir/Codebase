@@ -167,7 +167,7 @@ export function drawTrafficLayer(
       ctx.stroke();
     }
 
-    const lines = dataBlockLines(target, frame.timeShare);
+    const lines = dataBlockLines(target, frame.timeShare, settings['display.dataBlockStyle']);
     const width = Math.max(...lines.map((text) => ctx.measureText(text).width));
     const height = lineHeight * lines.length;
     const blockX =
@@ -194,7 +194,11 @@ export function drawTrafficLayer(
       ctx.shadowColor = withAlpha(palette.dataBlocks, 0.5);
       ctx.shadowBlur = 6;
     }
-    lines.forEach((text, i) => ctx.fillText(text, blockX, blockY + i * lineHeight));
+    lines.forEach((text, i) => {
+      // Type and destination (the expanded style's third line) are secondary: dim them.
+      ctx.globalAlpha = i === 2 ? 0.65 : 1;
+      ctx.fillText(text, blockX, blockY + i * lineHeight);
+    });
     ctx.restore();
 
     // Conflict Alert: 'CA' above the data block, flashing for an actual loss of separation.

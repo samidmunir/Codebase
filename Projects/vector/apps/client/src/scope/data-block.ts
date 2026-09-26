@@ -34,11 +34,33 @@ export interface DataBlockTarget {
   verticalSpeedFpm: number;
 }
 
-/** The two lines of a data block. `timeShare` alternates line 2 between its two forms. */
-export function dataBlockLines(target: DataBlockTarget, timeShare: 0 | 1): [string, string] {
+/** Ground speed in knots, three digits: 210 -> '210', 95 -> '095'. */
+export function formatGroundSpeedKnots(groundSpeedKts: number): string {
+  return String(Math.min(999, Math.max(0, Math.round(groundSpeedKts)))).padStart(3, '0');
+}
+
+export type DataBlockStyle = 'expanded' | 'stars';
+
+/**
+ * The lines of a data block.
+ * - 'expanded': callsign / altitude + trend + full ground speed / type + destination.
+ * - 'stars': callsign / altitude + trend + ground speed in tens, time-shared with type + destination.
+ */
+export function dataBlockLines(
+  target: DataBlockTarget,
+  timeShare: 0 | 1,
+  style: DataBlockStyle = 'stars',
+): string[] {
+  const altitude = `${formatAltitude(target.altitudeFt)}${trendIndicator(target.verticalSpeedFpm)}`;
+  const typeAndDestination = `${target.aircraftType.padEnd(4)} ${shortAirport(target.destination)}`;
+  if (style === 'expanded') {
+    return [
+      target.callsign,
+      `${altitude} ${formatGroundSpeedKnots(target.groundSpeedKts)}`,
+      typeAndDestination,
+    ];
+  }
   const line2 =
-    timeShare === 0
-      ? `${formatAltitude(target.altitudeFt)}${trendIndicator(target.verticalSpeedFpm)}${formatGroundSpeed(target.groundSpeedKts)}`
-      : `${target.aircraftType.padEnd(4)} ${shortAirport(target.destination)}`;
+    timeShare === 0 ? `${altitude}${formatGroundSpeed(target.groundSpeedKts)}` : typeAndDestination;
   return [target.callsign, line2];
 }

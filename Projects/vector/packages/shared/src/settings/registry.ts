@@ -20,6 +20,17 @@ export const USER_SETTINGS = {
     unit: '%',
     default: 100,
   }),
+  'display.dataBlockStyle': setting.select({
+    category: 'display',
+    label: 'Data block style',
+    description:
+      'Expanded: callsign, altitude with full ground speed, then type and destination. STARS: the real two-line format, ground speed in tens of knots, time-shared with type and destination.',
+    options: [
+      { value: 'expanded', label: 'Expanded' },
+      { value: 'stars', label: 'STARS' },
+    ],
+    default: 'expanded',
+  }),
   'display.dataBlockFontSize': setting.number({
     category: 'display',
     label: 'Data block font size',

@@ -506,3 +506,20 @@
     display: none;
   }
 }
+
+.layer-select {
+  display: grid;
+  gap: 6px;
+  padding: 7px 0;
+  font-size: 0.85rem;
+}
+
+.layer-select .segmented-control {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.layer-select .segmented-control button[aria-checked='true'] {
+  color: #04120c;
+  font-weight: 600;
+  background: var(--color-target);
+}
