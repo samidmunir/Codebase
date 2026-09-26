@@ -1,0 +1,47 @@
+/*
+ * Vector design tokens.
+ * Every color, font and spacing value in the client comes from here, so themes
+ * and user display settings (Milestone 3+) can override them in one place.
+ */
+:root {
+  /* Surfaces */
+  --color-bg: #05080b;
+  --color-bg-elevated: #0a1016;
+  --color-surface: rgba(16, 26, 34, 0.72);
+  --color-surface-border: rgba(120, 180, 160, 0.14);
+
+  /* Scope */
+  --color-scope-map: #2c5b4b;
+  --color-scope-ring: rgba(76, 242, 160, 0.1);
+  --color-scope-sweep: rgba(76, 242, 160, 0.22);
+  --color-target: #4cf2a0;
+  --color-target-dim: #3a6b5a;
+
+  /* Text */
+  --color-text: #e3efe9;
+  --color-text-muted: #7d938a;
+  --color-text-faint: #4a5c55;
+
+  /* Status */
+  --color-ok: #4cf2a0;
+  --color-caution: #ffb547;
+  --color-alert: #ff5a5f;
+
+  /* Typography */
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --font-data: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Spacing and shape */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 150ms;
+}

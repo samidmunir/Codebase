@@ -1,0 +1,126 @@
+.shell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: var(--space-4);
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, var(--color-bg-elevated), var(--color-bg) 70%);
+}
+
+/* Decorative radar scope behind the hero */
+.scope-backdrop {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(120vmin, 1100px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.scope-backdrop__rings {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle,
+    transparent 0 calc(12.5% - 1px),
+    var(--color-scope-ring) calc(12.5% - 1px) 12.5%
+  );
+  mask-image: radial-gradient(circle, black 55%, transparent 72%);
+}
+
+.scope-backdrop__sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--color-scope-sweep), transparent 55deg);
+  mask-image: radial-gradient(circle, black 45%, transparent 71%);
+  animation: sweep 4.8s linear infinite;
+}
+
+@keyframes sweep {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 560px;
+  padding: var(--space-8);
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(14px);
+}
+
+.hero__eyebrow {
+  margin: 0;
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.hero__title {
+  margin: 0;
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.hero__subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.api-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  border: 1px solid var(--color-surface-border);
+  border-radius: 999px;
+}
+
+.api-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-faint);
+}
+
+.api-status[data-status='online'] .api-status__dot {
+  background: var(--color-ok);
+  box-shadow: 0 0 10px var(--color-ok);
+}
+
+.api-status[data-status='degraded'] .api-status__dot {
+  background: var(--color-caution);
+}
+
+.api-status[data-status='offline'] .api-status__dot {
+  background: var(--color-alert);
+}
+
+.shell__footer {
+  position: absolute;
+  bottom: var(--space-4);
+  color: var(--color-text-faint);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+}
