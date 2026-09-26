@@ -64,7 +64,8 @@ Home ──► New Session ──► Select Airspace ──► Configure ──�
 ### 3.2 Radar Scope (STARS-style display)
 
 - Full-screen dark scope rendered on **HTML Canvas**, targeting 60 fps for UI and animation.
-- **Video map** layers: runways, airport outlines, Class B boundaries, key fixes and navaids, final approach courses, sector boundary, coastline and rivers (toggleable).
+- **Video map** layers: runways, airport outlines, Class B boundaries, key fixes and navaids, final approach courses, sector boundary, coastline and rivers (toggleable). Drawn by Vector's own renderer from real geographic data, placing KJFK, KEWR and KLGA at their exact real-world positions.
+- **Real-world map (optional):** a dark-styled real map (terrain, water, roads, city names) can be shown underneath the video map, with adjustable opacity. Off by default, since real STARS scopes show line maps only.
 - **Range rings** and a compass rose (toggleable).
 - **Radar sweep realism**: target positions update on a realistic ~4.8 s radar interval, while the rest of the display stays smooth.
 - **Targets** with **history trails** (last N positions) and **leader lines**.
@@ -212,19 +213,20 @@ Any value that can reasonably vary is a setting. Settings come in two scopes:
 
 Every setting has a realistic default and a "reset to default" option.
 
-| Category       | Examples                                                                                                                                                                   |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Display**    | Theme and brightness, map layer visibility and colors, data block font size, trail length, leader line length, range ring spacing, sweep effect on/off, UI animation level |
-| **Audio**      | Master volume, Conflict Alert sound on/off, UI sounds on/off                                                                                                               |
-| **Controls**   | Keyboard shortcut bindings, mouse/scroll zoom sensitivity, menu style (radial or list)                                                                                     |
-| **Traffic**    | Difficulty preset, arrival rate, departure rate, max departure queue per airport, airline and aircraft type mix                                                            |
-| **Weather**    | Wind mode (random but realistic, or manual), wind direction and speed per airport, maximum tailwind and crosswind for active runways                                       |
-| **Separation** | Lateral minimum (NM), vertical minimum (ft), Conflict Alert look-ahead time                                                                                                |
-| **Radar**      | Sweep interval, history trail count                                                                                                                                        |
-| **Pilots**     | Response delay range, readback detail                                                                                                                                      |
-| **Departures** | Radar-contact altitude (when control moves from Tower to the player)                                                                                                       |
-| **Approaches** | ILS intercept angle limit, intercept distance range, stabilized-approach gate altitude, go-around on/off, show approach eligibility in menus                               |
-| **Sim**        | Available sim speeds                                                                                                                                                       |
+| Category       | Examples                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Display**    | Theme and brightness, data block font size, trail length, leader line length, range ring spacing, sweep effect on/off, UI animation level, colors |
+| **Map**        | Each video map layer on/off, real-world map on/off and its opacity                                                                                |
+| **Audio**      | Master volume, Conflict Alert sound on/off, UI sounds on/off                                                                                      |
+| **Controls**   | Keyboard shortcut bindings, mouse/scroll zoom sensitivity, menu style (radial or list)                                                            |
+| **Traffic**    | Difficulty preset, arrival rate, departure rate, max departure queue per airport, airline and aircraft type mix                                   |
+| **Weather**    | Wind mode (random but realistic, or manual), wind direction and speed per airport, maximum tailwind and crosswind for active runways              |
+| **Separation** | Lateral minimum (NM), vertical minimum (ft), Conflict Alert look-ahead time                                                                       |
+| **Radar**      | Sweep interval, history trail count                                                                                                               |
+| **Pilots**     | Response delay range, readback detail                                                                                                             |
+| **Departures** | Radar-contact altitude (when control moves from Tower to the player)                                                                              |
+| **Approaches** | ILS intercept angle limit, intercept distance range, stabilized-approach gate altitude, go-around on/off, show approach eligibility in menus      |
+| **Sim**        | Available sim speeds                                                                                                                              |
 
 ### 3.10 Accounts & Saved Sessions
 
@@ -352,6 +354,8 @@ Airspace data ships as static assets with the client in v1. It can move behind a
 
 - Airport, runway, navaid, fix and procedure data will be built from **public FAA sources** (NASR / CIFP) and checked against current charts.
 - The N90 lateral boundary and internal video maps are not fully published, so they will be **approximated from public charts** (Class B, sectional/TAC charts, published procedures).
+- Coastlines, shorelines, rivers and borders for the video map come from **Natural Earth** (public domain). Class B boundaries come from the **FAA's published airspace data**.
+- The optional real-world map uses **MapLibre GL** with free **OpenStreetMap-based vector tiles** (e.g. OpenFreeMap), styled dark to match the scope. OpenStreetMap requires on-screen attribution when this layer is shown. It needs an internet connection; the video map does not.
 - Data is converted into Vector's own JSON schema by build scripts, so updating to a new FAA cycle is repeatable.
 - Vector is a simulation for entertainment and training-style practice. **It is not for real-world navigation or operational use.**
 
@@ -374,7 +378,7 @@ Airspace data ships as static assets with the client in v1. It can move behind a
 | --- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **Project foundation**                 | Monorepo, TypeScript, lint/format, Vitest, Vite client shell, Fastify server shell, PostgreSQL + migrations                                                                                                                                                                                    |
 | 2   | **Sim-core engine**                    | Fixed-timestep loop, geo math, aircraft state and flight model, performance profiles, seeded RNG, unit tests                                                                                                                                                                                   |
-| 3   | **Settings framework**                 | Shared settings schema, defaults, and the user/session scope split, so later milestones read their values from settings from day one                                                                                                                                                           |
+| 3   | **Settings framework**                 | One shared definition for every setting (type, range, default, scope), user and session registries, lenient loading of older stored settings, strict validation of updates, difficulty presets, keybinding conflict detection, map layer settings, and session settings saved in sim snapshots |
 | 4   | **New York airspace data**             | Airspace pack schema (Zod), KJFK/KEWR/KLGA runways, fixes, departure/arrival/missed-approach procedures, ILS data and video maps, plus a data build pipeline                                                                                                                                   |
 | 5   | **Radar scope**                        | Canvas renderer: video maps, targets, trails, data blocks, pan/zoom, range/bearing tool, game-control keyboard layer and the core visual design                                                                                                                                                |
 | 6   | **Controller instructions**            | Selection, command menus and value pickers, command pattern implementation, pilot delay, comms log with phraseology and readbacks                                                                                                                                                              |
@@ -409,14 +413,15 @@ A player can:
 
 ## 9. Decisions Log
 
-| Topic             | Decision                                                                                           |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| Wind              | Random but realistic for the region, seeded per session, fixed for the session in v1               |
-| Departure queue   | Grows up to a maximum set by difficulty. New departures wait at the gate when it's full            |
-| Tower handoff     | Automatic once the arrival is established on the ILS. Control returns to the player on a go-around |
-| Departure control | Automatic Tower-to-player transfer at the radar-contact altitude                                   |
-| Aircraft commands | UI only. No text entry, and no keyboard shortcuts for aircraft                                     |
-| Configurability   | Every tunable value is a setting with a realistic default                                          |
+| Topic             | Decision                                                                                                                            |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Wind              | Random but realistic for the region, seeded per session, fixed for the session in v1                                                |
+| Departure queue   | Grows up to a maximum set by difficulty. New departures wait at the gate when it's full                                             |
+| Tower handoff     | Automatic once the arrival is established on the ILS. Control returns to the player on a go-around                                  |
+| Departure control | Automatic Tower-to-player transfer at the radar-contact altitude                                                                    |
+| Aircraft commands | UI only. No text entry, and no keyboard shortcuts for aircraft                                                                      |
+| Configurability   | Every tunable value is a setting with a realistic default                                                                           |
+| Map               | Vector draws its own video map from real geodata. A real-world map (MapLibre + OpenStreetMap tiles) is an optional layer underneath |
 
 ## 10. Open Questions
 

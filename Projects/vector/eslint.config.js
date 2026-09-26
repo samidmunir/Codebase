@@ -30,8 +30,8 @@ export default tseslint.config(
     },
   },
   {
-    // The simulation engine must stay portable between the browser and Node.
-    files: ['packages/sim-core/**/*.ts'],
+    // The simulation engine and shared code must stay portable between the browser and Node.
+    files: ['packages/sim-core/**/*.ts', 'packages/shared/**/*.ts'],
     rules: {
       'no-restricted-globals': [
         'error',

@@ -1,3 +1,4 @@
+import { applyDifficulty, defaultSettings } from '@vector/shared';
 import { describe, expect, it } from 'vitest';
 import { NEW_YORK_WORLD, newAircraft, performance } from '../testing/fixtures';
 import type { SimEvent } from './events';
@@ -196,5 +197,40 @@ describe('SimEngine snapshots', () => {
     snapshot.state.aircraft[0]!.aircraftType = 'C172';
 
     expect(() => SimEngine.fromSnapshot(snapshot, performance)).toThrow(/C172/);
+  });
+});
+
+describe('SimEngine session settings', () => {
+  it('uses default session settings when none are given', () => {
+    expect(createEngine().settings).toEqual(defaultSettings('session'));
+  });
+
+  it('saves and restores custom settings with the session', () => {
+    const settings = {
+      ...applyDifficulty(defaultSettings('session'), 'expert'),
+      'separation.lateralNm': 5,
+    };
+    const engine = SimEngine.create({
+      performance,
+      world: NEW_YORK_WORLD,
+      seed: 1,
+      startTimeUtc: '2026-09-26T14:00:00Z',
+      settings,
+    });
+    const saved = JSON.parse(JSON.stringify(engine.toSnapshot())) as unknown;
+
+    expect(SimEngine.fromSnapshot(saved, performance).settings).toEqual(settings);
+  });
+
+  it('loads snapshots saved before newer settings existed', () => {
+    const snapshot = createEngine().toSnapshot();
+    const stored = snapshot.state.settings as Record<string, unknown>;
+    delete stored['approaches.showEligibility'];
+    stored['separation.lateralNm'] = 4;
+
+    const restored = SimEngine.fromSnapshot(snapshot, performance);
+
+    expect(restored.settings['approaches.showEligibility']).toBe(false);
+    expect(restored.settings['separation.lateralNm']).toBe(4);
   });
 });

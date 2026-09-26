@@ -1,3 +1,4 @@
+import { defaultSettings, type SessionSettings } from '@vector/shared';
 import {
   aircraftStateSchema,
   aircraftTargetsSchema,
@@ -26,6 +27,8 @@ export interface CreateSimEngineOptions {
   /** UTC wall-clock time at tick 0, as an ISO string. */
   startTimeUtc: string;
   config?: SimConfig;
+  /** Gameplay and realism settings for this session. Defaults if omitted. */
+  settings?: SessionSettings;
 }
 
 /**
@@ -62,6 +65,7 @@ export class SimEngine {
       nextAircraftNumber: 1,
       world: cloneJson(options.world),
       config: cloneJson(options.config ?? DEFAULT_SIM_CONFIG),
+      settings: cloneJson(options.settings ?? defaultSettings('session')),
       aircraft: [],
     });
   }
@@ -101,6 +105,10 @@ export class SimEngine {
 
   get config(): Readonly<SimConfig> {
     return this.state.config;
+  }
+
+  get settings(): Readonly<SessionSettings> {
+    return this.state.settings;
   }
 
   get world(): Readonly<World> {
