@@ -6,6 +6,7 @@ import { auth, useAuth } from '../auth/auth-store';
 import { ApiStatus } from '../components/ApiStatus';
 import { shortAirport } from '../scope/data-block';
 import { DIFFICULTY_LABELS, loadDifficulty, saveDifficulty } from '../settings/difficulty';
+import { SavedSessions } from './SavedSessions';
 import './auth-screen.css';
 import './home-screen.css';
 
@@ -58,8 +59,8 @@ export function HomeScreen() {
           </div>
           <p className="difficulty-picker__detail">
             {preset['traffic.arrivalRatePerHour']} arrivals and{' '}
-            {preset['traffic.departureRatePerHour']} departures per airport per hour · up to{' '}
-            {preset['traffic.maxDepartureQueue']} waiting to depart
+            {preset['traffic.departureRatePerHour']} departures per airport per hour ·{' '}
+            {preset['traffic.transitRatePerHour']} transits per hour
           </p>
         </div>
 
@@ -79,6 +80,8 @@ export function HomeScreen() {
             </Link>
           ))}
         </div>
+
+        {session.status === 'signedIn' && <SavedSessions />}
 
         <ApiStatus />
       </section>

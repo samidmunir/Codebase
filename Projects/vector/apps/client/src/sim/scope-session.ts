@@ -1,8 +1,15 @@
-import { defaultSettings, type SessionSettings } from '@vector/shared';
+import {
+  defaultSettings,
+  detectDifficulty,
+  IN_SESSION_TRAFFIC_KEYS,
+  type SessionDifficulty,
+  type SessionSettings,
+} from '@vector/shared';
 import {
   SimEngine,
   type AirspacePack,
   type AtcCommand,
+  type SimSnapshot,
   type ValidationResult,
 } from '@vector/sim-core';
 import { airlines, performanceCatalog } from '../airspaces/registry';
@@ -26,7 +33,16 @@ export interface SessionStatus {
   /** Changes whenever conflict alerts change. */
   conflictsKey: string;
   violationCount: number;
+  /** Changes whenever the in-session traffic settings change. */
+  trafficKey: string;
 }
+
+export type TrafficSettings = Pick<SessionSettings, (typeof IN_SESSION_TRAFFIC_KEYS)[number]>;
+
+/** Where a session came from: a new one, or a saved one being resumed. */
+export type SessionOrigin =
+  | { kind: 'new'; settings: SessionSettings }
+  | { kind: 'saved'; snapshot: unknown; savedId: string; name: string };
 
 /**
  * A running simulation for the scope: the engine, traffic and the radar that
@@ -40,27 +56,77 @@ export class ScopeSession {
   /** Bumped when the departure queue changes. */
   private queueVersion = 0;
 
+  /** The saved session this one was loaded from or last saved to, if any. */
+  saved: Readonly<{ id: string; name: string }> | undefined;
+
   constructor(
     readonly pack: AirspacePack,
-    settings: SessionSettings = defaultSettings('session'),
+    origin: SessionOrigin = { kind: 'new', settings: defaultSettings('session') },
   ) {
-    this.engine = SimEngine.create({
-      performance: performanceCatalog,
-      world: { magneticVariationDeg: pack.airspace.magneticVariationDeg },
-      seed: Date.now() >>> 0,
-      startTimeUtc: new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString(),
-      settings,
-      airspace: pack,
-      airlines,
-    });
+    if (origin.kind === 'saved') {
+      // Resume exactly where it was saved, paused so the player can get their bearings.
+      this.engine = SimEngine.fromSnapshot(origin.snapshot, performanceCatalog, {
+        airspace: pack,
+        airlines,
+      });
+      this.engine.pause();
+      this.saved = { id: origin.savedId, name: origin.name };
+    } else {
+      this.engine = SimEngine.create({
+        performance: performanceCatalog,
+        world: { magneticVariationDeg: pack.airspace.magneticVariationDeg },
+        seed: Date.now() >>> 0,
+        startTimeUtc: new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString(),
+        settings: origin.settings,
+        airspace: pack,
+        airlines,
+      });
+      // Start with traffic already under way: arrivals spread along their routes.
+      for (let i = 0; i < WARM_UP_SEC / this.engine.config.tickSeconds; i++) this.engine.step();
+    }
     this.engine.subscribe((event) => {
       if (event.type.startsWith('departure') || event.type === 'tookOff') this.queueVersion++;
     });
-    this.radar = new RadarTracker(settings['radar.sweepIntervalSec'], pack.airspace.radar.position);
-    // Start with traffic already under way: arrivals spread along their routes.
-    for (let i = 0; i < WARM_UP_SEC / this.engine.config.tickSeconds; i++) this.engine.step();
+    this.radar = new RadarTracker(
+      this.engine.settings['radar.sweepIntervalSec'],
+      pack.airspace.radar.position,
+    );
     this.radar.update(this.engine.displayTimeSec, this.engine.listAircraft());
     this.status = this.readStatus();
+  }
+
+  /** Changes arrival, departure and transit rates or the queue cap while the session runs. */
+  updateTraffic(patch: Partial<TrafficSettings>): ValidationResult {
+    const result = this.engine.updateTrafficSettings(patch);
+    this.refreshStatus(true);
+    return result;
+  }
+
+  get trafficSettings(): TrafficSettings {
+    const settings = this.engine.settings;
+    return Object.fromEntries(
+      IN_SESSION_TRAFFIC_KEYS.map((key) => [key, settings[key]]),
+    ) as TrafficSettings;
+  }
+
+  /** The preset the traffic settings match, or 'custom'. */
+  get difficulty(): SessionDifficulty {
+    return detectDifficulty(this.engine.settings);
+  }
+
+  /** The full simulation state, for saving. */
+  toSnapshot(): SimSnapshot {
+    return this.engine.toSnapshot();
+  }
+
+  /** Records the saved session this one now belongs to (later saves can overwrite it). */
+  markSaved(id: string, name: string): void {
+    this.saved = { id, name };
+    this.refreshStatus(true);
+  }
+
+  pause(): void {
+    if (!this.engine.paused) this.togglePause();
   }
 
   /** Advances by real elapsed time. Returns true if any radar target changed. */
@@ -145,6 +211,7 @@ export class ScopeSession {
       queueVersion: this.queueVersion,
       conflictsKey: this.engine.conflicts.map((c) => `${c.id}:${c.kind}`).join(','),
       violationCount: this.engine.violations.length,
+      trafficKey: IN_SESSION_TRAFFIC_KEYS.map((key) => this.engine.settings[key]).join(','),
     };
   }
 
@@ -162,7 +229,8 @@ export class ScopeSession {
       next.pendingCount !== this.status.pendingCount ||
       next.queueVersion !== this.status.queueVersion ||
       next.conflictsKey !== this.status.conflictsKey ||
-      next.violationCount !== this.status.violationCount;
+      next.violationCount !== this.status.violationCount ||
+      next.trafficKey !== this.status.trafficKey;
     if (!changed) return;
     this.status = next;
     for (const listener of this.listeners) listener();

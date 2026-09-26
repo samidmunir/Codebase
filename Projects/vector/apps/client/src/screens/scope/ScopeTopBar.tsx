@@ -16,6 +16,9 @@ interface ScopeTopBarProps {
   onToggleComms: () => void;
   departuresOpen: boolean;
   onToggleDepartures: () => void;
+  trafficOpen: boolean;
+  onToggleTraffic: () => void;
+  onSave: () => void;
 }
 
 export function ScopeTopBar(props: ScopeTopBarProps) {
@@ -135,6 +138,27 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
         <button
           type="button"
           className="scope-button"
+          aria-pressed={props.trafficOpen}
+          onClick={props.onToggleTraffic}
+        >
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path
+              d="M2.5 4.5 H13.5 M2.5 8 H13.5 M2.5 11.5 H13.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+            <circle cx="10" cy="4.5" r="1.6" fill="currentColor" />
+            <circle cx="5.5" cy="8" r="1.6" fill="currentColor" />
+            <circle cx="11" cy="11.5" r="1.6" fill="currentColor" />
+          </svg>
+          Traffic
+        </button>
+
+        <button
+          type="button"
+          className="scope-button"
           aria-pressed={props.layersOpen}
           onClick={props.onToggleLayers}
         >
@@ -155,6 +179,19 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
             />
           </svg>
           Layers
+        </button>
+
+        <button type="button" className="scope-button" onClick={props.onSave} title="Save session">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path
+              d="M3 2.5 H11 L13.5 5 V13.5 H2.5 V3 Z M5 2.5 V6 H10.5 V2.5 M5 13.5 V9.5 H11 V13.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Save
         </button>
       </div>
     </header>

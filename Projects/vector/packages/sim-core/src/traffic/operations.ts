@@ -49,6 +49,7 @@ export const operationsStateSchema = z.object({
   gateHolds: z.record(z.string(), z.number().int().min(0)),
   nextDepartureTick: z.record(z.string(), z.number().int()),
   nextArrivalTick: z.record(z.string(), z.number().int()).default({}),
+  nextTransitTick: z.number().int().default(0),
   /** Earliest tick each runway ('KJFK:22R') is free for the next takeoff. */
   runwayFreeTick: z.record(z.string(), z.number().int()),
   nextDepartureNumber: z.number().int().positive(),
@@ -115,6 +116,7 @@ export function initialOperations(
     gateHolds: Object.fromEntries(airports.map((icao) => [icao, 0])),
     nextDepartureTick: Object.fromEntries(airports.map((icao) => [icao, tick])),
     nextArrivalTick: Object.fromEntries(airports.map((icao) => [icao, tick])),
+    nextTransitTick: tick,
     runwayFreeTick: {},
     nextDepartureNumber: 1,
   };

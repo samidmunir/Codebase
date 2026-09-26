@@ -14,7 +14,13 @@ function createEngine(overrides: Partial<SessionSettings> = {}, seed = 21) {
     world: { magneticVariationDeg: newYork.airspace.magneticVariationDeg },
     seed,
     startTimeUtc: '2026-09-26T14:00:00Z',
-    settings: { ...defaultSettings('session'), 'pilots.responseDelaySec': [2, 2], ...overrides },
+    settings: {
+      ...defaultSettings('session'),
+      'pilots.responseDelaySec': [2, 2],
+      // Transits are covered in transits.test.ts.
+      'traffic.transitRatePerHour': 0,
+      ...overrides,
+    },
     airspace: newYork,
     airlines,
   });

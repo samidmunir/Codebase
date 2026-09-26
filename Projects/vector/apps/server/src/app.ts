@@ -1,5 +1,6 @@
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
+import { MAX_SNAPSHOT_BYTES } from '@vector/shared';
 import Fastify, { type FastifyServerOptions } from 'fastify';
 import { authService, type AuthConfig } from './auth/auth-service';
 import { sessionsRepository } from './auth/sessions-repository';
@@ -7,7 +8,9 @@ import type { Database } from './platform/database';
 import { authRoutes } from './routes/auth';
 import { errorHandler } from './routes/errors';
 import { healthRoutes } from './routes/health';
+import { sessionsRoutes } from './routes/sessions';
 import { settingsRoutes } from './routes/settings';
+import { savedSessionsRepository } from './sessions/sessions-repository';
 import { settingsRepository } from './settings/settings-repository';
 import { usersRepository } from './users/users-repository';
 
@@ -23,6 +26,8 @@ export interface AppDependencies {
     secureCookies: boolean;
     /** Sign-in attempts allowed per IP per minute (register and login). Defaults to 10. */
     signInRateLimit?: number;
+    /** Saved sessions allowed per account. Defaults to MAX_SAVED_SESSIONS. */
+    savedSessionLimit?: number;
   };
 }
 
@@ -50,6 +55,12 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         await api.register(settingsRoutes, {
           settings: settingsRepository(db),
           jwtSecret: authConfig.jwtSecret,
+        });
+        await api.register(sessionsRoutes, {
+          sessions: savedSessionsRepository(db),
+          jwtSecret: authConfig.jwtSecret,
+          bodyLimit: MAX_SNAPSHOT_BYTES,
+          ...(deps.accounts.savedSessionLimit ? { limit: deps.accounts.savedSessionLimit } : {}),
         });
       }
     },
