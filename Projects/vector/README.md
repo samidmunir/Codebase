@@ -38,6 +38,7 @@ npm run migrate:up -- --test
 | `npm run dev`                      | Start the API (port 4000) and client (port 5173) together |
 | `npm run check`                    | Format check, lint, type check and tests                  |
 | `npm test`                         | Run all tests                                             |
+| `npm run sim:demo`                 | Run the sim engine headlessly and print aircraft flying   |
 | `npm run build`                    | Production builds for client and server                   |
 | `npm run migrate:up`               | Apply migrations (`-- --test` for the test database)      |
 | `npm run migrate:down`             | Roll back the last migration                              |

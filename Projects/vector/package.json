@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "concurrently -n server,client -c cyan,magenta \"npm run dev -w @vector/server\" \"npm run dev -w @vector/client\"",
     "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc --noEmit -p .",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -22,7 +22,8 @@
     "migrate": "node scripts/migrate.js",
     "migrate:up": "npm run migrate -- up",
     "migrate:down": "npm run migrate -- down",
-    "migrate:create": "npm run migrate -- create"
+    "migrate:create": "npm run migrate -- create",
+    "sim:demo": "tsx scripts/sim-demo.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
