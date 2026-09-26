@@ -13,7 +13,13 @@ import {
 } from './camera';
 import { drawMapLayer } from './render/map-layer';
 import { scopePalette } from './render/palette';
-import { drawTrafficLayer, hitTest, type TargetHitArea } from './render/traffic-layer';
+import {
+  drawTrafficLayer,
+  hitTest,
+  type InstructionPreview,
+  type LeaderDirection,
+  type TargetHitArea,
+} from './render/traffic-layer';
 
 export interface RadarScopeHandle {
   zoomBy(steps: number): void;
@@ -25,6 +31,10 @@ interface RadarScopeProps {
   settings: UserSettings;
   onCameraChange?: (camera: Camera) => void;
   onCursorChange?: (position: LatLon | undefined) => void;
+  selectedId: string | undefined;
+  onSelect: (aircraftId: string | undefined) => void;
+  leaderDirections: ReadonlyMap<string, LeaderDirection>;
+  preview: InstructionPreview | undefined;
   ref?: Ref<RadarScopeHandle>;
 }
 
@@ -52,6 +62,10 @@ export function RadarScope({
   settings,
   onCameraChange,
   onCursorChange,
+  selectedId,
+  onSelect,
+  leaderDirections,
+  preview,
   ref,
 }: RadarScopeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -64,9 +78,11 @@ export function RadarScope({
   const hitsRef = useRef<TargetHitArea[]>([]);
   const hoveredRef = useRef<string | undefined>(undefined);
   const gestureRef = useRef<Gesture | undefined>(undefined);
-  const callbacksRef = useRef({ onCameraChange, onCursorChange });
+  const callbacksRef = useRef({ onCameraChange, onCursorChange, onSelect });
+  const selectionRef = useRef({ selectedId, leaderDirections, preview });
   useEffect(() => {
-    callbacksRef.current = { onCameraChange, onCursorChange };
+    callbacksRef.current = { onCameraChange, onCursorChange, onSelect };
+    selectionRef.current = { selectedId, leaderDirections, preview };
   });
 
   const boundaryRadiusNm = () => {
@@ -165,6 +181,7 @@ export function RadarScope({
         sweepProgress: session.radar.sweepProgress(session.engine.displayTimeSec),
         timeShare: Math.floor(now / TIME_SHARE_MS) % 2 === 0 ? 0 : 1,
         hoveredId: hoveredRef.current,
+        ...selectionRef.current,
         measure: gesture?.kind === 'measure' ? gesture : undefined,
         magneticVariationDeg: session.pack.airspace.magneticVariationDeg,
       });
@@ -225,9 +242,16 @@ export function RadarScope({
   };
 
   const endGesture = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const gesture = gestureRef.current;
     gestureRef.current = undefined;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    // A press that didn't become a drag is a click: select the aircraft under it, or clear the selection.
+    if (event.type === 'pointerup' && gesture?.kind === 'pan' && !gesture.moved) {
+      callbacksRef.current.onSelect(
+        hitTest(hitsRef.current, pointFromEvent(event, event.currentTarget)),
+      );
     }
   };
 

@@ -79,6 +79,7 @@ describe('SimEngine aircraft', () => {
       headingDeg: 0,
       turnDirection: 'shortest',
       iasKts: 220,
+      speedMode: 'assigned',
     });
   });
 

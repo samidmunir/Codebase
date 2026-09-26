@@ -1,5 +1,12 @@
 import type { UserSettings } from '@vector/shared';
-import { bearingTrue, distanceNm, trueToMagnetic, type LatLon } from '@vector/sim-core';
+import {
+  bearingTrue,
+  destinationPoint,
+  distanceNm,
+  magneticToTrue,
+  trueToMagnetic,
+  type LatLon,
+} from '@vector/sim-core';
 import { pixelsPerNm, project, type Camera, type ScreenPoint } from '../camera';
 import { dataBlockLines } from '../data-block';
 import type { RadarTarget } from '../radar-tracker';
@@ -24,9 +31,27 @@ export interface TrafficFrame {
   /** Alternates data block line 2. */
   timeShare: 0 | 1;
   hoveredId: string | undefined;
+  selectedId: string | undefined;
+  /** Data block position per aircraft (0 = north, clockwise in 45° steps). Default northeast. */
+  leaderDirections: ReadonlyMap<string, LeaderDirection>;
+  /** Preview of the instruction being composed for the selected aircraft. */
+  preview: InstructionPreview | undefined;
   measure: { from: LatLon; to: LatLon } | undefined;
   magneticVariationDeg: number;
 }
+
+export type LeaderDirection = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export const DEFAULT_LEADER_DIRECTION: LeaderDirection = 1;
+
+export interface InstructionPreview {
+  /** Magnetic heading being assigned. */
+  headingDeg?: number;
+  /** Fix being assigned direct. */
+  directTo?: LatLon;
+}
+
+/** Heading preview line length. */
+const PREVIEW_NM = 10;
 
 export interface TargetHitArea {
   id: string;
@@ -54,14 +79,15 @@ export function drawTrafficLayer(
   ctx.textAlign = 'left';
 
   const hits: TargetHitArea[] = [];
-  // Other controllers' traffic first, so the player's aircraft draw on top.
-  const ordered = [...frame.targets].sort(
-    (a, b) => Number(a.owner === frame.playerId) - Number(b.owner === frame.playerId),
-  );
+  // Other controllers' traffic first, then the player's, then the selected aircraft on top.
+  const rank = (target: RadarTarget) =>
+    target.id === frame.selectedId ? 2 : target.owner === frame.playerId ? 1 : 0;
+  const ordered = [...frame.targets].sort((a, b) => rank(a) - rank(b));
 
   for (const target of ordered) {
     const owned = target.owner === frame.playerId;
     const hovered = target.id === frame.hoveredId;
+    const selected = target.id === frame.selectedId;
     const color = owned ? palette.targets : palette.unowned;
     const position = project(camera, target.position);
 
@@ -92,34 +118,54 @@ export function drawTrafficLayer(
     }
     ctx.restore();
 
-    if (hovered) {
-      ctx.strokeStyle = withAlpha(palette.hover, 0.8);
-      ctx.lineWidth = 1;
+    if (hovered || selected) {
+      ctx.strokeStyle = selected ? palette.hover : withAlpha(palette.hover, 0.6);
+      ctx.lineWidth = selected ? 1.5 : 1;
       ctx.beginPath();
-      ctx.arc(position.x, position.y, 10, 0, Math.PI * 2);
+      ctx.arc(position.x, position.y, selected ? 11 : 10, 0, Math.PI * 2);
       ctx.stroke();
     }
 
-    // Leader line to the northeast, then the data block.
-    const direction = -Math.PI / 4;
+    // Leader line, then the data block on the chosen side.
+    const direction = frame.leaderDirections.get(target.id) ?? DEFAULT_LEADER_DIRECTION;
+    const angle = -Math.PI / 2 + (direction * Math.PI) / 4;
+    const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
     const lineEnd = {
-      x: position.x + Math.cos(direction) * (leaderLength + 6),
-      y: position.y + Math.sin(direction) * (leaderLength + 6),
+      x: position.x + cos * (leaderLength + 6),
+      y: position.y + sin * (leaderLength + 6),
     };
     if (leaderLength > 0) {
       ctx.strokeStyle = withAlpha(color, owned ? 0.8 : 0.5);
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(position.x + Math.cos(direction) * 6, position.y + Math.sin(direction) * 6);
+      ctx.moveTo(position.x + cos * 6, position.y + sin * 6);
       ctx.lineTo(lineEnd.x, lineEnd.y);
       ctx.stroke();
     }
 
     const lines = dataBlockLines(target, frame.timeShare);
-    const blockX = lineEnd.x + 3;
-    const blockY = lineEnd.y - lineHeight * 1.5;
+    const width = Math.max(...lines.map((text) => ctx.measureText(text).width));
+    const height = lineHeight * lines.length;
+    const blockX =
+      cos > 0.3 ? lineEnd.x + 3 : cos < -0.3 ? lineEnd.x - 3 - width : lineEnd.x - width / 2;
+    const blockY = sin < -0.3 ? lineEnd.y - height : sin > 0.3 ? lineEnd.y : lineEnd.y - height / 2;
+
+    if (selected) {
+      ctx.fillStyle = 'rgba(6, 12, 16, 0.78)';
+      ctx.strokeStyle = withAlpha(palette.hover, 0.35);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(blockX - 5, blockY - 3, width + 10, height + 4, 4);
+      ctx.fill();
+      ctx.stroke();
+    }
+
     ctx.save();
-    ctx.fillStyle = owned ? (hovered ? palette.hover : palette.dataBlocks) : palette.unownedText;
+    ctx.fillStyle = owned
+      ? hovered || selected
+        ? palette.hover
+        : palette.dataBlocks
+      : palette.unownedText;
     if (owned) {
       ctx.shadowColor = withAlpha(palette.dataBlocks, 0.5);
       ctx.shadowBlur = 6;
@@ -127,16 +173,51 @@ export function drawTrafficLayer(
     lines.forEach((text, i) => ctx.fillText(text, blockX, blockY + i * lineHeight));
     ctx.restore();
 
-    const width = Math.max(...lines.map((text) => ctx.measureText(text).width));
-    hits.push({
-      id: target.id,
-      center: position,
-      block: { x: blockX, y: blockY, width, height: lineHeight * lines.length },
-    });
+    hits.push({ id: target.id, center: position, block: { x: blockX, y: blockY, width, height } });
+    if (selected && frame.preview) drawPreview(ctx, frame, target.position, frame.preview);
   }
 
   if (frame.measure) drawMeasure(ctx, frame);
   return hits;
+}
+
+function drawPreview(
+  ctx: CanvasRenderingContext2D,
+  frame: TrafficFrame,
+  from: LatLon,
+  preview: InstructionPreview,
+): void {
+  const { camera, palette } = frame;
+  const start = project(camera, from);
+  const end =
+    preview.directTo ??
+    (preview.headingDeg !== undefined
+      ? destinationPoint(
+          from,
+          magneticToTrue(preview.headingDeg, frame.magneticVariationDeg),
+          PREVIEW_NM,
+        )
+      : undefined);
+  if (!end) return;
+  const target = project(camera, end);
+
+  ctx.save();
+  ctx.strokeStyle = palette.measure;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([7, 5]);
+  ctx.shadowColor = palette.measure;
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(start.x, start.y);
+  ctx.lineTo(target.x, target.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  if (preview.directTo) {
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, 7, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawSweep(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {

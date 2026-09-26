@@ -3,17 +3,22 @@
 // Arrivals fly toward a point on an ILS final and turn onto the localizer;
 // departures climb out and head for the boundary. Remove once real traffic lands.
 import {
+  altitudeWords,
   bearingTrue,
   destinationPoint,
   distanceNm,
   magneticToTrue,
   normalizeHeading,
+  spokenCallsign,
   trueToMagnetic,
   type AircraftState,
   type AirspacePack,
   type LatLon,
   type SimEngine,
 } from '@vector/sim-core';
+import airlineData from '../../../../data/airlines/airlines.json';
+
+const TELEPHONY = new Map(airlineData.airlines.map((airline) => [airline.icao, airline.telephony]));
 
 const AIRLINES = [
   { code: 'JBU', types: ['A320', 'A321'] },
@@ -59,6 +64,8 @@ interface DemoPlan {
   runway: string;
   stage: 'inbound' | 'final' | 'climb' | 'outbound';
   exit?: LatLon;
+  /** The player has given this aircraft an instruction: the demo stops flying it. */
+  manual?: boolean;
 }
 
 export class DemoTraffic {
@@ -68,7 +75,32 @@ export class DemoTraffic {
   constructor(
     private readonly engine: SimEngine,
     private readonly pack: AirspacePack,
-  ) {}
+  ) {
+    engine.subscribe((event) => {
+      if (event.type === 'instructionIssued') {
+        const plan = this.plans.get(event.aircraftId);
+        if (plan) plan.manual = true;
+      }
+      if (event.type === 'aircraftRemoved') this.plans.delete(event.aircraftId);
+    });
+  }
+
+  private checkIn(aircraftId: string, facility: string) {
+    const aircraft = this.engine.getAircraft(aircraftId)!;
+    const altitude = altitudeWords(Math.round(aircraft.altitudeFt / 100) * 100);
+    const target = aircraft.targets.altitudeFt;
+    const trend =
+      target > aircraft.altitudeFt + 100
+        ? ` climbing ${altitudeWords(target)}`
+        : target < aircraft.altitudeFt - 100
+          ? ` descending ${altitudeWords(target)}`
+          : '';
+    this.engine.transmit(
+      'pilot',
+      aircraftId,
+      `${facility}, ${spokenCallsign(aircraft.callsign, aircraft.telephony)}, ${altitude}${trend}.`,
+    );
+  }
 
   private get variation() {
     return this.pack.airspace.magneticVariationDeg;
@@ -104,6 +136,7 @@ export class DemoTraffic {
       const squawk = Array.from({ length: 4 }, () => random.int(0, 7)).join('');
       return {
         callsign,
+        ...(TELEPHONY.has(airline.code) ? { telephony: TELEPHONY.get(airline.code)! } : {}),
         aircraftType: random.pick(candidates),
         squawk: squawk.startsWith('7') ? `2${squawk.slice(1)}` : squawk,
       };
@@ -150,6 +183,7 @@ export class DemoTraffic {
       targets: { altitudeFt: random.pick([4_000, 5_000]), iasKts: 220 },
     });
     this.plans.set(aircraft.id, { kind: 'arrival', airport, runway, stage: 'inbound' });
+    this.checkIn(aircraft.id, this.pack.airspace.controllers.approach.approachCallsign);
   }
 
   spawnDeparture(): void {
@@ -211,6 +245,11 @@ export class DemoTraffic {
 
   private fly(aircraft: Readonly<AircraftState>, plan: DemoPlan): void {
     const { engine } = this;
+    if (plan.manual) {
+      // Under player control: only clean up aircraft that have left the airspace.
+      if (distanceNm(this.pack.airspace.center, aircraft.position) > 55) this.remove(aircraft.id);
+      return;
+    }
     if (plan.kind === 'arrival') {
       const runway = this.pack.runway(plan.airport, plan.runway);
       if (plan.stage === 'inbound') {
@@ -252,6 +291,7 @@ export class DemoTraffic {
         altitudeFt: 13_000,
         headingDeg: this.headingTo(aircraft.position, plan.exit!),
       });
+      this.checkIn(aircraft.id, this.pack.airspace.controllers.approach.departureCallsign);
     } else if (plan.stage === 'outbound') {
       if (distanceNm(this.pack.airspace.center, aircraft.position) > 46) this.remove(aircraft.id);
       else if (engine.tick % 15 === 0)

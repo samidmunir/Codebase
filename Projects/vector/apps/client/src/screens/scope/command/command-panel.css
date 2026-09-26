@@ -1,0 +1,685 @@
+/* ---- Command panel ------------------------------------------------------------ */
+
+.command-panel,
+.comms-log {
+  background: rgba(8, 14, 18, 0.8);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.command-panel {
+  position: absolute;
+  top: 72px;
+  right: var(--space-3);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: 348px;
+  /* Stay clear of the top bar and the zoom controls. */
+  max-height: calc(100% - 200px);
+  overflow: hidden;
+  animation: panel-in 180ms var(--ease-out);
+}
+
+.command-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4) 0;
+}
+
+.command-panel__identity {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--space-2);
+  align-items: baseline;
+}
+
+.command-panel__identity h2 {
+  margin: 0;
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.command-panel__telephony {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.command-panel__route {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+}
+
+.command-panel__state {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin: var(--space-3) var(--space-4) 0;
+}
+
+.command-panel__state div {
+  padding: 6px var(--space-2);
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: var(--radius-sm);
+}
+
+.command-panel__state dt {
+  color: var(--color-text-faint);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.command-panel__state dd {
+  margin: 2px 0 0;
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.command-panel__target {
+  color: var(--color-target);
+  font-size: 0.72rem;
+}
+
+.command-panel__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) var(--space-4) 0;
+}
+
+.status-chip {
+  padding: 3px 8px;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+}
+
+.status-chip--owned {
+  color: var(--color-target);
+  background: rgba(76, 242, 160, 0.1);
+}
+
+.status-chip--pending {
+  color: var(--color-caution);
+  background: rgba(255, 181, 71, 0.1);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.leader-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 10px);
+  gap: 2px;
+  margin-left: auto;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 5px;
+}
+
+.leader-picker button,
+.leader-picker__center {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 0;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.leader-picker__center {
+  background: transparent;
+  box-shadow: inset 0 0 0 3px rgba(76, 242, 160, 0.5);
+  border-radius: 50%;
+  cursor: default;
+}
+
+.leader-picker button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.leader-picker button[aria-pressed='true'] {
+  background: var(--color-target);
+}
+
+.command-panel__notice {
+  margin: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* ---- Tabs ---------------------------------------------------------------------- */
+
+.command-tabs {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 2px;
+  margin: var(--space-3) var(--space-4) 0;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+}
+
+.command-tabs button {
+  position: relative;
+  padding: 6px 2px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.command-tabs button:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.command-tabs button[aria-pressed='true'] {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* A dot marks tabs that are part of the transmission being built. */
+.command-tabs__set::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  width: 5px;
+  height: 5px;
+  background: var(--color-target);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--color-target);
+}
+
+.command-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4);
+}
+
+.command-panel__hint {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-faint);
+  font-size: 0.75rem;
+}
+
+/* ---- Heading ------------------------------------------------------------------- */
+
+.heading-tab {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.heading-dial {
+  width: 216px;
+  height: 216px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.heading-dial__face {
+  fill: rgba(76, 242, 160, 0.03);
+  stroke: rgba(76, 242, 160, 0.16);
+}
+
+.heading-dial__tick {
+  stroke: rgba(227, 239, 233, 0.22);
+  stroke-width: 1;
+}
+
+.heading-dial__tick--major {
+  stroke: rgba(227, 239, 233, 0.6);
+  stroke-width: 1.5;
+}
+
+.heading-dial__label {
+  fill: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 11px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.heading-dial__current {
+  stroke: rgba(227, 239, 233, 0.35);
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+
+.heading-dial__selected {
+  stroke: var(--color-caution);
+  stroke-width: 2;
+}
+
+.heading-dial__handle {
+  fill: var(--color-caution);
+  filter: drop-shadow(0 0 6px rgba(255, 181, 71, 0.7));
+}
+
+.heading-dial__hub {
+  fill: #0a1218;
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.heading-dial__value {
+  fill: var(--color-text);
+  font-family: var(--font-data);
+  font-size: 20px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.heading-dial__caption {
+  fill: var(--color-text-faint);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.segmented-control {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+}
+
+.segmented-control button {
+  min-height: 30px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.segmented-control button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.segmented-control button[aria-pressed='true'] {
+  color: #1a1204;
+  font-weight: 600;
+  background: var(--color-caution);
+}
+
+.link-button {
+  padding: 0;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* ---- Option grids ------------------------------------------------------------------ */
+
+.option-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.option-grid--altitudes {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.option-grid--speeds {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.option-grid--runways {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.option-grid button,
+.fix-list button,
+.handoff-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 4px;
+  color: var(--color-text);
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.option-grid button:hover,
+.fix-list button:hover,
+.handoff-option:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.option-grid button[aria-pressed='true'],
+.fix-list button[aria-pressed='true'],
+.handoff-option[aria-pressed='true'] {
+  color: #1a1204;
+  font-weight: 600;
+  background: var(--color-caution);
+  border-color: var(--color-caution);
+}
+
+.option-grid .option--current {
+  border-color: rgba(76, 242, 160, 0.45);
+}
+
+.option-grid .option--below-mva {
+  color: #ff9a8a;
+}
+
+.option-grid__wide {
+  grid-column: 1 / -1;
+  font-family: var(--font-ui) !important;
+}
+
+.option__caption {
+  color: inherit;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+/* ---- Direct-to --------------------------------------------------------------------- */
+
+.fix-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fix-list button {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 6px 10px;
+}
+
+.fix-list__ident {
+  min-width: 52px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.fix-list__tag {
+  padding: 1px 5px;
+  color: var(--color-target);
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(76, 242, 160, 0.1);
+  border-radius: 3px;
+}
+
+.fix-list button[aria-pressed='true'] .fix-list__tag {
+  color: inherit;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.fix-list__detail {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.fix-list button[aria-pressed='true'] .fix-list__detail {
+  color: inherit;
+}
+
+/* ---- Handoff ---------------------------------------------------------------------- */
+
+.handoff-option {
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  font-family: var(--font-ui);
+}
+
+.handoff-option__frequency {
+  font-family: var(--font-data);
+}
+
+/* ---- Transmission ------------------------------------------------------------------ */
+
+.command-panel__footer {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.transmission {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  background: rgba(255, 181, 71, 0.06);
+  border-left: 2px solid var(--color-caution);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.transmission--empty {
+  color: var(--color-text-faint);
+  background: rgba(255, 255, 255, 0.03);
+  border-left-color: rgba(255, 255, 255, 0.12);
+}
+
+.transmission__error {
+  margin: var(--space-2) 0 0;
+  color: #ff8c8f;
+  font-size: 0.75rem;
+}
+
+.command-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.scope-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.transmit-button {
+  min-height: 34px;
+  padding: 0 var(--space-4);
+  color: #04120c;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--color-target);
+  border: 0;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 18px rgba(76, 242, 160, 0.35);
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+}
+
+.transmit-button:hover:not(:disabled) {
+  box-shadow: 0 0 26px rgba(76, 242, 160, 0.55);
+  transform: translateY(-1px);
+}
+
+.transmit-button:disabled {
+  opacity: 0.35;
+  box-shadow: none;
+  cursor: default;
+}
+
+/* ---- Radio log --------------------------------------------------------------------- */
+
+.comms-log {
+  position: absolute;
+  left: var(--space-3);
+  bottom: 86px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, calc(100% - 24px));
+  height: min(260px, 36vh);
+  animation: panel-in 180ms var(--ease-out);
+}
+
+.comms-log__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.comms-log__header h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.comms-log__frequency {
+  color: var(--color-text-faint);
+  font-size: 0.72rem;
+}
+
+.comms-log__header .scope-panel__close {
+  margin-left: auto;
+}
+
+.comms-log__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-1) 0;
+  list-style: none;
+  scroll-behavior: smooth;
+}
+
+.comms-log__empty {
+  padding: var(--space-3);
+  color: var(--color-text-faint);
+  font-size: 0.8rem;
+}
+
+.comms-log__entry button {
+  display: grid;
+  grid-template-columns: 38px 64px 1fr;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 5px var(--space-3);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.comms-log__entry button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.comms-log__entry button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.comms-log__entry--selected button {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.comms-log__time {
+  color: var(--color-text-faint);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+}
+
+.comms-log__speaker {
+  overflow: hidden;
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.comms-log__entry--controller .comms-log__speaker,
+.comms-log__entry--controller .comms-log__text {
+  color: var(--color-target);
+}
+
+.comms-log__entry--pilot .comms-log__speaker {
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 760px) {
+  .command-panel {
+    top: auto;
+    right: var(--space-2);
+    left: var(--space-2);
+    bottom: var(--space-2);
+    width: auto;
+    max-height: 60%;
+  }
+
+  .comms-log {
+    display: none;
+  }
+}

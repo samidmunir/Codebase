@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { iasToTas } from '../atmosphere/isa';
 
-const latLonSchema = z.object({
+export const latLonSchema = z.object({
   lat: z.number().min(-90).max(90),
   lon: z.number().min(-180).max(180),
 });
@@ -26,13 +26,51 @@ export const aircraftTargetsSchema = z.object({
   headingDeg: z.number().min(0).lt(360),
   turnDirection: z.enum(['left', 'right', 'shortest']),
   iasKts: z.number().positive(),
+  /**
+   * 'assigned': fly `iasKts`. 'normal': the pilot flies the aircraft's normal
+   * speed for its altitude (e.g. after "resume normal speed").
+   */
+  speedMode: z.enum(['assigned', 'normal']).default('assigned'),
 });
 
 export type AircraftTargets = z.infer<typeof aircraftTargetsSchema>;
 
+/** Everything an aircraft needs to fly an ILS it has been cleared for. */
+export const ilsClearanceSchema = z.object({
+  airport: z.string(),
+  runway: z.string(),
+  approachId: z.string(),
+  threshold: latLonSchema,
+  thresholdElevationFt: z.number(),
+  /** Localizer course, magnetic. */
+  courseDeg: z.number().min(0).max(360),
+  glideslopeDeg: z.number().positive(),
+  thresholdCrossingHeightFt: z.number().min(0),
+});
+
+export type IlsClearance = z.infer<typeof ilsClearanceSchema>;
+
+export const navigationSchema = z.discriminatedUnion('mode', [
+  /** Fly the target heading. */
+  z.object({ mode: z.literal('heading') }),
+  /** Fly direct to a fix, then continue on the heading flown at the fix. */
+  z.object({ mode: z.literal('direct'), fix: z.string(), position: latLonSchema }),
+  /** Fly the target heading until intercepting the localizer, then fly the ILS. */
+  z.object({
+    mode: z.literal('approach'),
+    clearance: ilsClearanceSchema,
+    localizerCaptured: z.boolean(),
+    glideslopeCaptured: z.boolean(),
+  }),
+]);
+
+export type Navigation = z.infer<typeof navigationSchema>;
+
 export const aircraftStateSchema = z.object({
   id: z.string().min(1),
   callsign: z.string().min(1),
+  /** Radio name of the airline, e.g. 'JetBlue' for JBU. Spoken with the flight number. */
+  telephony: z.string().optional(),
   /** ICAO aircraft type designator, e.g. 'B738'. */
   aircraftType: z.string().min(1),
   squawk: z.string().regex(/^[0-7]{4}$/),
@@ -53,12 +91,16 @@ export const aircraftStateSchema = z.object({
 
   /** What the pilot is currently flying toward. */
   targets: aircraftTargetsSchema,
+  navigation: navigationSchema.default({ mode: 'heading' }),
 });
 
 export type AircraftState = z.infer<typeof aircraftStateSchema>;
 
 /** Input for adding an aircraft. Targets default to the current values (steady flight). */
-export type NewAircraft = Omit<AircraftState, 'id' | 'verticalSpeedFpm' | 'targets'> & {
+export type NewAircraft = Omit<
+  AircraftState,
+  'id' | 'verticalSpeedFpm' | 'targets' | 'navigation'
+> & {
   targets?: Partial<AircraftTargets>;
 };
 

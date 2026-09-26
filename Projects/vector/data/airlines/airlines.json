@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "airlines": [
+    { "icao": "AAL", "name": "American Airlines", "telephony": "American" },
+    { "icao": "BAW", "name": "British Airways", "telephony": "Speedbird" },
+    { "icao": "DAL", "name": "Delta Air Lines", "telephony": "Delta" },
+    { "icao": "EDV", "name": "Endeavor Air", "telephony": "Endeavor" },
+    { "icao": "JBU", "name": "JetBlue Airways", "telephony": "JetBlue" },
+    { "icao": "RPA", "name": "Republic Airways", "telephony": "Brickyard" },
+    { "icao": "UAL", "name": "United Airlines", "telephony": "United" }
+  ]
+}

@@ -11,12 +11,23 @@ import {
   type NewAircraft,
 } from '../aircraft/aircraft';
 import { stepAircraft } from '../aircraft/flight-model';
+import { followGlideslope, updateNavigation } from '../aircraft/navigation';
+import {
+  controllerPhrase,
+  inSpokenOrder,
+  pilotReadback,
+  validateInstruction,
+  type AtcCommand,
+  type ValidationResult,
+} from '../commands/commands';
+import { capitalize, spokenCallsign } from '../comms/phraseology';
 import { normalizeHeading } from '../math/angles';
 import type { PerformanceCatalog } from '../performance/performance';
 import { SeededRandom } from '../random/seeded-random';
 import {
   parseSnapshot,
   SNAPSHOT_SCHEMA_VERSION,
+  type CommsEntry,
   type SimSnapshot,
   type SimState,
 } from '../snapshot/snapshot';
@@ -33,7 +44,12 @@ export interface CreateSimEngineOptions {
   config?: SimConfig;
   /** Gameplay and realism settings for this session. Defaults if omitted. */
   settings?: SessionSettings;
+  /** Controller the player works as. Defaults to 'N90'. */
+  playerId?: string;
 }
+
+/** Radio transmissions kept in the log (and in saved sessions). */
+const MAX_COMMS_ENTRIES = 300;
 
 /**
  * The simulation engine.
@@ -71,6 +87,10 @@ export class SimEngine {
       config: cloneJson(options.config ?? DEFAULT_SIM_CONFIG),
       settings: cloneJson(options.settings ?? defaultSettings('session')),
       aircraft: [],
+      playerId: options.playerId ?? 'N90',
+      pendingInstructions: [],
+      comms: [],
+      nextMessageNumber: 1,
     });
   }
 
@@ -171,17 +191,32 @@ export class SimEngine {
   /** Runs exactly one tick, regardless of pause state. */
   step(): void {
     const { tickSeconds, flightModel } = this.state.config;
+    const variation = this.state.world.magneticVariationDeg;
     this.state.tick++;
+    this.executeDueInstructions();
 
+    const landed: { aircraft: AircraftState; airport: string; runway: string }[] = [];
     for (const aircraft of this.state.aircraft) {
       const performance = this.performance.get(aircraft.aircraftType);
-      const result = stepAircraft(
-        aircraft,
-        performance,
-        tickSeconds,
-        this.state.world.magneticVariationDeg,
-        flightModel,
-      );
+
+      const navigation = updateNavigation(aircraft, performance, variation, flightModel);
+      if (navigation.fixPassed) {
+        this.emit({ type: 'fixPassed', aircraftId: aircraft.id, fix: navigation.fixPassed });
+      }
+      if (navigation.localizerCaptured)
+        this.emit({ type: 'localizerCaptured', aircraftId: aircraft.id });
+      if (navigation.glideslopeCaptured)
+        this.emit({ type: 'glideslopeCaptured', aircraftId: aircraft.id });
+
+      const result = stepAircraft(aircraft, performance, tickSeconds, variation, flightModel);
+      if (
+        followGlideslope(aircraft, variation, tickSeconds) &&
+        aircraft.navigation.mode === 'approach'
+      ) {
+        const { airport, runway } = aircraft.navigation.clearance;
+        landed.push({ aircraft, airport, runway });
+      }
+
       if (result.reachedHeading) {
         this.emit({
           type: 'headingReached',
@@ -200,6 +235,182 @@ export class SimEngine {
         });
       }
     }
+
+    for (const { aircraft, airport, runway } of landed) {
+      this.emit({ type: 'landed', aircraftId: aircraft.id, airport, runway });
+      this.removeAircraft(aircraft.id);
+    }
+  }
+
+  // ---- Instructions and radio ------------------------------------------------
+
+  get playerId(): string {
+    return this.state.playerId;
+  }
+
+  /** Radio transmissions, oldest first. */
+  get comms(): readonly Readonly<CommsEntry>[] {
+    return this.state.comms;
+  }
+
+  /** Instructions an aircraft's pilot has not acted on yet. */
+  pendingInstructions(aircraftId: string): readonly AtcCommand[][] {
+    return this.state.pendingInstructions
+      .filter((pending) => pending.aircraftId === aircraftId)
+      .map((pending) => pending.commands);
+  }
+
+  /** Checks an instruction without transmitting it (e.g. to enable or disable UI). */
+  checkInstruction(aircraftId: string, commands: readonly AtcCommand[]): ValidationResult {
+    const aircraft = this.getAircraft(aircraftId);
+    if (!aircraft) return { ok: false, reason: 'Aircraft is no longer on the scope' };
+    const { speedLimitBelowFt, speedLimitKts } = this.state.config.flightModel;
+    return validateInstruction(aircraft, commands, {
+      playerId: this.state.playerId,
+      performance: this.performance.get(aircraft.aircraftType),
+      speedLimitBelowFt,
+      speedLimitKts,
+    });
+  }
+
+  /**
+   * Transmits an instruction to an aircraft. The pilot reads it back and starts
+   * following it after a response delay (from the session settings).
+   */
+  issueInstruction(aircraftId: string, commands: readonly AtcCommand[]): ValidationResult {
+    const check = this.checkInstruction(aircraftId, commands);
+    if (!check.ok) return check;
+    const aircraft = this.getAircraft(aircraftId)!;
+    const ordered = inSpokenOrder(commands);
+
+    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    const phrases = ordered.map((command) => controllerPhrase(command, aircraft));
+    this.transmit('controller', aircraftId, `${callsign}, ${phrases.join(', ')}.`);
+
+    const [minDelay, maxDelay] = this.state.settings['pilots.responseDelaySec'];
+    const delayTicks = Math.max(
+      1,
+      Math.ceil(this.rng.range(minDelay, maxDelay) / this.state.config.tickSeconds),
+    );
+    this.state.pendingInstructions.push({
+      id: `I${this.state.nextMessageNumber}`,
+      aircraftId,
+      commands: cloneJson(ordered),
+      executeAtTick: this.state.tick + delayTicks,
+    });
+    this.emit({ type: 'instructionIssued', aircraftId, commands: cloneJson(ordered) });
+    return { ok: true };
+  }
+
+  /** Adds a radio transmission to the log (e.g. a pilot checking in). */
+  transmit(
+    speaker: CommsEntry['speaker'],
+    aircraftId: string | undefined,
+    text: string,
+  ): CommsEntry {
+    const aircraft = aircraftId ? this.getAircraft(aircraftId) : undefined;
+    const entry: CommsEntry = {
+      id: `M${this.state.nextMessageNumber++}`,
+      tick: this.state.tick,
+      speaker,
+      text,
+      ...(aircraftId ? { aircraftId } : {}),
+      ...(aircraft ? { callsign: aircraft.callsign } : {}),
+    };
+    this.state.comms.push(entry);
+    if (this.state.comms.length > MAX_COMMS_ENTRIES) this.state.comms.shift();
+    this.emit({ type: 'transmission', entry });
+    return entry;
+  }
+
+  private executeDueInstructions(): void {
+    const due = this.state.pendingInstructions.filter(
+      (pending) => pending.executeAtTick <= this.state.tick,
+    );
+    if (due.length === 0) return;
+    this.state.pendingInstructions = this.state.pendingInstructions.filter(
+      (pending) => !due.includes(pending),
+    );
+
+    for (const pending of due) {
+      const aircraft = this.state.aircraft.find((candidate) => candidate.id === pending.aircraftId);
+      if (!aircraft) continue;
+
+      const detail = this.state.settings['pilots.readbackDetail'];
+      const readback = pending.commands.map((command) => pilotReadback(command, aircraft, detail));
+      const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+      this.transmit('pilot', aircraft.id, `${capitalize(readback.join(', '))}, ${callsign}.`);
+
+      for (const command of pending.commands) this.applyCommand(aircraft, command);
+      this.emit({
+        type: 'instructionExecuted',
+        aircraftId: aircraft.id,
+        commands: pending.commands,
+      });
+    }
+  }
+
+  private applyCommand(aircraft: AircraftState, command: AtcCommand): void {
+    const navigation = aircraft.navigation;
+    const cancelApproach = () => {
+      if (navigation.mode === 'approach') {
+        aircraft.navigation = { mode: 'heading' };
+        if (aircraft.phase === 'approach') aircraft.phase = 'arrival';
+      }
+    };
+
+    switch (command.type) {
+      case 'heading':
+        // A heading before the localizer is captured is the intercept heading; after, it breaks off the approach.
+        if (
+          navigation.mode === 'direct' ||
+          (navigation.mode === 'approach' && navigation.localizerCaptured)
+        ) {
+          cancelApproach();
+          aircraft.navigation = { mode: 'heading' };
+        }
+        aircraft.targets.headingDeg = normalizeHeading(command.headingDeg);
+        aircraft.targets.turnDirection = command.turn;
+        break;
+      case 'altitude':
+        if (navigation.mode === 'approach' && navigation.glideslopeCaptured) cancelApproach();
+        aircraft.targets.altitudeFt = command.altitudeFt;
+        break;
+      case 'speed':
+        aircraft.targets.speedMode = 'assigned';
+        aircraft.targets.iasKts = command.iasKts;
+        break;
+      case 'resumeNormalSpeed':
+        aircraft.targets.speedMode = 'normal';
+        break;
+      case 'directTo':
+        cancelApproach();
+        aircraft.navigation = {
+          mode: 'direct',
+          fix: command.fix,
+          position: { ...command.position },
+        };
+        break;
+      case 'clearedIls':
+        aircraft.navigation = {
+          mode: 'approach',
+          clearance: cloneJson(command.clearance),
+          localizerCaptured: false,
+          glideslopeCaptured: false,
+        };
+        aircraft.phase = 'approach';
+        break;
+      case 'handoff':
+        this.changeOwner(aircraft, command.to);
+        break;
+    }
+  }
+
+  private changeOwner(aircraft: AircraftState, owner: ControllerId): void {
+    const from = aircraft.owner;
+    if (from === owner) return;
+    aircraft.owner = owner;
+    this.emit({ type: 'ownerChanged', aircraftId: aircraft.id, from, to: owner });
   }
 
   // ---- Aircraft ------------------------------------------------------------
@@ -231,6 +442,9 @@ export class SimEngine {
     const index = this.state.aircraft.findIndex((aircraft) => aircraft.id === id);
     if (index === -1) throw new Error(`Unknown aircraft "${id}"`);
     this.state.aircraft.splice(index, 1);
+    this.state.pendingInstructions = this.state.pendingInstructions.filter(
+      (p) => p.aircraftId !== id,
+    );
     this.emit({ type: 'aircraftRemoved', aircraftId: id });
   }
 
@@ -243,9 +457,9 @@ export class SimEngine {
   }
 
   /**
-   * Sets what an aircraft is flying toward. Headings of 360 are accepted and
-   * stored as 0. Validation of whether an
-   * instruction is allowed belongs to the command layer (Milestone 6).
+   * Sets what an aircraft is flying toward, bypassing the radio (for traffic
+   * generation and tests). Headings of 360 are stored as 0. Player
+   * instructions go through issueInstruction().
    */
   setTargets(id: string, targets: Partial<AircraftTargets>): void {
     const aircraft = this.mutableAircraft(id);
@@ -258,7 +472,7 @@ export class SimEngine {
 
   /** Transfers control of an aircraft to another controller (e.g. a handoff). */
   setOwner(id: string, owner: ControllerId): void {
-    this.mutableAircraft(id).owner = controllerIdSchema.parse(owner);
+    this.changeOwner(this.mutableAircraft(id), controllerIdSchema.parse(owner));
   }
 
   setPhase(id: string, phase: FlightPhase): void {
