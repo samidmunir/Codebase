@@ -48,6 +48,7 @@ export const operationsStateSchema = z.object({
   /** Departures ready but held at the gate because the queue is full, per airport. */
   gateHolds: z.record(z.string(), z.number().int().min(0)),
   nextDepartureTick: z.record(z.string(), z.number().int()),
+  nextArrivalTick: z.record(z.string(), z.number().int()).default({}),
   /** Earliest tick each runway ('KJFK:22R') is free for the next takeoff. */
   runwayFreeTick: z.record(z.string(), z.number().int()),
   nextDepartureNumber: z.number().int().positive(),
@@ -113,6 +114,7 @@ export function initialOperations(
     departureQueue: [],
     gateHolds: Object.fromEntries(airports.map((icao) => [icao, 0])),
     nextDepartureTick: Object.fromEntries(airports.map((icao) => [icao, tick])),
+    nextArrivalTick: Object.fromEntries(airports.map((icao) => [icao, tick])),
     runwayFreeTick: {},
     nextDepartureNumber: 1,
   };

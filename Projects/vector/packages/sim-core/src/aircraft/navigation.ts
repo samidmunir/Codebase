@@ -19,8 +19,8 @@ const LOCALIZER_RANGE_NM = 30;
 /** Glideslope capture window around the glidepath (captured from below or slightly above). */
 const GLIDESLOPE_BELOW_FT = 20;
 const GLIDESLOPE_ABOVE_FT = 300;
-/** Established aircraft slow to final approach speed inside this distance. */
-const FINAL_SPEED_NM = 6;
+/** Extra distance pilots allow to be at final approach speed before the stabilized-approach gate. */
+const FINAL_SPEED_MARGIN_NM = 1;
 
 export interface NavigationEvents {
   fixPassed?: string;
@@ -72,6 +72,8 @@ export function updateNavigation(
   performance: AircraftPerformance,
   magneticVariationDeg: number,
   config: FlightModelConfig,
+  /** Height of the stabilized-approach gate; established pilots plan to be slowed by then. */
+  stabilizedGateFt = 1_000,
 ): NavigationEvents {
   const navigation = aircraft.navigation;
 
@@ -144,18 +146,28 @@ export function updateNavigation(
     }
   }
 
-  if (navigation.glideslopeCaptured) {
-    // The glidepath is flown in followGlideslope(); keep the flight model from changing altitude.
-    aircraft.targets.altitudeFt = aircraft.altitudeFt;
-    // Pilots slow down on their own once established.
+  if (navigation.localizerCaptured) {
+    // Pilots slow down on their own once on the localizer: to approach speed, then to
+    // final approach speed early enough to be stable at the gate.
+    const gateNm =
+      Math.max(0, stabilizedGateFt - clearance.thresholdCrossingHeightFt) /
+      (FEET_PER_NM * Math.tan(toRadians(clearance.glideslopeDeg)));
+    const slowingNm =
+      (Math.max(0, aircraft.iasKts - performance.speeds.final) / performance.decelerationKtPerSec) *
+      (trueAirspeedKts(aircraft) / 3600);
     const approachSpeed =
-      geometry.alongTrackNm <= FINAL_SPEED_NM
+      geometry.alongTrackNm <= gateNm + slowingNm + FINAL_SPEED_MARGIN_NM
         ? performance.speeds.final
         : performance.speeds.approach;
     if (aircraft.targets.speedMode === 'normal' || aircraft.targets.iasKts > approachSpeed) {
       aircraft.targets.speedMode = 'assigned';
       aircraft.targets.iasKts = approachSpeed;
     }
+  }
+
+  if (navigation.glideslopeCaptured) {
+    // The glidepath is flown in followGlideslope(); keep the flight model from changing altitude.
+    aircraft.targets.altitudeFt = aircraft.altitudeFt;
   }
   return events;
 }

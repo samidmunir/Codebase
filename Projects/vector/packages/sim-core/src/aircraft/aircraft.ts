@@ -90,6 +90,8 @@ export const navigationSchema = z.discriminatedUnion('mode', [
     clearance: ilsClearanceSchema,
     localizerCaptured: z.boolean(),
     glideslopeCaptured: z.boolean(),
+    /** The stabilized-approach gate has been passed (checked once). */
+    gatePassed: z.boolean().default(false),
   }),
 ]);
 
