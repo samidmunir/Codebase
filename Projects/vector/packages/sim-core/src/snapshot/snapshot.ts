@@ -1,6 +1,7 @@
 import { resolveSettings } from '@vector/shared';
 import { z } from 'zod';
 import { aircraftStateSchema } from '../aircraft/aircraft';
+import { atcCommandSchema } from '../commands/commands';
 import { simConfigSchema, worldSchema } from '../engine/config';
 
 /**
@@ -8,6 +9,17 @@ import { simConfigSchema, worldSchema } from '../engine/config';
  * previous version so older saved sessions keep loading.
  */
 export const SNAPSHOT_SCHEMA_VERSION = 1;
+
+export const commsEntrySchema = z.object({
+  id: z.string(),
+  tick: z.number().int().min(0),
+  speaker: z.enum(['controller', 'pilot']),
+  aircraftId: z.string().optional(),
+  callsign: z.string().optional(),
+  text: z.string(),
+});
+
+export type CommsEntry = z.infer<typeof commsEntrySchema>;
 
 export const simStateSchema = z.object({
   tick: z.number().int().min(0),
@@ -24,6 +36,22 @@ export const simStateSchema = z.object({
    */
   settings: z.unknown().transform((stored) => resolveSettings('session', stored).values),
   aircraft: z.array(aircraftStateSchema),
+  /** Controller the player works as. Only their aircraft accept instructions. */
+  playerId: z.string().min(1).default('N90'),
+  /** Instructions transmitted but not yet acted on (pilot response delay). */
+  pendingInstructions: z
+    .array(
+      z.object({
+        id: z.string(),
+        aircraftId: z.string(),
+        commands: z.array(atcCommandSchema).min(1),
+        executeAtTick: z.number().int().min(0),
+      }),
+    )
+    .default([]),
+  /** Radio transmissions, oldest first. */
+  comms: z.array(commsEntrySchema).default([]),
+  nextMessageNumber: z.number().int().positive().default(1),
 });
 
 export type SimState = z.infer<typeof simStateSchema>;

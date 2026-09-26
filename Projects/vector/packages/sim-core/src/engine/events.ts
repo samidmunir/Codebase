@@ -1,8 +1,21 @@
+import type { AtcCommand } from '../commands/commands';
+import type { CommsEntry } from '../snapshot/snapshot';
+
 export type SimEvent =
   | { type: 'aircraftAdded'; aircraftId: string }
   | { type: 'aircraftRemoved'; aircraftId: string }
   | { type: 'altitudeReached'; aircraftId: string; altitudeFt: number }
   | { type: 'headingReached'; aircraftId: string; headingDeg: number }
-  | { type: 'speedReached'; aircraftId: string; iasKts: number };
+  | { type: 'speedReached'; aircraftId: string; iasKts: number }
+  /** A controller instruction was transmitted (the pilot acts on it after a delay). */
+  | { type: 'instructionIssued'; aircraftId: string; commands: AtcCommand[] }
+  /** The pilot read back and started following an instruction. */
+  | { type: 'instructionExecuted'; aircraftId: string; commands: AtcCommand[] }
+  | { type: 'transmission'; entry: CommsEntry }
+  | { type: 'fixPassed'; aircraftId: string; fix: string }
+  | { type: 'localizerCaptured'; aircraftId: string }
+  | { type: 'glideslopeCaptured'; aircraftId: string }
+  | { type: 'landed'; aircraftId: string; airport: string; runway: string }
+  | { type: 'ownerChanged'; aircraftId: string; from: string; to: string };
 
 export type SimEventListener = (event: SimEvent, tick: number) => void;

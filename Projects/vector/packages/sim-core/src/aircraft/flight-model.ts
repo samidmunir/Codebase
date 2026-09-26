@@ -51,10 +51,23 @@ export function effectiveTargetSpeed(
   performance: AircraftPerformance,
   config: FlightModelConfig,
 ): number {
-  let target = clamp(aircraft.targets.iasKts, performance.speeds.final, performance.speeds.max);
+  let target = clamp(
+    aircraft.targets.speedMode === 'normal'
+      ? normalSpeed(aircraft, performance)
+      : aircraft.targets.iasKts,
+    performance.speeds.final,
+    performance.speeds.max,
+  );
   if (aircraft.altitudeFt < config.speedLimitBelowFt)
     target = Math.min(target, config.speedLimitKts);
   return target;
+}
+
+/** The speed a pilot flies when not assigned one: normal descent speed when descending, otherwise climb speed. */
+export function normalSpeed(aircraft: AircraftState, performance: AircraftPerformance): number {
+  return aircraft.targets.altitudeFt < aircraft.altitudeFt - 50
+    ? performance.speeds.descent
+    : performance.speeds.climb;
 }
 
 /**
