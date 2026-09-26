@@ -11,8 +11,21 @@ const STOPS: [number, [number, number, number]][] = [
   [1, [255, 77, 61]],
 ];
 
-/** Trails older than this are drawn fully cool (age mode). */
+/** In age mode, trails this old are drawn fully cool (unless a trail length sets the range). */
 export const HEAT_AGE_RANGE_SEC = 20 * 60;
+/** The oldest part of a limited trail fades out over this share of its length. */
+export const HEAT_FADE_SHARE = 0.35;
+
+/**
+ * Opacity factor for a trail point of an age, for a trail length (0 = whole
+ * path, no fade): 1 for recent points, easing to 0 at the end of the trail.
+ */
+export function heatFade(ageSec: number, lengthSec: number): number {
+  if (lengthSec <= 0) return 1;
+  const fadeStart = lengthSec * (1 - HEAT_FADE_SHARE);
+  if (ageSec <= fadeStart) return 1;
+  return Math.max(0, 1 - (ageSec - fadeStart) / (lengthSec - fadeStart));
+}
 /** Altitude and speed ranges mapped onto the scale. */
 const ALTITUDE_RANGE_FT: [number, number] = [0, 40_000];
 const SPEED_RANGE_KTS: [number, number] = [150, 500];
@@ -23,10 +36,11 @@ const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 export function heatValue(
   mode: HeatMode,
   point: { ageSec: number; altitudeFt: number; groundSpeedKts: number },
+  ageRangeSec = HEAT_AGE_RANGE_SEC,
 ): number {
   switch (mode) {
     case 'age':
-      return 1 - clamp01(point.ageSec / HEAT_AGE_RANGE_SEC);
+      return 1 - clamp01(point.ageSec / ageRangeSec);
     case 'altitude':
       return (
         1 -
@@ -62,7 +76,7 @@ export const HEAT_GRADIENT_CSS = `linear-gradient(90deg, ${STOPS.map(
 
 /** Legend labels for each mode: [cool end, hot end]. */
 export const HEAT_LEGEND: Record<HeatMode, [string, string]> = {
-  age: ['20+ min ago', 'Now'],
+  age: ['Oldest', 'Now'],
   altitude: ['FL400', 'Surface'],
   speed: ['150 kt', '500 kt'],
 };

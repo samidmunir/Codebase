@@ -65,6 +65,13 @@ export const simStateSchema = z.object({
     violations: [],
     nextViolationNumber: 1,
   }),
+  /** Center's level-change resolutions in force, by the aircraft moved. */
+  centerResolutions: z
+    .record(
+      z.string(),
+      z.object({ altitudeFt: z.number(), otherId: z.string(), sinceTick: z.number().int() }),
+    )
+    .default({}),
   /** Each aircraft's path since it became the player's traffic, by aircraft id. */
   tracks: z.record(z.string(), z.array(trackPointSchema)).default({}),
 });

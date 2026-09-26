@@ -127,6 +127,26 @@ export function MapLayersPanel({ settings, onClose }: MapLayersPanelProps) {
             <span>{HEAT_LEGEND[settings['display.heatTrailColorBy']][1]}</span>
           </span>
         </div>
+        <label className="layer-select">
+          <span>{USER_SETTINGS['display.heatTrailLengthMin'].label}</span>
+          <select
+            className="layer-dropdown"
+            value={settings['display.heatTrailLengthMin']}
+            disabled={!settings['display.heatTrail']}
+            onChange={(event) => {
+              const option = USER_SETTINGS['display.heatTrailLengthMin'].options.find(
+                (o) => String(o.value) === event.target.value,
+              );
+              if (option) userSettings.update({ 'display.heatTrailLengthMin': option.value });
+            }}
+          >
+            {USER_SETTINGS['display.heatTrailLengthMin'].options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="layer-select">
           <span>Show for</span>
           <div className="segmented-control" role="radiogroup" aria-label="Heat trails for">

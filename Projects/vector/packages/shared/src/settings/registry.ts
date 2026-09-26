@@ -89,6 +89,20 @@ export const USER_SETTINGS = {
     ],
     default: 'age',
   }),
+  'display.heatTrailLengthMin': setting.select({
+    category: 'display',
+    label: 'Heat trail length',
+    description:
+      'How much of each path to keep. The oldest part fades out smoothly; “Whole path” keeps everything since the aircraft entered.',
+    options: [
+      { value: 5, label: '5 min' },
+      { value: 10, label: '10 min' },
+      { value: 20, label: '20 min' },
+      { value: 30, label: '30 min' },
+      { value: 0, label: 'Whole path' },
+    ],
+    default: 20,
+  }),
   'display.heatTrailAircraft': setting.select({
     category: 'display',
     label: 'Heat trails for',
@@ -658,6 +672,31 @@ export const SESSION_SETTINGS = {
     description:
       'Player aid: show in the command menu whether an aircraft can accept the approach.',
     default: false,
+  }),
+
+  // ---- Center (computer controller) ------------------------------------------
+  'center.automation': setting.boolean({
+    category: 'center',
+    label: 'Center flies handed-off traffic',
+    description:
+      'After a handoff, Center climbs or descends the aircraft to its requested level and routes it along its flight plan toward its destination.',
+    default: true,
+  }),
+  'center.resolveConflicts': setting.boolean({
+    category: 'center',
+    label: 'Center separates its traffic',
+    description: 'Center changes levels to keep aircraft it controls apart from each other.',
+    default: true,
+  }),
+  'center.conflictLookaheadSec': setting.number({
+    category: 'center',
+    label: 'Center conflict look-ahead',
+    description: 'How far ahead Center looks for conflicts between its aircraft.',
+    min: 60,
+    max: 300,
+    step: 30,
+    unit: 's',
+    default: 120,
   }),
 
   // ---- Sim -----------------------------------------------------------------

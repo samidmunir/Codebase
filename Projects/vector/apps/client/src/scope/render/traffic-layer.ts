@@ -14,7 +14,7 @@ import { dataBlockLines } from '../data-block';
 import type { RadarTarget } from '../radar-tracker';
 import type { RoutePreview } from '../route-preview';
 import { trafficCategory } from '../traffic-category';
-import { heatColor, heatValue } from './heat-scale';
+import { HEAT_AGE_RANGE_SEC, heatColor, heatFade, heatValue } from './heat-scale';
 import { withAlpha, type ScopePalette } from './palette';
 
 /** Pixels per leader line length step (STARS uses discrete lengths). */
@@ -557,62 +557,80 @@ export function hitTest(hits: readonly TargetHitArea[], point: ScreenPoint): str
   return undefined;
 }
 
-/** Heat trail colors are drawn in this many bands (one canvas path each). */
+/** Heat trail colors are drawn in this many bands. */
 const HEAT_BANDS = 16;
+/** Opacity steps for fading the oldest part of a trail. */
+const HEAT_FADE_LEVELS = 6;
 const HEAT_TRAIL_WIDTH_PX = 2.5;
 
 /**
- * Each aircraft's whole path since it entered the airspace, colored by the
- * heat mode, ending at its current radar position.
+ * Each aircraft's path since it entered the airspace (or its last part, for
+ * a limited trail length, fading out at the old end), colored by the heat
+ * mode and ending at its current radar position.
  */
 function drawHeatTrails(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
   const { camera, settings } = frame;
   const mode = settings['display.heatTrailColorBy'];
   const onlySelected = settings['display.heatTrailAircraft'] === 'selected';
-  const bands: { x1: number; y1: number; x2: number; y2: number }[][] = Array.from(
-    { length: HEAT_BANDS },
+  const lengthSec = settings['display.heatTrailLengthMin'] * 60;
+  const ageRange = lengthSec > 0 ? lengthSec : HEAT_AGE_RANGE_SEC;
+  // Segments grouped by color band and fade level: one canvas path per group.
+  const groups: { x1: number; y1: number; x2: number; y2: number }[][] = Array.from(
+    { length: HEAT_BANDS * HEAT_FADE_LEVELS },
     () => [],
   );
+  const ageOf = (tick: number) => frame.simTimeSec - tick * frame.tickSeconds;
 
   for (const target of frame.targets) {
     if (onlySelected && target.id !== frame.selectedId) continue;
-    // Only what the radar has shown so far: the trail ends at the painted target.
+    // Only what the radar has shown so far (the trail ends at the painted target),
+    // and only as far back as the trail length.
     const track = frame
       .trackOf(target.id)
-      .filter((point) => point[0] * frame.tickSeconds <= target.seenAtSec);
+      .filter(
+        (point) =>
+          point[0] * frame.tickSeconds <= target.seenAtSec &&
+          (lengthSec <= 0 || ageOf(point[0]) <= lengthSec),
+      );
     if (track.length === 0) continue;
     let previous = project(camera, { lat: track[0]![1], lon: track[0]![2] });
-    const segment = (to: { x: number; y: number }, heat: number) => {
+    const segment = (
+      to: { x: number; y: number },
+      point: { ageSec: number; altitudeFt: number; groundSpeedKts: number },
+    ) => {
+      const heat = heatValue(mode, point, ageRange);
       const band = Math.min(HEAT_BANDS - 1, Math.floor(heat * HEAT_BANDS));
-      bands[band]!.push({ x1: previous.x, y1: previous.y, x2: to.x, y2: to.y });
+      const fade = heatFade(point.ageSec, lengthSec);
+      if (fade > 0) {
+        const level = Math.min(HEAT_FADE_LEVELS - 1, Math.floor(fade * HEAT_FADE_LEVELS));
+        groups[band * HEAT_FADE_LEVELS + level]!.push({
+          x1: previous.x,
+          y1: previous.y,
+          x2: to.x,
+          y2: to.y,
+        });
+      }
       previous = to;
     };
     for (const [tick, lat, lon, altitudeFt, groundSpeedKts] of track.slice(1)) {
-      segment(
-        project(camera, { lat, lon }),
-        heatValue(mode, {
-          ageSec: frame.simTimeSec - tick * frame.tickSeconds,
-          altitudeFt,
-          groundSpeedKts,
-        }),
-      );
+      segment(project(camera, { lat, lon }), { ageSec: ageOf(tick), altitudeFt, groundSpeedKts });
     }
-    segment(
-      project(camera, target.position),
-      heatValue(mode, {
-        ageSec: frame.simTimeSec - target.seenAtSec,
-        altitudeFt: target.altitudeFt,
-        groundSpeedKts: target.groundSpeedKts,
-      }),
-    );
+    segment(project(camera, target.position), {
+      ageSec: frame.simTimeSec - target.seenAtSec,
+      altitudeFt: target.altitudeFt,
+      groundSpeedKts: target.groundSpeedKts,
+    });
   }
 
   ctx.save();
-  ctx.globalAlpha = settings['display.heatTrailOpacity'] / 100;
+  const opacity = settings['display.heatTrailOpacity'] / 100;
   ctx.lineWidth = HEAT_TRAIL_WIDTH_PX;
   ctx.lineCap = 'round';
-  bands.forEach((segments, band) => {
+  groups.forEach((segments, index) => {
     if (segments.length === 0) return;
+    const band = Math.floor(index / HEAT_FADE_LEVELS);
+    const level = index % HEAT_FADE_LEVELS;
+    ctx.globalAlpha = opacity * ((level + 1) / HEAT_FADE_LEVELS);
     ctx.strokeStyle = heatColor((band + 0.5) / HEAT_BANDS);
     ctx.beginPath();
     for (const { x1, y1, x2, y2 } of segments) {

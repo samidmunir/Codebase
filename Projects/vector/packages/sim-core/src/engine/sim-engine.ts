@@ -9,6 +9,7 @@ import {
   aircraftTargetsSchema,
   controllerIdSchema,
   flightPhaseSchema,
+  groundSpeedKts,
   type AircraftState,
   type ControllerId,
   type FlightPhase,
@@ -24,6 +25,12 @@ import {
   type IlsEligibility,
 } from '../commands/ils-eligibility';
 import { TRACK_SAMPLE_SEC, trackPoint, type TrackPoint } from '../aircraft/track';
+import {
+  centerRouteTarget,
+  predictedConflict,
+  resolveConflict,
+  type CenterSeparation,
+} from '../atc/center';
 import { machToIas } from '../atmosphere/isa';
 import { arrivalRouteFrom, type ArrivalRoute } from '../traffic/arrival-route';
 import { isHemisphericLevel, requestedCruiseAltitude } from '../traffic/cruise-levels';
@@ -67,7 +74,13 @@ import {
 } from '../traffic/operations';
 import type { Wind } from '../weather/wind';
 import { headingDifference, normalizeHeading } from '../math/angles';
-import { bearingTrue, destinationPoint, distanceNm, trueToMagnetic } from '../math/geo';
+import {
+  bearingTrue,
+  destinationPoint,
+  distanceNm,
+  magneticToTrue,
+  trueToMagnetic,
+} from '../math/geo';
 import type { AircraftPerformance } from '../performance/performance';
 import type { PerformanceCatalog } from '../performance/performance';
 import { SeededRandom } from '../random/seeded-random';
@@ -116,6 +129,12 @@ const DEFAULT_MISSED_APPROACH_ALTITUDE_FT = 3_000;
 /** Arrival descent profile: about 300 ft per NM, leveling off this far from the airport. */
 const ARRIVAL_PROFILE_FT_PER_NM = 300;
 const ARRIVAL_PROFILE_LEVEL_NM = 25;
+/** Center re-plans its traffic this often. */
+const CENTER_UPDATE_SEC = 5;
+/** Center lifts a resolution once aircraft are this many minima apart and diverging. */
+const CENTER_CLEAR_FACTOR = 1.5;
+/** Center never resolves a conflict below this. */
+const CENTER_MIN_RESOLUTION_FT = 6_000;
 /** Arrivals never enter lower than this. */
 const ARRIVAL_MIN_ENTRY_ALTITUDE_FT = 6_000;
 /** Transits enter and leave at least this far apart around the airspace (degrees). */
@@ -180,6 +199,7 @@ export class SimEngine {
         nextMessageNumber: 1,
         separation: emptySeparationState(),
         tracks: {},
+        centerResolutions: {},
       },
       options,
     );
@@ -358,8 +378,140 @@ export class SimEngine {
       this.removeAircraft(aircraft.id);
     }
     this.recordTracks();
+    if (this.state.tick % Math.max(1, Math.round(CENTER_UPDATE_SEC / tickSeconds)) === 0)
+      this.updateCenterTraffic();
     this.removeExitedAircraft();
     this.checkSeparation();
+  }
+
+  // ---- Center (computer controller) ---------------------------------------------
+
+  /**
+   * Flies the traffic the player has handed to Center: to its requested
+   * level (or a resolution level while in conflict), along its route toward
+   * its destination, at normal speed; and keeps Center's aircraft apart.
+   */
+  private updateCenterTraffic(): void {
+    const pack = this.airspace;
+    const settings = this.state.settings;
+    if (!pack || !settings['center.automation']) return;
+    const centerTraffic = this.state.aircraft.filter(
+      (aircraft) =>
+        pack.isCenter(aircraft.owner) &&
+        aircraft.phase !== 'arrival' &&
+        aircraft.phase !== 'approach',
+    );
+    const separation = {
+      lateralNm: Math.max(
+        settings['separation.lateralNm'],
+        settings['separation.enrouteLateralNm'],
+      ),
+      verticalFt: settings['separation.verticalFt'],
+      lookaheadSec: settings['center.conflictLookaheadSec'],
+      magneticVariationDeg: this.state.world.magneticVariationDeg,
+    };
+    for (const aircraft of centerTraffic) {
+      const performance = this.performance.get(aircraft.aircraftType);
+      if (aircraft.targets.speedMode === 'assigned')
+        this.applyCommand(aircraft, { type: 'resumeNormalSpeed' });
+
+      // On a heading, or at the end of a departure procedure waiting for vectors (VM/FM legs).
+      const navigation = aircraft.navigation;
+      const awaitingVectors =
+        navigation.mode === 'procedure' &&
+        ['VM', 'FM'].includes(navigation.legs[navigation.legIndex]?.pathTerminator ?? '');
+      if (navigation.mode === 'heading' || awaitingVectors) {
+        const target = centerRouteTarget(pack, aircraft);
+        if (target) this.applyCommand(aircraft, { type: 'directTo', ...target });
+      }
+
+      this.assignCenterAltitude(aircraft, performance.ceilingFt);
+    }
+    // Then look for conflicts with those clearances, and change levels to resolve them.
+    if (settings['center.resolveConflicts']) {
+      this.resolveCenterConflicts(centerTraffic, separation);
+      for (const aircraft of centerTraffic)
+        this.assignCenterAltitude(aircraft, this.performance.get(aircraft.aircraftType).ceilingFt);
+    }
+  }
+
+  /** The level Center wants: a conflict resolution while one is in force, else the requested level. */
+  private assignCenterAltitude(aircraft: AircraftState, ceilingFt: number): void {
+    const resolution = this.state.centerResolutions[aircraft.id];
+    const wanted =
+      resolution?.altitudeFt ??
+      aircraft.flightPlan.requestedAltitudeFt ??
+      aircraft.targets.altitudeFt;
+    const altitude = Math.min(wanted, ceilingFt);
+    if (aircraft.targets.altitudeFt !== altitude)
+      this.applyCommand(aircraft, { type: 'altitude', altitudeFt: altitude });
+  }
+
+  private resolveCenterConflicts(
+    traffic: readonly AircraftState[],
+    separation: CenterSeparation,
+  ): void {
+    const resolutions = this.state.centerResolutions;
+    const byId = new Map(traffic.map((aircraft) => [aircraft.id, aircraft]));
+
+    // Lift resolutions once the two aircraft are clear of each other and diverging.
+    for (const [id, resolution] of Object.entries(resolutions)) {
+      const aircraft = byId.get(id);
+      const other = byId.get(resolution.otherId);
+      if (!aircraft || !other) {
+        delete resolutions[id];
+        continue;
+      }
+      const now = distanceNm(aircraft.position, other.position);
+      const soon = distanceNm(
+        destinationPoint(
+          aircraft.position,
+          magneticToTrue(aircraft.headingDeg, separation.magneticVariationDeg),
+          groundSpeedKts(aircraft) / 360,
+        ),
+        destinationPoint(
+          other.position,
+          magneticToTrue(other.headingDeg, separation.magneticVariationDeg),
+          groundSpeedKts(other) / 360,
+        ),
+      );
+      if (now > separation.lateralNm * CENTER_CLEAR_FACTOR && soon > now) delete resolutions[id];
+    }
+
+    // New conflicts: one aircraft of each pair changes level.
+    for (let i = 0; i < traffic.length; i++) {
+      for (let j = i + 1; j < traffic.length; j++) {
+        const a = traffic[i]!;
+        const b = traffic[j]!;
+        const resolved = (x: AircraftState, y: AircraftState) =>
+          resolutions[x.id]?.otherId === y.id;
+        if (resolved(a, b) || resolved(b, a)) continue;
+        if (!predictedConflict(a, b, separation)) continue;
+        const minimum = Math.max(
+          CENTER_MIN_RESOLUTION_FT,
+          this.airspace!.minimumVectoringAltitude(a.position) ?? 0,
+          this.airspace!.minimumVectoringAltitude(b.position) ?? 0,
+        );
+        const { movingId, otherId, resolutionAltitudeFt } = resolveConflict(
+          a,
+          b,
+          separation,
+          minimum,
+        );
+        resolutions[movingId] = {
+          altitudeFt: resolutionAltitudeFt,
+          otherId,
+          sinceTick: this.state.tick,
+        };
+      }
+    }
+  }
+
+  /** Center level changes in force, by the aircraft moved (for display and tests). */
+  get centerResolutions(): Readonly<
+    Record<string, Readonly<{ altitudeFt: number; otherId: string }>>
+  > {
+    return this.state.centerResolutions;
   }
 
   // ---- Tracks ---------------------------------------------------------------------
@@ -1404,6 +1556,7 @@ export class SimEngine {
     if (index === -1) throw new Error(`Unknown aircraft "${id}"`);
     this.state.aircraft.splice(index, 1);
     delete this.state.tracks[id];
+    delete this.state.centerResolutions[id];
     this.state.pendingInstructions = this.state.pendingInstructions.filter(
       (p) => p.aircraftId !== id,
     );
