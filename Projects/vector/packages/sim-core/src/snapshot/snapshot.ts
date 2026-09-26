@@ -1,3 +1,4 @@
+import { resolveSettings } from '@vector/shared';
 import { z } from 'zod';
 import { aircraftStateSchema } from '../aircraft/aircraft';
 import { simConfigSchema, worldSchema } from '../engine/config';
@@ -17,6 +18,11 @@ export const simStateSchema = z.object({
   nextAircraftNumber: z.number().int().positive(),
   world: worldSchema,
   config: simConfigSchema,
+  /**
+   * Session settings, resolved leniently so snapshots saved before a setting
+   * existed still load (the new setting gets its default).
+   */
+  settings: z.unknown().transform((stored) => resolveSettings('session', stored).values),
   aircraft: z.array(aircraftStateSchema),
 });
 
