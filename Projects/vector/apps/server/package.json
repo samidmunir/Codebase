@@ -10,8 +10,11 @@
     "typecheck": "tsc --noEmit -p ."
   },
   "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/rate-limit": "^11.2.0",
     "@vector/shared": "*",
     "fastify": "^5.12.5",
+    "jose": "^6.2.12",
     "pg": "^8.23.0",
     "zod": "^4.6.5"
   },

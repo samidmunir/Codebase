@@ -4,6 +4,7 @@ import {
   destinationPoint,
   distanceNm,
   magneticToTrue,
+  toRadians,
   trueToMagnetic,
   type LatLon,
 } from '@vector/sim-core';
@@ -62,6 +63,8 @@ export interface InstructionPreview {
   directTo?: LatLon;
 }
 
+/** Length of the heading vector beyond the target symbol. */
+const HEADING_VECTOR_PX = 16;
 /** Heading preview line length. */
 const PREVIEW_NM = 10;
 
@@ -124,6 +127,21 @@ export function drawTrafficLayer(
       ctx.fill();
     }
 
+    // Heading vector: a short line in the direction the aircraft is pointing (true, north-up scope).
+    if (settings['display.headingVector']) {
+      const heading = toRadians(magneticToTrue(target.headingDeg, frame.magneticVariationDeg));
+      const [dx, dy] = [Math.sin(heading), -Math.cos(heading)];
+      ctx.strokeStyle = withAlpha(color, owned ? 0.9 : 0.55);
+      ctx.lineWidth = owned ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(position.x + dx * 6, position.y + dy * 6);
+      ctx.lineTo(
+        position.x + dx * (6 + HEADING_VECTOR_PX),
+        position.y + dy * (6 + HEADING_VECTOR_PX),
+      );
+      ctx.stroke();
+    }
+
     // Position symbol.
     ctx.save();
     if (owned) {
@@ -167,7 +185,7 @@ export function drawTrafficLayer(
       ctx.stroke();
     }
 
-    const lines = dataBlockLines(target, frame.timeShare);
+    const lines = dataBlockLines(target, frame.timeShare, settings['display.dataBlockStyle']);
     const width = Math.max(...lines.map((text) => ctx.measureText(text).width));
     const height = lineHeight * lines.length;
     const blockX =
@@ -194,7 +212,11 @@ export function drawTrafficLayer(
       ctx.shadowColor = withAlpha(palette.dataBlocks, 0.5);
       ctx.shadowBlur = 6;
     }
-    lines.forEach((text, i) => ctx.fillText(text, blockX, blockY + i * lineHeight));
+    lines.forEach((text, i) => {
+      // Type and destination (the expanded style's third line) are secondary: dim them.
+      ctx.globalAlpha = i === 2 ? 0.65 : 1;
+      ctx.fillText(text, blockX, blockY + i * lineHeight);
+    });
     ctx.restore();
 
     // Conflict Alert: 'CA' above the data block, flashing for an actual loss of separation.

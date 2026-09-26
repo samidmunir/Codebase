@@ -25,6 +25,8 @@ migrations/        PostgreSQL migrations (node-pg-migrate, SQL)
 ```sh
 npm install
 cp apps/server/.env.example apps/server/.env
+# Set JWT_SECRET in apps/server/.env to a long random value:
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 createdb vector_dev
 createdb vector_test
 npm run migrate:up

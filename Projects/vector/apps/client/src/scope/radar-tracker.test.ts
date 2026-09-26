@@ -1,6 +1,6 @@
 import { destinationPoint, type AircraftState, type LatLon } from '@vector/sim-core';
 import { describe, expect, it } from 'vitest';
-import { RadarTracker } from './radar-tracker';
+import { navigatingTo, RadarTracker } from './radar-tracker';
 
 const ANTENNA = { lat: 40.6386, lon: -73.7698 };
 const INTERVAL = 4;
@@ -132,5 +132,59 @@ describe('RadarTracker', () => {
     expect(radar.sweepProgress(11)).toBe(0.75);
     expect(radar.sweepProgress(11.5)).toBe(0.875);
     expect(radar.sweepProgress(12)).toBe(0);
+  });
+});
+
+describe('navigatingTo', () => {
+  const base = aircraft('1', { lat: 40.8, lon: -73.8 });
+  it('is the fix for direct-to, the ILS for approaches, and nothing on a heading', () => {
+    expect(navigatingTo(base)).toBeUndefined();
+    expect(
+      navigatingTo({
+        ...base,
+        navigation: { mode: 'direct', fix: 'CAMRN', position: base.position },
+      }),
+    ).toBe('CAMRN');
+    expect(
+      navigatingTo({
+        ...base,
+        navigation: {
+          mode: 'approach',
+          clearance: {
+            airport: 'KJFK',
+            runway: '22L',
+            approachId: 'I22L',
+            threshold: base.position,
+            thresholdElevationFt: 13,
+            courseDeg: 224,
+            glideslopeDeg: 3,
+            thresholdCrossingHeightFt: 55,
+          },
+          localizerCaptured: false,
+          glideslopeCaptured: false,
+          gatePassed: false,
+        },
+      }),
+    ).toBe('ILS22L');
+  });
+
+  it('is the next fix on a procedure, skipping heading legs, and nothing on a from-fix heading', () => {
+    const procedure = (
+      legs: Extract<AircraftState['navigation'], { mode: 'procedure' }>['legs'],
+      legIndex = 0,
+    ) =>
+      navigatingTo({
+        ...base,
+        navigation: { mode: 'procedure', name: 'TNNIS6', legs, legIndex, legStart: base.position },
+      });
+    expect(
+      procedure([
+        { pathTerminator: 'VI', courseDeg: 134 },
+        { pathTerminator: 'CF', fix: 'JUTES', position: base.position, courseDeg: 91 },
+      ]),
+    ).toBe('JUTES');
+    expect(
+      procedure([{ pathTerminator: 'FM', fix: 'WATJA', position: base.position, courseDeg: 61 }]),
+    ).toBeUndefined();
   });
 });

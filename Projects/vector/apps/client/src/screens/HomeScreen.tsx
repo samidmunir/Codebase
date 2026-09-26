@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { DIFFICULTY_LEVELS, DIFFICULTY_PRESETS } from '@vector/shared';
 import { AIRSPACES } from '../airspaces/registry';
+import { auth, useAuth } from '../auth/auth-store';
 import { ApiStatus } from '../components/ApiStatus';
 import { shortAirport } from '../scope/data-block';
 import { DIFFICULTY_LABELS, loadDifficulty, saveDifficulty } from '../settings/difficulty';
+import './auth-screen.css';
 import './home-screen.css';
 
 export function HomeScreen() {
   const [difficulty, setDifficulty] = useState(loadDifficulty);
+  const session = useAuth();
   const preset = DIFFICULTY_PRESETS[difficulty];
 
   return (
@@ -17,6 +20,17 @@ export function HomeScreen() {
         <div className="scope-backdrop__rings" />
         <div className="scope-backdrop__sweep" />
       </div>
+
+      {session.status === 'signedIn' && (
+        <div className="home-account">
+          <span>
+            Signed in as <strong>{session.user.displayName}</strong>
+          </span>
+          <button type="button" onClick={() => void auth.logout()}>
+            Sign out
+          </button>
+        </div>
+      )}
 
       <section className="hero">
         <p className="hero__eyebrow">Approach &amp; departure control</p>

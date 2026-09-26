@@ -10,6 +10,10 @@ const configSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   DATABASE_URL: z.url(),
   CLIENT_ORIGIN: z.url().default('http://localhost:5173'),
+  /** Secret for signing access tokens. Use a long random value; never commit it. */
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  ACCESS_TOKEN_MINUTES: z.coerce.number().int().positive().default(15),
+  REFRESH_TOKEN_DAYS: z.coerce.number().int().positive().default(30),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 

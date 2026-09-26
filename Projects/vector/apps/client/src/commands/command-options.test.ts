@@ -5,7 +5,7 @@ import { newYorkPack as pack } from '../testing/new-york-pack';
 import {
   altitudeOptions,
   centerHandoff,
-  directToOptions,
+  directToGroups,
   ilsClearance,
   ilsRunways,
   isDeparting,
@@ -74,11 +74,49 @@ describe('command options', () => {
     });
   });
 
-  it('offers route fixes first for direct-to', () => {
-    const options = directToOptions(pack, aircraft());
-    expect(options[0]!.onRoute).toBe(true);
-    expect(options.filter((o) => o.onRoute).map((o) => o.fix.ident)).toContain('CAMRN');
-    expect(options.every((o) => o.bearingDeg >= 1 && o.bearingDeg <= 360)).toBe(true);
+  it('offers route fixes first, then the rest in distance rings, alphabetical within each', () => {
+    const camrn = pack.fix('CAMRN')!.position;
+    const onStar = aircraft({
+      navigation: {
+        mode: 'procedure',
+        name: 'CAMRN5',
+        legIndex: 1,
+        legStart: { lat: 40.3, lon: -73.8 },
+        legs: [
+          { pathTerminator: 'TF', fix: 'KARRS', position: pack.fix('KARRS')!.position },
+          { pathTerminator: 'TF', fix: 'CAMRN', position: camrn },
+        ],
+      },
+    });
+    const groups = directToGroups(pack, onStar, 10);
+    // Only the fixes still ahead: KARRS is behind (leg 0 already flown).
+    expect(groups[0]).toMatchObject({ title: 'Route' });
+    expect(groups[0]!.fixes.map((o) => o.fix.ident)).toEqual(['CAMRN']);
+
+    const rings = groups.slice(1);
+    expect(rings.map((g) => g.title)).toEqual(
+      ['Within 10 NM', '10–20 NM', '20–30 NM', '30–40 NM'].filter((title) =>
+        rings.some((g) => g.title === title),
+      ),
+    );
+    for (const ring of rings) {
+      const idents = ring.fixes.map((o) => o.fix.ident);
+      expect(idents).toEqual([...idents].sort((a, b) => a.localeCompare(b)));
+      expect(ring.fixes.every((o) => o.bearingDeg >= 1 && o.bearingDeg <= 360)).toBe(true);
+    }
+    const [low, high] = rings[1]!.title.split(/[–\s]/).map(Number);
+    expect(rings[1]!.fixes.every((o) => o.distanceNm > low! && o.distanceNm <= high!)).toBe(true);
+    // No fix appears twice, and nothing beyond 40 NM.
+    const all = groups.flatMap((g) => g.fixes.map((o) => o.fix.ident));
+    expect(new Set(all).size).toBe(all.length);
+    expect(rings.flatMap((g) => g.fixes).every((o) => o.distanceNm <= 40)).toBe(true);
+  });
+
+  it('follows the ring width setting, and has no route group on vectors', () => {
+    expect(directToGroups(pack, aircraft(), 20).map((g) => g.title)).toEqual([
+      'Within 20 NM',
+      '20–40 NM',
+    ]);
   });
 
   it('offers altitudes up to the top of the airspace', () => {

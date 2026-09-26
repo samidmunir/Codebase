@@ -6,7 +6,18 @@ const config = loadConfig();
 const db = createDatabase(config.DATABASE_URL);
 
 const app = buildApp(
-  { checkDatabase: () => pingDatabase(db) },
+  {
+    checkDatabase: () => pingDatabase(db),
+    accounts: {
+      db,
+      auth: {
+        jwtSecret: config.JWT_SECRET,
+        accessTokenMinutes: config.ACCESS_TOKEN_MINUTES,
+        refreshTokenDays: config.REFRESH_TOKEN_DAYS,
+      },
+      secureCookies: config.NODE_ENV === 'production',
+    },
+  },
   { logger: { level: config.LOG_LEVEL } },
 );
 

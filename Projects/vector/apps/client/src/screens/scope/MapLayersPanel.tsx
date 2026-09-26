@@ -16,7 +16,11 @@ const MAP_LAYERS: BooleanKey[] = [
   'map.minimumVectoringAltitudes',
 ];
 
-const DISPLAY_OPTIONS: BooleanKey[] = ['display.rangeRings', 'display.sweepEffect'];
+const DISPLAY_OPTIONS: BooleanKey[] = [
+  'display.headingVector',
+  'display.rangeRings',
+  'display.sweepEffect',
+];
 
 interface MapLayersPanelProps {
   settings: UserSettings;
@@ -64,6 +68,23 @@ export function MapLayersPanel({ settings, onClose }: MapLayersPanelProps) {
 
       <section className="scope-panel__section">
         <h3>Display</h3>
+        <div className="layer-select">
+          <span>{USER_SETTINGS['display.dataBlockStyle'].label}</span>
+          <div className="segmented-control" role="radiogroup" aria-label="Data block style">
+            {USER_SETTINGS['display.dataBlockStyle'].options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={settings['display.dataBlockStyle'] === option.value}
+                title={USER_SETTINGS['display.dataBlockStyle'].description}
+                onClick={() => userSettings.update({ 'display.dataBlockStyle': option.value })}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
         {DISPLAY_OPTIONS.map((key) => (
           <Toggle key={key} settingKey={key} settings={settings} />
         ))}

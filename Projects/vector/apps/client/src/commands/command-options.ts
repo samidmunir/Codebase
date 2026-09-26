@@ -93,12 +93,48 @@ export interface FixOption {
   onRoute: boolean;
 }
 
-/** Fixes for direct-to: fixes on the aircraft's arrival or departure procedure first, then the nearest others. */
-export function directToOptions(
+export interface FixGroup {
+  /** 'Route', 'Within 10 NM', '10–20 NM', ... */
+  title: string;
+  fixes: FixOption[];
+}
+
+/** Fixes farther than this are left out of the direct-to list. */
+const DIRECT_TO_RANGE_NM = 40;
+
+/**
+ * Fixes still ahead of the aircraft on its route, in flying order: the rest of
+ * the procedure it is flying, then any fixes in its flight plan (e.g. a
+ * departure's gate).
+ */
+export function routeFixesAhead(pack: AirspacePack, aircraft: Readonly<AircraftState>): string[] {
+  const ahead: string[] = [];
+  const navigation = aircraft.navigation;
+  if (navigation.mode === 'procedure') {
+    for (const leg of navigation.legs.slice(navigation.legIndex)) {
+      // Legs flown from a fix start there: that fix is behind.
+      if (leg.fix && !leg.pathTerminator.startsWith('F') && !ahead.includes(leg.fix))
+        ahead.push(leg.fix);
+    }
+  } else if (navigation.mode === 'direct') {
+    ahead.push(navigation.fix);
+  }
+  for (const id of aircraft.flightPlan.route) {
+    if (pack.fix(id) && !ahead.includes(id)) ahead.push(id);
+  }
+  return ahead;
+}
+
+/**
+ * Fixes for direct-to, grouped to make the right one easy to find: the fixes
+ * still ahead on the aircraft's route first (in flying order), then every other
+ * fix within range in distance rings of `ringNm`, alphabetical within each ring.
+ */
+export function directToGroups(
   pack: AirspacePack,
   aircraft: Readonly<AircraftState>,
-  limit = 14,
-): FixOption[] {
+  ringNm: number,
+): FixGroup[] {
   const variation = pack.airspace.magneticVariationDeg;
   const option = (fix: Fix, onRoute: boolean): FixOption => ({
     fix,
@@ -109,40 +145,30 @@ export function directToOptions(
     onRoute,
   });
 
-  const routeIds = new Set<string>();
-  for (const id of aircraft.flightPlan.route) {
-    // Route entries are procedures (e.g. 'TNNIS6') or fixes (e.g. a departure gate).
-    if (pack.fix(id)) {
-      routeIds.add(id);
-      continue;
-    }
-    const procedure = [...pack.arrivals, ...pack.departures].find(
-      (p) =>
-        p.id === id &&
-        (p.airport === aircraft.flightPlan.destination || p.airport === aircraft.flightPlan.origin),
-    );
-    for (const segment of [
-      ...(procedure?.enrouteTransitions ?? []),
-      ...(procedure?.commonRoutes ?? []),
-      ...(procedure?.runwayTransitions ?? []),
-    ]) {
-      for (const leg of segment.legs) if (leg.fix) routeIds.add(leg.fix);
-    }
-  }
-
-  const route = [...routeIds]
+  // Route: the fixes still ahead on the aircraft's path, in the order it will fly them.
+  const routeIds = routeFixesAhead(pack, aircraft);
+  const route = routeIds
     .map((ident) => pack.fix(ident))
     .filter((fix): fix is Fix => fix !== undefined)
     .map((fix) => option(fix, true))
-    .filter((o) => o.distanceNm > 1 && o.distanceNm < 60);
+    .filter((o) => o.distanceNm > 1);
 
-  const nearby = pack.fixes
-    .filter((fix) => !routeIds.has(fix.ident))
+  const groups: FixGroup[] = route.length > 0 ? [{ title: 'Route', fixes: route }] : [];
+  const onRoute = new Set(routeIds);
+  const others = pack.fixes
+    .filter((fix) => !onRoute.has(fix.ident))
     .map((fix) => option(fix, false))
-    .filter((o) => o.distanceNm > 1)
-    .sort((a, b) => a.distanceNm - b.distanceNm);
+    .filter((o) => o.distanceNm > 1 && o.distanceNm <= DIRECT_TO_RANGE_NM);
 
-  return [...route.sort((a, b) => a.distanceNm - b.distanceNm), ...nearby].slice(0, limit);
+  for (let inner = 0; inner < DIRECT_TO_RANGE_NM; inner += ringNm) {
+    const outer = inner + ringNm;
+    const fixes = others
+      .filter((o) => o.distanceNm > inner && o.distanceNm <= outer)
+      .sort((a, b) => a.fix.ident.localeCompare(b.fix.ident));
+    if (fixes.length > 0)
+      groups.push({ title: inner === 0 ? `Within ${outer} NM` : `${inner}–${outer} NM`, fixes });
+  }
+  return groups;
 }
 
 /** Assignable altitudes: every 1,000 ft from 2,000 ft to the top of the airspace (or the aircraft's ceiling). */

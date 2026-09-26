@@ -20,6 +20,17 @@ export const USER_SETTINGS = {
     unit: '%',
     default: 100,
   }),
+  'display.dataBlockStyle': setting.select({
+    category: 'display',
+    label: 'Data block style',
+    description:
+      'Expanded: callsign, altitude with full ground speed, then type and destination. STARS: the real two-line format, ground speed in tens of knots, time-shared with type and destination.',
+    options: [
+      { value: 'expanded', label: 'Expanded' },
+      { value: 'stars', label: 'STARS' },
+    ],
+    default: 'expanded',
+  }),
   'display.dataBlockFontSize': setting.number({
     category: 'display',
     label: 'Data block font size',
@@ -47,6 +58,12 @@ export const USER_SETTINGS = {
     max: 7,
     step: 1,
     default: 2,
+  }),
+  'display.headingVector': setting.boolean({
+    category: 'display',
+    label: 'Heading vector',
+    description: 'Show a short line from each target in the direction it is heading.',
+    default: true,
   }),
   'display.rangeRings': setting.boolean({
     category: 'display',
@@ -211,6 +228,18 @@ export const USER_SETTINGS = {
       { value: 'list', label: 'List' },
     ],
     default: 'radial',
+  }),
+  'controls.directToRingNm': setting.select({
+    category: 'controls',
+    label: 'Direct-to distance rings',
+    description:
+      'The direct-to list groups fixes into rings of this width around the aircraft, alphabetical within each ring.',
+    options: [
+      { value: 5, label: '5 NM' },
+      { value: 10, label: '10 NM' },
+      { value: 20, label: '20 NM' },
+    ],
+    default: 10,
   }),
   'controls.keys.togglePause': setting.keybinding({
     category: 'controls',
