@@ -12,6 +12,7 @@ import { useUserSettings } from '../settings/user-settings-store';
 import { ScopeSession } from '../sim/scope-session';
 import { CommandPanel } from './scope/command/CommandPanel';
 import { CommsLog } from './scope/CommsLog';
+import { DeparturesPanel } from './scope/DeparturesPanel';
 import { MapLayersPanel } from './scope/MapLayersPanel';
 import { ScopeTopBar } from './scope/ScopeTopBar';
 import { formatPosition } from './scope/format';
@@ -82,6 +83,7 @@ function Scope({ session }: { session: ScopeSession }) {
   const basemapRef = useRef<BasemapHandle>(null);
   const [layersOpen, setLayersOpen] = useState(false);
   const [commsOpen, setCommsOpen] = useState(true);
+  const [departuresOpen, setDeparturesOpen] = useState(true);
   const [cursor, setCursor] = useState<LatLon | undefined>(undefined);
   const [selection, setSelection] = useState<{ id: string; draft: InstructionDraft } | undefined>(
     undefined,
@@ -113,6 +115,7 @@ function Scope({ session }: { session: ScopeSession }) {
     centerScope: () => scopeRef.current?.recenter(),
     toggleMapLayers: () => setLayersOpen((open) => !open),
     toggleCommsLog: () => setCommsOpen((open) => !open),
+    toggleDepartureQueue: () => setDeparturesOpen((open) => !open),
     // Closes the topmost panel: map layers first, then the selected aircraft.
     closeMenu: () => (layersOpen ? setLayersOpen(false) : select(undefined)),
   });
@@ -153,6 +156,8 @@ function Scope({ session }: { session: ScopeSession }) {
         onToggleLayers={() => setLayersOpen((open) => !open)}
         commsOpen={commsOpen}
         onToggleComms={() => setCommsOpen((open) => !open)}
+        departuresOpen={departuresOpen}
+        onToggleDepartures={() => setDeparturesOpen((open) => !open)}
       />
 
       {status.paused && <div className="scope-paused">Paused</div>}
@@ -173,6 +178,14 @@ function Scope({ session }: { session: ScopeSession }) {
       )}
 
       {layersOpen && <MapLayersPanel settings={settings} onClose={() => setLayersOpen(false)} />}
+
+      {departuresOpen && (
+        <DeparturesPanel
+          session={session}
+          queueVersion={status.queueVersion}
+          onClose={() => setDeparturesOpen(false)}
+        />
+      )}
 
       {commsOpen && (
         <CommsLog
@@ -197,7 +210,7 @@ function Scope({ session }: { session: ScopeSession }) {
 
         <div className="scope-notice">
           <span className="scope-notice__dot" aria-hidden="true" />
-          Preview traffic · {status.aircraftCount} aircraft · click an aircraft to instruct it
+          {status.aircraftCount} aircraft · demo arrivals · click an aircraft to instruct it
         </div>
 
         <div className="scope-zoom" role="group" aria-label="Zoom">

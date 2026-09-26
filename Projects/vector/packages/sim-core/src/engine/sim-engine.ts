@@ -20,8 +20,23 @@ import {
   type AtcCommand,
   type ValidationResult,
 } from '../commands/commands';
-import { capitalize, spokenCallsign } from '../comms/phraseology';
+import { altitudeWords, capitalize, runwayWords, spokenCallsign } from '../comms/phraseology';
+import type { AirspacePack } from '../airspace/airspace-pack';
+import type { Airline } from '../airspace/schema';
+import { departureProcedure } from '../traffic/departure-procedure';
+import {
+  departureInterval,
+  INITIAL_QUEUE,
+  initialOperations,
+  MAX_GATE_HOLDS,
+  newDepartureEntry,
+  queuedAt,
+  type ActiveRunways,
+  type DepartureEntry,
+} from '../traffic/operations';
+import type { Wind } from '../weather/wind';
 import { normalizeHeading } from '../math/angles';
+import { destinationPoint, distanceNm } from '../math/geo';
 import type { PerformanceCatalog } from '../performance/performance';
 import { SeededRandom } from '../random/seeded-random';
 import {
@@ -35,7 +50,7 @@ import { cloneJson } from '../snapshot/clone';
 import { DEFAULT_SIM_CONFIG, type SimConfig, type World } from './config';
 import type { SimEvent, SimEventListener } from './events';
 
-export interface CreateSimEngineOptions {
+export type CreateSimEngineOptions = {
   performance: PerformanceCatalog;
   world: World;
   seed: number;
@@ -46,7 +61,21 @@ export interface CreateSimEngineOptions {
   settings?: SessionSettings;
   /** Controller the player works as. Defaults to 'N90'. */
   playerId?: string;
+} & OperationsContext;
+
+/** Static data for airport operations (wind, runways, departures). Not saved in snapshots. */
+export interface OperationsContext {
+  airspace?: AirspacePack;
+  airlines?: readonly Airline[];
 }
+
+/** Aircraft beyond the boundary by this much are removed: handed-off aircraft sooner. */
+const EXIT_MARGIN_HANDED_OFF_NM = 3;
+const EXIT_MARGIN_NM = 10;
+/** Line-up and takeoff roll after a takeoff clearance. */
+const LINE_UP_SEC: [number, number] = [30, 50];
+/** Spacing between takeoffs on one runway, by the leading aircraft's wake category. */
+const TAKEOFF_SPACING_SEC = { small: 60, large: 60, b757: 90, heavy: 120, super: 180 } as const;
 
 /** Radio transmissions kept in the log (and in saved sessions). */
 const MAX_COMMS_ENTRIES = 300;
@@ -67,37 +96,57 @@ export class SimEngine {
   /** Sim seconds owed but not yet ticked. Not saved: saves happen between ticks. */
   private accumulatorSec = 0;
 
+  private readonly airspace: AirspacePack | undefined;
+  private readonly airlines: ReadonlyMap<string, Airline>;
+
   private constructor(
     readonly performance: PerformanceCatalog,
     state: SimState,
+    context: OperationsContext,
   ) {
     this.state = state;
     this.rng = SeededRandom.fromState(state.rngState);
+    this.airspace = context.airspace;
+    this.airlines = new Map((context.airlines ?? []).map((airline) => [airline.icao, airline]));
   }
 
   static create(options: CreateSimEngineOptions): SimEngine {
-    return new SimEngine(options.performance, {
-      tick: 0,
-      startTimeUtc: new Date(options.startTimeUtc).toISOString(),
-      speed: 1,
-      paused: false,
-      rngState: new SeededRandom(options.seed).getState(),
-      nextAircraftNumber: 1,
-      world: cloneJson(options.world),
-      config: cloneJson(options.config ?? DEFAULT_SIM_CONFIG),
-      settings: cloneJson(options.settings ?? defaultSettings('session')),
-      aircraft: [],
-      playerId: options.playerId ?? 'N90',
-      pendingInstructions: [],
-      comms: [],
-      nextMessageNumber: 1,
-    });
+    const engine = new SimEngine(
+      options.performance,
+      {
+        tick: 0,
+        startTimeUtc: new Date(options.startTimeUtc).toISOString(),
+        speed: 1,
+        paused: false,
+        rngState: new SeededRandom(options.seed).getState(),
+        nextAircraftNumber: 1,
+        world: cloneJson(options.world),
+        config: cloneJson(options.config ?? DEFAULT_SIM_CONFIG),
+        settings: cloneJson(options.settings ?? defaultSettings('session')),
+        aircraft: [],
+        playerId: options.playerId ?? 'N90',
+        pendingInstructions: [],
+        comms: [],
+        nextMessageNumber: 1,
+      },
+      options,
+    );
+    engine.startOperations();
+    return engine;
   }
 
-  static fromSnapshot(snapshot: unknown, performance: PerformanceCatalog): SimEngine {
+  /**
+   * Restores a saved session. Pass the same airspace and airlines it was
+   * created with so airport operations continue.
+   */
+  static fromSnapshot(
+    snapshot: unknown,
+    performance: PerformanceCatalog,
+    context: OperationsContext = {},
+  ): SimEngine {
     const { state } = parseSnapshot(snapshot);
     for (const aircraft of state.aircraft) performance.get(aircraft.aircraftType);
-    return new SimEngine(performance, state);
+    return new SimEngine(performance, state, context);
   }
 
   toSnapshot(): SimSnapshot {
@@ -194,12 +243,20 @@ export class SimEngine {
     const variation = this.state.world.magneticVariationDeg;
     this.state.tick++;
     this.executeDueInstructions();
+    this.updateDepartures();
 
     const landed: { aircraft: AircraftState; airport: string; runway: string }[] = [];
     for (const aircraft of this.state.aircraft) {
       const performance = this.performance.get(aircraft.aircraftType);
 
       const navigation = updateNavigation(aircraft, performance, variation, flightModel);
+      if (navigation.procedureCompleted) {
+        this.emit({
+          type: 'procedureCompleted',
+          aircraftId: aircraft.id,
+          procedure: navigation.procedureCompleted,
+        });
+      }
       if (navigation.fixPassed) {
         this.emit({ type: 'fixPassed', aircraftId: aircraft.id, fix: navigation.fixPassed });
       }
@@ -209,6 +266,7 @@ export class SimEngine {
         this.emit({ type: 'glideslopeCaptured', aircraftId: aircraft.id });
 
       const result = stepAircraft(aircraft, performance, tickSeconds, variation, flightModel);
+      this.checkRadarContact(aircraft);
       if (
         followGlideslope(aircraft, variation, tickSeconds) &&
         aircraft.navigation.mode === 'approach'
@@ -240,6 +298,7 @@ export class SimEngine {
       this.emit({ type: 'landed', aircraftId: aircraft.id, airport, runway });
       this.removeAircraft(aircraft.id);
     }
+    this.removeExitedAircraft();
   }
 
   // ---- Instructions and radio ------------------------------------------------
@@ -307,6 +366,7 @@ export class SimEngine {
     speaker: CommsEntry['speaker'],
     aircraftId: string | undefined,
     text: string,
+    facility?: string,
   ): CommsEntry {
     const aircraft = aircraftId ? this.getAircraft(aircraftId) : undefined;
     const entry: CommsEntry = {
@@ -316,6 +376,7 @@ export class SimEngine {
       text,
       ...(aircraftId ? { aircraftId } : {}),
       ...(aircraft ? { callsign: aircraft.callsign } : {}),
+      ...(facility ? { facility } : {}),
     };
     this.state.comms.push(entry);
     if (this.state.comms.length > MAX_COMMS_ENTRIES) this.state.comms.shift();
@@ -361,9 +422,11 @@ export class SimEngine {
 
     switch (command.type) {
       case 'heading':
-        // A heading before the localizer is captured is the intercept heading; after, it breaks off the approach.
+        // A heading ends a direct-to or procedure (radar vectors). Before the localizer is captured
+        // it is the intercept heading; after, it breaks off the approach.
         if (
           navigation.mode === 'direct' ||
+          navigation.mode === 'procedure' ||
           (navigation.mode === 'approach' && navigation.localizerCaptured)
         ) {
           cancelApproach();
@@ -403,6 +466,280 @@ export class SimEngine {
       case 'handoff':
         this.changeOwner(aircraft, command.to);
         break;
+    }
+  }
+
+  // ---- Airport operations ------------------------------------------------------
+
+  /** Wind at each airport (magnetic direction). Empty without an airspace. */
+  get winds(): Readonly<Record<string, Wind>> {
+    return this.state.operations?.winds ?? {};
+  }
+
+  /** Arrival and departure runways in use at each airport. */
+  get activeRunways(): Readonly<Record<string, ActiveRunways>> {
+    return this.state.operations?.runways ?? {};
+  }
+
+  /** Departures waiting for a runway or cleared for takeoff, oldest first. */
+  get departureQueue(): readonly Readonly<DepartureEntry>[] {
+    return this.state.operations?.departureQueue ?? [];
+  }
+
+  /** Departures held at the gate because the airport's queue is full. */
+  gateHolds(airport: string): number {
+    return this.state.operations?.gateHolds[airport] ?? 0;
+  }
+
+  /** Validates releasing a departure onto a runway without doing it. */
+  checkRelease(entryId: string, runway: string): ValidationResult {
+    const entry = this.state.operations?.departureQueue.find(
+      (candidate) => candidate.id === entryId,
+    );
+    if (!entry) return { ok: false, reason: 'Departure is no longer in the queue' };
+    if (entry.status !== 'waiting')
+      return { ok: false, reason: `${entry.callsign} is already cleared for takeoff` };
+    if (!this.activeRunways[entry.airport]?.departures.includes(runway)) {
+      return { ok: false, reason: `Runway ${runway} is not in use for departures` };
+    }
+    return { ok: true };
+  }
+
+  /**
+   * Clears a waiting departure for takeoff on an active departure runway. The
+   * pilot reads back, lines up, and takes off once the runway is free.
+   */
+  releaseDeparture(entryId: string, runway: string): ValidationResult {
+    const check = this.checkRelease(entryId, runway);
+    if (!check.ok) return check;
+    if (!this.airspace) return { ok: false, reason: 'No airspace loaded' };
+    const operations = this.state.operations!;
+    const entry = operations.departureQueue.find((candidate) => candidate.id === entryId)!;
+    const tower = this.airspace.airport(entry.airport).towerCallsign;
+    const callsign = spokenCallsign(entry.callsign, entry.telephony);
+
+    this.transmit(
+      'controller',
+      undefined,
+      `${capitalize(callsign)}, ${tower}, runway ${runwayWords(runway)}, cleared for takeoff.`,
+      towerFacility(entry.airport),
+    );
+    this.state.comms.at(-1)!.callsign = entry.callsign;
+
+    const [minDelay, maxDelay] = this.state.settings['pilots.responseDelaySec'];
+    const tickSeconds = this.state.config.tickSeconds;
+    const readbackAtTick =
+      this.state.tick + Math.max(1, Math.ceil(this.rng.range(minDelay, maxDelay) / tickSeconds));
+    const lineUp = Math.ceil(this.rng.range(...LINE_UP_SEC) / tickSeconds);
+    const runwayKey = `${entry.airport}:${runway}`;
+    const takeoffAtTick = Math.max(
+      readbackAtTick + lineUp,
+      operations.runwayFreeTick[runwayKey] ?? 0,
+    );
+    const wake = this.performance.get(entry.aircraftType).wakeCategory;
+    operations.runwayFreeTick[runwayKey] =
+      takeoffAtTick + Math.ceil(TAKEOFF_SPACING_SEC[wake] / tickSeconds);
+
+    Object.assign(entry, { status: 'cleared', runway, readbackAtTick, takeoffAtTick });
+    this.emit({ type: 'departureReleased', entryId, airport: entry.airport, runway });
+    return { ok: true };
+  }
+
+  private startOperations(): void {
+    if (!this.airspace) return;
+    const settings = this.state.settings;
+    const operations = initialOperations(
+      this.airspace,
+      this.rng,
+      {
+        windMode: settings['weather.windMode'],
+        manualWind: {
+          directionDeg: settings['weather.manualWindDirectionDeg'],
+          speedKts: settings['weather.manualWindSpeedKts'],
+        },
+        maxTailwindKts: settings['weather.maxTailwindKts'],
+        maxCrosswindKts: settings['weather.maxCrosswindKts'],
+        departureRatePerHour: settings['traffic.departureRatePerHour'],
+        maxDepartureQueue: settings['traffic.maxDepartureQueue'],
+      },
+      this.state.tick,
+    );
+    this.state.operations = operations;
+
+    const rate = settings['traffic.departureRatePerHour'];
+    for (const airport of this.airspace.airspace.airports) {
+      if (rate > 0) {
+        const initial = Math.min(INITIAL_QUEUE, settings['traffic.maxDepartureQueue']);
+        for (let i = 0; i < initial; i++) this.queueDeparture(airport);
+      }
+      operations.nextDepartureTick[airport] =
+        this.state.tick + departureInterval(this.rng, rate, this.state.config.tickSeconds);
+    }
+  }
+
+  private queueDeparture(airport: string): void {
+    const operations = this.state.operations!;
+    const inUse = new Set([
+      ...this.state.aircraft.map((a) => a.callsign),
+      ...operations.departureQueue.map((d) => d.callsign),
+    ]);
+    const entry = newDepartureEntry(
+      {
+        pack: this.airspace!,
+        airlines: this.airlines,
+        random: this.rng,
+        callsignsInUse: inUse,
+        hasPerformance: (type) => this.performance.has(type),
+      },
+      operations,
+      airport,
+      this.state.tick,
+    );
+    operations.departureQueue.push(entry);
+    this.emit({ type: 'departureQueued', entryId: entry.id, airport });
+  }
+
+  private updateDepartures(): void {
+    const operations = this.state.operations;
+    if (!operations || !this.airspace) return;
+    const settings = this.state.settings;
+    const maxQueue = settings['traffic.maxDepartureQueue'];
+    const tick = this.state.tick;
+
+    for (const airport of this.airspace.airspace.airports) {
+      // A new departure is ready: join the queue, or wait at the gate if it's full.
+      if (tick >= (operations.nextDepartureTick[airport] ?? Infinity)) {
+        if (queuedAt(operations, airport) < maxQueue) this.queueDeparture(airport);
+        else
+          operations.gateHolds[airport] = Math.min(
+            MAX_GATE_HOLDS,
+            (operations.gateHolds[airport] ?? 0) + 1,
+          );
+        operations.nextDepartureTick[airport] =
+          tick +
+          departureInterval(
+            this.rng,
+            settings['traffic.departureRatePerHour'],
+            this.state.config.tickSeconds,
+          );
+      }
+      // Held departures move up as the queue empties.
+      if ((operations.gateHolds[airport] ?? 0) > 0 && queuedAt(operations, airport) < maxQueue) {
+        operations.gateHolds[airport]!--;
+        this.queueDeparture(airport);
+      }
+    }
+
+    for (const entry of [...operations.departureQueue]) {
+      if (entry.status !== 'cleared') continue;
+      if (entry.readbackAtTick === tick) {
+        const callsign = spokenCallsign(entry.callsign, entry.telephony);
+        this.transmit(
+          'pilot',
+          undefined,
+          `Cleared for takeoff runway ${runwayWords(entry.runway!)}, ${callsign}.`,
+        );
+        this.state.comms.at(-1)!.callsign = entry.callsign;
+      }
+      if (entry.takeoffAtTick !== undefined && tick >= entry.takeoffAtTick) this.takeOff(entry);
+    }
+  }
+
+  private takeOff(entry: DepartureEntry): void {
+    const pack = this.airspace!;
+    const operations = this.state.operations!;
+    operations.departureQueue = operations.departureQueue.filter(
+      (candidate) => candidate.id !== entry.id,
+    );
+
+    const runway = pack.runway(entry.airport, entry.runway!);
+    const performance = this.performance.get(entry.aircraftType);
+    const procedure = departureProcedure(pack, entry.airport, runway.id, entry.gateFix);
+    // Lifting off about halfway down the runway.
+    const liftoff = destinationPoint(
+      runway.threshold,
+      runway.trueHeadingDeg,
+      (runway.lengthFt / 6076.12) * 0.55,
+    );
+
+    const aircraft = this.addAircraft({
+      callsign: entry.callsign,
+      ...(entry.telephony ? { telephony: entry.telephony } : {}),
+      aircraftType: entry.aircraftType,
+      squawk: entry.squawk,
+      flightPlan: {
+        origin: entry.airport,
+        destination: entry.destination,
+        route: [...(procedure.sid ? [procedure.sid] : []), entry.gateFix],
+      },
+      phase: 'departure',
+      owner: towerId(entry.airport),
+      position: liftoff,
+      altitudeFt: runway.thresholdElevationFt + 100,
+      headingDeg: Math.round(runway.magneticHeadingDeg) % 360,
+      iasKts: performance.speeds.initialClimb,
+      targets: {
+        altitudeFt: pack.traffic.airports[entry.airport]!.initialAltitudeFt,
+        speedMode: 'normal',
+      },
+    });
+    this.mutableAircraft(aircraft.id).navigation = {
+      mode: 'procedure',
+      name: procedure.name,
+      legs: procedure.legs,
+      legIndex: 0,
+      legStart: { ...liftoff },
+    };
+    this.emit({
+      type: 'tookOff',
+      aircraftId: aircraft.id,
+      airport: entry.airport,
+      runway: runway.id,
+      procedure: procedure.name,
+    });
+  }
+
+  /** Tower hands departures to the player once they climb through the radar contact altitude. */
+  private checkRadarContact(aircraft: AircraftState): void {
+    if (!this.airspace || aircraft.phase !== 'departure') return;
+    if (aircraft.owner !== towerId(aircraft.flightPlan.origin)) return;
+    if (aircraft.altitudeFt < this.state.settings['departures.radarContactAltitudeFt']) return;
+
+    this.changeOwner(aircraft, this.state.playerId);
+    aircraft.phase = 'enroute';
+    const altitude = altitudeWords(Math.round(aircraft.altitudeFt / 100) * 100);
+    const climbing = altitudeWords(aircraft.targets.altitudeFt);
+    const navigation = aircraft.navigation;
+    const procedure =
+      navigation.mode === 'procedure' && navigation.name !== 'Runway heading'
+        ? `, ${navigation.name.replace(/(\d)$/, ' $1')} departure`
+        : '';
+    const facility = this.airspace.airspace.controllers.approach.departureCallsign;
+    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    this.transmit(
+      'pilot',
+      aircraft.id,
+      `${facility}, ${callsign}, ${altitude} climbing ${climbing}${procedure}.`,
+    );
+  }
+
+  private removeExitedAircraft(): void {
+    if (!this.airspace) return;
+    const { center } = this.airspace.airspace;
+    const radius = this.airspace.boundaryRadiusNm;
+    const centerId = this.airspace.airspace.controllers.center.id;
+    for (const aircraft of [...this.state.aircraft]) {
+      const handedOff = aircraft.owner === centerId;
+      const margin = handedOff ? EXIT_MARGIN_HANDED_OFF_NM : EXIT_MARGIN_NM;
+      if (distanceNm(center, aircraft.position) > radius + margin) {
+        this.emit({
+          type: 'leftAirspace',
+          aircraftId: aircraft.id,
+          callsign: aircraft.callsign,
+          handedOff,
+        });
+        this.removeAircraft(aircraft.id);
+      }
     }
   }
 
@@ -495,4 +832,14 @@ export class SimEngine {
   private emit(event: SimEvent): void {
     for (const listener of this.listeners) listener(event, this.state.tick);
   }
+}
+
+/** Controller id of an airport's tower, e.g. 'KJFK_TWR'. */
+export function towerId(airport: string): string {
+  return `${airport}_TWR`;
+}
+
+/** Radio log label for an airport's tower, e.g. 'JFK TWR'. */
+function towerFacility(airport: string): string {
+  return `${airport.length === 4 && airport.startsWith('K') ? airport.slice(1) : airport} TWR`;
 }

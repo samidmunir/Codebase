@@ -24,6 +24,8 @@ const FINAL_SPEED_NM = 6;
 
 export interface NavigationEvents {
   fixPassed?: string;
+  /** The aircraft finished its procedure (and continues on its last heading). */
+  procedureCompleted?: string;
   localizerCaptured?: boolean;
   glideslopeCaptured?: boolean;
 }
@@ -87,6 +89,7 @@ export function updateNavigation(
     return {};
   }
 
+  if (navigation.mode === 'procedure') return flyProcedure(aircraft, magneticVariationDeg);
   if (navigation.mode !== 'approach') return {};
 
   const events: NavigationEvents = {};
@@ -181,4 +184,126 @@ export function followGlideslope(
   aircraft.targets.altitudeFt = aircraft.altitudeFt;
 
   return alongTrackNm <= 0;
+}
+
+// ---- Procedures --------------------------------------------------------------
+
+const FIX_LEGS = new Set(['IF', 'TF', 'CF', 'DF', 'RF', 'AF']);
+const ALTITUDE_LEGS = new Set(['VA', 'CA', 'FA']);
+const INTERCEPT_LEGS = new Set(['VI', 'CI']);
+const MANUAL_LEGS = new Set(['VM', 'FM']);
+const DISTANCE_LEGS = new Set(['FC', 'CD', 'FD', 'VD', 'CR', 'VR']);
+/** Distance flown on legs that end at a DME distance or radial we don't model exactly. */
+const DEFAULT_LEG_DISTANCE_NM = 3;
+/** An intercept leg ends when the aircraft is this close to the next leg's course. */
+const INTERCEPT_CAPTURE_NM = 0.3;
+
+/**
+ * Flies the current procedure leg and advances through the legs. Holds and
+ * procedure turns end the procedure; the aircraft then keeps its heading.
+ */
+function flyProcedure(aircraft: AircraftState, magneticVariationDeg: number): NavigationEvents {
+  const events: NavigationEvents = {};
+  for (let guard = 0; guard < 4; guard++) {
+    const navigation = aircraft.navigation;
+    if (navigation.mode !== 'procedure') return events;
+    const leg = navigation.legs[navigation.legIndex];
+    if (!leg) return finishProcedure(aircraft, events);
+    const pt = leg.pathTerminator;
+
+    const advance = () => {
+      if (navigation.legIndex + 1 >= navigation.legs.length) {
+        finishProcedure(aircraft, events);
+        return;
+      }
+      navigation.legIndex++;
+      navigation.legStart = { ...aircraft.position };
+      const next = navigation.legs[navigation.legIndex]!;
+      aircraft.targets.turnDirection = next.turnDirection ?? 'shortest';
+    };
+
+    // Speed limits apply while flying toward a restricted fix.
+    if (leg.speedLimitKts !== undefined) {
+      if (aircraft.targets.speedMode === 'normal' || aircraft.targets.iasKts > leg.speedLimitKts) {
+        aircraft.targets.speedMode = 'assigned';
+        aircraft.targets.iasKts = leg.speedLimitKts;
+      }
+    }
+
+    if (FIX_LEGS.has(pt) && leg.position) {
+      if (distanceNm(aircraft.position, leg.position) <= FIX_PASSED_NM) {
+        if (leg.fix) events.fixPassed = leg.fix;
+        // Restrictions end at the fix: resume normal speed unless the next leg has its own.
+        if (leg.speedLimitKts !== undefined) aircraft.targets.speedMode = 'normal';
+        advance();
+        continue;
+      }
+      aircraft.targets.headingDeg = trueToMagnetic(
+        bearingTrue(aircraft.position, leg.position),
+        magneticVariationDeg,
+      );
+      return events;
+    }
+
+    if (leg.courseDeg === undefined) {
+      advance();
+      continue;
+    }
+    aircraft.targets.headingDeg = normalizeHeading(leg.courseDeg) || 0;
+
+    if (ALTITUDE_LEGS.has(pt)) {
+      if (leg.altitudeFt === undefined || aircraft.altitudeFt >= leg.altitudeFt) {
+        advance();
+        continue;
+      }
+      return events;
+    }
+
+    if (INTERCEPT_LEGS.has(pt)) {
+      const next = navigation.legs[navigation.legIndex + 1];
+      if (!next?.position || next.courseDeg === undefined) {
+        advance();
+        continue;
+      }
+      // Distance off the next leg's inbound course line (through its fix).
+      const inbound = magneticToTrue(next.courseDeg, magneticVariationDeg);
+      const offset = toRadians(
+        headingDifference(
+          normalizeHeading(inbound + 180),
+          bearingTrue(next.position, aircraft.position),
+        ),
+      );
+      const crossTrack = Math.abs(distanceNm(next.position, aircraft.position) * Math.sin(offset));
+      if (crossTrack <= INTERCEPT_CAPTURE_NM) {
+        advance();
+        continue;
+      }
+      return events;
+    }
+
+    if (DISTANCE_LEGS.has(pt)) {
+      if (
+        distanceNm(navigation.legStart, aircraft.position) >=
+        (leg.distanceNm ?? DEFAULT_LEG_DISTANCE_NM)
+      ) {
+        advance();
+        continue;
+      }
+      return events;
+    }
+
+    if (MANUAL_LEGS.has(pt)) return events; // fly the heading until given vectors
+
+    // Holds, procedure turns and other legs end the procedure.
+    return finishProcedure(aircraft, events);
+  }
+  return events;
+}
+
+function finishProcedure(aircraft: AircraftState, events: NavigationEvents): NavigationEvents {
+  if (aircraft.navigation.mode === 'procedure') {
+    events.procedureCompleted = aircraft.navigation.name;
+    aircraft.navigation = { mode: 'heading' };
+  }
+  return events;
 }

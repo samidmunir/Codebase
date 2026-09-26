@@ -1,12 +1,47 @@
 {
   "schemaVersion": 1,
   "airlines": [
-    { "icao": "AAL", "name": "American Airlines", "telephony": "American" },
-    { "icao": "BAW", "name": "British Airways", "telephony": "Speedbird" },
-    { "icao": "DAL", "name": "Delta Air Lines", "telephony": "Delta" },
-    { "icao": "EDV", "name": "Endeavor Air", "telephony": "Endeavor" },
-    { "icao": "JBU", "name": "JetBlue Airways", "telephony": "JetBlue" },
-    { "icao": "RPA", "name": "Republic Airways", "telephony": "Brickyard" },
-    { "icao": "UAL", "name": "United Airlines", "telephony": "United" }
+    {
+      "icao": "AAL",
+      "name": "American Airlines",
+      "telephony": "American",
+      "flightNumbers": [100, 2999]
+    },
+    {
+      "icao": "BAW",
+      "name": "British Airways",
+      "telephony": "Speedbird",
+      "flightNumbers": [100, 299]
+    },
+    {
+      "icao": "DAL",
+      "name": "Delta Air Lines",
+      "telephony": "Delta",
+      "flightNumbers": [100, 2999]
+    },
+    {
+      "icao": "EDV",
+      "name": "Endeavor Air",
+      "telephony": "Endeavor",
+      "flightNumbers": [4600, 5499]
+    },
+    {
+      "icao": "JBU",
+      "name": "JetBlue Airways",
+      "telephony": "JetBlue",
+      "flightNumbers": [100, 2799]
+    },
+    {
+      "icao": "RPA",
+      "name": "Republic Airways",
+      "telephony": "Brickyard",
+      "flightNumbers": [3400, 4799]
+    },
+    {
+      "icao": "UAL",
+      "name": "United Airlines",
+      "telephony": "United",
+      "flightNumbers": [100, 2699]
+    }
   ]
 }

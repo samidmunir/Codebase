@@ -223,6 +223,65 @@ export const videoMapFileSchema = z.object({
 
 export type VideoMap = z.infer<typeof videoMapFileSchema>;
 
+// ---- Traffic and operations -------------------------------------------------------
+
+export const runwayConfigSchema = z.object({
+  id: z.string(),
+  arrivals: z.array(z.string()).min(1),
+  departures: z.array(z.string()).min(1),
+});
+
+export type RunwayConfig = z.infer<typeof runwayConfigSchema>;
+
+export const airportTrafficSchema = z.object({
+  /** Altitude departures climb to after takeoff. */
+  initialAltitudeFt: z.number().positive(),
+  /** Runway configurations in order of preference; the best one for the wind is used. */
+  runwayConfigs: z.array(runwayConfigSchema).min(1),
+  airlines: z
+    .array(
+      z.object({
+        icao: z.string(),
+        weight: z.number().positive(),
+        types: z.array(z.string()).min(1),
+        /** Destinations this airline serves from the airport; any destination if omitted. */
+        destinations: z.array(z.string()).min(1).optional(),
+      }),
+    )
+    .min(1),
+  destinations: z
+    .array(z.object({ icao: z.string(), weight: z.number().positive(), gate: z.string() }))
+    .min(1),
+});
+
+export type AirportTraffic = z.infer<typeof airportTrafficSchema>;
+
+export const trafficFileSchema = z.object({
+  schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
+  notes: z.string().optional(),
+  /** Departure gates (exit directions) and their fixes. */
+  departureGates: z.record(z.string(), z.array(z.string()).min(1)),
+  airports: z.record(z.string(), airportTrafficSchema),
+});
+
+export type TrafficProfile = z.infer<typeof trafficFileSchema>;
+
+/** Airlines: radio names and flight number ranges (data/airlines/airlines.json). */
+export const airlinesFileSchema = z.object({
+  schemaVersion: z.literal(1),
+  airlines: z.array(
+    z.object({
+      icao: z.string().regex(/^[A-Z]{3}$/),
+      name: z.string(),
+      telephony: z.string(),
+      flightNumbers: z.tuple([z.number().int().positive(), z.number().int().positive()]),
+    }),
+  ),
+});
+
+export type AirlinesFile = z.infer<typeof airlinesFileSchema>;
+export type Airline = AirlinesFile['airlines'][number];
+
 // ---- Airspace ----------------------------------------------------------------
 
 export const centerSiteSchema = z.object({

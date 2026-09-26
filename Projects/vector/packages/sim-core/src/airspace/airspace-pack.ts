@@ -1,10 +1,12 @@
 import { z } from 'zod';
 import { headingDifference, normalizeHeading } from '../math/angles';
+import { distanceNm } from '../math/geo';
 import {
   airportsFileSchema,
   airspaceFileSchema,
   navdataFileSchema,
   proceduresFileSchema,
+  trafficFileSchema,
   videoMapFileSchema,
   type Airport,
   type AirspaceFile,
@@ -13,6 +15,7 @@ import {
   type ProcedureLeg,
   type Runway,
   type TerminalProcedure,
+  type TrafficProfile,
   type VideoMap,
 } from './schema';
 
@@ -23,6 +26,7 @@ export interface AirspacePackFiles {
   navdata: unknown;
   procedures: unknown;
   videoMap: unknown;
+  traffic: unknown;
 }
 
 export class AirspaceDataError extends Error {
@@ -50,6 +54,7 @@ export class AirspacePack {
     readonly departures: readonly TerminalProcedure[],
     readonly approaches: readonly IlsApproach[],
     readonly videoMap: VideoMap,
+    readonly traffic: TrafficProfile,
   ) {
     this.airportsByIcao = new Map(airports.map((airport) => [airport.icao, airport]));
     this.fixesByIdent = new Map(fixes.map((fix) => [fix.ident, fix]));
@@ -67,6 +72,7 @@ export class AirspacePack {
     const { fixes } = parse('navdata.json', navdataFileSchema, files.navdata);
     const procedures = parse('procedures.json', proceduresFileSchema, files.procedures);
     const videoMap = parse('video-map.json', videoMapFileSchema, files.videoMap);
+    const traffic = parse('traffic.json', trafficFileSchema, files.traffic);
 
     const pack = new AirspacePack(
       airspace,
@@ -76,6 +82,7 @@ export class AirspacePack {
       procedures.departures,
       procedures.approaches,
       videoMap,
+      traffic,
     );
     const problems = pack.crossCheck();
     if (problems.length > 0) throw new AirspaceDataError(problems);
@@ -96,6 +103,12 @@ export class AirspacePack {
 
   fix(ident: string): Fix | undefined {
     return this.fixesByIdent.get(ident);
+  }
+
+  /** Distance from the airspace center to its boundary (the boundary is a circle in v1). */
+  get boundaryRadiusNm(): number {
+    const [lon, lat] = this.airspace.boundary.ring[0]!;
+    return distanceNm(this.airspace.center, { lat, lon });
   }
 
   ilsApproaches(icao: string, runway: string): IlsApproach[] {
@@ -161,6 +174,53 @@ export class AirspacePack {
         checkLegs(`${where} ${segment.name}`, approach.airport, segment.legs);
       checkLegs(`${where} final`, approach.airport, approach.final);
       checkLegs(`${where} missed approach`, approach.airport, approach.missedApproach);
+    }
+    problems.push(...this.checkTraffic());
+    return problems;
+  }
+
+  private checkTraffic(): string[] {
+    const problems: string[] = [];
+    for (const [gate, fixes] of Object.entries(this.traffic.departureGates)) {
+      for (const ident of fixes) {
+        if (!this.fixesByIdent.has(ident))
+          problems.push(`traffic.json gate ${gate}: unknown fix ${ident}`);
+      }
+    }
+    for (const icao of this.airspace.airports) {
+      const traffic = this.traffic.airports[icao];
+      if (!traffic) {
+        problems.push(`traffic.json: no traffic profile for ${icao}`);
+        continue;
+      }
+      const runways = this.airportsByIcao.get(icao)?.runways ?? [];
+      for (const config of traffic.runwayConfigs) {
+        for (const id of [...config.arrivals, ...config.departures]) {
+          if (!runways.some((r) => r.id === id))
+            problems.push(`${icao} config ${config.id}: unknown runway ${id}`);
+        }
+        for (const id of config.arrivals) {
+          if (!runways.find((r) => r.id === id)?.ils) {
+            problems.push(`${icao} config ${config.id}: arrival runway ${id} has no ILS`);
+          }
+        }
+      }
+      for (const airline of traffic.airlines) {
+        for (const destination of airline.destinations ?? []) {
+          if (!traffic.destinations.some((d) => d.icao === destination)) {
+            problems.push(
+              `${icao} airline ${airline.icao}: ${destination} is not one of the airport's destinations`,
+            );
+          }
+        }
+      }
+      for (const destination of traffic.destinations) {
+        if (!this.traffic.departureGates[destination.gate]) {
+          problems.push(
+            `${icao} destination ${destination.icao}: unknown gate ${destination.gate}`,
+          );
+        }
+      }
     }
     return problems;
   }

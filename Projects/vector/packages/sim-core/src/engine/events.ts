@@ -16,6 +16,12 @@ export type SimEvent =
   | { type: 'localizerCaptured'; aircraftId: string }
   | { type: 'glideslopeCaptured'; aircraftId: string }
   | { type: 'landed'; aircraftId: string; airport: string; runway: string }
-  | { type: 'ownerChanged'; aircraftId: string; from: string; to: string };
+  | { type: 'ownerChanged'; aircraftId: string; from: string; to: string }
+  | { type: 'departureQueued'; entryId: string; airport: string }
+  | { type: 'departureReleased'; entryId: string; airport: string; runway: string }
+  | { type: 'tookOff'; aircraftId: string; airport: string; runway: string; procedure: string }
+  | { type: 'procedureCompleted'; aircraftId: string; procedure: string }
+  /** An aircraft left the airspace; `handedOff` is false if it left without a handoff. */
+  | { type: 'leftAirspace'; aircraftId: string; callsign: string; handedOff: boolean };
 
 export type SimEventListener = (event: SimEvent, tick: number) => void;

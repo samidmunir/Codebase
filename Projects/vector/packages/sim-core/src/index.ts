@@ -20,3 +20,6 @@ export * from './math/geo';
 export * from './performance/performance';
 export * from './random/seeded-random';
 export * from './snapshot/snapshot';
+export * from './traffic/departure-procedure';
+export * from './traffic/operations';
+export * from './weather/wind';

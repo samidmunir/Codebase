@@ -165,7 +165,12 @@ export function RadarScope({
 
       if (mapDirtyRef.current) {
         mapDirtyRef.current = false;
-        drawMapLayer(mapContext, camera, session.pack, currentSettings, palette);
+        const activeArrivals = new Set(
+          Object.entries(session.engine.activeRunways).flatMap(([icao, runways]) =>
+            runways.arrivals.map((runway) => `${icao}:${runway}`),
+          ),
+        );
+        drawMapLayer(mapContext, camera, session.pack, currentSettings, palette, activeArrivals);
         callbacksRef.current.onCameraChange?.(camera);
       }
 

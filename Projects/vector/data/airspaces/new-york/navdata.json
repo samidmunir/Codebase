@@ -177,6 +177,15 @@
       "name": "BESSI"
     },
     {
+      "ident": "BETTE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.559238888888885,
+        "lon": -73.011725
+      },
+      "name": "BETTE"
+    },
+    {
       "ident": "BEUTY",
       "kind": "waypoint",
       "position": {
@@ -396,6 +405,15 @@
       "name": "CNRSE"
     },
     {
+      "ident": "COATE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.136227777777776,
+        "lon": -74.69516666666667
+      },
+      "name": "COATE"
+    },
+    {
       "ident": "COL",
       "kind": "vor",
       "position": {
@@ -542,6 +560,15 @@
         "lon": -73.46286111111111
       },
       "name": "DETGY"
+    },
+    {
+      "ident": "DIXIE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.09936666666667,
+        "lon": -74.16449166666668
+      },
+      "name": "DIXIE"
     },
     {
       "ident": "DNNIS",
@@ -786,6 +813,15 @@
       "name": "GATBY"
     },
     {
+      "ident": "GAYEL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.40669166666667,
+        "lon": -74.35714444444444
+      },
+      "name": "GAYEL"
+    },
+    {
       "ident": "GEE",
       "kind": "vor",
       "position": {
@@ -821,6 +857,15 @@
         "lon": -73.96998333333333
       },
       "name": "GLDMN"
+    },
+    {
+      "ident": "GREKI",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.48000833333334,
+        "lon": -73.3141611111111
+      },
+      "name": "GREKI"
     },
     {
       "ident": "GREKO",
@@ -879,6 +924,15 @@
       "name": "HAARP"
     },
     {
+      "ident": "HAAYS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.32000555555556,
+        "lon": -74.46718055555556
+      },
+      "name": "HAAYS"
+    },
+    {
       "ident": "HAIRR",
       "kind": "waypoint",
       "position": {
@@ -895,6 +949,15 @@
         "lon": -73.612825
       },
       "name": "HANAA"
+    },
+    {
+      "ident": "HAPIE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.386516666666665,
+        "lon": -72.982675
+      },
+      "name": "HAPIE"
     },
     {
       "ident": "HARLM",
@@ -1390,6 +1453,15 @@
       "name": "MEMMS"
     },
     {
+      "ident": "MERIT",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.38195,
+        "lon": -73.13743055555557
+      },
+      "name": "MERIT"
+    },
+    {
       "ident": "MERSR",
       "kind": "waypoint",
       "position": {
@@ -1489,6 +1561,15 @@
         "lon": -72.68857777777778
       },
       "name": "NELIE"
+    },
+    {
+      "ident": "NEWEL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.92194444444444,
+        "lon": -75.17083333333333
+      },
+      "name": "NEWEL"
     },
     {
       "ident": "NOBBI",
@@ -1921,6 +2002,15 @@
       "name": "SHAFF"
     },
     {
+      "ident": "SHIPP",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.329433333333334,
+        "lon": -73.24727222222222
+      },
+      "name": "SHIPP"
+    },
+    {
       "ident": "SHLBK",
       "kind": "waypoint",
       "position": {
@@ -2260,6 +2350,15 @@
       "name": "WATJA"
     },
     {
+      "ident": "WAVEY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.23458333333333,
+        "lon": -73.39437777777779
+      },
+      "name": "WAVEY"
+    },
+    {
       "ident": "WEETS",
       "kind": "waypoint",
       "position": {
@@ -2267,6 +2366,15 @@
         "lon": -74.19764166666667
       },
       "name": "WEETS"
+    },
+    {
+      "ident": "WHITE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.00675555555556,
+        "lon": -74.25128055555555
+      },
+      "name": "WHITE"
     },
     {
       "ident": "WIGAN",
@@ -2375,6 +2483,15 @@
         "lon": -73.875925
       },
       "name": "ZETAL"
+    },
+    {
+      "ident": "ZIMMZ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.80305555555555,
+        "lon": -75.1236111111111
+      },
+      "name": "ZIMMZ"
     },
     {
       "ident": "ZULAB",

@@ -16,6 +16,7 @@ const pack = AirspacePack.parse({
   navdata: read('navdata.json'),
   procedures: read('procedures.json'),
   videoMap: read('video-map.json'),
+  traffic: read('traffic.json'),
 });
 
 const center =

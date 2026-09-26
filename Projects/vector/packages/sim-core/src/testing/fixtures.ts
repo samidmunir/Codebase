@@ -23,3 +23,25 @@ export function newAircraft(overrides: Partial<NewAircraft> = {}): NewAircraft {
     ...overrides,
   } as NewAircraft;
 }
+
+// ---- New York airspace, for operations tests -----------------------------------
+import airlineData from '../../../../data/airlines/airlines.json';
+import nyAirports from '../../../../data/airspaces/new-york/airports.json';
+import nyAirspace from '../../../../data/airspaces/new-york/airspace.json';
+import nyNavdata from '../../../../data/airspaces/new-york/navdata.json';
+import nyProcedures from '../../../../data/airspaces/new-york/procedures.json';
+import nyTraffic from '../../../../data/airspaces/new-york/traffic.json';
+import nyVideoMap from '../../../../data/airspaces/new-york/video-map.json';
+import { AirspacePack } from '../airspace/airspace-pack';
+import { airlinesFileSchema } from '../airspace/schema';
+
+export const newYork = AirspacePack.parse({
+  airspace: nyAirspace,
+  airports: nyAirports,
+  navdata: nyNavdata,
+  procedures: nyProcedures,
+  videoMap: nyVideoMap,
+  traffic: nyTraffic,
+});
+
+export const airlines = airlinesFileSchema.parse(airlineData).airlines;
