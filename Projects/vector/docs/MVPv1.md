@@ -270,7 +270,7 @@ Every setting has a realistic default and a "reset to default" option.
 | Database   | PostgreSQL                                                                      |
 | Validation | Zod (shared schemas for API payloads, data files and save snapshots)            |
 | Auth       | JWT access tokens + rotating refresh tokens (same model as Atlas)               |
-| Testing    | Vitest (unit + integration), Playwright (end-to-end, later milestones)          |
+| Testing    | Vitest (unit + integration), Playwright (end-to-end, `npm run test:e2e`)        |
 
 ### 4.2 Project Structure
 

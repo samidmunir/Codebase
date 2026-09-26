@@ -41,7 +41,13 @@ export type TrafficSettings = Pick<SessionSettings, (typeof IN_SESSION_TRAFFIC_K
 
 /** Where a session came from: a new one, or a saved one being resumed. */
 export type SessionOrigin =
-  | { kind: 'new'; settings: SessionSettings }
+  | {
+      kind: 'new';
+      settings: SessionSettings;
+      /** Random seed; the setup screen passes the one it previewed. */
+      seed?: number;
+      runwayConfigs?: Record<string, string>;
+    }
   | { kind: 'saved'; snapshot: unknown; savedId: string; name: string };
 
 /**
@@ -75,11 +81,12 @@ export class ScopeSession {
       this.engine = SimEngine.create({
         performance: performanceCatalog,
         world: { magneticVariationDeg: pack.airspace.magneticVariationDeg },
-        seed: Date.now() >>> 0,
+        seed: origin.seed ?? Date.now() >>> 0,
         startTimeUtc: new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString(),
         settings: origin.settings,
         airspace: pack,
         airlines,
+        ...(origin.runwayConfigs ? { runwayConfigs: origin.runwayConfigs } : {}),
       });
       // Start with traffic already under way: arrivals spread along their routes.
       for (let i = 0; i < WARM_UP_SEC / this.engine.config.tickSeconds; i++) this.engine.step();

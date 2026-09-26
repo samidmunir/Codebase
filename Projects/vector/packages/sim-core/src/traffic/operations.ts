@@ -68,6 +68,8 @@ export interface OperationsSettings {
   maxCrosswindKts: number;
   departureRatePerHour: number;
   maxDepartureQueue: number;
+  /** Runway configuration ids chosen by the player, by airport; otherwise the wind decides. */
+  runwayConfigs?: Readonly<Record<string, string>>;
 }
 
 /** Picks from weighted options. */
@@ -97,12 +99,16 @@ export function initialOperations(
       : generateWinds(random, airports);
   const runways: Record<string, ActiveRunways> = {};
   for (const icao of airports) {
-    const config = selectRunwayConfig(
-      pack.traffic.airports[icao]!.runwayConfigs,
-      (runway) => pack.runway(icao, runway).magneticHeadingDeg,
-      winds[icao]!,
-      { maxTailwindKts: settings.maxTailwindKts, maxCrosswindKts: settings.maxCrosswindKts },
-    );
+    const configs = pack.traffic.airports[icao]!.runwayConfigs;
+    const chosen = configs.find((config) => config.id === settings.runwayConfigs?.[icao]);
+    const config =
+      chosen ??
+      selectRunwayConfig(
+        configs,
+        (runway) => pack.runway(icao, runway).magneticHeadingDeg,
+        winds[icao]!,
+        { maxTailwindKts: settings.maxTailwindKts, maxCrosswindKts: settings.maxCrosswindKts },
+      );
     runways[icao] = {
       configId: config.id,
       arrivals: [...config.arrivals],
@@ -140,6 +146,23 @@ export interface NewDepartureContext {
   /** Callsigns already in use (on the scope or in a queue). */
   callsignsInUse: ReadonlySet<string>;
   hasPerformance: (aircraftType: string) => boolean;
+  /** 'varied' evens out the airline mix so smaller carriers show up more often. */
+  fleetMix: FleetMix;
+}
+
+export type FleetMix = 'realistic' | 'varied';
+
+/** How strongly 'varied' flattens airline weights (1 would keep them as they are). */
+const VARIED_WEIGHT_EXPONENT = 0.3;
+
+/** Airline weights for a fleet mix. */
+export function airlineMix<T extends { weight: number }>(
+  airlines: readonly T[],
+  mix: FleetMix,
+): T[] {
+  return mix === 'varied'
+    ? airlines.map((airline) => ({ ...airline, weight: airline.weight ** VARIED_WEIGHT_EXPONENT }))
+    : [...airlines];
 }
 
 /** A new departure for an airport, with a realistic airline, type, destination and exit gate. */
@@ -152,7 +175,7 @@ export function newDepartureEntry(
   const { pack, random } = context;
   const traffic = pack.traffic.airports[airport]!;
 
-  const airline = weightedPick(random, traffic.airlines);
+  const airline = weightedPick(random, airlineMix(traffic.airlines, context.fleetMix));
   const types = airline.types.filter(context.hasPerformance);
   const info = context.airlines.get(airline.icao);
   const [low, high] = info?.flightNumbers ?? [100, 2999];

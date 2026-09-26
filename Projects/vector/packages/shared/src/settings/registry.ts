@@ -219,16 +219,6 @@ export const USER_SETTINGS = {
     unit: 'x',
     default: 1,
   }),
-  'controls.commandMenuStyle': setting.select({
-    category: 'controls',
-    label: 'Command menu style',
-    description: 'How aircraft command menus open.',
-    options: [
-      { value: 'radial', label: 'Radial' },
-      { value: 'list', label: 'List' },
-    ],
-    default: 'radial',
-  }),
   'controls.directToRingNm': setting.select({
     category: 'controls',
     label: 'Direct-to distance rings',

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { alertSounds } from '../../audio/alert-sounds';
+import { alertSounds, uiSounds } from '../../audio/alert-sounds';
 import { userSettings } from '../../settings/user-settings-store';
 import type { ScopeSession } from '../../sim/scope-session';
 
@@ -28,4 +28,24 @@ export function useConflictSounds(session: ScopeSession): void {
       window.clearInterval(timer);
     };
   }, [session]);
+}
+
+/** Plays a soft blip when the player transmits an instruction or clears a departure. */
+export function useInterfaceSounds(session: ScopeSession): void {
+  useEffect(
+    () =>
+      session.engine.subscribe((event) => {
+        const settings = userSettings.get();
+        if (!settings['audio.uiSounds']) return;
+        if (event.type === 'instructionIssued' || event.type === 'departureReleased')
+          uiSounds.transmit(settings['audio.masterVolume']);
+      }),
+    [session],
+  );
+}
+
+/** A tick when an aircraft is selected. */
+export function playSelectSound(): void {
+  const settings = userSettings.get();
+  if (settings['audio.uiSounds']) uiSounds.select(settings['audio.masterVolume']);
 }

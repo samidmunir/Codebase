@@ -142,8 +142,12 @@
   cursor: default;
 }
 
+.home-account a,
 .home-account button {
+  display: inline-flex;
+  align-items: center;
   min-height: 32px;
+  text-decoration: none;
   padding: 0 var(--space-3);
   color: var(--color-text);
   font: inherit;
@@ -154,6 +158,7 @@
   cursor: pointer;
 }
 
+.home-account a:hover,
 .home-account button:hover {
   background: rgba(255, 255, 255, 0.1);
 }

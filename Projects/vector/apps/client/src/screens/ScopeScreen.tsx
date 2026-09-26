@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router';
 import { applyDifficulty, defaultSettings } from '@vector/shared';
 import type { LatLon } from '@vector/sim-core';
 import { findAirspace } from '../airspaces/registry';
@@ -14,12 +14,18 @@ import { DEFAULT_LEADER_DIRECTION, type LeaderDirection } from '../scope/render/
 import { DEFAULT_DIFFICULTY, DIFFICULTY_LABELS, parseDifficulty } from '../settings/difficulty';
 import { useUserSettings } from '../settings/user-settings-store';
 import { ScopeSession } from '../sim/scope-session';
+import { parseSetup } from '../sim/session-setup';
 import { CommandPanel } from './scope/command/CommandPanel';
 import { CommsLog } from './scope/CommsLog';
 import { DeparturesPanel } from './scope/DeparturesPanel';
 import { MapLayersPanel } from './scope/MapLayersPanel';
-import { useConflictSounds } from './scope/use-conflict-sounds';
+import {
+  playSelectSound,
+  useConflictSounds,
+  useInterfaceSounds,
+} from './scope/use-conflict-sounds';
 import { SaveSessionDialog } from './scope/SaveSessionDialog';
+import { SettingsDialog } from './scope/SettingsDialog';
 import { ScopeTopBar } from './scope/ScopeTopBar';
 import { TrafficPanel } from './scope/TrafficPanel';
 import { formatPosition } from './scope/format';
@@ -34,10 +40,14 @@ type LoadState =
 export function ScopeScreen() {
   const { airspaceId = '' } = useParams();
   const [searchParams] = useSearchParams();
-  const difficulty = parseDifficulty(searchParams.get('difficulty')) ?? DEFAULT_DIFFICULTY;
+  const difficultyParam = parseDifficulty(searchParams.get('difficulty'));
+  const difficulty = difficultyParam ?? DEFAULT_DIFFICULTY;
   const savedId = searchParams.get('session');
+  const location = useLocation();
+  const setup = useMemo(() => parseSetup(location.state), [location.state]);
   const entry = findAirspace(airspaceId);
-  const loadKey = `${entry?.id}:${savedId ? `session=${savedId}` : difficulty}`;
+  // A new key for every start from the setup screen, so each start is a fresh session.
+  const loadKey = `${entry?.id}:${savedId ? `session=${savedId}` : setup ? `setup=${location.key}` : difficulty}`;
   const [loaded, setLoaded] = useState<{ id: string; state: LoadState } | undefined>(undefined);
 
   useEffect(() => {
@@ -47,10 +57,12 @@ export function ScopeScreen() {
     const start = async (): Promise<ScopeSession> => {
       if (!savedId) {
         const pack = await entry.load!();
-        return new ScopeSession(pack, {
-          kind: 'new',
-          settings: applyDifficulty(defaultSettings('session'), difficulty),
-        });
+        return new ScopeSession(
+          pack,
+          setup
+            ? { kind: 'new', ...setup }
+            : { kind: 'new', settings: applyDifficulty(defaultSettings('session'), difficulty) },
+        );
       }
       const [pack, saved] = await Promise.all([entry.load!(), getSavedSession(savedId)]);
       if (saved.airspaceId !== entry.id) throw new Error('That session is for another airspace.');
@@ -79,7 +91,12 @@ export function ScopeScreen() {
     return () => {
       cancelled = true;
     };
-  }, [entry, difficulty, savedId, loadKey]);
+  }, [entry, difficulty, savedId, setup, loadKey]);
+
+  // Opened without a setup (e.g. a typed URL): choose the session first.
+  if (entry?.load && !savedId && !setup && !difficultyParam) {
+    return <Navigate to={`/setup/${entry.id}`} replace />;
+  }
 
   const state: LoadState = !entry?.load
     ? { kind: 'error', message: `Airspace "${airspaceId}" is not available.` }
@@ -124,6 +141,7 @@ function Scope({ session }: { session: ScopeSession }) {
   const [layersOpen, setLayersOpen] = useState(false);
   const [trafficOpen, setTrafficOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string | undefined>(undefined);
   const [commsOpen, setCommsOpen] = useState(true);
   const [departuresOpen, setDeparturesOpen] = useState(true);
@@ -137,7 +155,10 @@ function Scope({ session }: { session: ScopeSession }) {
 
   // The selected aircraft, if it is still on the scope (it may have landed or left).
   const selected = selection ? session.engine.getAircraft(selection.id) : undefined;
+  const selectedIdRef = useRef<string | undefined>(undefined);
   const select = useCallback((id: string | undefined) => {
+    if (id !== undefined && id !== selectedIdRef.current) playSelectSound();
+    selectedIdRef.current = id;
     setSelection((current) =>
       id === undefined ? undefined : current?.id === id ? current : { id, draft: EMPTY_DRAFT },
     );
@@ -150,6 +171,7 @@ function Scope({ session }: { session: ScopeSession }) {
   const onCameraChange = useCallback((camera: Camera) => basemapRef.current?.sync(camera), []);
 
   useConflictSounds(session);
+  useInterfaceSounds(session);
 
   useEffect(() => {
     if (!toast) return;
@@ -187,11 +209,13 @@ function Scope({ session }: { session: ScopeSession }) {
     toggleMapLayers: toggleLayers,
     toggleTraffic,
     saveSession: openSave,
+    openSettings: () => setSettingsOpen((open) => !open),
     toggleCommsLog: () => setCommsOpen((open) => !open),
     toggleDepartureQueue: () => setDeparturesOpen((open) => !open),
     // Closes the topmost panel: the save dialog, then side panels, then the selected aircraft.
     closeMenu: () => {
-      if (saveOpen) setSaveOpen(false);
+      if (settingsOpen) setSettingsOpen(false);
+      else if (saveOpen) setSaveOpen(false);
       else if (layersOpen || trafficOpen) {
         setLayersOpen(false);
         setTrafficOpen(false);
@@ -236,6 +260,7 @@ function Scope({ session }: { session: ScopeSession }) {
         trafficOpen={trafficOpen}
         onToggleTraffic={toggleTraffic}
         onSave={openSave}
+        onOpenSettings={() => setSettingsOpen(true)}
         commsOpen={commsOpen}
         onToggleComms={() => setCommsOpen((open) => !open)}
         departuresOpen={departuresOpen}
@@ -273,6 +298,8 @@ function Scope({ session }: { session: ScopeSession }) {
           onClose={() => setTrafficOpen(false)}
         />
       )}
+
+      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
 
       {saveOpen && (
         <SaveSessionDialog

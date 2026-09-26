@@ -1,2 +1,6 @@
 # Raw downloads for data build scripts (reproducible, large)
 data/.cache/
+
+# End-to-end test output
+test-results/
+playwright-report/

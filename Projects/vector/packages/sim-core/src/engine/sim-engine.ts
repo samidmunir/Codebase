@@ -57,6 +57,7 @@ import {
   newDepartureEntry,
   queuedAt,
   weightedPick,
+  airlineMix,
   type ActiveRunways,
   type DepartureEntry,
 } from '../traffic/operations';
@@ -88,6 +89,11 @@ export type CreateSimEngineOptions = {
   settings?: SessionSettings;
   /** Controller the player works as. Defaults to 'N90'. */
   playerId?: string;
+  /**
+   * Runway configuration to use at an airport (by config id) instead of the
+   * one the wind favors. Unknown airports or ids are ignored.
+   */
+  runwayConfigs?: Readonly<Record<string, string>>;
 } & OperationsContext;
 
 /** Static data for airport operations (wind, runways, departures). Not saved in snapshots. */
@@ -171,7 +177,7 @@ export class SimEngine {
       },
       options,
     );
-    engine.startOperations();
+    engine.startOperations(options.runwayConfigs);
     return engine;
   }
 
@@ -815,7 +821,10 @@ export class SimEngine {
 
     const airline = weightedPick(
       random,
-      allTraffic.flatMap((t) => t.airlines),
+      airlineMix(
+        allTraffic.flatMap((t) => t.airlines),
+        this.state.settings['traffic.fleetMix'],
+      ),
     );
     const types = airline.types.filter((type) => this.performance.has(type));
     if (types.length === 0) return false;
@@ -904,6 +913,7 @@ export class SimEngine {
         random: this.rng,
         callsignsInUse: inUse,
         hasPerformance: (type) => this.performance.has(type),
+        fleetMix: this.state.settings['traffic.fleetMix'],
       },
       { ...operations, nextDepartureNumber: 1 },
       airport,
@@ -1048,7 +1058,7 @@ export class SimEngine {
     return { ok: true };
   }
 
-  private startOperations(): void {
+  private startOperations(runwayConfigs?: Readonly<Record<string, string>>): void {
     if (!this.airspace) return;
     const settings = this.state.settings;
     const operations = initialOperations(
@@ -1064,6 +1074,7 @@ export class SimEngine {
         maxCrosswindKts: settings['weather.maxCrosswindKts'],
         departureRatePerHour: settings['traffic.departureRatePerHour'],
         maxDepartureQueue: settings['traffic.maxDepartureQueue'],
+        ...(runwayConfigs ? { runwayConfigs } : {}),
       },
       this.state.tick,
     );
@@ -1093,6 +1104,7 @@ export class SimEngine {
         random: this.rng,
         callsignsInUse: inUse,
         hasPerformance: (type) => this.performance.has(type),
+        fleetMix: this.state.settings['traffic.fleetMix'],
       },
       operations,
       airport,
