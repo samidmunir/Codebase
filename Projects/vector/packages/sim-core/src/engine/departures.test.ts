@@ -55,6 +55,27 @@ describe('wind and runways', () => {
     }
   });
 
+  it('uses a runway configuration the player chose over the wind', () => {
+    const engine = SimEngine.create({
+      performance,
+      world: { magneticVariationDeg: newYork.airspace.magneticVariationDeg },
+      seed: 21,
+      startTimeUtc: '2026-09-26T14:00:00Z',
+      settings: {
+        ...defaultSettings('session'),
+        'weather.windMode': 'manual',
+        'weather.manualWindDirectionDeg': 310,
+        'weather.manualWindSpeedKts': 18,
+      },
+      airspace: newYork,
+      airlines,
+      runwayConfigs: { KJFK: '13s', KXYZ: '4s', KEWR: 'no-such-config' },
+    });
+    expect(engine.activeRunways.KJFK).toMatchObject({ arrivals: ['13L'], departures: ['13R'] });
+    // Unknown ids fall back to the wind.
+    expect(engine.activeRunways.KEWR!.configId).not.toBe('no-such-config');
+  });
+
   it('uses the manual wind when set', () => {
     const engine = createEngine({
       'weather.windMode': 'manual',
@@ -87,6 +108,35 @@ describe('departure queue', () => {
     expect(lga.some((d) => ['B77W', 'B789', 'B763', 'A333'].includes(d.aircraftType))).toBe(false);
   });
 
+  it('evens out the airline mix when the fleet mix is varied', () => {
+    const share = (fleetMix: 'realistic' | 'varied') => {
+      const random = new SeededRandom(3);
+      const operations = initialOperations(newYork, random, OPERATIONS_SETTINGS, 0);
+      const context = {
+        pack: newYork,
+        airlines: new Map(airlines.map((airline) => [airline.icao, airline])),
+        random,
+        callsignsInUse: new Set<string>(),
+        hasPerformance: (type: string) => performance.has(type),
+        fleetMix,
+      };
+      const entries = Array.from({ length: 1_000 }, () =>
+        newDepartureEntry(context, operations, 'KJFK', 0),
+      );
+      // The busiest airline's share of departures.
+      const counts = new Map<string, number>();
+      for (const entry of entries) {
+        const icao = entry.callsign.slice(0, 3);
+        counts.set(icao, (counts.get(icao) ?? 0) + 1);
+      }
+      return { top: Math.max(...counts.values()) / entries.length, airlines: counts.size };
+    };
+    const realistic = share('realistic');
+    const varied = share('varied');
+    expect(varied.top).toBeLessThan(realistic.top);
+    expect(varied.airlines).toBeGreaterThanOrEqual(realistic.airlines);
+  });
+
   it('only sends airlines to destinations they serve', () => {
     const random = new SeededRandom(3);
     const operations = initialOperations(newYork, random, OPERATIONS_SETTINGS, 0);
@@ -96,6 +146,7 @@ describe('departure queue', () => {
       random,
       callsignsInUse: new Set<string>(),
       hasPerformance: (type: string) => performance.has(type),
+      fleetMix: 'realistic' as const,
     };
     const entries = Array.from({ length: 500 }, () =>
       newDepartureEntry(context, operations, 'KJFK', 0),

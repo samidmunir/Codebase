@@ -639,3 +639,22 @@
   border-radius: 999px;
   animation: panel-in 180ms var(--ease-out);
 }
+
+.scope-dialog--settings {
+  grid-template-rows: auto minmax(0, 1fr);
+  align-self: center;
+  overflow: hidden;
+  width: min(920px, 100%);
+  height: min(680px, calc(100% - 48px));
+}
+
+.scope-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.scope-dialog--settings .settings-view,
+.scope-dialog--settings .settings-view__content {
+  min-height: 0;
+}

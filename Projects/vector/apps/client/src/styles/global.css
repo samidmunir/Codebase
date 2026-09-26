@@ -28,3 +28,20 @@ body {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* display.uiAnimations: 'reduced' drops entrance and decorative animations,
+   'off' also drops transitions. */
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after,
+:root[data-motion='off'] *,
+:root[data-motion='off'] *::before,
+:root[data-motion='off'] *::after {
+  animation: none !important;
+}
+
+:root[data-motion='off'] *,
+:root[data-motion='off'] *::before,
+:root[data-motion='off'] *::after {
+  transition: none !important;
+}

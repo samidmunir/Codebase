@@ -19,6 +19,7 @@ interface ScopeTopBarProps {
   trafficOpen: boolean;
   onToggleTraffic: () => void;
   onSave: () => void;
+  onOpenSettings: () => void;
 }
 
 export function ScopeTopBar(props: ScopeTopBarProps) {
@@ -192,6 +193,24 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
             />
           </svg>
           Save
+        </button>
+
+        <button
+          type="button"
+          className="scope-button scope-button--icon"
+          onClick={props.onOpenSettings}
+          aria-label="Settings"
+          title="Settings"
+        >
+          <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+            <circle cx="8" cy="8" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.4" />
+            <path
+              d="M8 1.5 V3.2 M8 12.8 V14.5 M1.5 8 H3.2 M12.8 8 H14.5 M3.4 3.4 L4.6 4.6 M11.4 11.4 L12.6 12.6 M3.4 12.6 L4.6 11.4 M11.4 4.6 L12.6 3.4"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
       </div>
     </header>
