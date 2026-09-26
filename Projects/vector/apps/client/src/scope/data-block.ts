@@ -32,6 +32,8 @@ export interface DataBlockTarget {
   altitudeFt: number;
   groundSpeedKts: number;
   verticalSpeedFpm: number;
+  /** Fix or approach being flown to (not shown on a plain heading). */
+  navigatingTo?: string | undefined;
 }
 
 /** Ground speed in knots, three digits: 210 -> '210', 95 -> '095'. */
@@ -41,10 +43,17 @@ export function formatGroundSpeedKnots(groundSpeedKts: number): string {
 
 export type DataBlockStyle = 'expanded' | 'stars';
 
+/** '→CAMRN' for a fix; approaches ('ILS22L') as they are. */
+export function navigationLabel(navigatingTo: string | undefined): string | undefined {
+  if (!navigatingTo) return undefined;
+  return navigatingTo.startsWith('ILS') ? navigatingTo : `→${navigatingTo}`;
+}
+
 /**
  * The lines of a data block.
- * - 'expanded': callsign / altitude + trend + full ground speed / type + destination.
- * - 'stars': callsign / altitude + trend + ground speed in tens, time-shared with type + destination.
+ * - 'expanded': callsign / altitude + trend + full ground speed / type + destination (+ where it's navigating to).
+ * - 'stars': callsign / altitude + trend + ground speed in tens, time-shared with where it's
+ *   navigating to (like the STARS scratchpad), or type + destination.
  */
 export function dataBlockLines(
   target: DataBlockTarget,
@@ -53,14 +62,17 @@ export function dataBlockLines(
 ): string[] {
   const altitude = `${formatAltitude(target.altitudeFt)}${trendIndicator(target.verticalSpeedFpm)}`;
   const typeAndDestination = `${target.aircraftType.padEnd(4)} ${shortAirport(target.destination)}`;
+  const route = navigationLabel(target.navigatingTo);
   if (style === 'expanded') {
     return [
       target.callsign,
       `${altitude} ${formatGroundSpeedKnots(target.groundSpeedKts)}`,
-      typeAndDestination,
+      route ? `${typeAndDestination} ${route}` : typeAndDestination,
     ];
   }
   const line2 =
-    timeShare === 0 ? `${altitude}${formatGroundSpeed(target.groundSpeedKts)}` : typeAndDestination;
+    timeShare === 0
+      ? `${altitude}${formatGroundSpeed(target.groundSpeedKts)}`
+      : (route ?? typeAndDestination);
   return [target.callsign, line2];
 }

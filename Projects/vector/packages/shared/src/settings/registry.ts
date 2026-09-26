@@ -59,6 +59,12 @@ export const USER_SETTINGS = {
     step: 1,
     default: 2,
   }),
+  'display.headingVector': setting.boolean({
+    category: 'display',
+    label: 'Heading vector',
+    description: 'Show a short line from each target in the direction it is heading.',
+    default: true,
+  }),
   'display.rangeRings': setting.boolean({
     category: 'display',
     label: 'Range rings',

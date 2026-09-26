@@ -12,6 +12,8 @@ export interface RadarTarget {
   groundSpeedKts: number;
   verticalSpeedFpm: number;
   headingDeg: number;
+  /** Where the aircraft is navigating when not on a plain heading: a fix, or an ILS ('ILS22L'). */
+  navigatingTo: string | undefined;
   /** Previous returns, newest first. */
   history: LatLon[];
 }
@@ -19,6 +21,21 @@ export interface RadarTarget {
 interface TrackedTarget extends RadarTarget {
   /** Rotation in which this target was last scanned. */
   scan: number;
+}
+
+/** The fix or approach an aircraft is flying to, or undefined on a heading. */
+export function navigatingTo(aircraft: Readonly<AircraftState>): string | undefined {
+  const navigation = aircraft.navigation;
+  if (navigation.mode === 'direct') return navigation.fix;
+  if (navigation.mode === 'approach') return `ILS${navigation.clearance.runway}`;
+  if (navigation.mode === 'procedure') {
+    // The next leg that ends at a fix (heading legs in between are flown on the way).
+    for (const leg of navigation.legs.slice(navigation.legIndex)) {
+      if (leg.pathTerminator.startsWith('F')) return undefined; // flies a course from a fix: on a heading
+      if (leg.fix && leg.position) return leg.fix;
+    }
+  }
+  return undefined;
 }
 
 /** Returns kept per target; trails show as many of these as the display setting allows. */
@@ -121,6 +138,7 @@ export class RadarTracker {
       groundSpeedKts: groundSpeedKts(plane),
       verticalSpeedFpm: plane.verticalSpeedFpm,
       headingDeg: plane.headingDeg,
+      navigatingTo: navigatingTo(plane),
       history: previous ? [previous.position, ...previous.history].slice(0, MAX_HISTORY) : [],
       scan,
     });

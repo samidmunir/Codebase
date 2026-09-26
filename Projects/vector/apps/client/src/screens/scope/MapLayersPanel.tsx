@@ -16,7 +16,11 @@ const MAP_LAYERS: BooleanKey[] = [
   'map.minimumVectoringAltitudes',
 ];
 
-const DISPLAY_OPTIONS: BooleanKey[] = ['display.rangeRings', 'display.sweepEffect'];
+const DISPLAY_OPTIONS: BooleanKey[] = [
+  'display.headingVector',
+  'display.rangeRings',
+  'display.sweepEffect',
+];
 
 interface MapLayersPanelProps {
   settings: UserSettings;

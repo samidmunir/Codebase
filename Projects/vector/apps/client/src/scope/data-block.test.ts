@@ -45,6 +45,15 @@ describe('data block', () => {
     expect(dataBlockLines(target, 1, 'stars')).toEqual(['JBU1024', 'A320 JFK']);
   });
 
+  it('adds where the aircraft is navigating to, and shows it in the STARS time-share', () => {
+    const direct = { ...target, navigatingTo: 'CAMRN' };
+    expect(dataBlockLines(direct, 0, 'expanded')[2]).toBe('A320 JFK →CAMRN');
+    expect(dataBlockLines(direct, 1, 'stars')).toEqual(['JBU1024', '→CAMRN']);
+    expect(dataBlockLines({ ...target, navigatingTo: 'ILS22L' }, 0, 'expanded')[2]).toBe(
+      'A320 JFK ILS22L',
+    );
+  });
+
   it('shows altitude, full speed, type and destination together in the expanded style', () => {
     const expected = ['JBU1024', '050↓ 212', 'A320 JFK'];
     expect(dataBlockLines(target, 0, 'expanded')).toEqual(expected);
