@@ -215,15 +215,15 @@ describe('navigation', () => {
 
   it('intercepts the localizer, descends on the glideslope, slows down and lands', () => {
     const engine = createEngine([1, 1]);
-    // 14 NM out on final, 3 NM left of the centerline (as the pilot sees it), on a 30° intercept.
+    // 14 NM out on final, 3 NM left of the centerline (as the pilot sees it), on a 26° intercept.
     const outbound = 223.8 - 13 + 180;
     const onCourse = destinationPoint(ILS_22L.threshold, outbound, 14);
     const start = destinationPoint(onCourse, outbound + 90, 3);
     const aircraft = engine.addAircraft(
       newAircraft({
         position: start,
-        headingDeg: 254,
-        altitudeFt: 3_000,
+        headingDeg: 250,
+        altitudeFt: 2_000,
         iasKts: 210,
         flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
         phase: 'arrival',
@@ -264,26 +264,25 @@ describe('navigation', () => {
     expect(lowestSpeed).toBe(performance.get('A320').speeds.final);
   });
 
-  it('does not capture the glideslope from well above it', () => {
+  it('replies unable when too high for the approach, and stays on vectors', () => {
     const engine = createEngine([1, 1]);
     const start = destinationPoint(ILS_22L.threshold, 223.8 - 13 + 180, 8);
-    const aircraft = engine.addAircraft(
-      newAircraft({
+    const aircraft = engine.addAircraft({
+      ...newAircraft({
         position: start,
         headingDeg: 224,
         altitudeFt: 6_000, // glidepath at 8 NM is ~2,600 ft
         iasKts: 180,
         flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
       }),
-    );
-    engine.issueInstruction(aircraft.id, [{ type: 'clearedIls', clearance: ILS_22L }]);
-    run(engine, 60);
-    const navigation = engine.getAircraft(aircraft.id)!.navigation;
-    expect(navigation).toMatchObject({
-      mode: 'approach',
-      localizerCaptured: true,
-      glideslopeCaptured: false,
+      telephony: 'JetBlue',
     });
+    engine.issueInstruction(aircraft.id, [{ type: 'clearedIls', clearance: ILS_22L }]);
+    run(engine, 2);
+    expect(engine.comms.at(-1)!.text).toBe(
+      'Unable ILS runway two two left, too high for the approach, JetBlue ten twenty-four.',
+    );
+    expect(engine.getAircraft(aircraft.id)!.navigation.mode).toBe('heading');
   });
 
   it('breaks off the approach when vectored after capturing the localizer', () => {

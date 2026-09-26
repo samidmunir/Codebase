@@ -22,6 +22,10 @@ export type SimEvent =
   | { type: 'tookOff'; aircraftId: string; airport: string; runway: string; procedure: string }
   | { type: 'procedureCompleted'; aircraftId: string; procedure: string }
   /** An aircraft left the airspace; `handedOff` is false if it left without a handoff. */
-  | { type: 'leftAirspace'; aircraftId: string; callsign: string; handedOff: boolean };
+  | { type: 'leftAirspace'; aircraftId: string; callsign: string; handedOff: boolean }
+  | { type: 'arrivalEntered'; aircraftId: string; airport: string; star: string }
+  /** The pilot could not accept an ILS clearance. */
+  | { type: 'ilsUnable'; aircraftId: string; reason: string }
+  | { type: 'goAround'; aircraftId: string; airport: string; runway: string; reason: string };
 
 export type SimEventListener = (event: SimEvent, tick: number) => void;

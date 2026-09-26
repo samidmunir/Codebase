@@ -885,3 +885,30 @@
     display: none;
   }
 }
+
+.option-grid .option--in-use {
+  border-color: rgba(76, 242, 160, 0.45);
+}
+
+.option-grid button {
+  position: relative;
+}
+
+.option__eligible,
+.option__ineligible {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.option__eligible {
+  background: var(--color-ok);
+  box-shadow: 0 0 6px var(--color-ok);
+}
+
+.option__ineligible {
+  background: var(--color-alert);
+}

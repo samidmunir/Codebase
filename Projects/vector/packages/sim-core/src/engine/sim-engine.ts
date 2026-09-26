@@ -7,11 +7,18 @@ import {
   type AircraftState,
   type ControllerId,
   type FlightPhase,
+  type IlsClearance,
   type AircraftTargets,
   type NewAircraft,
 } from '../aircraft/aircraft';
 import { stepAircraft } from '../aircraft/flight-model';
-import { followGlideslope, updateNavigation } from '../aircraft/navigation';
+import { finalApproachGeometry, followGlideslope, updateNavigation } from '../aircraft/navigation';
+import {
+  distanceForHeightNm,
+  ilsEligibility,
+  type IlsEligibility,
+} from '../commands/ils-eligibility';
+import { arrivalRouteFrom } from '../traffic/arrival-route';
 import {
   controllerPhrase,
   inSpokenOrder,
@@ -20,10 +27,17 @@ import {
   type AtcCommand,
   type ValidationResult,
 } from '../commands/commands';
-import { altitudeWords, capitalize, runwayWords, spokenCallsign } from '../comms/phraseology';
+import {
+  altitudeWords,
+  capitalize,
+  frequencyWords,
+  procedureWords,
+  runwayWords,
+  spokenCallsign,
+} from '../comms/phraseology';
 import type { AirspacePack } from '../airspace/airspace-pack';
 import type { Airline } from '../airspace/schema';
-import { departureProcedure } from '../traffic/departure-procedure';
+import { departureProcedure, resolveLegs } from '../traffic/departure-procedure';
 import {
   departureInterval,
   INITIAL_QUEUE,
@@ -36,7 +50,8 @@ import {
 } from '../traffic/operations';
 import type { Wind } from '../weather/wind';
 import { normalizeHeading } from '../math/angles';
-import { destinationPoint, distanceNm } from '../math/geo';
+import { bearingTrue, destinationPoint, distanceNm, trueToMagnetic } from '../math/geo';
+import type { AircraftPerformance } from '../performance/performance';
 import type { PerformanceCatalog } from '../performance/performance';
 import { SeededRandom } from '../random/seeded-random';
 import {
@@ -72,6 +87,14 @@ export interface OperationsContext {
 /** Aircraft beyond the boundary by this much are removed: handed-off aircraft sooner. */
 const EXIT_MARGIN_HANDED_OFF_NM = 3;
 const EXIT_MARGIN_NM = 10;
+/** Stabilized approach: within this distance of the centerline and speed margin at the gate. */
+const STABILIZED_CROSS_TRACK_NM = 0.1;
+const STABILIZED_SPEED_MARGIN_KTS = 10;
+const DEFAULT_MISSED_APPROACH_ALTITUDE_FT = 3_000;
+/** Altitudes arrivals are typically handed over at, when the STAR doesn't publish one. */
+const ARRIVAL_ENTRY_ALTITUDES_FT = [11_000, 12_000, 13_000];
+/** New arrivals wait if another aircraft is this close to the entry point at a similar altitude. */
+const ARRIVAL_ENTRY_SPACING_NM = 6;
 /** Line-up and takeoff roll after a takeoff clearance. */
 const LINE_UP_SEC: [number, number] = [30, 50];
 /** Spacing between takeoffs on one runway, by the leading aircraft's wake category. */
@@ -244,12 +267,19 @@ export class SimEngine {
     this.state.tick++;
     this.executeDueInstructions();
     this.updateDepartures();
+    this.updateArrivals();
 
     const landed: { aircraft: AircraftState; airport: string; runway: string }[] = [];
     for (const aircraft of this.state.aircraft) {
       const performance = this.performance.get(aircraft.aircraftType);
 
-      const navigation = updateNavigation(aircraft, performance, variation, flightModel);
+      const navigation = updateNavigation(
+        aircraft,
+        performance,
+        variation,
+        flightModel,
+        this.state.settings['approaches.stabilizedGateFt'],
+      );
       if (navigation.procedureCompleted) {
         this.emit({
           type: 'procedureCompleted',
@@ -267,12 +297,11 @@ export class SimEngine {
 
       const result = stepAircraft(aircraft, performance, tickSeconds, variation, flightModel);
       this.checkRadarContact(aircraft);
-      if (
-        followGlideslope(aircraft, variation, tickSeconds) &&
-        aircraft.navigation.mode === 'approach'
-      ) {
+      const atThreshold = followGlideslope(aircraft, variation, tickSeconds);
+      if (aircraft.navigation.mode === 'approach') {
         const { airport, runway } = aircraft.navigation.clearance;
-        landed.push({ aircraft, airport, runway });
+        const outcome = this.monitorApproach(aircraft, performance, atThreshold);
+        if (outcome === 'landed') landed.push({ aircraft, airport, runway });
       }
 
       if (result.reachedHeading) {
@@ -398,16 +427,27 @@ export class SimEngine {
       if (!aircraft) continue;
 
       const detail = this.state.settings['pilots.readbackDetail'];
-      const readback = pending.commands.map((command) => pilotReadback(command, aircraft, detail));
+      const readback: string[] = [];
+      const executed: AtcCommand[] = [];
+      // Commands are in spoken order, so a heading given with an approach clearance applies first.
+      for (const command of pending.commands) {
+        if (command.type === 'clearedIls') {
+          const eligibility = this.ilsEligibilityFor(aircraft, command.clearance);
+          if (!eligibility.ok) {
+            readback.push(
+              `unable ILS runway ${runwayWords(command.clearance.runway)}, ${eligibility.reason}`,
+            );
+            this.emit({ type: 'ilsUnable', aircraftId: aircraft.id, reason: eligibility.reason });
+            continue;
+          }
+        }
+        readback.push(pilotReadback(command, aircraft, detail));
+        this.applyCommand(aircraft, command);
+        executed.push(command);
+      }
       const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
       this.transmit('pilot', aircraft.id, `${capitalize(readback.join(', '))}, ${callsign}.`);
-
-      for (const command of pending.commands) this.applyCommand(aircraft, command);
-      this.emit({
-        type: 'instructionExecuted',
-        aircraftId: aircraft.id,
-        commands: pending.commands,
-      });
+      this.emit({ type: 'instructionExecuted', aircraftId: aircraft.id, commands: executed });
     }
   }
 
@@ -460,6 +500,7 @@ export class SimEngine {
           clearance: cloneJson(command.clearance),
           localizerCaptured: false,
           glideslopeCaptured: false,
+          gatePassed: false,
         };
         aircraft.phase = 'approach';
         break;
@@ -467,6 +508,251 @@ export class SimEngine {
         this.changeOwner(aircraft, command.to);
         break;
     }
+  }
+
+  // ---- Approaches -----------------------------------------------------------------
+
+  /** Whether an aircraft could accept an ILS clearance right now. */
+  ilsEligibility(aircraftId: string, clearance: IlsClearance): IlsEligibility {
+    const aircraft = this.getAircraft(aircraftId);
+    if (!aircraft) return { ok: false, problem: 'position', reason: 'no longer on the scope' };
+    return this.ilsEligibilityFor(aircraft, clearance);
+  }
+
+  private ilsEligibilityFor(
+    aircraft: Readonly<AircraftState>,
+    clearance: IlsClearance,
+  ): IlsEligibility {
+    return ilsEligibility(aircraft, clearance, {
+      performance: this.performance.get(aircraft.aircraftType),
+      settings: this.state.settings,
+      magneticVariationDeg: this.state.world.magneticVariationDeg,
+      minimumVectoringAltitudeFt: this.airspace?.minimumVectoringAltitude(aircraft.position),
+    });
+  }
+
+  /**
+   * Watches an aircraft on an approach: hands it to Tower once established,
+   * checks the stabilized-approach gate, and sends it around if the approach
+   * isn't stable. Returns 'landed' when it touches down.
+   */
+  private monitorApproach(
+    aircraft: AircraftState,
+    performance: AircraftPerformance,
+    atThreshold: boolean,
+  ): 'landed' | 'flying' {
+    const navigation = aircraft.navigation;
+    if (navigation.mode !== 'approach') return 'flying';
+    const { clearance } = navigation;
+    const settings = this.state.settings;
+    const established = navigation.localizerCaptured && navigation.glideslopeCaptured;
+
+    // Established on the ILS: the player hands the aircraft to Tower.
+    if (established && aircraft.owner === this.state.playerId && this.airspace) {
+      const runway = this.airspace.runway(clearance.airport, clearance.runway);
+      const tower = this.airspace.airport(clearance.airport).towerCallsign;
+      const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+      this.transmit(
+        'controller',
+        aircraft.id,
+        `${capitalize(callsign)}, contact ${tower} ${frequencyWords(runway.towerFrequencyMhz)}.`,
+      );
+      this.transmit(
+        'pilot',
+        aircraft.id,
+        `${capitalize(frequencyWords(runway.towerFrequencyMhz))}, ${callsign}.`,
+      );
+      this.changeOwner(aircraft, towerId(clearance.airport));
+    }
+
+    const geometry = finalApproachGeometry(
+      aircraft.position,
+      clearance,
+      this.state.world.magneticVariationDeg,
+    );
+    const gateNm = distanceForHeightNm(clearance, settings['approaches.stabilizedGateFt']);
+
+    if (!navigation.gatePassed && geometry.alongTrackNm <= gateNm) {
+      navigation.gatePassed = true;
+      const stable =
+        established &&
+        Math.abs(geometry.crossTrackNm) <= STABILIZED_CROSS_TRACK_NM &&
+        aircraft.iasKts <= performance.speeds.final + STABILIZED_SPEED_MARGIN_KTS;
+      if (!stable && settings['approaches.goArounds']) {
+        const reason = !established
+          ? 'not established on the ILS'
+          : aircraft.iasKts > performance.speeds.final + STABILIZED_SPEED_MARGIN_KTS
+            ? 'too fast'
+            : 'not aligned with the runway';
+        this.goAround(aircraft, reason);
+        return 'flying';
+      }
+    }
+
+    if (atThreshold) return 'landed';
+    // Reached the runway without being on the glideslope (e.g. go-arounds turned off): go around anyway.
+    if (geometry.alongTrackNm <= 0 && !navigation.glideslopeCaptured) {
+      this.goAround(aircraft, 'not established on the ILS');
+    }
+    return 'flying';
+  }
+
+  /** Flies the published missed approach and hands the aircraft back to the player. */
+  private goAround(aircraft: AircraftState, reason: string): void {
+    const navigation = aircraft.navigation;
+    if (navigation.mode !== 'approach') return;
+    const { clearance } = navigation;
+    const approach = this.airspace?.approaches.find(
+      (candidate) =>
+        candidate.airport === clearance.airport && candidate.id === clearance.approachId,
+    );
+    const legs =
+      approach && this.airspace
+        ? resolveLegs(this.airspace, clearance.airport, approach.missedApproach)
+        : [];
+    const missedAltitude = Math.max(
+      DEFAULT_MISSED_APPROACH_ALTITUDE_FT,
+      ...(approach?.missedApproach ?? []).flatMap((leg) =>
+        leg.altitude && 'ft' in leg.altitude ? [leg.altitude.ft] : [],
+      ),
+    );
+
+    aircraft.navigation =
+      legs.length > 0
+        ? {
+            mode: 'procedure',
+            name: 'Missed approach',
+            legs,
+            legIndex: 0,
+            legStart: { ...aircraft.position },
+          }
+        : { mode: 'heading' };
+    aircraft.targets.headingDeg = normalizeHeading(Math.round(clearance.courseDeg));
+    aircraft.targets.turnDirection = 'shortest';
+    aircraft.targets.altitudeFt = missedAltitude;
+    aircraft.targets.speedMode = 'normal';
+    aircraft.phase = 'goAround';
+    this.changeOwner(aircraft, this.state.playerId);
+
+    const facility = this.airspace?.airspace.controllers.approach.approachCallsign ?? 'Approach';
+    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    this.transmit(
+      'pilot',
+      aircraft.id,
+      `${facility}, ${callsign}, going around, ${reason}, climbing ${altitudeWords(missedAltitude)}.`,
+    );
+    this.emit({
+      type: 'goAround',
+      aircraftId: aircraft.id,
+      airport: clearance.airport,
+      runway: clearance.runway,
+      reason,
+    });
+  }
+
+  // ---- Arrivals ---------------------------------------------------------------
+
+  private updateArrivals(): void {
+    const operations = this.state.operations;
+    if (!operations || !this.airspace) return;
+    const rate = this.state.settings['traffic.arrivalRatePerHour'];
+    if (rate <= 0) return;
+    for (const airport of this.airspace.airspace.airports) {
+      if (this.state.tick < (operations.nextArrivalTick[airport] ?? Infinity)) continue;
+      const spawned = this.spawnArrival(airport);
+      // If the entry point is busy, try again shortly instead of stacking aircraft.
+      operations.nextArrivalTick[airport] =
+        this.state.tick +
+        (spawned
+          ? departureInterval(this.rng, rate, this.state.config.tickSeconds)
+          : Math.ceil(30 / this.state.config.tickSeconds));
+    }
+  }
+
+  private spawnArrival(airport: string): boolean {
+    const pack = this.airspace!;
+    const operations = this.state.operations!;
+    const runway = operations.runways[airport]?.arrivals[0];
+    if (!runway) return false;
+
+    const inUse = new Set([
+      ...this.state.aircraft.map((a) => a.callsign),
+      ...operations.departureQueue.map((d) => d.callsign),
+    ]);
+    // An arrival is a departure from somewhere else: same airline, type and city-pair logic.
+    const flight = newDepartureEntry(
+      {
+        pack,
+        airlines: this.airlines,
+        random: this.rng,
+        callsignsInUse: inUse,
+        hasPerformance: (type) => this.performance.has(type),
+      },
+      { ...operations, nextDepartureNumber: 1 },
+      airport,
+      this.state.tick,
+    );
+    const gate = pack.fix(flight.gateFix);
+    if (!gate) return false;
+    const route = arrivalRouteFrom(
+      pack,
+      airport,
+      runway,
+      bearingTrue(pack.airspace.center, gate.position),
+    );
+    if (!route) return false;
+
+    const altitude = Math.min(
+      pack.airspace.boundary.ceilingFt - 1_000,
+      route.crossingAltitudeFt ?? this.rng.pick(ARRIVAL_ENTRY_ALTITUDES_FT),
+    );
+    const crowded = this.state.aircraft.some(
+      (other) =>
+        distanceNm(other.position, route.entry) < ARRIVAL_ENTRY_SPACING_NM &&
+        Math.abs(other.altitudeFt - altitude) < 1_000,
+    );
+    if (crowded) return false;
+
+    const firstFix = route.legs.find((leg) => leg.position)!;
+    const heading =
+      Math.round(
+        trueToMagnetic(
+          bearingTrue(route.entry, firstFix.position!),
+          this.state.world.magneticVariationDeg,
+        ),
+      ) % 360;
+    const aircraft = this.addAircraft({
+      callsign: flight.callsign,
+      ...(flight.telephony ? { telephony: flight.telephony } : {}),
+      aircraftType: flight.aircraftType,
+      squawk: flight.squawk,
+      flightPlan: { origin: flight.destination, destination: airport, route: [route.star] },
+      phase: 'arrival',
+      owner: this.state.playerId,
+      position: route.entry,
+      altitudeFt: altitude,
+      headingDeg: heading,
+      iasKts: altitude >= 10_000 ? 280 : 250,
+      targets: { speedMode: 'normal' },
+    });
+    this.mutableAircraft(aircraft.id).navigation = {
+      mode: 'procedure',
+      name: route.star,
+      legs: route.legs,
+      legIndex: 0,
+      legStart: { ...route.entry },
+    };
+
+    const facility = pack.airspace.controllers.approach.approachCallsign;
+    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    const star = procedureWords(route.star);
+    this.transmit(
+      'pilot',
+      aircraft.id,
+      `${facility}, ${callsign}, ${altitudeWords(altitude)}, ${star} arrival.`,
+    );
+    this.emit({ type: 'arrivalEntered', aircraftId: aircraft.id, airport, star: route.star });
+    return true;
   }
 
   // ---- Airport operations ------------------------------------------------------
@@ -712,7 +998,7 @@ export class SimEngine {
     const navigation = aircraft.navigation;
     const procedure =
       navigation.mode === 'procedure' && navigation.name !== 'Runway heading'
-        ? `, ${navigation.name.replace(/(\d)$/, ' $1')} departure`
+        ? `, ${procedureWords(navigation.name)} departure`
         : '';
     const facility = this.airspace.airspace.controllers.approach.departureCallsign;
     const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);

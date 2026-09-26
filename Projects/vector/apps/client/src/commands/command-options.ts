@@ -171,25 +171,5 @@ export function minimumVectoringAltitude(
   pack: AirspacePack,
   position: { lat: number; lon: number },
 ): number | undefined {
-  const inside = (ring: readonly [number, number][]) => {
-    let result = false;
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const [xi, yi] = ring[i]!;
-      const [xj, yj] = ring[j]!;
-      if (
-        yi > position.lat !== yj > position.lat &&
-        position.lon < ((xj - xi) * (position.lat - yi)) / (yj - yi) + xi
-      ) {
-        result = !result;
-      }
-    }
-    return result;
-  };
-  let highest: number | undefined;
-  for (const sector of pack.videoMap.minimumVectoringAltitudes) {
-    if (inside(sector.exterior) && !sector.holes.some(inside)) {
-      highest = Math.max(highest ?? 0, sector.minimumAltitudeFt);
-    }
-  }
-  return highest;
+  return pack.minimumVectoringAltitude(position);
 }

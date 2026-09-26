@@ -150,3 +150,8 @@ export function formatFrequency(mhz: number): string {
 export function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+
+/** Procedure names as spoken: 'PHLBO4' -> 'PHLBO four', 'TNNIS6' -> 'TNNIS six'. */
+export function procedureWords(name: string): string {
+  return name.replace(/(\d)$/, (digit) => ` ${spellDigits(digit)}`);
+}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useSearchParams } from 'react-router';
+import { applyDifficulty, defaultSettings } from '@vector/shared';
 import type { AirspacePack, LatLon } from '@vector/sim-core';
 import { findAirspace } from '../airspaces/registry';
 import { draftPreview, EMPTY_DRAFT, type InstructionDraft } from '../commands/draft';
@@ -8,6 +9,7 @@ import { Basemap, BASEMAP_ATTRIBUTION, type BasemapHandle } from '../scope/Basem
 import type { Camera } from '../scope/camera';
 import { RadarScope, type RadarScopeHandle } from '../scope/RadarScope';
 import { DEFAULT_LEADER_DIRECTION, type LeaderDirection } from '../scope/render/traffic-layer';
+import { DEFAULT_DIFFICULTY, DIFFICULTY_LABELS, parseDifficulty } from '../settings/difficulty';
 import { useUserSettings } from '../settings/user-settings-store';
 import { ScopeSession } from '../sim/scope-session';
 import { CommandPanel } from './scope/command/CommandPanel';
@@ -26,27 +28,35 @@ type LoadState =
 
 export function ScopeScreen() {
   const { airspaceId = '' } = useParams();
+  const [searchParams] = useSearchParams();
+  const difficulty = parseDifficulty(searchParams.get('difficulty')) ?? DEFAULT_DIFFICULTY;
   const entry = findAirspace(airspaceId);
   const [loaded, setLoaded] = useState<{ id: string; state: LoadState } | undefined>(undefined);
 
   useEffect(() => {
     if (!entry?.load) return;
     let cancelled = false;
-    const finish = (state: LoadState) => !cancelled && setLoaded({ id: entry.id, state });
+    const finish = (state: LoadState) =>
+      !cancelled && setLoaded({ id: `${entry.id}:${difficulty}`, state });
     entry
       .load()
-      .then((pack: AirspacePack) => finish({ kind: 'ready', session: new ScopeSession(pack) }))
+      .then((pack: AirspacePack) =>
+        finish({
+          kind: 'ready',
+          session: new ScopeSession(pack, applyDifficulty(defaultSettings('session'), difficulty)),
+        }),
+      )
       .catch((error: unknown) =>
         finish({ kind: 'error', message: error instanceof Error ? error.message : String(error) }),
       );
     return () => {
       cancelled = true;
     };
-  }, [entry]);
+  }, [entry, difficulty]);
 
   const state: LoadState = !entry?.load
     ? { kind: 'error', message: `Airspace "${airspaceId}" is not available.` }
-    : loaded?.id === entry.id
+    : loaded?.id === `${entry.id}:${difficulty}`
       ? loaded.state
       : { kind: 'loading' };
 
@@ -70,10 +80,10 @@ export function ScopeScreen() {
       </div>
     );
   }
-  return <Scope session={state.session} />;
+  return <Scope session={state.session} difficultyLabel={DIFFICULTY_LABELS[difficulty]} />;
 }
 
-function Scope({ session }: { session: ScopeSession }) {
+function Scope({ session, difficultyLabel }: { session: ScopeSession; difficultyLabel: string }) {
   const settings = useUserSettings();
   const status = useSyncExternalStore(
     (listener) => session.subscribe(listener),
@@ -210,7 +220,7 @@ function Scope({ session }: { session: ScopeSession }) {
 
         <div className="scope-notice">
           <span className="scope-notice__dot" aria-hidden="true" />
-          {status.aircraftCount} aircraft · demo arrivals · click an aircraft to instruct it
+          {difficultyLabel} · {status.aircraftCount} aircraft · click an aircraft to instruct it
         </div>
 
         <div className="scope-zoom" role="group" aria-label="Zoom">

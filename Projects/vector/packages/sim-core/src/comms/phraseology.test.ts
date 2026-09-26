@@ -4,6 +4,7 @@ import {
   flightNumberWords,
   frequencyWords,
   headingWords,
+  procedureWords,
   runwayWords,
   speedWords,
   spellDigits,
@@ -61,5 +62,7 @@ describe('phraseology', () => {
     expect(runwayWords('04L')).toBe('four left');
     expect(runwayWords('22R')).toBe('two two right');
     expect(runwayWords('13')).toBe('one three');
+    expect(procedureWords('PHLBO4')).toBe('PHLBO four');
+    expect(procedureWords('Runway heading')).toBe('Runway heading');
   });
 });
