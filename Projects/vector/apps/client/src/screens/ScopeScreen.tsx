@@ -16,6 +16,7 @@ import { CommandPanel } from './scope/command/CommandPanel';
 import { CommsLog } from './scope/CommsLog';
 import { DeparturesPanel } from './scope/DeparturesPanel';
 import { MapLayersPanel } from './scope/MapLayersPanel';
+import { useConflictSounds } from './scope/use-conflict-sounds';
 import { ScopeTopBar } from './scope/ScopeTopBar';
 import { formatPosition } from './scope/format';
 import './scope-screen.css';
@@ -116,6 +117,14 @@ function Scope({ session, difficultyLabel }: { session: ScopeSession; difficulty
 
   const onCameraChange = useCallback((camera: Camera) => basemapRef.current?.sync(camera), []);
 
+  useConflictSounds(session);
+
+  // Development only: expose the session for debugging and browser tests.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    (window as unknown as { __vector?: ScopeSession }).__vector = session;
+  }, [session]);
+
   useGameControls({
     togglePause: () => session.togglePause(),
     simSpeedUp: () => session.changeSpeed(1),
@@ -201,6 +210,8 @@ function Scope({ session, difficultyLabel }: { session: ScopeSession; difficulty
         <CommsLog
           session={session}
           lastMessageId={status.lastMessageId}
+          conflictsKey={status.conflictsKey}
+          violationCount={status.violationCount}
           selectedId={selected?.id}
           onSelect={select}
           onClose={() => setCommsOpen(false)}

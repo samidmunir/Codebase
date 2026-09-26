@@ -1,4 +1,5 @@
 import type { AtcCommand } from '../commands/commands';
+import type { Conflict, Violation } from '../separation/separation';
 import type { CommsEntry } from '../snapshot/snapshot';
 
 export type SimEvent =
@@ -26,6 +27,10 @@ export type SimEvent =
   | { type: 'arrivalEntered'; aircraftId: string; airport: string; star: string }
   /** The pilot could not accept an ILS clearance. */
   | { type: 'ilsUnable'; aircraftId: string; reason: string }
-  | { type: 'goAround'; aircraftId: string; airport: string; runway: string; reason: string };
+  | { type: 'goAround'; aircraftId: string; airport: string; runway: string; reason: string }
+  | { type: 'conflictStarted'; conflict: Conflict }
+  | { type: 'conflictEnded'; conflict: Conflict }
+  /** Two aircraft lost the required separation (logged as a violation). */
+  | { type: 'separationLost'; violation: Violation };
 
 export type SimEventListener = (event: SimEvent, tick: number) => void;

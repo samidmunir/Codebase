@@ -12,6 +12,7 @@ import {
   type ScreenPoint,
 } from './camera';
 import { drawMapLayer } from './render/map-layer';
+import { routePreview } from './route-preview';
 import { scopePalette } from './render/palette';
 import {
   drawTrafficLayer,
@@ -187,6 +188,13 @@ export function RadarScope({
         timeShare: Math.floor(now / TIME_SHARE_MS) % 2 === 0 ? 0 : 1,
         hoveredId: hoveredRef.current,
         ...selectionRef.current,
+        route: (() => {
+          const id = selectionRef.current.selectedId;
+          const aircraft = id ? session.engine.getAircraft(id) : undefined;
+          return aircraft ? routePreview(aircraft, session.pack) : undefined;
+        })(),
+        conflicts: session.engine.conflicts,
+        nowMs: now,
         measure: gesture?.kind === 'measure' ? gesture : undefined,
         magneticVariationDeg: session.pack.airspace.magneticVariationDeg,
       });

@@ -10,6 +10,7 @@ import {
 import { pixelsPerNm, project, type Camera, type ScreenPoint } from '../camera';
 import { dataBlockLines } from '../data-block';
 import type { RadarTarget } from '../radar-tracker';
+import type { RoutePreview } from '../route-preview';
 import { withAlpha, type ScopePalette } from './palette';
 
 /** Pixels per leader line length step (STARS uses discrete lengths). */
@@ -36,6 +37,17 @@ export interface TrafficFrame {
   leaderDirections: ReadonlyMap<string, LeaderDirection>;
   /** Preview of the instruction being composed for the selected aircraft. */
   preview: InstructionPreview | undefined;
+  /** The route the selected aircraft is flying. */
+  route: RoutePreview | undefined;
+  /** Conflict Alert state per aircraft, and the conflicting pairs. */
+  conflicts: readonly {
+    aircraftIds: readonly [string, string];
+    kind: 'predicted' | 'loss';
+    lateralNm: number;
+    verticalFt: number;
+  }[];
+  /** Real time in ms, for flashing alerts. */
+  nowMs: number;
   measure: { from: LatLon; to: LatLon } | undefined;
   magneticVariationDeg: number;
 }
@@ -69,6 +81,17 @@ export function drawTrafficLayer(
   ctx.clearRect(0, 0, camera.width, camera.height);
 
   if (settings['display.sweepEffect']) drawSweep(ctx, frame);
+  if (frame.route) drawRoute(ctx, frame, frame.route);
+
+  // Conflict Alert state per aircraft: an actual loss outranks a prediction.
+  const alertOf = new Map<string, 'predicted' | 'loss'>();
+  for (const conflict of frame.conflicts) {
+    for (const id of conflict.aircraftIds) {
+      if (alertOf.get(id) !== 'loss') alertOf.set(id, conflict.kind);
+    }
+  }
+  const flashOn = Math.floor(frame.nowMs / 400) % 2 === 0;
+  drawConflictLines(ctx, frame);
 
   const fontSize = settings['display.dataBlockFontSize'];
   const lineHeight = Math.round(fontSize * 1.25);
@@ -88,7 +111,8 @@ export function drawTrafficLayer(
     const owned = target.owner === frame.playerId;
     const hovered = target.id === frame.hoveredId;
     const selected = target.id === frame.selectedId;
-    const color = owned ? palette.targets : palette.unowned;
+    const alert = alertOf.get(target.id);
+    const color = alert === 'loss' ? palette.alert : owned ? palette.targets : palette.unowned;
     const position = project(camera, target.position);
 
     // History trail, fading with age.
@@ -173,12 +197,114 @@ export function drawTrafficLayer(
     lines.forEach((text, i) => ctx.fillText(text, blockX, blockY + i * lineHeight));
     ctx.restore();
 
+    // Conflict Alert: 'CA' above the data block, flashing for an actual loss of separation.
+    if (alert && (alert === 'predicted' || flashOn)) {
+      ctx.save();
+      ctx.fillStyle = alert === 'loss' ? palette.alert : palette.caution;
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 8;
+      ctx.font = `700 ${fontSize}px "JetBrains Mono", monospace`;
+      ctx.fillText('CA', blockX, blockY - lineHeight);
+      ctx.restore();
+    }
+
     hits.push({ id: target.id, center: position, block: { x: blockX, y: blockY, width, height } });
     if (selected && frame.preview) drawPreview(ctx, frame, target.position, frame.preview);
   }
 
   if (frame.measure) drawMeasure(ctx, frame);
   return hits;
+}
+
+function drawRoute(ctx: CanvasRenderingContext2D, frame: TrafficFrame, route: RoutePreview): void {
+  const { camera, palette } = frame;
+  const polyline = (points: readonly LatLon[]) => {
+    ctx.beginPath();
+    points.forEach((point, i) => {
+      const { x, y } = project(camera, point);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  };
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = palette.route;
+  ctx.shadowBlur = 6;
+
+  if (route.onward.length >= 2) {
+    ctx.strokeStyle = withAlpha(palette.route, 0.35);
+    ctx.lineWidth = 1.25;
+    ctx.setLineDash([3, 6]);
+    polyline(route.onward);
+  }
+  if (route.headingTail) {
+    ctx.strokeStyle = withAlpha(palette.route, 0.55);
+    ctx.lineWidth = 1.25;
+    ctx.setLineDash([8, 6]);
+    polyline([route.headingTail.from, route.headingTail.to]);
+  }
+  if (route.path.length >= 2) {
+    ctx.strokeStyle = withAlpha(palette.route, 0.8);
+    ctx.lineWidth = 1.75;
+    ctx.setLineDash([]);
+    polyline(route.path);
+  }
+  ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+
+  ctx.font = '600 11px "JetBrains Mono", monospace';
+  ctx.textBaseline = 'bottom';
+  ctx.textAlign = 'left';
+  for (const fix of route.fixes) {
+    const { x, y } = project(camera, fix.position);
+    ctx.fillStyle = palette.route;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 5);
+    ctx.lineTo(x + 5, y + 3);
+    ctx.lineTo(x - 5, y + 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillText(fix.ident, x + 7, y - 3);
+    if (fix.note) {
+      ctx.fillStyle = withAlpha(palette.route, 0.7);
+      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.fillText(fix.note, x + 7, y + 9);
+      ctx.font = '600 11px "JetBrains Mono", monospace';
+    }
+  }
+  ctx.restore();
+}
+
+function drawConflictLines(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
+  const { camera, palette } = frame;
+  const positions = new Map(frame.targets.map((target) => [target.id, target.position]));
+  for (const conflict of frame.conflicts) {
+    const a = positions.get(conflict.aircraftIds[0]);
+    const b = positions.get(conflict.aircraftIds[1]);
+    if (!a || !b) continue;
+    const pa = project(camera, a);
+    const pb = project(camera, b);
+    const color = conflict.kind === 'loss' ? palette.alert : palette.caution;
+    ctx.save();
+    ctx.strokeStyle = withAlpha(color, 0.75);
+    ctx.lineWidth = 1.25;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pb.x, pb.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = color;
+    ctx.font = '600 11px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const label = `${conflict.lateralNm.toFixed(1)} NM ${String(Math.round(conflict.verticalFt / 100)).padStart(2, '0')}`;
+    ctx.fillText(label, (pa.x + pb.x) / 2, (pa.y + pb.y) / 2 - 10);
+    ctx.restore();
+  }
 }
 
 function drawPreview(

@@ -2,6 +2,7 @@ import { resolveSettings } from '@vector/shared';
 import { z } from 'zod';
 import { aircraftStateSchema } from '../aircraft/aircraft';
 import { atcCommandSchema } from '../commands/commands';
+import { separationStateSchema } from '../separation/separation';
 import { operationsStateSchema } from '../traffic/operations';
 import { simConfigSchema, worldSchema } from '../engine/config';
 
@@ -57,6 +58,12 @@ export const simStateSchema = z.object({
   nextMessageNumber: z.number().int().positive().default(1),
   /** Wind, active runways and departure queues (sessions with an airspace). */
   operations: operationsStateSchema.optional(),
+  /** Conflict alerts and the log of separation losses. */
+  separation: separationStateSchema.default({
+    conflicts: [],
+    violations: [],
+    nextViolationNumber: 1,
+  }),
 });
 
 export type SimState = z.infer<typeof simStateSchema>;

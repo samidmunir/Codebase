@@ -20,6 +20,12 @@ import {
 } from '../commands/ils-eligibility';
 import { arrivalRouteFrom } from '../traffic/arrival-route';
 import {
+  emptySeparationState,
+  updateSeparation,
+  type Conflict,
+  type Violation,
+} from '../separation/separation';
+import {
   controllerPhrase,
   inSpokenOrder,
   pilotReadback,
@@ -151,6 +157,7 @@ export class SimEngine {
         pendingInstructions: [],
         comms: [],
         nextMessageNumber: 1,
+        separation: emptySeparationState(),
       },
       options,
     );
@@ -328,6 +335,47 @@ export class SimEngine {
       this.removeAircraft(aircraft.id);
     }
     this.removeExitedAircraft();
+    this.checkSeparation();
+  }
+
+  // ---- Separation ------------------------------------------------------------------
+
+  /** Pairs currently in conflict (predicted or actual losses of separation). */
+  get conflicts(): readonly Readonly<Conflict>[] {
+    return this.state.separation.conflicts;
+  }
+
+  /** Every loss of separation this session, oldest first. */
+  get violations(): readonly Readonly<Violation>[] {
+    return this.state.separation.violations;
+  }
+
+  private checkSeparation(): void {
+    const settings = this.state.settings;
+    const elevations = new Map(
+      this.airspace?.airports.map((airport) => [airport.icao, airport.elevationFt]) ?? [],
+    );
+    const { started, ended, violationsStarted } = updateSeparation(
+      this.state.separation,
+      this.state.aircraft,
+      {
+        lateralNm: settings['separation.lateralNm'],
+        verticalFt: settings['separation.verticalFt'],
+        lookaheadSec: settings['separation.conflictAlertLookaheadSec'],
+        playerId: this.state.playerId,
+        magneticVariationDeg: this.state.world.magneticVariationDeg,
+      },
+      this.state.tick,
+      // Height above the nearer of the aircraft's airports.
+      (aircraft) =>
+        Math.max(
+          elevations.get(aircraft.flightPlan.origin) ?? 0,
+          elevations.get(aircraft.flightPlan.destination) ?? 0,
+        ),
+    );
+    for (const conflict of started) this.emit({ type: 'conflictStarted', conflict });
+    for (const conflict of ended) this.emit({ type: 'conflictEnded', conflict });
+    for (const violation of violationsStarted) this.emit({ type: 'separationLost', violation });
   }
 
   // ---- Instructions and radio ------------------------------------------------

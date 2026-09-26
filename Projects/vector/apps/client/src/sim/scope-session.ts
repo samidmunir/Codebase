@@ -23,6 +23,9 @@ export interface SessionStatus {
   pendingCount: number;
   /** Changes whenever the departure queue changes. */
   queueVersion: number;
+  /** Changes whenever conflict alerts change. */
+  conflictsKey: string;
+  violationCount: number;
 }
 
 /**
@@ -140,6 +143,8 @@ export class ScopeSession {
         .listAircraft()
         .reduce((n, a) => n + this.engine.pendingInstructions(a.id).length, 0),
       queueVersion: this.queueVersion,
+      conflictsKey: this.engine.conflicts.map((c) => `${c.id}:${c.kind}`).join(','),
+      violationCount: this.engine.violations.length,
     };
   }
 
@@ -155,7 +160,9 @@ export class ScopeSession {
       next.aircraftCount !== this.status.aircraftCount ||
       next.lastMessageId !== this.status.lastMessageId ||
       next.pendingCount !== this.status.pendingCount ||
-      next.queueVersion !== this.status.queueVersion;
+      next.queueVersion !== this.status.queueVersion ||
+      next.conflictsKey !== this.status.conflictsKey ||
+      next.violationCount !== this.status.violationCount;
     if (!changed) return;
     this.status = next;
     for (const listener of this.listeners) listener();
