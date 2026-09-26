@@ -353,8 +353,11 @@ Airspace data ships as static assets with the client in v1. It can move behind a
 ## 5. Real-World Data
 
 - Airport, runway, navaid, fix and procedure data will be built from **public FAA sources** (NASR / CIFP) and checked against current charts.
-- The N90 lateral boundary and internal video maps are not fully published, so they will be **approximated from public charts** (Class B, sectional/TAC charts, published procedures).
-- Coastlines, shorelines, rivers and borders for the video map come from **Natural Earth** (public domain). Class B boundaries come from the **FAA's published airspace data**.
+- The N90 lateral boundary is not published, so the playable boundary is **approximated** as a 45 NM circle around the three airports (ceiling 17,000 ft).
+- Shorelines and rivers for the video map come from **US Census TIGER/Line water data** (public domain), which is detailed enough to show Jamaica Bay, the East River and the Manhattan piers. Class B boundaries come from the **FAA's published airspace data**.
+- **Minimum vectoring altitudes** come from the FAA's published N90 MVA chart, so the "above the minimum vectoring altitude" approach rule uses real values.
+- Tower frequencies (split by runway where the tower splits them) and New York Center radio sites come from **FAA NASR**.
+- The build pipeline, sources and known approximations are documented in `scripts/data/README.md`.
 - The optional real-world map uses **MapLibre GL** with free **OpenStreetMap-based vector tiles** (e.g. OpenFreeMap), styled dark to match the scope. OpenStreetMap requires on-screen attribution when this layer is shown. It needs an internet connection; the video map does not.
 - Data is converted into Vector's own JSON schema by build scripts, so updating to a new FAA cycle is repeatable.
 - Vector is a simulation for entertainment and training-style practice. **It is not for real-world navigation or operational use.**
@@ -413,15 +416,15 @@ A player can:
 
 ## 9. Decisions Log
 
-| Topic             | Decision                                                                                                                            |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Wind              | Random but realistic for the region, seeded per session, fixed for the session in v1                                                |
-| Departure queue   | Grows up to a maximum set by difficulty. New departures wait at the gate when it's full                                             |
-| Tower handoff     | Automatic once the arrival is established on the ILS. Control returns to the player on a go-around                                  |
-| Departure control | Automatic Tower-to-player transfer at the radar-contact altitude                                                                    |
-| Aircraft commands | UI only. No text entry, and no keyboard shortcuts for aircraft                                                                      |
-| Configurability   | Every tunable value is a setting with a realistic default                                                                           |
-| Map               | Vector draws its own video map from real geodata. A real-world map (MapLibre + OpenStreetMap tiles) is an optional layer underneath |
+| Topic             | Decision                                                                                                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Wind              | Random but realistic for the region, seeded per session, fixed for the session in v1                                                                                                 |
+| Departure queue   | Grows up to a maximum set by difficulty. New departures wait at the gate when it's full                                                                                              |
+| Tower handoff     | Automatic once the arrival is established on the ILS. Control returns to the player on a go-around                                                                                   |
+| Departure control | Automatic Tower-to-player transfer at the radar-contact altitude                                                                                                                     |
+| Aircraft commands | UI only. No text entry, and no keyboard shortcuts for aircraft                                                                                                                       |
+| Configurability   | Every tunable value is a setting with a realistic default                                                                                                                            |
+| Map               | Vector draws its own video map from real geodata (US Census TIGER shoreline, FAA Class B and MVA). A real-world map (MapLibre + OpenStreetMap tiles) is an optional layer underneath |
 
 ## 10. Open Questions
 

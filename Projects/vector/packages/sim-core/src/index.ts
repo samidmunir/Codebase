@@ -5,6 +5,8 @@
 // ESLint enforces this boundary.
 
 export * from './aircraft/aircraft';
+export * from './airspace/airspace-pack';
+export * from './airspace/schema';
 export * from './aircraft/flight-model';
 export * from './atmosphere/isa';
 export * from './engine/config';

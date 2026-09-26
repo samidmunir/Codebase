@@ -23,7 +23,9 @@
     "migrate:up": "npm run migrate -- up",
     "migrate:down": "npm run migrate -- down",
     "migrate:create": "npm run migrate -- create",
-    "sim:demo": "tsx scripts/sim-demo.ts"
+    "sim:demo": "tsx scripts/sim-demo.ts",
+    "data:new-york": "tsx scripts/data/build-new-york.ts",
+    "data:preview": "tsx scripts/data/preview.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -33,6 +35,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
+    "fflate": "^0.8.3",
     "globals": "^17.12.0",
     "node-pg-migrate": "^9.0.0",
     "prettier": "^3.9.9",
