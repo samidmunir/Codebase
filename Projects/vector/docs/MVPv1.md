@@ -33,7 +33,7 @@ Register / Login
       ▼
 Home ──► New Session ──► Select Airspace ──► Configure ──► Radar Scope (live)
   │                      (New York ✔,       (wind, runways,       │
-  │                       others "coming     traffic density)     │
+  │                       others "coming     difficulty)          │
   │                       soon")                                  ▼
   │                                                       Pause ──► Save ──► Close
   │                                                                           │
@@ -55,9 +55,9 @@ Home ──► New Session ──► Select Airspace ──► Configure ──�
 - The player controls **all arrival and departure traffic for all three airports** in a single session.
 - Other airspaces may appear as locked "coming soon" cards, so the foundation for choosing between them exists from day one.
 - **Session configuration** before launch:
-  - **Wind** per airport (direction and speed), either generated realistically or set by the player
+  - **Wind** per airport (direction and speed), **randomly generated but realistic** for the region by default, or set manually in Settings. Generation uses the session's seeded random number generator and a regional wind profile (typical directions and speeds for New York), and the three airports get consistent winds since they're only a few miles apart.
   - **Active runways** per airport, derived from the wind (runways with an acceptable headwind/crosswind component are available; the rest are not)
-  - **Traffic density**: Light / Medium / Heavy
+  - **Difficulty**: Easy / Normal / Hard / Expert (see 3.4.1)
   - **Gameplay and realism settings** for this session (see 3.9)
 - In v1, wind stays the same for the whole session and is used to pick active runways. Wind drift on aircraft in flight comes later.
 
@@ -105,7 +105,20 @@ Each aircraft has:
 - **Departures** appear in a **departure queue** at each airport once they are ready to go (see 3.5.1). Nothing takes off until the player clears it.
 - Airline mix, aircraft types and destinations reflect each airport's real-world traffic (e.g. heavy international widebodies at JFK, JetBlue presence at JFK, United hub at EWR, regional jets and narrowbodies at LGA).
 - **Scenario/spawn definitions** are data files, so densities and traffic patterns can be tuned without code changes.
-- Target of **20–40 simultaneous aircraft** under Heavy density.
+- Target of **20–40 simultaneous aircraft** on Hard and Expert.
+
+#### 3.4.1 Difficulty
+
+Difficulty is a preset that sets a group of traffic settings at once. Each value can still be adjusted individually in Settings (the difficulty then shows as "Custom").
+
+| Setting | Easy | Normal | Hard | Expert |
+|---|---|---|---|---|
+| Arrival rate (per airport, per hour) | Low | Moderate | High | Peak real-world |
+| Departure rate (per airport, per hour) | Low | Moderate | High | Peak real-world |
+| **Max departure queue** (per airport) | 3 | 5 | 8 | 12 |
+
+- The departure queue **can grow, but only up to its maximum**. When an airport's queue is full, new departures are **held at the gate**: they don't enter the queue until a slot opens. This keeps traffic realistic without flooding the player.
+- The exact rates and queue sizes are defaults to tune during playtesting.
 
 ### 3.5 Issuing Instructions (UI only)
 
@@ -120,7 +133,8 @@ All aircraft control happens through the UI. **There is no text or command-line 
   - **Speed**: maintain / increase / reduce to `XXX` kts (with "resume normal speed")
   - **Direct to fix**: pick from nearby fixes
   - **Cleared ILS approach**: an active runway at the aircraft's destination (see 3.5.2)
-  - **Handoff**: arrivals to the correct Tower (Kennedy / Newark / LaGuardia), departures to New York Center
+  - **Handoff to Center**: departures to New York Center
+- **Arrivals are handed to Tower automatically** once established on the ILS (see 3.5.3). There is no manual Tower handoff command.
 
 #### 3.5.1 Departures
 
@@ -145,8 +159,24 @@ All aircraft control happens through the UI. **There is no text or command-line 
 - If the criteria are **not met**, the pilot replies **"unable"** with a reason (e.g. `Unable, too high for the approach, Delta 412`) and keeps the current instruction. A setting can also show approach eligibility in the command menu, as a player aid.
 - If the criteria **are met**, the aircraft intercepts the localizer, captures the glideslope, and **slows down on its own** according to its type's performance.
 - **Stabilized-approach gate** (setting, default 1,000 ft AGL): if the aircraft is not on the localizer, on the glideslope, and at or near final approach speed by the gate, it performs an **automatic go-around**.
-- **Go-around**: the aircraft flies the published missed approach (or runway heading and a set altitude), reports it on the radio, and becomes **controllable again** so the player can re-sequence it.
-- After a successful approach and a handoff to Tower, the aircraft lands and is removed from the scope. It does not taxi.
+- **Go-around**: the aircraft flies the published missed approach (or runway heading and a set altitude) and reports it on the radio.
+
+#### 3.5.3 Control Ownership & Automatic Handoffs
+
+Every aircraft has an **owner**: the player (N90) or another facility (Tower or Center). Only aircraft the player owns can be selected and commanded. Aircraft owned by someone else are drawn **dimmed and non-interactive**. Control moves automatically at realistic points:
+
+| Event | Control moves | What the player sees |
+|---|---|---|
+| Departure passes the radar-contact altitude (setting, default 1,500 ft) | Tower → **Player** | Pilot checks in and the data block becomes active |
+| Player hands a departure to Center | Player → Center | Target dims and the pilot reads back the frequency change |
+| Arrival checks in at the sector boundary | Center → **Player** | Pilot checks in and the data block becomes active |
+| Arrival is **established on the ILS** (localizer and glideslope both captured) | Player → Tower (automatic) | ATC transmits the frequency change to Tower, the pilot reads it back, and the target dims |
+| Aircraft **goes around** | Tower → **Player** (automatic) | Pilot reports the go-around, and the data block becomes active again so the player can re-sequence it |
+| Arrival lands | Removed | Target disappears from the scope (no taxi) |
+
+- All ownership changes appear in the comms log with realistic phraseology (e.g. `ATC: Delta four twelve, contact Kennedy Tower one one niner point one.` / `Tower one one niner point one, Delta four twelve.`).
+- Ownership is part of the sim state, so it is saved and restored with the session.
+- The same ownership model supports Tower and Center player positions later without changes to the engine.
 
 ### 3.6 Radio / Communications Log
 
@@ -186,12 +216,12 @@ Every setting has a realistic default and a "reset to default" option.
 | **Display** | Theme and brightness, map layer visibility and colors, data block font size, trail length, leader line length, range ring spacing, sweep effect on/off, UI animation level |
 | **Audio** | Master volume, Conflict Alert sound on/off, UI sounds on/off |
 | **Controls** | Keyboard shortcut bindings, mouse/scroll zoom sensitivity, menu style (radial or list) |
-| **Traffic** | Density, arrival spawn rate, departure queue rate, airline and aircraft type mix |
-| **Weather** | Wind mode (generated or manual), wind direction and speed per airport, maximum tailwind and crosswind for active runways |
+| **Traffic** | Difficulty preset, arrival rate, departure rate, max departure queue per airport, airline and aircraft type mix |
+| **Weather** | Wind mode (random but realistic, or manual), wind direction and speed per airport, maximum tailwind and crosswind for active runways |
 | **Separation** | Lateral minimum (NM), vertical minimum (ft), Conflict Alert look-ahead time |
 | **Radar** | Sweep interval, history trail count |
 | **Pilots** | Response delay range, readback detail |
-| **Departures** | Radar-contact altitude (when departures become controllable) |
+| **Departures** | Radar-contact altitude (when control moves from Tower to the player) |
 | **Approaches** | ILS intercept angle limit, intercept distance range, stabilized-approach gate altitude, go-around on/off, show approach eligibility in menus |
 | **Sim** | Available sim speeds |
 
@@ -253,7 +283,8 @@ Projects/vector/
 │   │   ├── traffic/            # Spawning and scenario playback
 │   │   ├── separation/         # Conflict detection and alerts
 │   │   ├── approach/           # ILS eligibility, stabilized-approach checks, go-arounds
-│   │   ├── weather/            # Wind and active-runway selection
+│   │   ├── weather/            # Seeded realistic wind and active-runway selection
+│   │   ├── ownership/          # Who controls each aircraft, automatic handoffs
 │   │   ├── settings/           # Session settings schema and defaults
 │   │   ├── navigation/         # Geo math, fixes, procedures, ILS
 │   │   ├── comms/              # Phraseology generation and readbacks
@@ -346,12 +377,12 @@ Airspace data ships as static assets with the client in v1. It can move behind a
 | 4 | **New York airspace data** | Airspace pack schema (Zod), KJFK/KEWR/KLGA runways, fixes, departure/arrival/missed-approach procedures, ILS data and video maps, plus a data build pipeline |
 | 5 | **Radar scope** | Canvas renderer: video maps, targets, trails, data blocks, pan/zoom, range/bearing tool, game-control keyboard layer and the core visual design |
 | 6 | **Controller instructions** | Selection, command menus and value pickers, command pattern implementation, pilot delay, comms log with phraseology and readbacks |
-| 7 | **Departures** | Wind-based active runways, departure queues, runway assignment and takeoff, published departure procedures, radar-contact altitude, handoff to Center |
-| 8 | **Arrivals & approaches** | Arrival spawning on arrival routes, ILS eligibility with "unable" replies, localizer/glideslope capture, pilot slowdown, stabilized-approach gate, automatic go-arounds, handoff to Tower and landing |
+| 7 | **Departures** | Realistic wind generation, wind-based active runways, control ownership model, difficulty presets, bounded departure queues with gate holds, runway assignment and takeoff, published departure procedures, automatic Tower-to-player handoff at the radar-contact altitude, handoff to Center |
+| 8 | **Arrivals & approaches** | Arrival spawning on arrival routes, ILS eligibility with "unable" replies, localizer/glideslope capture, automatic handoff to Tower once established, pilot slowdown, stabilized-approach gate, automatic go-arounds with control returned to the player, landing |
 | 9 | **Separation** | Conflict detection and prediction, Conflict Alert visuals and audio, violation log |
 | 10 | **Accounts & user settings** | Register, login, token refresh and logout, plus user preferences saved to the account |
 | 11 | **Save & load** | Snapshot serialization, saved sessions API, save/load/rename/delete UI, exact resume |
-| 12 | **Session flow, settings UI & polish** | Home, airspace selection, session config (wind, runways, density), saved sessions and settings screens, UX polish, performance pass, end-to-end tests |
+| 12 | **Session flow, settings UI & polish** | Home, airspace selection, session config (wind, runways, difficulty), saved sessions and settings screens, UX polish, performance pass, end-to-end tests |
 
 Each milestone is developed on a `vector/feature/<name>` branch and merged into `vector/develop`. `vector/develop` merges into `main` when the milestone set is complete.
 
@@ -362,20 +393,30 @@ Each milestone is developed on a `vector/feature/<name>` branch and merged into 
 A player can:
 
 1. Register and log in.
-2. Choose **New York** from the airspace selection screen, set the wind (which determines active runways) and traffic density, and launch a session.
+2. Choose **New York** from the airspace selection screen, get realistic random wind (which determines active runways), pick a difficulty, and launch a session.
 3. See realistic arrival traffic and departure queues for KJFK, KEWR and KLGA on a polished STARS-style scope.
 4. Clear departures for takeoff by assigning an active runway, watch them fly the departure procedure, and take control once they pass the radar-contact altitude.
-5. Select aircraft and issue heading, altitude, speed, direct-to, ILS approach and handoff instructions **entirely through the UI**, with realistic readbacks in the comms log.
-6. Get an "unable" when an ILS clearance doesn't meet the approach criteria, and see an automatic go-around when an approach isn't stabilized.
-7. Watch arrivals intercept the ILS, slow down and land, and departures climb out and get handed off to Center.
-8. Get Conflict Alerts on losses of separation, logged in the violation log.
-9. Change display, audio, control and gameplay settings.
-10. Pause, change sim speed, **save the session, close the browser, log back in later, load it and resume exactly where they left off**.
+5. Select aircraft and issue heading, altitude, speed, direct-to, ILS approach and Center handoff instructions **entirely through the UI**, with realistic readbacks in the comms log.
+6. Get an "unable" when an ILS clearance doesn't meet the approach criteria.
+7. Watch arrivals get handed to Tower automatically once established on the ILS, then slow down and land. If an approach isn't stabilized, see an automatic go-around with control handed back.
+8. Watch departures climb out and hand them off to Center.
+9. Get Conflict Alerts on losses of separation, logged in the violation log.
+10. Change display, audio, control and gameplay settings.
+11. Pause, change sim speed, **save the session, close the browser, log back in later, load it and resume exactly where they left off**.
 
 ---
 
-## 9. Open Questions
+## 9. Decisions Log
 
-- **Generated wind**: should it be random but realistic for the region, or based on real historical or live weather (METAR)?
-- **Departure queue pacing**: should departures keep queuing until the player clears them (the queue can build up), or should waiting too long have consequences later?
-- **Tower handoff timing**: must arrivals be handed to Tower before a certain point on final (e.g. by 5 NM), or can the handoff happen anytime after ILS clearance?
+| Topic | Decision |
+|---|---|
+| Wind | Random but realistic for the region, seeded per session, fixed for the session in v1 |
+| Departure queue | Grows up to a maximum set by difficulty. New departures wait at the gate when it's full |
+| Tower handoff | Automatic once the arrival is established on the ILS. Control returns to the player on a go-around |
+| Departure control | Automatic Tower-to-player transfer at the radar-contact altitude |
+| Aircraft commands | UI only. No text entry, and no keyboard shortcuts for aircraft |
+| Configurability | Every tunable value is a setting with a realistic default |
+
+## 10. Open Questions
+
+- None at this time.
