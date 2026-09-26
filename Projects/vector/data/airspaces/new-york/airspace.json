@@ -1,0 +1,530 @@
+{
+  "schemaVersion": 1,
+  "id": "new-york",
+  "name": "New York",
+  "facility": "N90",
+  "description": "New York TRACON: arrivals and departures for Kennedy, LaGuardia and Newark.",
+  "center": {
+    "lat": 40.72,
+    "lon": -73.95
+  },
+  "magneticVariationDeg": -13,
+  "boundary": {
+    "ring": [
+      [
+        -73.95,
+        41.46949
+      ],
+      [
+        -73.86283,
+        41.46661
+      ],
+      [
+        -73.77634,
+        41.45798
+      ],
+      [
+        -73.69123,
+        41.44367
+      ],
+      [
+        -73.60814,
+        41.42379
+      ],
+      [
+        -73.52775,
+        41.39851
+      ],
+      [
+        -73.45066,
+        41.36801
+      ],
+      [
+        -73.3775,
+        41.33254
+      ],
+      [
+        -73.30881,
+        41.29238
+      ],
+      [
+        -73.24512,
+        41.24784
+      ],
+      [
+        -73.18694,
+        41.19926
+      ],
+      [
+        -73.13468,
+        41.14703
+      ],
+      [
+        -73.08875,
+        41.09156
+      ],
+      [
+        -73.04949,
+        41.03326
+      ],
+      [
+        -73.01717,
+        40.9726
+      ],
+      [
+        -72.99204,
+        40.91003
+      ],
+      [
+        -72.97425,
+        40.84604
+      ],
+      [
+        -72.96394,
+        40.78113
+      ],
+      [
+        -72.96114,
+        40.71578
+      ],
+      [
+        -72.96587,
+        40.6505
+      ],
+      [
+        -72.97806,
+        40.58577
+      ],
+      [
+        -72.9976,
+        40.5221
+      ],
+      [
+        -73.02433,
+        40.45995
+      ],
+      [
+        -73.05802,
+        40.39981
+      ],
+      [
+        -73.0984,
+        40.34211
+      ],
+      [
+        -73.14515,
+        40.2873
+      ],
+      [
+        -73.1979,
+        40.23578
+      ],
+      [
+        -73.25626,
+        40.18794
+      ],
+      [
+        -73.31977,
+        40.14413
+      ],
+      [
+        -73.38796,
+        40.10468
+      ],
+      [
+        -73.46031,
+        40.06988
+      ],
+      [
+        -73.53628,
+        40.03998
+      ],
+      [
+        -73.6153,
+        40.01522
+      ],
+      [
+        -73.69679,
+        39.99577
+      ],
+      [
+        -73.78015,
+        39.98177
+      ],
+      [
+        -73.86476,
+        39.97333
+      ],
+      [
+        -73.95,
+        39.97051
+      ],
+      [
+        -74.03524,
+        39.97333
+      ],
+      [
+        -74.11985,
+        39.98177
+      ],
+      [
+        -74.20321,
+        39.99577
+      ],
+      [
+        -74.2847,
+        40.01522
+      ],
+      [
+        -74.36372,
+        40.03998
+      ],
+      [
+        -74.43969,
+        40.06988
+      ],
+      [
+        -74.51204,
+        40.10468
+      ],
+      [
+        -74.58023,
+        40.14413
+      ],
+      [
+        -74.64374,
+        40.18794
+      ],
+      [
+        -74.7021,
+        40.23578
+      ],
+      [
+        -74.75485,
+        40.2873
+      ],
+      [
+        -74.8016,
+        40.34211
+      ],
+      [
+        -74.84198,
+        40.39981
+      ],
+      [
+        -74.87567,
+        40.45995
+      ],
+      [
+        -74.9024,
+        40.5221
+      ],
+      [
+        -74.92194,
+        40.58577
+      ],
+      [
+        -74.93413,
+        40.6505
+      ],
+      [
+        -74.93886,
+        40.71578
+      ],
+      [
+        -74.93606,
+        40.78113
+      ],
+      [
+        -74.92575,
+        40.84604
+      ],
+      [
+        -74.90796,
+        40.91003
+      ],
+      [
+        -74.88283,
+        40.9726
+      ],
+      [
+        -74.85051,
+        41.03326
+      ],
+      [
+        -74.81125,
+        41.09156
+      ],
+      [
+        -74.76532,
+        41.14703
+      ],
+      [
+        -74.71306,
+        41.19926
+      ],
+      [
+        -74.65488,
+        41.24784
+      ],
+      [
+        -74.59119,
+        41.29238
+      ],
+      [
+        -74.5225,
+        41.33254
+      ],
+      [
+        -74.44934,
+        41.36801
+      ],
+      [
+        -74.37225,
+        41.39851
+      ],
+      [
+        -74.29186,
+        41.42379
+      ],
+      [
+        -74.20877,
+        41.44367
+      ],
+      [
+        -74.12366,
+        41.45798
+      ],
+      [
+        -74.03717,
+        41.46661
+      ],
+      [
+        -73.95,
+        41.46949
+      ]
+    ],
+    "ceilingFt": 17000
+  },
+  "airports": [
+    "KJFK",
+    "KLGA",
+    "KEWR"
+  ],
+  "controllers": {
+    "approach": {
+      "id": "N90",
+      "approachCallsign": "New York Approach",
+      "departureCallsign": "New York Departure"
+    },
+    "center": {
+      "id": "ZNY",
+      "callsign": "New York Center",
+      "sites": [
+        {
+          "name": "Barnegat",
+          "position": {
+            "lat": 39.74956111111111,
+            "lon": -74.39070000000001
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 133.5,
+              "altitude": "low/high"
+            }
+          ]
+        },
+        {
+          "name": "Colts Neck",
+          "position": {
+            "lat": 40.31166666666666,
+            "lon": -74.16027777777778
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 118.975,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 125.325,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Douglaston",
+          "position": {
+            "lat": 40.756766666666664,
+            "lon": -73.72735277777778
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 121.125,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 128.675,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Elk Mountain",
+          "position": {
+            "lat": 41.71508055555556,
+            "lon": -75.56073888888889
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 128.5,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 132.175,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 134.45,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Flint Hill",
+          "position": {
+            "lat": 40.360933333333335,
+            "lon": -75.3562861111111
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 123.825,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 124.625,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 132.1,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Huguenot",
+          "position": {
+            "lat": 41.410091666666666,
+            "lon": -74.59154722222222
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 132.6,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Millville",
+          "position": {
+            "lat": 39.41733611111111,
+            "lon": -75.13490277777778
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 134.325,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Modena",
+          "position": {
+            "lat": 39.91791388888889,
+            "lon": -75.67085277777778
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 135.45,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Ship Bottom",
+          "position": {
+            "lat": 39.77928333333333,
+            "lon": -74.34125555555555
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 128.3,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 133.05,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Sparta",
+          "position": {
+            "lat": 41.0675,
+            "lon": -74.53861111111111
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 133.15,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Stillwater",
+          "position": {
+            "lat": 40.99583333333334,
+            "lon": -74.86888888888888
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 127.175,
+              "altitude": "high"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "name": "FAA Coded Instrument Flight Procedures (CIFP)",
+      "url": "https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/cifp/",
+      "edition": "Cycle 260903",
+      "usedFor": "Airports, runways, ILS, fixes, arrival, departure and approach procedures"
+    },
+    {
+      "name": "FAA National Airspace System Resources (NASR)",
+      "url": "https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/",
+      "edition": "2026-09-03",
+      "usedFor": "Tower frequencies and New York Center radio sites"
+    },
+    {
+      "name": "FAA Class Airspace",
+      "url": "https://adds-faa.opendata.arcgis.com/",
+      "edition": "Retrieved with this build",
+      "usedFor": "New York Class B airspace"
+    },
+    {
+      "name": "FAA Minimum Vectoring Altitude charts",
+      "url": "https://aeronav.faa.gov/MVA_Charts/",
+      "edition": "N90 FUS3",
+      "usedFor": "Minimum vectoring altitudes"
+    },
+    {
+      "name": "US Census Bureau TIGER/Line and cartographic boundary files",
+      "url": "https://www.census.gov/geographies/mapping-files.html",
+      "edition": "2024",
+      "usedFor": "Shoreline"
+    }
+  ]
+}
