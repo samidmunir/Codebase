@@ -22,6 +22,16 @@ npm run data:preview -- new-york 40.64 -73.78 10   # zoomed preview (lat, lon, r
 All sources are US government works in the public domain. The FAA data is **not for
 navigation**: Vector is a simulation.
 
+## Hand-authored files
+
+`data/airspaces/<id>/traffic.json` is curated rather than built: runway configurations
+(common real-world flows, in order of preference), airline and aircraft mixes per
+airport, destinations and their departure gates, and initial departure altitudes. The
+build reads its departure gate fixes and adds them to the navdata. The airspace pack
+tests cross-check it (runways exist, arrival runways have an ILS, gate fixes exist).
+
+`data/airlines/airlines.json` holds airline radio names (telephony) and flight number ranges.
+
 ## Updating to a new FAA cycle
 
 The FAA publishes new CIFP and NASR data every 28 days. In `build-new-york.ts`, update
@@ -49,9 +59,9 @@ extend 3 NM out to sea. The builder:
   boundary is a 45 NM circle around the three airports (ceiling 17,000 ft). Arrival
   routes start 40–130 NM out, so arrivals will appear where their route crosses it.
 - **Departure procedures.** CIFP only codes RNAV/pilot-navigation SIDs (8 here). The
-  radar-vector SIDs most New York departures actually fly are text-only and are not
-  included; runways without a coded SID need an initial heading and altitude
-  (Milestone 7).
+  radar-vector SIDs most New York departures actually fly are text-only, so runways
+  without a coded SID toward a departure's gate fly runway heading to their initial
+  altitude and expect radar vectors.
 - **Center frequencies.** Which New York Center sector takes a departure isn't
   published. The pack includes ZNY's real radio sites and frequencies, and handoffs
   can use the nearest site on the right altitude band.

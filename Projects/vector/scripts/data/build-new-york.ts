@@ -2,7 +2,7 @@
 // public FAA and US Census data. Downloads are cached in data/.cache/.
 //
 //   npm run data:new-york
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
   AIRSPACE_SCHEMA_VERSION,
@@ -289,6 +289,19 @@ function buildNavdata(cifp: CifpData, procedures: readonly CifpProcedureRecord[]
     if (!fix) throw new Error(`Procedure fix ${leg.fix} (${leg.fixSection}) not found`);
     add(fix);
   }
+  // Departure gate fixes from the hand-authored traffic profile.
+  const traffic = JSON.parse(readFileSync(`${OUTPUT_DIR}traffic.json`, 'utf8')) as {
+    departureGates: Record<string, string[]>;
+  };
+  for (const ident of Object.values(traffic.departureGates).flat()) {
+    const fix =
+      index.get(fixKey(ident, 'EA')) ??
+      index.get(fixKey(ident, 'D ')) ??
+      index.get(fixKey(ident, 'DB'));
+    if (!fix) throw new Error(`Departure gate fix ${ident} not found`);
+    add(fix);
+  }
+
   // Nearby VORs and NDBs for direct-to menus (not DME-only, TACAN or ILS/DME
   // stations). Procedure fixes take precedence, and VORs over NDBs where two
   // stations share an ident.

@@ -2,6 +2,7 @@ import { resolveSettings } from '@vector/shared';
 import { z } from 'zod';
 import { aircraftStateSchema } from '../aircraft/aircraft';
 import { atcCommandSchema } from '../commands/commands';
+import { operationsStateSchema } from '../traffic/operations';
 import { simConfigSchema, worldSchema } from '../engine/config';
 
 /**
@@ -16,6 +17,8 @@ export const commsEntrySchema = z.object({
   speaker: z.enum(['controller', 'pilot']),
   aircraftId: z.string().optional(),
   callsign: z.string().optional(),
+  /** Facility that transmitted, when not the player's (e.g. 'JFK TWR'). */
+  facility: z.string().optional(),
   text: z.string(),
 });
 
@@ -52,6 +55,8 @@ export const simStateSchema = z.object({
   /** Radio transmissions, oldest first. */
   comms: z.array(commsEntrySchema).default([]),
   nextMessageNumber: z.number().int().positive().default(1),
+  /** Wind, active runways and departure queues (sessions with an airspace). */
+  operations: operationsStateSchema.optional(),
 });
 
 export type SimState = z.infer<typeof simStateSchema>;

@@ -19,11 +19,10 @@ export function CommsLog({ session, lastMessageId, selectedId, onSelect, onClose
   const entries = session.engine.comms.slice(-VISIBLE_ENTRIES);
 
   // Follow new transmissions, unless the player has scrolled up to read.
+  const followRef = useRef(true);
   useEffect(() => {
     const list = listRef.current;
-    if (!list) return;
-    const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
-    if (nearBottom) list.scrollTop = list.scrollHeight;
+    if (list && followRef.current) list.scrollTop = list.scrollHeight;
   }, [lastMessageId]);
 
   return (
@@ -42,13 +41,24 @@ export function CommsLog({ session, lastMessageId, selectedId, onSelect, onClose
           ×
         </button>
       </header>
-      <ol ref={listRef} className="comms-log__list" aria-live="polite">
+      <ol
+        ref={listRef}
+        className="comms-log__list"
+        aria-live="polite"
+        onScroll={(event) => {
+          const list = event.currentTarget;
+          followRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+        }}
+      >
         {entries.length === 0 && <li className="comms-log__empty">No transmissions yet.</li>}
         {entries.map((entry) => {
-          const selected = entry.aircraftId !== undefined && entry.aircraftId === selectedId;
-          const aircraftId = entry.aircraftId;
+          // Tower transmissions come before the aircraft is airborne; match those by callsign.
+          const aircraftId =
+            entry.aircraftId ??
+            session.engine.listAircraft().find((a) => a.callsign === entry.callsign)?.id;
           const onScope =
             aircraftId !== undefined && session.engine.getAircraft(aircraftId) !== undefined;
+          const selected = aircraftId !== undefined && aircraftId === selectedId;
           return (
             <li
               key={entry.id}
@@ -68,7 +78,9 @@ export function CommsLog({ session, lastMessageId, selectedId, onSelect, onClose
                   {formatUtc(session.utcAtTick(entry.tick)).slice(0, 5)}
                 </span>
                 <span className="comms-log__speaker">
-                  {entry.speaker === 'controller' ? session.pack.airspace.facility : entry.callsign}
+                  {entry.speaker === 'controller'
+                    ? (entry.facility ?? session.pack.airspace.facility)
+                    : entry.callsign}
                 </span>
                 <span className="comms-log__text">{entry.text}</span>
               </button>

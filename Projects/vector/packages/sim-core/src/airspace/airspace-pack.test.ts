@@ -3,12 +3,13 @@ import airports from '../../../../data/airspaces/new-york/airports.json';
 import airspace from '../../../../data/airspaces/new-york/airspace.json';
 import navdata from '../../../../data/airspaces/new-york/navdata.json';
 import procedures from '../../../../data/airspaces/new-york/procedures.json';
+import traffic from '../../../../data/airspaces/new-york/traffic.json';
 import videoMap from '../../../../data/airspaces/new-york/video-map.json';
 import { cloneJson } from '../snapshot/clone';
 import { distanceNm } from '../math/geo';
 import { AirspaceDataError, AirspacePack, type AirspacePackFiles } from './airspace-pack';
 
-const files: AirspacePackFiles = { airspace, airports, navdata, procedures, videoMap };
+const files: AirspacePackFiles = { airspace, airports, navdata, procedures, videoMap, traffic };
 const pack = AirspacePack.parse(files);
 
 describe('New York airspace pack', () => {
@@ -75,6 +76,25 @@ describe('New York airspace pack', () => {
     expect(pack.videoMap.shoreline.length).toBeGreaterThan(100);
     expect(pack.videoMap.classB).toHaveLength(16);
     expect(pack.videoMap.minimumVectoringAltitudes.length).toBeGreaterThan(40);
+  });
+});
+
+describe('traffic profile', () => {
+  it('has a traffic profile and runway configurations for every airport', () => {
+    for (const icao of pack.airspace.airports) {
+      expect(pack.traffic.airports[icao]!.runwayConfigs.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('keeps widebodies out of LaGuardia', () => {
+    const types = pack.traffic.airports.KLGA!.airlines.flatMap((airline) => airline.types);
+    expect(types.some((type) => ['B77W', 'B789', 'B763', 'A333'].includes(type))).toBe(false);
+  });
+
+  it('rejects a configuration landing on a runway without an ILS', () => {
+    const broken = cloneJson(files) as { traffic: typeof traffic } & AirspacePackFiles;
+    broken.traffic.airports.KLGA!.runwayConfigs[0]!.arrivals = ['31'];
+    expect(() => AirspacePack.parse(broken)).toThrow(/arrival runway 31 has no ILS/);
   });
 });
 

@@ -5,7 +5,7 @@ import {
   type AtcCommand,
   type ValidationResult,
 } from '@vector/sim-core';
-import { performanceCatalog } from '../airspaces/registry';
+import { airlines, performanceCatalog } from '../airspaces/registry';
 import { RadarTracker } from '../scope/radar-tracker';
 import { DemoTraffic } from './demo-traffic';
 
@@ -19,6 +19,8 @@ export interface SessionStatus {
   lastMessageId: string | undefined;
   /** Changes whenever an instruction is issued or acted on. */
   pendingCount: number;
+  /** Changes whenever the departure queue changes. */
+  queueVersion: number;
 }
 
 /**
@@ -31,6 +33,8 @@ export class ScopeSession {
   private readonly demo: DemoTraffic;
   private readonly listeners = new Set<() => void>();
   private status: SessionStatus;
+  /** Bumped when the departure queue changes. */
+  private queueVersion = 0;
 
   constructor(
     readonly pack: AirspacePack,
@@ -42,6 +46,11 @@ export class ScopeSession {
       seed: Date.now() >>> 0,
       startTimeUtc: new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString(),
       settings,
+      airspace: pack,
+      airlines,
+    });
+    this.engine.subscribe((event) => {
+      if (event.type.startsWith('departure') || event.type === 'tookOff') this.queueVersion++;
     });
     this.radar = new RadarTracker(settings['radar.sweepIntervalSec'], pack.airspace.radar.position);
     this.demo = new DemoTraffic(this.engine, pack);
@@ -90,6 +99,17 @@ export class ScopeSession {
     return result;
   }
 
+  checkRelease(entryId: string, runway: string): ValidationResult {
+    return this.engine.checkRelease(entryId, runway);
+  }
+
+  /** Clears a waiting departure for takeoff on a runway. */
+  releaseDeparture(entryId: string, runway: string): ValidationResult {
+    const result = this.engine.releaseDeparture(entryId, runway);
+    this.refreshStatus(true);
+    return result;
+  }
+
   /** UTC time of a sim tick (e.g. for timestamps in the radio log). */
   utcAtTick(tick: number): Date {
     return new Date(
@@ -118,6 +138,7 @@ export class ScopeSession {
       pendingCount: this.engine
         .listAircraft()
         .reduce((n, a) => n + this.engine.pendingInstructions(a.id).length, 0),
+      queueVersion: this.queueVersion,
     };
   }
 
@@ -132,7 +153,8 @@ export class ScopeSession {
       next.speed !== this.status.speed ||
       next.aircraftCount !== this.status.aircraftCount ||
       next.lastMessageId !== this.status.lastMessageId ||
-      next.pendingCount !== this.status.pendingCount;
+      next.pendingCount !== this.status.pendingCount ||
+      next.queueVersion !== this.status.queueVersion;
     if (!changed) return;
     this.status = next;
     for (const listener of this.listeners) listener();

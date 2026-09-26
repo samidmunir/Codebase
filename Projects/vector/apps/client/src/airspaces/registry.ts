@@ -1,9 +1,17 @@
-import { AirspacePack, parsePerformanceCatalog, type PerformanceCatalog } from '@vector/sim-core';
+import {
+  AirspacePack,
+  airlinesFileSchema,
+  parsePerformanceCatalog,
+  type Airline,
+  type PerformanceCatalog,
+} from '@vector/sim-core';
+import airlineData from '../../../../data/airlines/airlines.json';
 import performanceData from '../../../../data/aircraft-types/performance.json';
 import newYorkAirports from '../../../../data/airspaces/new-york/airports.json?url';
 import newYorkAirspace from '../../../../data/airspaces/new-york/airspace.json?url';
 import newYorkNavdata from '../../../../data/airspaces/new-york/navdata.json?url';
 import newYorkProcedures from '../../../../data/airspaces/new-york/procedures.json?url';
+import newYorkTraffic from '../../../../data/airspaces/new-york/traffic.json?url';
 import newYorkVideoMap from '../../../../data/airspaces/new-york/video-map.json?url';
 
 export interface AirspaceEntry {
@@ -33,12 +41,17 @@ export const AIRSPACES: AirspaceEntry[] = [
     airports: ['KJFK', 'KLGA', 'KEWR'],
     available: true,
     load: async () => {
-      const [airspace, airports, navdata, procedures, videoMap] = await Promise.all(
-        [newYorkAirspace, newYorkAirports, newYorkNavdata, newYorkProcedures, newYorkVideoMap].map(
-          fetchJson,
-        ),
+      const [airspace, airports, navdata, procedures, videoMap, traffic] = await Promise.all(
+        [
+          newYorkAirspace,
+          newYorkAirports,
+          newYorkNavdata,
+          newYorkProcedures,
+          newYorkVideoMap,
+          newYorkTraffic,
+        ].map(fetchJson),
       );
-      return AirspacePack.parse({ airspace, airports, navdata, procedures, videoMap });
+      return AirspacePack.parse({ airspace, airports, navdata, procedures, videoMap, traffic });
     },
   },
 ];
@@ -48,3 +61,5 @@ export function findAirspace(id: string): AirspaceEntry | undefined {
 }
 
 export const performanceCatalog: PerformanceCatalog = parsePerformanceCatalog(performanceData);
+
+export const airlines: readonly Airline[] = airlinesFileSchema.parse(airlineData).airlines;

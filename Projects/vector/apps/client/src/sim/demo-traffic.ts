@@ -1,7 +1,7 @@
-// TEMPORARY demo traffic so the radar scope has something to show before real
-// traffic generation (Milestones 7 and 8) and aircraft commands (Milestone 6).
-// Arrivals fly toward a point on an ILS final and turn onto the localizer;
-// departures climb out and head for the boundary. Remove once real traffic lands.
+// TEMPORARY demo arrivals until real arrival generation (Milestone 8). Arrivals
+// fly toward a point on the active runway's ILS final and turn onto the
+// localizer, unless the player takes them over. Departures are real (see the
+// engine's airport operations).
 import {
   altitudeWords,
   bearingTrue,
@@ -47,23 +47,14 @@ const ORIGINS = [
   'KMCO',
 ];
 
-/** Demo flow: arrivals land on these runways, departures leave from these. */
-const DEMO_FLOW: Record<string, { arrival: string; departure: string }> = {
-  KJFK: { arrival: '22L', departure: '22R' },
-  KLGA: { arrival: '22', departure: '13' },
-  KEWR: { arrival: '22L', departure: '22R' },
-};
-
 const APPROACH = 'N90';
 const FINAL_GATE_NM = 12;
-const TARGET_AIRCRAFT = 16;
+const TARGET_ARRIVALS = 10;
 
 interface DemoPlan {
-  kind: 'arrival' | 'departure';
   airport: string;
   runway: string;
-  stage: 'inbound' | 'final' | 'climb' | 'outbound';
-  exit?: LatLon;
+  stage: 'inbound' | 'final';
   /** The player has given this aircraft an instruction: the demo stops flying it. */
   manual?: boolean;
 }
@@ -152,8 +143,8 @@ export class DemoTraffic {
 
   spawnArrival(): void {
     const random = this.engine.random;
-    const airport = random.pick(Object.keys(DEMO_FLOW));
-    const runway = DEMO_FLOW[airport]!.arrival;
+    const airport = random.pick(this.pack.airspace.airports);
+    const runway = this.engine.activeRunways[airport]!.arrivals[0]!;
     const { center, boundary } = this.pack.airspace;
 
     // Enter from the direction of one of the airport's real arrival routes.
@@ -182,36 +173,8 @@ export class DemoTraffic {
       iasKts: 250,
       targets: { altitudeFt: random.pick([4_000, 5_000]), iasKts: 220 },
     });
-    this.plans.set(aircraft.id, { kind: 'arrival', airport, runway, stage: 'inbound' });
+    this.plans.set(aircraft.id, { airport, runway, stage: 'inbound' });
     this.checkIn(aircraft.id, this.pack.airspace.controllers.approach.approachCallsign);
-  }
-
-  spawnDeparture(): void {
-    const random = this.engine.random;
-    const airport = random.pick(Object.keys(DEMO_FLOW));
-    const runway = this.pack.runway(airport, DEMO_FLOW[airport]!.departure);
-    const opposite = this.pack.runway(airport, runway.oppositeId);
-    const exit = destinationPoint(this.pack.airspace.center, random.range(0, 360), 50);
-
-    const aircraft = this.engine.addAircraft({
-      ...this.newFlight(airport),
-      flightPlan: { origin: airport, destination: random.pick(ORIGINS), route: [] },
-      phase: 'departure',
-      owner: `${airport}_TWR`,
-      // Just airborne past the departure end of the runway.
-      position: destinationPoint(opposite.threshold, runway.trueHeadingDeg, 0.5),
-      altitudeFt: 600,
-      headingDeg: Math.round(runway.magneticHeadingDeg) % 360,
-      iasKts: 170,
-      targets: { altitudeFt: 5_000, iasKts: 250 },
-    });
-    this.plans.set(aircraft.id, {
-      kind: 'departure',
-      airport,
-      runway: runway.id,
-      stage: 'climb',
-      exit,
-    });
   }
 
   /** Seeds traffic at several stages so the scope isn't empty at start. */
@@ -231,9 +194,8 @@ export class DemoTraffic {
       const plan = this.plans.get(aircraft.id);
       if (plan) this.fly(aircraft, plan);
     }
-    if (now >= this.nextSpawnSec && this.engine.listAircraft().length < TARGET_AIRCRAFT) {
-      if (this.engine.random.chance(0.65)) this.spawnArrival();
-      else this.spawnDeparture();
+    if (now >= this.nextSpawnSec && this.plans.size < TARGET_ARRIVALS) {
+      this.spawnArrival();
       this.nextSpawnSec = now + this.engine.random.range(35, 70);
     }
   }
@@ -244,60 +206,41 @@ export class DemoTraffic {
   }
 
   private fly(aircraft: Readonly<AircraftState>, plan: DemoPlan): void {
+    // Aircraft the player has instructed are theirs; the engine removes them if they leave the airspace.
+    if (plan.manual) return;
     const { engine } = this;
-    if (plan.manual) {
-      // Under player control: only clean up aircraft that have left the airspace.
-      if (distanceNm(this.pack.airspace.center, aircraft.position) > 55) this.remove(aircraft.id);
-      return;
-    }
-    if (plan.kind === 'arrival') {
-      const runway = this.pack.runway(plan.airport, plan.runway);
-      if (plan.stage === 'inbound') {
-        const gate = this.finalGate(plan.airport, plan.runway);
-        if (distanceNm(aircraft.position, gate) < 2) {
-          plan.stage = 'final';
-          engine.setTargets(aircraft.id, {
-            headingDeg: Math.round(runway.ils!.courseDeg) % 360,
-            altitudeFt: 0,
-            iasKts: 150,
-          });
-          engine.setOwner(aircraft.id, `${plan.airport}_TWR`);
-          engine.setPhase(aircraft.id, 'approach');
-        } else if (engine.tick % 10 === 0) {
-          engine.setTargets(aircraft.id, { headingDeg: this.headingTo(aircraft.position, gate) });
-        }
-      } else if (
-        distanceNm(aircraft.position, runway.threshold) < 0.3 ||
-        aircraft.altitudeFt <= runway.thresholdElevationFt + 50
-      ) {
-        this.remove(aircraft.id);
-      } else if (engine.tick % 5 === 0) {
-        // Stay on the extended centerline and descend on a ~3° path.
-        const toThreshold = this.headingTo(aircraft.position, runway.threshold);
-        const glidepath = distanceNm(aircraft.position, runway.threshold) * 318;
+    const runway = this.pack.runway(plan.airport, plan.runway);
+
+    if (plan.stage === 'inbound') {
+      const gate = this.finalGate(plan.airport, plan.runway);
+      if (distanceNm(aircraft.position, gate) < 2) {
+        plan.stage = 'final';
         engine.setTargets(aircraft.id, {
-          headingDeg: toThreshold,
-          altitudeFt: Math.max(0, Math.round(glidepath)),
+          headingDeg: Math.round(runway.ils!.courseDeg) % 360,
+          altitudeFt: 0,
+          iasKts: 150,
         });
+        engine.setOwner(aircraft.id, `${plan.airport}_TWR`);
+        engine.setPhase(aircraft.id, 'approach');
+      } else if (engine.tick % 10 === 0) {
+        engine.setTargets(aircraft.id, { headingDeg: this.headingTo(aircraft.position, gate) });
       }
       return;
     }
 
-    if (plan.stage === 'climb' && aircraft.altitudeFt >= 1_500) {
-      plan.stage = 'outbound';
-      engine.setOwner(aircraft.id, APPROACH);
-      engine.setPhase(aircraft.id, 'enroute');
+    if (
+      distanceNm(aircraft.position, runway.threshold) < 0.3 ||
+      aircraft.altitudeFt <= runway.thresholdElevationFt + 50
+    ) {
+      this.remove(aircraft.id);
+    } else if (engine.tick % 5 === 0) {
+      // Stay on the extended centerline and descend on a ~3° path.
+      const toThreshold = this.headingTo(aircraft.position, runway.threshold);
+      const glidepath = distanceNm(aircraft.position, runway.threshold) * 318;
       engine.setTargets(aircraft.id, {
-        altitudeFt: 13_000,
-        headingDeg: this.headingTo(aircraft.position, plan.exit!),
+        headingDeg: toThreshold,
+        altitudeFt: Math.max(0, Math.round(glidepath)),
       });
-      this.checkIn(aircraft.id, this.pack.airspace.controllers.approach.departureCallsign);
-    } else if (plan.stage === 'outbound') {
-      if (distanceNm(this.pack.airspace.center, aircraft.position) > 46) this.remove(aircraft.id);
-      else if (engine.tick % 15 === 0)
-        engine.setTargets(aircraft.id, {
-          headingDeg: this.headingTo(aircraft.position, plan.exit!),
-        });
     }
   }
 }

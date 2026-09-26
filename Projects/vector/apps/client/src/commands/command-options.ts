@@ -111,6 +111,11 @@ export function directToOptions(
 
   const routeIds = new Set<string>();
   for (const id of aircraft.flightPlan.route) {
+    // Route entries are procedures (e.g. 'TNNIS6') or fixes (e.g. a departure gate).
+    if (pack.fix(id)) {
+      routeIds.add(id);
+      continue;
+    }
     const procedure = [...pack.arrivals, ...pack.departures].find(
       (p) =>
         p.id === id &&

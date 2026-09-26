@@ -25,6 +25,8 @@ export function drawMapLayer(
   pack: AirspacePack,
   settings: UserSettings,
   palette: ScopePalette,
+  /** Arrival runways in use ('KJFK:22L'); only their final approach courses are drawn. */
+  activeArrivals: ReadonlySet<string>,
 ): void {
   ctx.clearRect(0, 0, camera.width, camera.height);
   const scale = pixelsPerNm(camera);
@@ -102,7 +104,7 @@ export function drawMapLayer(
     ctx.lineWidth = 1;
     for (const airport of pack.airports) {
       for (const runway of airport.runways) {
-        if (!runway.ils) continue;
+        if (!runway.ils || !activeArrivals.has(`${airport.icao}:${runway.id}`)) continue;
         const outbound = normalizeHeading(magneticToTrue(runway.ils.courseDeg, variation) + 180);
         const start = project(camera, runway.threshold);
         const end = project(camera, destinationPoint(runway.threshold, outbound, FINAL_COURSE_NM));

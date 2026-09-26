@@ -50,11 +50,40 @@ export const ilsClearanceSchema = z.object({
 
 export type IlsClearance = z.infer<typeof ilsClearanceSchema>;
 
+/** A procedure leg with fix positions resolved, so the aircraft can fly it without airspace data. */
+export const resolvedLegSchema = z.object({
+  /** ARINC 424 path terminator, e.g. 'TF', 'VA', 'VM'. */
+  pathTerminator: z.string().length(2),
+  fix: z.string().optional(),
+  position: latLonSchema.optional(),
+  /** Magnetic course or heading. */
+  courseDeg: z.number().min(0).max(360).optional(),
+  turnDirection: z.enum(['left', 'right']).optional(),
+  /** Altitude that ends a to-altitude leg (VA, CA, FA). */
+  altitudeFt: z.number().optional(),
+  /** Distance that ends a distance leg (FC, CD, FD, VD). */
+  distanceNm: z.number().optional(),
+  /** Speed limit (at or below) while flying toward this leg's fix. */
+  speedLimitKts: z.number().positive().optional(),
+});
+
+export type ResolvedLeg = z.infer<typeof resolvedLegSchema>;
+
 export const navigationSchema = z.discriminatedUnion('mode', [
   /** Fly the target heading. */
   z.object({ mode: z.literal('heading') }),
   /** Fly direct to a fix, then continue on the heading flown at the fix. */
   z.object({ mode: z.literal('direct'), fix: z.string(), position: latLonSchema }),
+  /** Fly a published procedure (e.g. a departure) leg by leg. */
+  z.object({
+    mode: z.literal('procedure'),
+    /** Procedure name as spoken, e.g. 'TNNIS6'. */
+    name: z.string(),
+    legs: z.array(resolvedLegSchema).min(1),
+    legIndex: z.number().int().min(0),
+    /** Where the current leg started (for distance-terminated legs). */
+    legStart: latLonSchema,
+  }),
   /** Fly the target heading until intercepting the localizer, then fly the ILS. */
   z.object({
     mode: z.literal('approach'),

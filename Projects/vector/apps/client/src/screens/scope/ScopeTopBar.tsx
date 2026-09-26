@@ -14,6 +14,8 @@ interface ScopeTopBarProps {
   onToggleLayers: () => void;
   commsOpen: boolean;
   onToggleComms: () => void;
+  departuresOpen: boolean;
+  onToggleDepartures: () => void;
 }
 
 export function ScopeTopBar(props: ScopeTopBarProps) {
@@ -92,6 +94,25 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
             </button>
           ))}
         </div>
+
+        <button
+          type="button"
+          className="scope-button"
+          aria-pressed={props.departuresOpen}
+          onClick={props.onToggleDepartures}
+        >
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path
+              d="M2 12.5 H14 M3.5 10 L12.5 4.5 M9 4 L12.5 4.5 L11.5 8"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Departures
+        </button>
 
         <button
           type="button"
