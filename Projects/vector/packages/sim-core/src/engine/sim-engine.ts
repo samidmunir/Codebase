@@ -95,6 +95,14 @@ export class SimEngine {
     return this.state.tick * this.state.config.tickSeconds;
   }
 
+  /**
+   * Sim time including the fraction of the next tick already elapsed. Use it
+   * for smooth animation only; the simulation itself moves in whole ticks.
+   */
+  get displayTimeSec(): number {
+    return this.simTimeSec + Math.min(this.accumulatorSec, this.state.config.tickSeconds);
+  }
+
   get utcTime(): Date {
     return new Date(Date.parse(this.state.startTimeUtc) + this.simTimeSec * 1000);
   }

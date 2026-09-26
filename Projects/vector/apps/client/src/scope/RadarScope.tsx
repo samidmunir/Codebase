@@ -162,7 +162,7 @@ export function RadarScope({
         playerId: PLAYER_ID,
         scopeCenter: session.pack.airspace.center,
         sweepRadiusNm: boundaryRadiusNm() + FIT_MARGIN_NM,
-        sweepProgress: session.radar.sweepProgress(session.engine.simTimeSec),
+        sweepProgress: session.radar.sweepProgress(session.engine.displayTimeSec),
         timeShare: Math.floor(now / TIME_SHARE_MS) % 2 === 0 ? 0 : 1,
         hoveredId: hoveredRef.current,
         measure: gesture?.kind === 'measure' ? gesture : undefined,

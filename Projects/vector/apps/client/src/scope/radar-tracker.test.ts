@@ -52,10 +52,17 @@ describe('RadarTracker', () => {
     expect(radar.list().map((t) => t.id)).toEqual(['2']);
   });
 
-  it('reports sweep progress for the sweep animation', () => {
+  it('keeps an even sweep rhythm even when ticks do not line up with the interval', () => {
+    const radar = new RadarTracker(4.8);
+    const sweeps = Array.from({ length: 30 }, (_, t) => t).filter((t) => radar.update(t, []));
+    // Sweeps due at 0, 4.8, 9.6, 14.4, 19.2, 24.0, 28.8 happen on the next whole-second tick.
+    expect(sweeps).toEqual([0, 5, 10, 15, 20, 24, 29]);
+  });
+
+  it('moves the sweep beam continuously', () => {
     const radar = new RadarTracker(4);
-    radar.update(10, []);
-    expect(radar.sweepProgress(11)).toBe(0.25);
-    expect(radar.sweepProgress(20)).toBe(1);
+    expect(radar.sweepProgress(11)).toBe(0.75);
+    expect(radar.sweepProgress(11.5)).toBe(0.875);
+    expect(radar.sweepProgress(12)).toBe(0);
   });
 });

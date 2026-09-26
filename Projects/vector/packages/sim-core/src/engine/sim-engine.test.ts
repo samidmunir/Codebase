@@ -47,6 +47,15 @@ describe('SimEngine clock', () => {
     expect(engine.advance(1_000)).toBeLessThanOrEqual(2);
   });
 
+  it('reports a smooth display time between ticks', () => {
+    const engine = createEngine();
+    engine.advance(1_250);
+    expect(engine.simTimeSec).toBe(1);
+    expect(engine.displayTimeSec).toBeCloseTo(1.25);
+    engine.pause();
+    expect(engine.displayTimeSec).toBe(1);
+  });
+
   it('reports UTC time from the start time plus sim time', () => {
     const engine = createEngine();
     for (let i = 0; i < 90; i++) engine.step();

@@ -21,7 +21,8 @@ const MAX_HISTORY = 10;
 
 export class RadarTracker {
   private readonly targets = new Map<string, RadarTarget>();
-  private lastSweepSimTime = -Infinity;
+  /** Index of the last sweep: sweeps happen whenever sim time crosses a multiple of the interval. */
+  private lastSweep = -Infinity;
 
   constructor(private intervalSec: number) {}
 
@@ -29,16 +30,20 @@ export class RadarTracker {
     this.intervalSec = intervalSec;
   }
 
-  /** Sim seconds since the last sweep, as a fraction of the interval (for sweep animation). */
-  sweepProgress(simTimeSec: number): number {
-    if (!Number.isFinite(this.lastSweepSimTime)) return 0;
-    return Math.min(1, (simTimeSec - this.lastSweepSimTime) / this.intervalSec);
+  /**
+   * Beam position for the sweep animation, 0..1. Pass a smooth time (e.g. the
+   * engine's display time) so the beam glides between sim ticks.
+   */
+  sweepProgress(timeSec: number): number {
+    const turns = timeSec / this.intervalSec;
+    return turns - Math.floor(turns);
   }
 
   /** Sweeps if one is due. Returns true when the targets changed. */
   update(simTimeSec: number, aircraft: readonly Readonly<AircraftState>[]): boolean {
-    if (simTimeSec - this.lastSweepSimTime < this.intervalSec) return false;
-    this.lastSweepSimTime = simTimeSec;
+    const sweep = Math.floor(simTimeSec / this.intervalSec);
+    if (sweep === this.lastSweep) return false;
+    this.lastSweep = sweep;
 
     const seen = new Set<string>();
     for (const plane of aircraft) {
@@ -72,7 +77,7 @@ export class RadarTracker {
 
   /** Forces the next update() to sweep (e.g. after loading a session). */
   reset(): void {
-    this.lastSweepSimTime = -Infinity;
+    this.lastSweep = -Infinity;
     this.targets.clear();
   }
 }
