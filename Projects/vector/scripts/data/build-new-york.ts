@@ -25,6 +25,7 @@ import {
 import { cachedDownload, onlyFile, text, unzipMatching } from './lib/download';
 import { boxAround } from './lib/geometry';
 import { parseMva } from './lib/mva';
+import { findRadarSites } from './lib/radar-sites';
 import { parseCenterSites, parseFrequencies } from './lib/nasr';
 import { buildShoreline } from './lib/shoreline';
 
@@ -42,6 +43,8 @@ const BOUNDARY_RADIUS_NM = 45;
 const BOUNDARY_CEILING_FT = 17_000;
 /** Radius of video map geography. */
 const MAP_RADIUS_NM = 60;
+/** MVA arcs at least this large are radar range arcs, not obstacle clearance circles. */
+const RADAR_MIN_ARC_NM = 20;
 /** Center radio sites farther than this are left out. */
 const CENTER_SITE_RADIUS_NM = 110;
 
@@ -461,6 +464,14 @@ async function main() {
 
   const jfk = airports.find((a) => a.icao === 'KJFK')!;
 
+  // The JFK airport surveillance radar: the MVA chart's long range arcs are centered on it.
+  const radarSite = findRadarSites(
+    mva.flatMap((sector) => [sector.exterior, ...sector.holes]),
+    RADAR_MIN_ARC_NM,
+    CENTER.lat,
+  ).find((site) => distanceNm(site, jfk.position) < 2);
+  if (!radarSite) throw new Error('JFK radar site not found in the MVA chart');
+
   mkdirSync(OUTPUT_DIR, { recursive: true });
   write('airspace.json', {
     schemaVersion: AIRSPACE_SCHEMA_VERSION,
@@ -470,6 +481,14 @@ async function main() {
     description: 'New York TRACON: arrivals and departures for Kennedy, LaGuardia and Newark.',
     center: CENTER,
     magneticVariationDeg: jfk.magneticVariationDeg,
+    radar: {
+      name: 'JFK ASR',
+      position: {
+        lat: Math.round(radarSite.lat * 1e5) / 1e5,
+        lon: Math.round(radarSite.lon * 1e5) / 1e5,
+      },
+      rangeNm: Math.max(...radarSite.arcRadiiNm),
+    },
     boundary: { ring: circleRing(CENTER, BOUNDARY_RADIUS_NM), ceilingFt: BOUNDARY_CEILING_FT },
     airports: [...AIRPORTS],
     controllers: {
@@ -503,7 +522,8 @@ async function main() {
         name: 'FAA Minimum Vectoring Altitude charts',
         url: 'https://aeronav.faa.gov/MVA_Charts/',
         edition: 'N90 FUS3',
-        usedFor: 'Minimum vectoring altitudes',
+        usedFor:
+          'Minimum vectoring altitudes and the JFK radar antenna position (center of its range arcs)',
       },
       {
         name: 'US Census Bureau TIGER/Line and cartographic boundary files',

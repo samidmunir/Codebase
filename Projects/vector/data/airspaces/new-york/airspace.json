@@ -9,6 +9,14 @@
     "lon": -73.95
   },
   "magneticVariationDeg": -13,
+  "radar": {
+    "name": "JFK ASR",
+    "position": {
+      "lat": 40.63859,
+      "lon": -73.76976
+    },
+    "rangeNm": 60
+  },
   "boundary": {
     "ring": [
       [
@@ -518,7 +526,7 @@
       "name": "FAA Minimum Vectoring Altitude charts",
       "url": "https://aeronav.faa.gov/MVA_Charts/",
       "edition": "N90 FUS3",
-      "usedFor": "Minimum vectoring altitudes"
+      "usedFor": "Minimum vectoring altitudes and the JFK radar antenna position (center of its range arcs)"
     },
     {
       "name": "US Census Bureau TIGER/Line and cartographic boundary files",

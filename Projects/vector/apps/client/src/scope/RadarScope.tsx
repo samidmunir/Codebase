@@ -160,8 +160,8 @@ export function RadarScope({
         palette,
         targets: session.radar.list(),
         playerId: PLAYER_ID,
-        scopeCenter: session.pack.airspace.center,
-        sweepRadiusNm: boundaryRadiusNm() + FIT_MARGIN_NM,
+        scopeCenter: session.pack.airspace.radar.position,
+        sweepRadiusNm: session.pack.airspace.radar.rangeNm,
         sweepProgress: session.radar.sweepProgress(session.engine.displayTimeSec),
         timeShare: Math.floor(now / TIME_SHARE_MS) % 2 === 0 ? 0 : 1,
         hoveredId: hoveredRef.current,
@@ -171,7 +171,6 @@ export function RadarScope({
     };
     frameId = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(frameId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   // Wheel zoom needs a non-passive listener to prevent page scrolling.

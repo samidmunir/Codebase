@@ -34,17 +34,17 @@ export class ScopeSession {
       startTimeUtc: new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString(),
       settings,
     });
-    this.radar = new RadarTracker(settings['radar.sweepIntervalSec']);
+    this.radar = new RadarTracker(settings['radar.sweepIntervalSec'], pack.airspace.radar.position);
     this.demo = new DemoTraffic(this.engine, pack);
     this.demo.seed();
-    this.radar.update(this.engine.simTimeSec, this.engine.listAircraft());
+    this.radar.update(this.engine.displayTimeSec, this.engine.listAircraft());
     this.status = this.readStatus();
   }
 
-  /** Advances by real elapsed time. Returns true if the radar swept. */
+  /** Advances by real elapsed time. Returns true if any radar target changed. */
   frame(realElapsedMs: number): boolean {
     if (this.engine.advance(realElapsedMs) > 0) this.demo.update();
-    const swept = this.radar.update(this.engine.simTimeSec, this.engine.listAircraft());
+    const swept = this.radar.update(this.engine.displayTimeSec, this.engine.listAircraft());
     this.refreshStatus();
     return swept;
   }

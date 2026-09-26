@@ -16,6 +16,7 @@ export interface TrafficFrame {
   targets: readonly RadarTarget[];
   /** Controller the player works as; their aircraft are drawn bright. */
   playerId: string;
+  /** Radar antenna the sweep rotates around, and its range. */
   scopeCenter: LatLon;
   sweepRadiusNm: number;
   /** 0..1 progress of the current radar sweep. */
