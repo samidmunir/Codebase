@@ -24,7 +24,14 @@ function aircraft(id: string, position: LatLon): AircraftState {
     headingDeg: 180,
     iasKts: 210,
     verticalSpeedFpm: 0,
-    targets: { altitudeFt: 5_000, headingDeg: 180, turnDirection: 'shortest', iasKts: 210 },
+    targets: {
+      altitudeFt: 5_000,
+      headingDeg: 180,
+      turnDirection: 'shortest',
+      iasKts: 210,
+      speedMode: 'assigned',
+    },
+    navigation: { mode: 'heading' },
   };
 }
 

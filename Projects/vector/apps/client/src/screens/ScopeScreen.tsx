@@ -1,17 +1,22 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, useParams } from 'react-router';
 import type { AirspacePack, LatLon } from '@vector/sim-core';
 import { findAirspace } from '../airspaces/registry';
+import { draftPreview, EMPTY_DRAFT, type InstructionDraft } from '../commands/draft';
 import { useGameControls } from '../controls/use-game-controls';
 import { Basemap, BASEMAP_ATTRIBUTION, type BasemapHandle } from '../scope/Basemap';
 import type { Camera } from '../scope/camera';
 import { RadarScope, type RadarScopeHandle } from '../scope/RadarScope';
+import { DEFAULT_LEADER_DIRECTION, type LeaderDirection } from '../scope/render/traffic-layer';
 import { useUserSettings } from '../settings/user-settings-store';
 import { ScopeSession } from '../sim/scope-session';
+import { CommandPanel } from './scope/command/CommandPanel';
+import { CommsLog } from './scope/CommsLog';
 import { MapLayersPanel } from './scope/MapLayersPanel';
 import { ScopeTopBar } from './scope/ScopeTopBar';
 import { formatPosition } from './scope/format';
 import './scope-screen.css';
+import './scope/command/command-panel.css';
 
 type LoadState =
   | { kind: 'loading' }
@@ -76,7 +81,26 @@ function Scope({ session }: { session: ScopeSession }) {
   const scopeRef = useRef<RadarScopeHandle>(null);
   const basemapRef = useRef<BasemapHandle>(null);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [commsOpen, setCommsOpen] = useState(true);
   const [cursor, setCursor] = useState<LatLon | undefined>(undefined);
+  const [selection, setSelection] = useState<{ id: string; draft: InstructionDraft } | undefined>(
+    undefined,
+  );
+  const [leaderDirections, setLeaderDirections] = useState<ReadonlyMap<string, LeaderDirection>>(
+    new Map(),
+  );
+
+  // The selected aircraft, if it is still on the scope (it may have landed or left).
+  const selected = selection ? session.engine.getAircraft(selection.id) : undefined;
+  const select = useCallback((id: string | undefined) => {
+    setSelection((current) =>
+      id === undefined ? undefined : current?.id === id ? current : { id, draft: EMPTY_DRAFT },
+    );
+  }, []);
+  const preview = useMemo(
+    () => (selection && selected ? draftPreview(selection.draft, session.pack) : undefined),
+    [selection, selected, session.pack],
+  );
 
   const onCameraChange = useCallback((camera: Camera) => basemapRef.current?.sync(camera), []);
 
@@ -88,7 +112,9 @@ function Scope({ session }: { session: ScopeSession }) {
     zoomOut: () => scopeRef.current?.zoomBy(-1),
     centerScope: () => scopeRef.current?.recenter(),
     toggleMapLayers: () => setLayersOpen((open) => !open),
-    closeMenu: () => setLayersOpen(false),
+    toggleCommsLog: () => setCommsOpen((open) => !open),
+    // Closes the topmost panel: map layers first, then the selected aircraft.
+    closeMenu: () => (layersOpen ? setLayersOpen(false) : select(undefined)),
   });
 
   const { airspace } = session.pack;
@@ -109,6 +135,10 @@ function Scope({ session }: { session: ScopeSession }) {
         settings={settings}
         onCameraChange={onCameraChange}
         onCursorChange={setCursor}
+        selectedId={selected?.id}
+        onSelect={select}
+        leaderDirections={leaderDirections}
+        preview={preview}
       />
       <div className="scope-vignette" aria-hidden="true" />
 
@@ -121,11 +151,38 @@ function Scope({ session }: { session: ScopeSession }) {
         onSetSpeed={(speed) => session.setSpeed(speed)}
         layersOpen={layersOpen}
         onToggleLayers={() => setLayersOpen((open) => !open)}
+        commsOpen={commsOpen}
+        onToggleComms={() => setCommsOpen((open) => !open)}
       />
 
       {status.paused && <div className="scope-paused">Paused</div>}
 
+      {selection && selected && (
+        <CommandPanel
+          key={selected.id}
+          session={session}
+          aircraft={selected}
+          draft={selection.draft}
+          onDraftChange={(draft) => setSelection({ id: selected.id, draft })}
+          leaderDirection={leaderDirections.get(selected.id) ?? DEFAULT_LEADER_DIRECTION}
+          onLeaderDirectionChange={(direction) =>
+            setLeaderDirections((current) => new Map(current).set(selected.id, direction))
+          }
+          onClose={() => select(undefined)}
+        />
+      )}
+
       {layersOpen && <MapLayersPanel settings={settings} onClose={() => setLayersOpen(false)} />}
+
+      {commsOpen && (
+        <CommsLog
+          session={session}
+          lastMessageId={status.lastMessageId}
+          selectedId={selected?.id}
+          onSelect={select}
+          onClose={() => setCommsOpen(false)}
+        />
+      )}
 
       <div className="scope-footer">
         <div className="scope-readout">
@@ -140,7 +197,7 @@ function Scope({ session }: { session: ScopeSession }) {
 
         <div className="scope-notice">
           <span className="scope-notice__dot" aria-hidden="true" />
-          Preview traffic · {status.aircraftCount} aircraft · controlling aircraft comes next
+          Preview traffic · {status.aircraftCount} aircraft · click an aircraft to instruct it
         </div>
 
         <div className="scope-zoom" role="group" aria-label="Zoom">

@@ -17,7 +17,13 @@ const engine = SimEngine.create({
 });
 
 engine.subscribe((event: SimEvent, tick) => {
-  if (event.type === 'aircraftAdded' || event.type === 'aircraftRemoved') return;
+  if (
+    event.type !== 'altitudeReached' &&
+    event.type !== 'headingReached' &&
+    event.type !== 'speedReached'
+  ) {
+    return;
+  }
   const callsign = engine.getAircraft(event.aircraftId)?.callsign ?? event.aircraftId;
   const detail =
     event.type === 'altitudeReached'

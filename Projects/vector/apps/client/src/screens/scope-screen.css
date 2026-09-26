@@ -235,6 +235,7 @@
   position: absolute;
   top: 72px;
   right: var(--space-3);
+  z-index: 3;
   width: 280px;
   max-height: calc(100% - 150px);
   overflow-y: auto;

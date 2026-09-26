@@ -1,5 +1,10 @@
 import { defaultSettings, type SessionSettings } from '@vector/shared';
-import { SimEngine, type AirspacePack } from '@vector/sim-core';
+import {
+  SimEngine,
+  type AirspacePack,
+  type AtcCommand,
+  type ValidationResult,
+} from '@vector/sim-core';
 import { performanceCatalog } from '../airspaces/registry';
 import { RadarTracker } from '../scope/radar-tracker';
 import { DemoTraffic } from './demo-traffic';
@@ -10,6 +15,10 @@ export interface SessionStatus {
   speed: number;
   availableSpeeds: number[];
   aircraftCount: number;
+  /** Changes whenever a radio transmission is added. */
+  lastMessageId: string | undefined;
+  /** Changes whenever an instruction is issued or acted on. */
+  pendingCount: number;
 }
 
 /**
@@ -69,6 +78,26 @@ export class ScopeSession {
     this.refreshStatus(true);
   }
 
+  /** Validates an instruction without transmitting it. */
+  checkInstruction(aircraftId: string, commands: readonly AtcCommand[]): ValidationResult {
+    return this.engine.checkInstruction(aircraftId, commands);
+  }
+
+  /** Transmits an instruction to an aircraft. */
+  issueInstruction(aircraftId: string, commands: readonly AtcCommand[]): ValidationResult {
+    const result = this.engine.issueInstruction(aircraftId, commands);
+    this.refreshStatus(true);
+    return result;
+  }
+
+  /** UTC time of a sim tick (e.g. for timestamps in the radio log). */
+  utcAtTick(tick: number): Date {
+    return new Date(
+      this.engine.utcTime.getTime() -
+        (this.engine.tick - tick) * this.engine.config.tickSeconds * 1000,
+    );
+  }
+
   getStatus(): SessionStatus {
     return this.status;
   }
@@ -85,6 +114,10 @@ export class ScopeSession {
       speed: this.engine.speed,
       availableSpeeds: [...this.engine.settings['sim.availableSpeeds']].sort((a, b) => a - b),
       aircraftCount: this.engine.listAircraft().length,
+      lastMessageId: this.engine.comms.at(-1)?.id,
+      pendingCount: this.engine
+        .listAircraft()
+        .reduce((n, a) => n + this.engine.pendingInstructions(a.id).length, 0),
     };
   }
 
@@ -97,7 +130,9 @@ export class ScopeSession {
         Math.floor(this.status.utcTime.getTime() / 1000) ||
       next.paused !== this.status.paused ||
       next.speed !== this.status.speed ||
-      next.aircraftCount !== this.status.aircraftCount;
+      next.aircraftCount !== this.status.aircraftCount ||
+      next.lastMessageId !== this.status.lastMessageId ||
+      next.pendingCount !== this.status.pendingCount;
     if (!changed) return;
     this.status = next;
     for (const listener of this.listeners) listener();
