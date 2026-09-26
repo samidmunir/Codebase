@@ -41,6 +41,8 @@ export const aircraftPerformanceSchema = z.object({
   name: z.string().min(1),
   wakeCategory: z.enum(['small', 'large', 'b757', 'heavy', 'super']),
   ceilingFt: z.number().positive(),
+  /** Mach number flown at cruise and in high-altitude climbs and descents. */
+  cruiseMach: z.number().min(0.5).max(0.95).default(0.78),
   speeds: speedsSchema,
   climbRate: rateCurveSchema,
   descentRate: rateCurveSchema,

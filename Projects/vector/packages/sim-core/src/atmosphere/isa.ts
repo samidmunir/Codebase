@@ -29,3 +29,15 @@ export function iasToTas(iasKts: number, altitudeFt: number): number {
 export function tasToIas(tasKts: number, altitudeFt: number): number {
   return tasKts * Math.sqrt(densityRatio(altitudeFt));
 }
+
+/** Speed of sound in knots at an ISA altitude. */
+export function speedOfSoundKts(altitudeFt: number): number {
+  const altitude = Math.min(Math.max(0, altitudeFt), TROPOPAUSE_FT);
+  const temperatureK = SEA_LEVEL_TEMPERATURE_K - LAPSE_RATE_K_PER_FT * altitude;
+  return 661.47 * Math.sqrt(temperatureK / SEA_LEVEL_TEMPERATURE_K);
+}
+
+/** Indicated airspeed that gives a Mach number at an altitude (knots). */
+export function machToIas(mach: number, altitudeFt: number): number {
+  return tasToIas(mach * speedOfSoundKts(altitudeFt), altitudeFt);
+}

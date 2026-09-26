@@ -1,10 +1,13 @@
 // STARS-style full data block formatting.
 //   Line 1: callsign
-//   Line 2: altitude (hundreds of ft) + trend + ground speed (tens of kts),
-//           time-shared with aircraft type + destination.
+//   Line 2: altitude (hundreds of ft; flight levels read the same, 350 = FL350)
+//           + trend + ground speed (tens of kts), time-shared with aircraft
+//           type + destination.
 
 /** Vertical speeds below this are shown as level. */
 const LEVEL_THRESHOLD_FPM = 300;
+/** The assigned altitude shows when the aircraft is at least this far from it. */
+const ASSIGNED_ALTITUDE_SHOWN_FT = 300;
 
 export function formatAltitude(altitudeFt: number): string {
   return String(Math.max(0, Math.round(altitudeFt / 100))).padStart(3, '0');
@@ -32,6 +35,8 @@ export interface DataBlockTarget {
   altitudeFt: number;
   groundSpeedKts: number;
   verticalSpeedFpm: number;
+  /** Cleared altitude; shown after the altitude while climbing or descending to it. */
+  assignedAltitudeFt?: number | undefined;
   /** Fix or approach being flown to (not shown on a plain heading). */
   navigatingTo?: string | undefined;
 }
@@ -64,9 +69,15 @@ export function dataBlockLines(
   const typeAndDestination = `${target.aircraftType.padEnd(4)} ${shortAirport(target.destination)}`;
   const route = navigationLabel(target.navigatingTo);
   if (style === 'expanded') {
+    // Like an ERAM data block: '180↑240' while climbing from 18,000 to FL240.
+    const assigned =
+      target.assignedAltitudeFt !== undefined &&
+      Math.abs(target.assignedAltitudeFt - target.altitudeFt) >= ASSIGNED_ALTITUDE_SHOWN_FT
+        ? formatAltitude(target.assignedAltitudeFt)
+        : '';
     return [
       target.callsign,
-      `${altitude} ${formatGroundSpeedKnots(target.groundSpeedKts)}`,
+      `${altitude}${assigned} ${formatGroundSpeedKnots(target.groundSpeedKts)}`,
       route ? `${typeAndDestination} ${route}` : typeAndDestination,
     ];
   }

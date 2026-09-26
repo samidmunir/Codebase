@@ -15,3 +15,11 @@ export function formatPosition({ lat, lon }: LatLon): string {
   };
   return `${part(lat, 'N', 'S', 2)} ${part(lon, 'E', 'W', 3)}`;
 }
+
+/** An altitude as controllers write it: 'FL240' at and above the transition altitude, else '13,000'. */
+export function formatAltitudeLabel(altitudeFt: number, transitionAltitudeFt = 18_000): string {
+  const rounded = Math.round(altitudeFt / 100) * 100;
+  return rounded >= transitionAltitudeFt
+    ? `FL${String(rounded / 100).padStart(3, '0')}`
+    : rounded.toLocaleString('en-US');
+}

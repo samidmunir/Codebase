@@ -23,10 +23,10 @@ import {
   type CifpProcedureRecord,
 } from './lib/cifp';
 import { cachedDownload, onlyFile, text, unzipMatching } from './lib/download';
-import { boxAround } from './lib/geometry';
+import { boxAround, inBox, simplify } from './lib/geometry';
 import { parseMva } from './lib/mva';
 import { findRadarSites } from './lib/radar-sites';
-import { parseCenterSites, parseFrequencies } from './lib/nasr';
+import { parseArtccBoundaries, parseCenterSites, parseFrequencies } from './lib/nasr';
 import { buildShoreline } from './lib/shoreline';
 
 // ---- Configuration -------------------------------------------------------------
@@ -38,15 +38,37 @@ const NASR_CSV_EDITION = '03_Sep_2026';
 
 const AIRPORTS = ['KJFK', 'KLGA', 'KEWR'] as const;
 const CENTER = { lat: 40.72, lon: -73.95 };
-/** Radius of the playable area (see printBoundaryDiagnostics). */
-const BOUNDARY_RADIUS_NM = 45;
-const BOUNDARY_CEILING_FT = 17_000;
-/** Radius of video map geography. */
-const MAP_RADIUS_NM = 60;
+/**
+ * Radius of the playable area: the New York TRACON plus the surrounding
+ * Center airspace, far enough out that arrivals enter on their STARs at
+ * cruise levels (see printBoundaryDiagnostics).
+ */
+const BOUNDARY_RADIUS_NM = 150;
+const BOUNDARY_CEILING_FT = 45_000;
+/** Radius of video map geography (a little beyond the boundary). */
+const MAP_RADIUS_NM = 165;
+/** Detailed shoreline this close to the center; coarser beyond. */
+const DETAILED_SHORELINE_RADIUS_NM = 60;
+/** Simplification tolerance for Class B and C outlines. */
+const CLASS_AIRSPACE_TOLERANCE_M = 40;
+/** Other airports shown on the map need a runway at least this long. */
+const MIN_MAP_AIRPORT_RUNWAY_FT = 5_000;
+/** The owning Center and its neighbors in the region. */
+const HOME_CENTER = 'ZNY';
+const ADJACENT_CENTERS = ['ZBW', 'ZDC', 'ZOB'] as const;
+const CENTER_NAMES: Record<string, string> = {
+  ZNY: 'New York Center',
+  ZBW: 'Boston Center',
+  ZDC: 'Washington Center',
+  ZOB: 'Cleveland Center',
+};
+/** TRACON MVA charts (FUS3) and Center MIA charts in the region. */
+const MVA_CHARTS = ['N90_MVA_FUS3', 'PHL_MVA_FUS3'] as const;
+const MIA_CHARTS = ['ZNY_TAV', 'ZBW_TAV', 'ZDC_TAV', 'ZOB_TAV'] as const;
 /** MVA arcs at least this large are radar range arcs, not obstacle clearance circles. */
 const RADAR_MIN_ARC_NM = 20;
 /** Center radio sites farther than this are left out. */
-const CENTER_SITE_RADIUS_NM = 110;
+const CENTER_SITE_RADIUS_NM = 260;
 
 /** Radio names that don't title-case cleanly. */
 const TOWER_NAMES: Record<string, string> = { LAGUARDIA: 'LaGuardia' };
@@ -302,6 +324,21 @@ function buildNavdata(cifp: CifpData, procedures: readonly CifpProcedureRecord[]
     add(fix);
   }
 
+  // Fixes on high-altitude airways (Jet and Q routes) in the region, so
+  // aircraft can be sent direct to them at altitude.
+  const airwayFixes = new Set(
+    cifp.airways
+      .filter((point) => /^[JQ]/.test(point.route))
+      .map((p) => `${p.fix}|${p.fixSection}`),
+  );
+  for (const key of airwayFixes) {
+    const [ident, section] = key.split('|') as [string, string];
+    const fix = index.get(fixKey(ident, section));
+    if (fix && !selected.has(fix.ident) && distanceNm(CENTER, fix.position) <= MAP_RADIUS_NM) {
+      selected.set(fix.ident, fix);
+    }
+  }
+
   // Nearby VORs and NDBs for direct-to menus (not DME-only, TACAN or ILS/DME
   // stations). Procedure fixes take precedence, and VORs over NDBs where two
   // stations share an ident.
@@ -330,6 +367,79 @@ function buildNavdata(cifp: CifpData, procedures: readonly CifpProcedureRecord[]
         frequencyMhz: fix.frequencyMhz,
       }),
     );
+}
+
+// ---- Airways and other airports --------------------------------------------------
+
+type Point = [number, number];
+const toPoint = (p: { lat: number; lon: number }): Point => [
+  Math.round(p.lon * 1e5) / 1e5,
+  Math.round(p.lat * 1e5) / 1e5,
+];
+
+/** Airway lines in the map area: each continuous stretch, cut to the pieces near the region. */
+function buildAirways(cifp: CifpData) {
+  const index = new Map<string, CifpFix>();
+  for (const fix of cifp.fixes) {
+    if (fix.section === 'EA' || fix.section === 'D ' || fix.section === 'DB')
+      index.set(`${fix.ident}|${fix.section}`, fix);
+  }
+  const byRoute = new Map<string, typeof cifp.airways>();
+  for (const point of cifp.airways) {
+    if (!/^[JQVT]\d/.test(point.route)) continue;
+    byRoute.set(point.route, [...(byRoute.get(point.route) ?? []), point]);
+  }
+  const airways: { id: string; level: 'high' | 'low'; line: Point[] }[] = [];
+  for (const [route, points] of byRoute) {
+    const level = /^[JQ]/.test(route) ? 'high' : 'low';
+    let stretch: Point[] = [];
+    const flush = () => {
+      if (stretch.length >= 2) airways.push({ id: route, level, line: stretch });
+      stretch = [];
+    };
+    for (const point of points.sort((a, b) => a.sequence - b.sequence)) {
+      const fix = index.get(`${point.fix}|${point.fixSection}`);
+      const near = fix && distanceNm(CENTER, fix.position) <= MAP_RADIUS_NM + 40;
+      if (near) stretch.push(toPoint(fix.position));
+      else flush();
+      if (point.endsSegment) flush();
+    }
+    flush();
+  }
+  return airways;
+}
+
+/** Airports in the region with a runway long enough for jets, drawn for orientation. */
+function buildMapAirports(cifp: CifpData) {
+  const controlled = new Set<string>(AIRPORTS);
+  return cifp.allAirports
+    .filter(
+      (airport) =>
+        !controlled.has(airport.icao) &&
+        // Public airports with ICAO identifiers (not private strips like '3NY8').
+        /^K[A-Z]{3}$/.test(airport.icao) &&
+        distanceNm(CENTER, airport.position) <= BOUNDARY_RADIUS_NM &&
+        cifp.allRunways.some(
+          (r) => r.airport === airport.icao && r.lengthFt >= MIN_MAP_AIRPORT_RUNWAY_FT,
+        ),
+    )
+    .map((airport) => {
+      const runways = cifp.allRunways.filter((r) => r.airport === airport.icao);
+      const pairs: [Point, Point][] = [];
+      for (const runway of runways) {
+        const opposite = runways.find((r) => r.id === oppositeRunway(runway.id));
+        // Each pair once, from the lower-numbered end.
+        if (opposite && runway.id < opposite.id)
+          pairs.push([toPoint(runway.threshold), toPoint(opposite.threshold)]);
+      }
+      return {
+        icao: airport.icao,
+        name: titleCase(airport.name),
+        position: airport.position,
+        runways: pairs,
+      };
+    })
+    .sort((a, b) => a.icao.localeCompare(b.icao));
 }
 
 // ---- Boundary ------------------------------------------------------------------
@@ -429,51 +539,127 @@ async function main() {
   );
   const fixes = buildNavdata(cifp, includedProcedureRecords);
 
-  console.log('- FAA Class B airspace');
-  const classB = JSON.parse(
-    text(
-      await cachedDownload(
-        'https://services6.arcgis.com/ssFJjBXIUyZDrSYZ/arcgis/rest/services/Class_Airspace/FeatureServer/0/query' +
-          "?where=NAME+LIKE+'NEW+YORK%25'+AND+CLASS%3D'B'&outFields=NAME,LOWER_VAL,UPPER_VAL&f=geojson",
-        'faa/classb-new-york.geojson',
-      ),
-    ),
-  ) as {
-    features: {
-      properties: { LOWER_VAL: number; UPPER_VAL: number };
-      geometry: { coordinates: number[][][] };
-    }[];
-  };
-
-  console.log('- FAA minimum vectoring altitudes (N90)');
-  const mva = parseMva(
-    text(
-      await cachedDownload(
-        'https://aeronav.faa.gov/MVA_Charts/aixm/N90_MVA_FUS3.xml',
-        'faa/N90_MVA_FUS3.xml',
-      ),
-    ),
-  );
-
-  console.log('- US Census TIGER shoreline');
-  const shoreline = await buildShoreline({
-    box: boxAround(CENTER, MAP_RADIUS_NM),
-    minWaterAreaM2: 150_000,
-    simplifyToleranceMeters: 15,
-    minLineLengthMeters: 400,
-  });
-
   const round = ([lon, lat]: number[]): [number, number] => [
     Math.round(lon! * 1e5) / 1e5,
     Math.round(lat! * 1e5) / 1e5,
   ];
-  const centerSites = parseCenterSites(artccText, 'ZNY')
-    .filter((site) => distanceNm(CENTER, site.position) <= CENTER_SITE_RADIUS_NM)
-    .map((site) => ({
-      name: titleCase(site.site),
-      position: site.position,
-      frequencies: site.frequencies,
-    }));
+  const box = boxAround(CENTER, MAP_RADIUS_NM);
+
+  console.log('- FAA Class B and C airspace');
+  type ClassFeature = {
+    properties: { NAME: string; CLASS: string; LOWER_VAL: number; UPPER_VAL: number };
+    geometry: { type: string; coordinates: number[][][] | number[][][][] };
+  };
+  const classAirspace = JSON.parse(
+    text(
+      await cachedDownload(
+        'https://services6.arcgis.com/ssFJjBXIUyZDrSYZ/arcgis/rest/services/Class_Airspace/FeatureServer/0/query' +
+          `?where=${encodeURIComponent("CLASS IN ('B','C')")}` +
+          `&geometry=${box.minLon},${box.minLat},${box.maxLon},${box.maxLat}` +
+          '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects' +
+          '&outFields=NAME,CLASS,LOWER_VAL,UPPER_VAL&outSR=4326&f=geojson',
+        `faa/class-bc-${BOUNDARY_RADIUS_NM}nm.geojson`,
+      ),
+    ),
+  ) as { features: ClassFeature[] };
+  const classAreas = (cls: string) =>
+    classAirspace.features
+      .filter((f) => f.properties.CLASS === cls)
+      .flatMap((f) => {
+        // Polygons have one outer ring; multipolygons several.
+        const rings =
+          f.geometry.type === 'MultiPolygon'
+            ? (f.geometry.coordinates as number[][][][]).map((polygon) => polygon[0]!)
+            : [(f.geometry.coordinates as number[][][])[0]!];
+        return rings.map((ring) => ({
+          name: titleCase(f.properties.NAME.replace(/ CLASS [BC].*$/, '')),
+          floorFt: Math.max(0, f.properties.LOWER_VAL),
+          ceilingFt: f.properties.UPPER_VAL,
+          // Arcs come densely sampled; a few meters' tolerance is invisible on the scope.
+          ring: simplify(ring.map(round), CLASS_AIRSPACE_TOLERANCE_M),
+        }));
+      });
+
+  console.log('- FAA minimum vectoring and minimum IFR altitudes');
+  const altitudeCharts = async (charts: readonly string[], kind: 'mva' | 'mia') =>
+    (
+      await Promise.all(
+        charts.map(async (chart) =>
+          parseMva(
+            text(
+              await cachedDownload(
+                `https://aeronav.faa.gov/MVA_Charts/aixm/${chart}.xml`,
+                `faa/${chart}.xml`,
+              ),
+            ),
+          ).map((sector) => ({ ...sector, kind, chart })),
+        ),
+      )
+    ).flat();
+  const mvaSectors = await altitudeCharts(MVA_CHARTS, 'mva');
+  const miaSectors = await altitudeCharts(MIA_CHARTS, 'mia');
+  const mva = mvaSectors.filter((sector) => sector.chart.startsWith('N90'));
+  // Keep only sectors that reach into the map area.
+  const nearMap = (sector: { exterior: number[][] }) =>
+    sector.exterior.some(
+      ([lon, lat]) => distanceNm(CENTER, { lat: lat!, lon: lon! }) <= MAP_RADIUS_NM,
+    );
+  const altitudeSectors = [...mvaSectors, ...miaSectors].filter(nearMap);
+
+  console.log('- FAA NASR ARTCC boundaries');
+  const artccBoundaries = parseArtccBoundaries(
+    text(
+      onlyFile(
+        unzipMatching(
+          await cachedDownload(
+            `https://nfdc.faa.gov/webContent/28DaySub/${NASR_EDITION}/ARB.zip`,
+            `nasr/${NASR_EDITION}_ARB.zip`,
+          ),
+          /ARB\.txt$/,
+        ),
+        /ARB\.txt$/,
+      ),
+    ),
+    [HOME_CENTER, ...ADJACENT_CENTERS],
+  );
+
+  console.log('- US Census TIGER shoreline');
+  // Full detail near the airports; farther out, only larger water bodies at a coarser tolerance.
+  const detailedBox = boxAround(CENTER, DETAILED_SHORELINE_RADIUS_NM);
+  const detailed = await buildShoreline({
+    box: detailedBox,
+    minWaterAreaM2: 150_000,
+    simplifyToleranceMeters: 15,
+    minLineLengthMeters: 400,
+  });
+  const regional = await buildShoreline({
+    box,
+    minWaterAreaM2: 10_000_000,
+    simplifyToleranceMeters: 150,
+    minLineLengthMeters: 5_000,
+  });
+  const shoreline = {
+    lines: [
+      ...detailed.lines,
+      ...regional.lines.filter((line) => !line.every((point) => inBox(point, detailedBox))),
+    ],
+  };
+
+  const centerController = (id: string) => ({
+    id,
+    callsign: CENTER_NAMES[id]!,
+    sites: parseCenterSites(artccText, id)
+      .filter((site) => distanceNm(CENTER, site.position) <= CENTER_SITE_RADIUS_NM)
+      .map((site) => ({
+        name: titleCase(site.site),
+        position: site.position,
+        frequencies: site.frequencies,
+      })),
+  });
+  const homeCenter = centerController(HOME_CENTER);
+  const adjacentCenters = ADJACENT_CENTERS.map(centerController).filter((c) => c.sites.length > 0);
+  const airways = buildAirways(cifp);
+  const mapAirports = buildMapAirports(cifp);
 
   const jfk = airports.find((a) => a.icao === 'KJFK')!;
 
@@ -491,7 +677,8 @@ async function main() {
     id: 'new-york',
     name: 'New York',
     facility: 'N90',
-    description: 'New York TRACON: arrivals and departures for Kennedy, LaGuardia and Newark.',
+    description:
+      'New York TRACON and the surrounding Center airspace: arrivals, departures and overflights for Kennedy, LaGuardia and Newark.',
     center: CENTER,
     magneticVariationDeg: jfk.magneticVariationDeg,
     radar: {
@@ -503,6 +690,7 @@ async function main() {
       rangeNm: Math.max(...radarSite.arcRadiiNm),
     },
     boundary: { ring: circleRing(CENTER, BOUNDARY_RADIUS_NM), ceilingFt: BOUNDARY_CEILING_FT },
+    transitionAltitudeFt: 18_000,
     airports: [...AIRPORTS],
     controllers: {
       approach: {
@@ -510,7 +698,8 @@ async function main() {
         approachCallsign: 'New York Approach',
         departureCallsign: 'New York Departure',
       },
-      center: { id: 'ZNY', callsign: 'New York Center', sites: centerSites },
+      center: homeCenter,
+      adjacentCenters,
     },
     sources: [
       {
@@ -523,20 +712,20 @@ async function main() {
         name: 'FAA National Airspace System Resources (NASR)',
         url: 'https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/',
         edition: NASR_EDITION,
-        usedFor: 'Tower frequencies and New York Center radio sites',
+        usedFor: 'Tower frequencies, Center radio sites and ARTCC boundaries',
       },
       {
         name: 'FAA Class Airspace',
         url: 'https://adds-faa.opendata.arcgis.com/',
         edition: 'Retrieved with this build',
-        usedFor: 'New York Class B airspace',
+        usedFor: 'Class B and C airspace',
       },
       {
         name: 'FAA Minimum Vectoring Altitude charts',
         url: 'https://aeronav.faa.gov/MVA_Charts/',
-        edition: 'N90 FUS3',
+        edition: [...MVA_CHARTS, ...MIA_CHARTS].join(', '),
         usedFor:
-          'Minimum vectoring altitudes and the JFK radar antenna position (center of its range arcs)',
+          'Minimum vectoring and minimum IFR altitudes, and the JFK radar antenna position (center of its range arcs)',
       },
       {
         name: 'US Census Bureau TIGER/Line and cartographic boundary files',
@@ -559,17 +748,18 @@ async function main() {
     {
       schemaVersion: AIRSPACE_SCHEMA_VERSION,
       shoreline: shoreline.lines,
-      classB: classB.features.map((f) => ({
-        floorFt: f.properties.LOWER_VAL,
-        ceilingFt: f.properties.UPPER_VAL,
-        ring: f.geometry.coordinates[0]!.map(round),
-      })),
-      minimumVectoringAltitudes: mva.map((sector) => ({
+      classB: classAreas('B'),
+      classC: classAreas('C'),
+      minimumVectoringAltitudes: altitudeSectors.map((sector) => ({
         name: sector.name,
+        kind: sector.kind,
         minimumAltitudeFt: sector.minimumAltitudeFt,
         exterior: sector.exterior.map(round),
         holes: sector.holes.map((hole) => hole.map(round)),
       })),
+      airways,
+      airports: mapAirports,
+      artccBoundaries: artccBoundaries.map(({ artcc, level, ring }) => ({ artcc, level, ring })),
     },
     false,
   );
@@ -577,8 +767,10 @@ async function main() {
   console.log(
     `\n  ${airports.length} airports, ${airports.reduce((n, a) => n + a.runways.length, 0)} runway ends, ` +
       `${arrivals.length} arrivals, ${departures.length} departures, ${approaches.length} ILS approaches, ` +
-      `${fixes.length} fixes, ${classB.features.length} Class B areas, ${mva.length} MVA sectors, ` +
-      `${shoreline.lines.length} shoreline lines, ${centerSites.length} Center sites`,
+      `${fixes.length} fixes, ${classAreas('B').length} Class B and ${classAreas('C').length} Class C areas, ` +
+      `${altitudeSectors.length} MVA/MIA sectors, ${airways.length} airway lines, ${mapAirports.length} other airports, ` +
+      `${artccBoundaries.length} ARTCC boundaries, ${shoreline.lines.length} shoreline lines, ` +
+      `${[homeCenter, ...adjacentCenters].map((c) => `${c.id} ${c.sites.length}`).join(', ')} Center sites`,
   );
   printBoundaryDiagnostics(arrivals, fixes);
 }

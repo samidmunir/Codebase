@@ -6,6 +6,7 @@
       "name": "Airbus A320",
       "wakeCategory": "large",
       "ceilingFt": 39000,
+      "cruiseMach": 0.78,
       "speeds": {
         "initialClimb": 165,
         "climb": 290,
@@ -62,6 +63,7 @@
       "name": "Airbus A321",
       "wakeCategory": "large",
       "ceilingFt": 39000,
+      "cruiseMach": 0.78,
       "speeds": {
         "initialClimb": 170,
         "climb": 300,
@@ -118,6 +120,7 @@
       "name": "Airbus A330-300",
       "wakeCategory": "heavy",
       "ceilingFt": 41000,
+      "cruiseMach": 0.82,
       "speeds": {
         "initialClimb": 170,
         "climb": 300,
@@ -174,6 +177,7 @@
       "name": "Boeing 737-800",
       "wakeCategory": "large",
       "ceilingFt": 41000,
+      "cruiseMach": 0.785,
       "speeds": {
         "initialClimb": 165,
         "climb": 290,
@@ -230,6 +234,7 @@
       "name": "Boeing 737-900",
       "wakeCategory": "large",
       "ceilingFt": 41000,
+      "cruiseMach": 0.785,
       "speeds": {
         "initialClimb": 170,
         "climb": 290,
@@ -286,6 +291,7 @@
       "name": "Boeing 757-200",
       "wakeCategory": "b757",
       "ceilingFt": 42000,
+      "cruiseMach": 0.8,
       "speeds": {
         "initialClimb": 165,
         "climb": 290,
@@ -342,6 +348,7 @@
       "name": "Boeing 767-300",
       "wakeCategory": "heavy",
       "ceilingFt": 43000,
+      "cruiseMach": 0.8,
       "speeds": {
         "initialClimb": 170,
         "climb": 300,
@@ -398,6 +405,7 @@
       "name": "Boeing 777-300ER",
       "wakeCategory": "heavy",
       "ceilingFt": 43000,
+      "cruiseMach": 0.84,
       "speeds": {
         "initialClimb": 180,
         "climb": 310,
@@ -454,6 +462,7 @@
       "name": "Boeing 787-9",
       "wakeCategory": "heavy",
       "ceilingFt": 43000,
+      "cruiseMach": 0.85,
       "speeds": {
         "initialClimb": 175,
         "climb": 310,
@@ -510,6 +519,7 @@
       "name": "Bombardier CRJ900",
       "wakeCategory": "large",
       "ceilingFt": 41000,
+      "cruiseMach": 0.78,
       "speeds": {
         "initialClimb": 160,
         "climb": 290,
@@ -566,6 +576,7 @@
       "name": "Embraer E175",
       "wakeCategory": "large",
       "ceilingFt": 41000,
+      "cruiseMach": 0.78,
       "speeds": {
         "initialClimb": 150,
         "climb": 280,

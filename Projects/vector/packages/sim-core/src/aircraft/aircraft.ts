@@ -109,6 +109,8 @@ export const aircraftStateSchema = z.object({
     origin: z.string().min(1),
     destination: z.string().min(1),
     route: z.array(z.string()),
+    /** Cruising altitude the flight filed for (departures and overflights). */
+    requestedAltitudeFt: z.number().int().positive().optional(),
   }),
   phase: flightPhaseSchema,
   owner: controllerIdSchema,

@@ -1,6 +1,7 @@
 import { defaultSettings, type SessionSettings } from '@vector/shared';
 import { describe, expect, it } from 'vitest';
 import { headingDifference } from '../math/angles';
+import { isHemisphericLevel } from '../traffic/cruise-levels';
 import { bearingTrue, distanceNm, type LatLon } from '../math/geo';
 import { airlines, newYork, performance } from '../testing/fixtures';
 import type { SimEvent } from './events';
@@ -41,11 +42,13 @@ describe('transits', () => {
     const entered: Extract<SimEvent, { type: 'transitEntered' }>[] = [];
     const navigation: unknown[] = [];
     const entries: LatLon[] = [];
+    const headings: number[] = [];
     engine.subscribe((event) => {
       if (event.type !== 'transitEntered') return;
       entered.push(event);
       const transit = engine.getAircraft(event.aircraftId)!;
       navigation.push(transit.navigation);
+      headings.push(transit.headingDeg);
       entries.push(transit.position);
     });
     run(engine, 1_800);
@@ -55,13 +58,19 @@ describe('transits', () => {
     entered.forEach((event, i) =>
       expect(navigation[i]).toMatchObject({ mode: 'direct', fix: event.exitFix }),
     );
+    for (const [i, event] of entered.entries()) {
+      const transit = engine.getAircraft(event.aircraftId);
+      if (transit) expect(isHemisphericLevel(transit.altitudeFt, headings[i]!)).toBe(true);
+    }
     for (const event of entered) {
       const transit = engine.getAircraft(event.aircraftId);
       if (!transit) continue;
       expect(transit.phase).toBe('enroute');
       expect(transit.owner).toBe('N90');
-      expect(transit.altitudeFt).toBeGreaterThanOrEqual(9_000);
-      expect(transit.altitudeFt).toBeLessThanOrEqual(15_000);
+      // At the level they filed, which suits the direction they cross in.
+      expect(transit.altitudeFt).toBeGreaterThanOrEqual(16_000);
+      expect(transit.altitudeFt).toBeLessThanOrEqual(41_000);
+      expect(transit.flightPlan.requestedAltitudeFt).toBe(transit.altitudeFt);
       expect(newYork.airspace.airports).not.toContain(transit.flightPlan.destination);
       expect(transit.flightPlan.route).toEqual([event.exitFix]);
     }
@@ -74,13 +83,8 @@ describe('transits', () => {
     );
     expect(Math.abs(turn)).toBeGreaterThan(90);
     expect(distanceNm(center, first.position)).toBeLessThan(newYork.boundaryRadiusNm);
-    expect(
-      engine.comms.filter((c) =>
-        /, (one|two|three|four|five|six|seven|eight|niner) thousand|, one (zero|one|two|three|four|five) thousand/.test(
-          c.text,
-        ),
-      ).length,
-    ).toBeGreaterThan(0);
+    // Transits check in at their cruising level.
+    expect(engine.comms.some((c) => /^New York Center, .*, flight level/.test(c.text))).toBe(true);
   });
 
   it('follows the transit rate setting', () => {

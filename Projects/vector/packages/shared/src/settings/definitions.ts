@@ -15,6 +15,7 @@ export type SettingCategory =
   | 'pilots'
   | 'departures'
   | 'approaches'
+  | 'center'
   | 'sim';
 
 interface SettingMeta {

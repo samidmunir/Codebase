@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { parseMva } from './mva';
-import { parseCenterSites, parseFrequencies } from './nasr';
+import {
+  parseArtccBoundaries,
+  parseCenterSites,
+  parseDmsCoordinate,
+  parseFrequencies,
+} from './nasr';
 
 describe('parseFrequencies', () => {
   it('reads quoted CSV fields by column name', () => {
@@ -77,5 +82,34 @@ describe('parseMva', () => {
         ],
       },
     ]);
+  });
+});
+
+describe('parseArtccBoundaries', () => {
+  const record = (artcc: string, level: string, lat: string, lon: string, text = 'TO') =>
+    `${artcc} *${level[0]}*00001${'NEW YORK'.padEnd(40)}${level.padEnd(10)}${lat.padEnd(14)}${lon.padEnd(14)}${text}`;
+
+  it('reads DMS coordinates', () => {
+    expect(parseDmsCoordinate('39-41-00.0N')).toBeCloseTo(39.68333, 5);
+    expect(parseDmsCoordinate('073-10-30.0W')).toBeCloseTo(-73.175, 5);
+  });
+
+  it('builds closed rings per center and stratum', () => {
+    const content = [
+      record('ZNY', 'HIGH', '39-00-00.0N', '073-00-00.0W'),
+      record('ZNY', 'HIGH', '40-00-00.0N', '073-00-00.0W'),
+      record('ZNY', 'HIGH', '40-00-00.0N', '074-00-00.0W', 'TO POINT OF BEGINNING'),
+      record('ZNY', 'LOW', '39-00-00.0N', '073-00-00.0W'),
+      record('ZNY', 'LOW', '40-00-00.0N', '073-00-00.0W'),
+      record('ZNY', 'LOW', '40-00-00.0N', '074-00-00.0W', 'TO POINT OF BEGINNING'),
+      record('ZAB', 'HIGH', '35-00-00.0N', '111-00-00.0W'),
+    ].join('\n');
+    const boundaries = parseArtccBoundaries(content, ['ZNY']);
+    expect(boundaries.map((b) => [b.artcc, b.level, b.ring.length])).toEqual([
+      ['ZNY', 'high', 4],
+      ['ZNY', 'low', 4],
+    ]);
+    expect(boundaries[0]!.ring[0]).toEqual([-73, 39]);
+    expect(boundaries[0]!.ring.at(-1)).toEqual([-73, 39]);
   });
 });

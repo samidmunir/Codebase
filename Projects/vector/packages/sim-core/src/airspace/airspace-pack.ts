@@ -10,6 +10,7 @@ import {
   videoMapFileSchema,
   type Airport,
   type AirspaceFile,
+  type CenterController,
   type Fix,
   type IlsApproach,
   type ProcedureLeg,
@@ -111,29 +112,51 @@ export class AirspacePack {
     return distanceNm(this.airspace.center, { lat, lon });
   }
 
-  /** The minimum vectoring altitude at a position, from the MVA chart (undefined outside it). */
+  /**
+   * The minimum altitude a controller can assign at a position: the TRACON's
+   * minimum vectoring altitude where its MVA chart covers the position,
+   * otherwise the Center's minimum IFR altitude. Undefined outside both.
+   */
   minimumVectoringAltitude(position: { lat: number; lon: number }): number | undefined {
-    const inside = (ring: readonly [number, number][]) => {
-      let result = false;
-      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-        const [xi, yi] = ring[i]!;
-        const [xj, yj] = ring[j]!;
+    const highestOf = (kind: 'mva' | 'mia') => {
+      let highest: number | undefined;
+      for (const sector of this.videoMap.minimumVectoringAltitudes) {
         if (
-          yi > position.lat !== yj > position.lat &&
-          position.lon < ((xj - xi) * (position.lat - yi)) / (yj - yi) + xi
+          sector.kind === kind &&
+          pointInRing(position, sector.exterior) &&
+          !sector.holes.some((hole) => pointInRing(position, hole))
         ) {
-          result = !result;
+          highest = Math.max(highest ?? 0, sector.minimumAltitudeFt);
         }
       }
-      return result;
+      return highest;
     };
-    let highest: number | undefined;
-    for (const sector of this.videoMap.minimumVectoringAltitudes) {
-      if (inside(sector.exterior) && !sector.holes.some(inside)) {
-        highest = Math.max(highest ?? 0, sector.minimumAltitudeFt);
-      }
-    }
-    return highest;
+    return highestOf('mva') ?? highestOf('mia');
+  }
+
+  /** Every Center an aircraft can be handed to: the owning Center first, then its neighbors. */
+  get centers(): readonly CenterController[] {
+    return [this.airspace.controllers.center, ...this.airspace.controllers.adjacentCenters];
+  }
+
+  isCenter(controllerId: string): boolean {
+    return this.centers.some((center) => center.id === controllerId);
+  }
+
+  /**
+   * The Center whose airspace contains a position, by stratum (high at and
+   * above the transition altitude). Falls back to the owning Center where no
+   * boundary data covers the position.
+   */
+  centerAt(position: { lat: number; lon: number }, altitudeFt: number): CenterController {
+    const level = altitudeFt >= this.airspace.transitionAltitudeFt ? 'high' : 'low';
+    const boundary = this.videoMap.artccBoundaries.find(
+      (b) => b.level === level && pointInRing(position, b.ring),
+    );
+    return (
+      this.centers.find((center) => center.id === boundary?.artcc) ??
+      this.airspace.controllers.center
+    );
   }
 
   ilsApproaches(icao: string, runway: string): IlsApproach[] {
@@ -276,4 +299,23 @@ function checkRunways(airport: Airport): string[] {
     }
   }
   return problems;
+}
+
+/** Whether a position is inside a ring of [lon, lat] points (ray casting). */
+export function pointInRing(
+  position: { lat: number; lon: number },
+  ring: readonly (readonly [number, number])[],
+): boolean {
+  let result = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]!;
+    const [xj, yj] = ring[j]!;
+    if (
+      yi > position.lat !== yj > position.lat &&
+      position.lon < ((xj - xi) * (position.lat - yi)) / (yj - yi) + xi
+    ) {
+      result = !result;
+    }
+  }
+  return result;
 }

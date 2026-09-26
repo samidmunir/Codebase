@@ -391,6 +391,8 @@ Airspace data ships as static assets with the client in v1. It can move behind a
 | 10  | **Accounts & user settings**           | Register, login, token refresh and logout, plus user preferences saved to the account                                                                                                                                                                                                          |
 | 11  | **Save & load**                        | Snapshot serialization, saved sessions API, save/load/rename/delete UI, exact resume, transit overflights, in-session traffic tuning                                                                                                                                                           |
 | 12  | **Session flow, settings UI & polish** | Home, airspace selection, session config (wind, runways, difficulty), saved sessions and settings screens, UX polish, performance pass, end-to-end tests                                                                                                                                       |
+| 13  | **Wider airspace & flight levels**     | 150 NM region to FL450 with Center MIAs, ARTCC boundaries, airways and nearby airports; arrivals from cruise levels; requested cruise levels; en route separation; direct-to highlight                                                                                                         |
+| 14  | **RP scoring** (planned)               | Reputation points for completed arrivals, departures and transits, and penalties for losses of separation                                                                                                                                                                                      |
 
 Each milestone is developed on a `vector/feature/<name>` branch and merged into `vector/develop`. `vector/develop` merges into `main` when the milestone set is complete.
 
@@ -416,16 +418,19 @@ A player can:
 
 ## 9. Decisions Log
 
-| Topic             | Decision                                                                                                                                                                             |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Wind              | Random but realistic for the region, seeded per session, fixed for the session in v1                                                                                                 |
-| Departure queue   | Grows up to a maximum set by difficulty. New departures wait at the gate when it's full                                                                                              |
-| Tower handoff     | Automatic once the arrival is established on the ILS. Control returns to the player on a go-around                                                                                   |
-| Departure control | Automatic Tower-to-player transfer at the radar-contact altitude                                                                                                                     |
-| Aircraft commands | UI only. No text entry, and no keyboard shortcuts for aircraft                                                                                                                       |
-| Configurability   | Every tunable value is a setting with a realistic default                                                                                                                            |
-| Traffic tuning    | Difficulty sets starting arrival, departure and transit rates and the queue cap. The player can tune these four during a session (Traffic panel), and the values are saved with it   |
-| Map               | Vector draws its own video map from real geodata (US Census TIGER shoreline, FAA Class B and MVA). A real-world map (MapLibre + OpenStreetMap tiles) is an optional layer underneath |
+| Topic             | Decision                                                                                                                                                                                                              |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wind              | Random but realistic for the region, seeded per session, fixed for the session in v1                                                                                                                                  |
+| Departure queue   | Grows up to a maximum set by difficulty. New departures wait at the gate when it's full                                                                                                                               |
+| Tower handoff     | Automatic once the arrival is established on the ILS. Control returns to the player on a go-around                                                                                                                    |
+| Departure control | Automatic Tower-to-player transfer at the radar-contact altitude                                                                                                                                                      |
+| Aircraft commands | UI only. No text entry, and no keyboard shortcuts for aircraft                                                                                                                                                        |
+| Configurability   | Every tunable value is a setting with a realistic default                                                                                                                                                             |
+| Traffic tuning    | Difficulty sets starting arrival, departure and transit rates and the queue cap. The player can tune these four during a session (Traffic panel), and the values are saved with it                                    |
+| Map               | Vector draws its own video map from real geodata (US Census TIGER shoreline, FAA Class B and MVA). A real-world map (MapLibre + OpenStreetMap tiles) is an optional layer underneath                                  |
+| Region            | The player works the New York TRACON and surrounding Center airspace: 150 NM around New York, up to FL450. Handoffs go to the Center the aircraft leaves into (New York, Boston, Washington or Cleveland)             |
+| Altitudes         | Flight levels at and above 18,000 ft. Departures and overflights file a requested cruise level (trip length and the hemispheric rule); arrivals enter at cruise or on a descent profile, and the player descends them |
+| Separation        | 3 NM within 40 NM of the radar, 5 NM beyond (both settings), 1,000 ft vertically                                                                                                                                      |
 
 ## 10. Open Questions
 

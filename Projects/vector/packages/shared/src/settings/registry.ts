@@ -41,14 +41,25 @@ export const USER_SETTINGS = {
     unit: 'px',
     default: 13,
   }),
+  'display.scopeRangeNm': setting.number({
+    category: 'display',
+    label: 'Scope range',
+    description:
+      'How far from the center the scope shows when it opens or is recentered (the whole region at the maximum).',
+    min: 30,
+    max: 150,
+    step: 10,
+    unit: 'NM',
+    default: 150,
+  }),
   'display.historyTrailLength': setting.number({
     category: 'display',
     label: 'History trail length',
     description: 'Number of previous radar positions shown behind each target.',
     min: 0,
-    max: 10,
+    max: 20,
     step: 1,
-    default: 5,
+    default: 8,
   }),
   'display.leaderLineLength': setting.number({
     category: 'display',
@@ -58,6 +69,59 @@ export const USER_SETTINGS = {
     max: 7,
     step: 1,
     default: 2,
+  }),
+  'display.heatTrail': setting.boolean({
+    category: 'display',
+    label: 'Heat trail',
+    description:
+      'Draw each aircraft’s whole path since it entered your airspace, colored as a heat map (in addition to the short history trail).',
+    default: true,
+  }),
+  'display.heatTrailColorBy': setting.select({
+    category: 'display',
+    label: 'Heat trail colors',
+    description:
+      'Age: hot where the aircraft is now, cooling toward where it entered. Altitude: hot low, cool high. Speed: hot fast, cool slow.',
+    options: [
+      { value: 'age', label: 'Age' },
+      { value: 'altitude', label: 'Altitude' },
+      { value: 'speed', label: 'Speed' },
+    ],
+    default: 'age',
+  }),
+  'display.heatTrailLengthMin': setting.select({
+    category: 'display',
+    label: 'Heat trail length',
+    description:
+      'How much of each path to keep. The oldest part fades out smoothly; “Whole path” keeps everything since the aircraft entered.',
+    options: [
+      { value: 5, label: '5 min' },
+      { value: 10, label: '10 min' },
+      { value: 20, label: '20 min' },
+      { value: 30, label: '30 min' },
+      { value: 0, label: 'Whole path' },
+    ],
+    default: 20,
+  }),
+  'display.heatTrailAircraft': setting.select({
+    category: 'display',
+    label: 'Heat trails for',
+    description: 'Every aircraft on the scope, or only the one you have selected.',
+    options: [
+      { value: 'all', label: 'All aircraft' },
+      { value: 'selected', label: 'Selected' },
+    ],
+    default: 'all',
+  }),
+  'display.heatTrailOpacity': setting.number({
+    category: 'display',
+    label: 'Heat trail opacity',
+    description: 'How strongly heat trails are drawn.',
+    min: 10,
+    max: 100,
+    step: 5,
+    unit: '%',
+    default: 55,
   }),
   'display.headingVector': setting.boolean({
     category: 'display',
@@ -105,17 +169,23 @@ export const USER_SETTINGS = {
     description: 'Color of video map lines.',
     default: '#2c5b4b',
   }),
-  'display.color.targets': setting.color({
+  'display.color.arrivals': setting.color({
     category: 'display',
-    label: 'Target color',
-    description: 'Color of aircraft targets you control.',
+    label: 'Arrival color',
+    description: 'Color of arrivals you control (targets, trails and data blocks).',
     default: '#4cf2a0',
   }),
-  'display.color.dataBlocks': setting.color({
+  'display.color.departures': setting.color({
     category: 'display',
-    label: 'Data block color',
-    description: 'Color of data blocks for aircraft you control.',
-    default: '#b8f5d8',
+    label: 'Departure color',
+    description: 'Color of departures you control (targets, trails and data blocks).',
+    default: '#62b8ff',
+  }),
+  'display.color.transits': setting.color({
+    category: 'display',
+    label: 'Overflight color',
+    description: 'Color of overflights you control (targets, trails and data blocks).',
+    default: '#d49bff',
   }),
 
   // ---- Map layers ----------------------------------------------------------
@@ -146,7 +216,38 @@ export const USER_SETTINGS = {
   'map.classB': setting.boolean({
     category: 'map',
     label: 'Class B airspace',
-    description: 'Show New York Class B airspace boundaries.',
+    description: 'Show Class B airspace boundaries (New York, Philadelphia and nearby).',
+    default: true,
+  }),
+  'map.classC': setting.boolean({
+    category: 'map',
+    label: 'Class C airspace',
+    description: 'Show Class C airspace around airports in the region.',
+    default: false,
+  }),
+  'map.airwaysHigh': setting.boolean({
+    category: 'map',
+    label: 'Jet and Q routes',
+    description: 'Show high-altitude airways (at and above FL180).',
+    default: false,
+  }),
+  'map.airwaysLow': setting.boolean({
+    category: 'map',
+    label: 'Victor and T routes',
+    description: 'Show low-altitude airways (below FL180).',
+    default: false,
+  }),
+  'map.otherAirports': setting.boolean({
+    category: 'map',
+    label: 'Other airports',
+    description: 'Show the region’s other airports and their runways, for orientation.',
+    default: true,
+  }),
+  'map.artccBoundaries': setting.boolean({
+    category: 'map',
+    label: 'Center boundaries',
+    description:
+      'Show where New York Center meets Boston, Washington and Cleveland Centers (high altitude).',
     default: true,
   }),
   'map.sectorBoundary': setting.boolean({
@@ -164,7 +265,13 @@ export const USER_SETTINGS = {
   'map.minimumVectoringAltitudes': setting.boolean({
     category: 'map',
     label: 'Minimum vectoring altitudes',
-    description: 'Show MVA sectors and their minimum altitudes.',
+    description: 'Show TRACON MVA sectors and their minimum altitudes.',
+    default: false,
+  }),
+  'map.minimumIfrAltitudes': setting.boolean({
+    category: 'map',
+    label: 'Minimum IFR altitudes',
+    description: 'Show Center MIA sectors, which apply outside the TRACON’s MVA chart.',
     default: false,
   }),
   'map.basemap': setting.boolean({
@@ -423,12 +530,33 @@ export const SESSION_SETTINGS = {
   'separation.lateralNm': setting.number({
     category: 'separation',
     label: 'Lateral separation',
-    description: 'Minimum horizontal distance between aircraft.',
+    description: 'Minimum horizontal distance between aircraft near the radar (terminal area).',
     min: 2.5,
     max: 10,
     step: 0.5,
     unit: 'NM',
     default: 3,
+  }),
+  'separation.enrouteLateralNm': setting.number({
+    category: 'separation',
+    label: 'En route lateral separation',
+    description:
+      'Minimum horizontal distance where either aircraft is beyond the terminal area (farther from the radar).',
+    min: 3,
+    max: 10,
+    step: 0.5,
+    unit: 'NM',
+    default: 5,
+  }),
+  'separation.terminalRangeNm': setting.number({
+    category: 'separation',
+    label: 'Terminal area range',
+    description: 'Within this distance of the radar site, the terminal lateral separation applies.',
+    min: 20,
+    max: 60,
+    step: 5,
+    unit: 'NM',
+    default: 40,
   }),
   'separation.verticalFt': setting.number({
     category: 'separation',
@@ -544,6 +672,31 @@ export const SESSION_SETTINGS = {
     description:
       'Player aid: show in the command menu whether an aircraft can accept the approach.',
     default: false,
+  }),
+
+  // ---- Center (computer controller) ------------------------------------------
+  'center.automation': setting.boolean({
+    category: 'center',
+    label: 'Center flies handed-off traffic',
+    description:
+      'After a handoff, Center climbs or descends the aircraft to its requested level and routes it along its flight plan toward its destination.',
+    default: true,
+  }),
+  'center.resolveConflicts': setting.boolean({
+    category: 'center',
+    label: 'Center separates its traffic',
+    description: 'Center changes levels to keep aircraft it controls apart from each other.',
+    default: true,
+  }),
+  'center.conflictLookaheadSec': setting.number({
+    category: 'center',
+    label: 'Center conflict look-ahead',
+    description: 'How far ahead Center looks for conflicts between its aircraft.',
+    min: 60,
+    max: 300,
+    step: 30,
+    unit: 's',
+    default: 120,
   }),
 
   // ---- Sim -----------------------------------------------------------------

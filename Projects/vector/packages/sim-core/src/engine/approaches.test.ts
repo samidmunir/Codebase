@@ -223,11 +223,34 @@ describe('arrivals', () => {
         newYork.boundaryRadiusNm,
       );
     }
-    const checkIns = engine.comms.filter((c) => c.text.startsWith('New York Approach,'));
+    const checkIns = engine.comms.filter((c) => /^New York (Center|Approach),/.test(c.text));
     expect(checkIns.length).toBe(entered.length);
     expect(checkIns[0]!.text).toMatch(
       /, [A-Z]+ (one|two|three|four|five|six|seven|eight|niner) arrival\.$/,
     );
+  });
+
+  it('enter far out at the flight levels, for the player to descend', () => {
+    const engine = createEngine({
+      'traffic.arrivalRatePerHour': 20,
+      'traffic.transitRatePerHour': 0,
+    });
+    const entries: { altitudeFt: number; distanceNm: number }[] = [];
+    engine.subscribe((event) => {
+      if (event.type !== 'arrivalEntered') return;
+      const arrival = engine.getAircraft(event.aircraftId)!;
+      entries.push({
+        altitudeFt: arrival.altitudeFt,
+        distanceNm: distanceNm(newYork.airspace.center, arrival.position),
+      });
+    });
+    run(engine, 1_800);
+    expect(entries.length).toBeGreaterThan(10);
+    for (const entry of entries) expect(entry.distanceNm).toBeGreaterThan(140);
+    const high = entries.filter((entry) => entry.altitudeFt >= 18_000);
+    expect(high.length / entries.length).toBeGreaterThan(0.7);
+    // Checking in at a flight level, with Center.
+    expect(engine.comms.some((c) => /^New York Center, .*, flight level/.test(c.text))).toBe(true);
   });
 
   it('never brings widebodies into LaGuardia', () => {

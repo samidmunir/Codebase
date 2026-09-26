@@ -59,4 +59,21 @@ describe('data block', () => {
     expect(dataBlockLines(target, 0, 'expanded')).toEqual(expected);
     expect(dataBlockLines(target, 1, 'expanded')).toEqual(expected);
   });
+
+  it('shows the assigned altitude while climbing or descending (expanded)', () => {
+    const climbing = {
+      ...target,
+      altitudeFt: 18_000,
+      verticalSpeedFpm: 2_000,
+      assignedAltitudeFt: 24_000,
+    };
+    expect(dataBlockLines(climbing, 0, 'expanded')[1]).toMatch(/^180↑240 /);
+    const level = {
+      ...target,
+      altitudeFt: 35_000,
+      verticalSpeedFpm: 0,
+      assignedAltitudeFt: 35_000,
+    };
+    expect(dataBlockLines(level, 0, 'expanded')[1]).toMatch(/^350 {2}\d{3}$/);
+  });
 });

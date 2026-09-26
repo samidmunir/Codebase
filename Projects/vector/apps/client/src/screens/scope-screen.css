@@ -658,3 +658,81 @@
 .scope-dialog--settings .settings-view__content {
   min-height: 0;
 }
+
+/* ---- Traffic color legend ------------------------------------------------------------ */
+
+.traffic-color {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 0;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.traffic-color__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.traffic-color input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ---- Heat trail legend ----------------------------------------------------------------- */
+
+.layer-select .segmented-control--three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.layer-select .segmented-control button:disabled {
+  opacity: 0.4;
+}
+
+.heat-legend {
+  display: grid;
+  gap: 4px;
+  padding: 2px 0 8px;
+}
+
+.heat-legend__bar {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.heat-legend__labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-faint);
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+}
+
+.layer-dropdown {
+  min-height: 30px;
+  padding: 0 var(--space-2);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}
+
+.layer-dropdown {
+  min-height: 30px;
+  padding: 0 var(--space-2);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}

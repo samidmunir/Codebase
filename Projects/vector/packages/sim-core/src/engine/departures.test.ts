@@ -118,6 +118,7 @@ describe('departure queue', () => {
         random,
         callsignsInUse: new Set<string>(),
         hasPerformance: (type: string) => performance.has(type),
+        ceilingFt: (type: string) => performance.get(type).ceilingFt,
         fleetMix,
       };
       const entries = Array.from({ length: 1_000 }, () =>
@@ -146,6 +147,7 @@ describe('departure queue', () => {
       random,
       callsignsInUse: new Set<string>(),
       hasPerformance: (type: string) => performance.has(type),
+      ceilingFt: (type: string) => performance.get(type).ceilingFt,
       fleetMix: 'realistic' as const,
     };
     const entries = Array.from({ length: 500 }, () =>
@@ -296,7 +298,7 @@ describe('leaving the airspace', () => {
       flightPlan: { origin: 'KJFK', destination: 'KBOS', route: [] },
       phase: 'enroute',
       owner: 'ZNY',
-      position: { lat: newYork.airspace.center.lat + 0.8, lon: newYork.airspace.center.lon },
+      position: { lat: newYork.airspace.center.lat + 2.55, lon: newYork.airspace.center.lon },
       altitudeFt: 12_000,
       headingDeg: 360,
       iasKts: 250,

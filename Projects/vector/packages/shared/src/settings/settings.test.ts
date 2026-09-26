@@ -108,7 +108,7 @@ describe('setting value validation', () => {
     expect(key.safeParse('').success).toBe(true);
     expect(key.safeParse('Shift+').success).toBe(false);
 
-    const color = schema(USER_SETTINGS['display.color.targets']);
+    const color = schema(USER_SETTINGS['display.color.arrivals']);
     expect(color.safeParse('#A1b2C3').success).toBe(true);
     expect(color.safeParse('green').success).toBe(false);
   });

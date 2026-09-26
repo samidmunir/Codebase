@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import type { AirspacePack } from '../airspace/airspace-pack';
 import type { Airline } from '../airspace/schema';
+import { bearingTrue, distanceNm, trueToMagnetic, type LatLon } from '../math/geo';
 import type { SeededRandom } from '../random/seeded-random';
+import { requestedCruiseAltitude } from './cruise-levels';
 import {
   generateWinds,
   manualWinds,
@@ -23,6 +25,8 @@ export const departureEntrySchema = z.object({
   destination: z.string(),
   /** Exit fix of the departure gate, e.g. 'MERIT'. */
   gateFix: z.string(),
+  /** Cruising altitude the flight filed for. */
+  requestedAltitudeFt: z.number().int().positive().optional(),
   readyAtTick: z.number().int().min(0),
   /** 'waiting' for a runway; 'cleared' for takeoff (lining up or waiting for the runway). */
   status: z.enum(['waiting', 'cleared']),
@@ -146,6 +150,8 @@ export interface NewDepartureContext {
   /** Callsigns already in use (on the scope or in a queue). */
   callsignsInUse: ReadonlySet<string>;
   hasPerformance: (aircraftType: string) => boolean;
+  /** Certified ceiling of an aircraft type. */
+  ceilingFt: (aircraftType: string) => number;
   /** 'varied' evens out the airline mix so smaller carriers show up more often. */
   fleetMix: FleetMix;
 }
@@ -191,18 +197,40 @@ export function newDepartureEntry(
   const destination = weightedPick(random, served.length > 0 ? served : traffic.destinations);
   const gateFix = random.pick(pack.traffic.departureGates[destination.gate]!);
 
+  const aircraftType = random.pick(types.length > 0 ? types : airline.types);
+  const trip = tripBetween(pack, pack.airport(airport).position, destination.icao);
   return {
     id: `D${operations.nextDepartureNumber++}`,
     callsign,
     ...(info ? { telephony: info.telephony } : {}),
-    aircraftType: random.pick(types.length > 0 ? types : airline.types),
+    aircraftType,
     squawk: departureSquawk(random),
     airport,
     destination: destination.icao,
     gateFix,
+    requestedAltitudeFt: requestedCruiseAltitude(
+      random,
+      trip.distanceNm,
+      trueToMagnetic(trip.courseDeg, pack.airspace.magneticVariationDeg),
+      context.ceilingFt(aircraftType),
+    ),
     readyAtTick: tick,
     status: 'waiting',
   };
+}
+
+/** Typical trip when a city's position isn't in the traffic profile. */
+const DEFAULT_TRIP_NM = 600;
+
+/** Great-circle distance and initial true course from a position to a city in the traffic profile. */
+export function tripBetween(
+  pack: AirspacePack,
+  from: LatLon,
+  city: string,
+): { distanceNm: number; courseDeg: number } {
+  const to = pack.traffic.cityPositions[city];
+  if (!to) return { distanceNm: DEFAULT_TRIP_NM, courseDeg: 0 };
+  return { distanceNm: distanceNm(from, to), courseDeg: bearingTrue(from, to) };
 }
 
 /** A discrete transponder code, avoiding VFR (1200) and emergency codes. */

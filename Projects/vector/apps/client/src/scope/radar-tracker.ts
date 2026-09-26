@@ -5,17 +5,22 @@ export interface RadarTarget {
   id: string;
   callsign: string;
   aircraftType: string;
+  origin: string;
   destination: string;
   owner: string;
   position: LatLon;
   altitudeFt: number;
   groundSpeedKts: number;
   verticalSpeedFpm: number;
+  /** Altitude the aircraft is cleared to (its target). */
+  assignedAltitudeFt: number;
   headingDeg: number;
   /** Where the aircraft is navigating when not on a plain heading: a fix, or an ILS ('ILS22L'). */
   navigatingTo: string | undefined;
   /** Previous returns, newest first. */
   history: LatLon[];
+  /** Sim time of this return, in seconds. */
+  seenAtSec: number;
 }
 
 interface TrackedTarget extends RadarTarget {
@@ -39,7 +44,7 @@ export function navigatingTo(aircraft: Readonly<AircraftState>): string | undefi
 }
 
 /** Returns kept per target; trails show as many of these as the display setting allows. */
-const MAX_HISTORY = 10;
+const MAX_HISTORY = 20;
 
 /**
  * A rotating radar. The beam turns once per interval, clockwise from north,
@@ -74,12 +79,16 @@ export class RadarTracker {
     return Math.floor(timeSec / this.intervalSec - azimuth);
   }
 
+  /** Sim time of the update being processed. */
+  private updateTimeSec = 0;
+
   /**
    * Updates targets the beam has passed since the last call. Pass a smooth time
    * (e.g. the engine's display time) so targets refresh right as the beam
    * crosses them. Returns true when anything changed.
    */
   update(timeSec: number, aircraft: readonly Readonly<AircraftState>[]): boolean {
+    this.updateTimeSec = timeSec;
     let changed = false;
     const seen = new Set<string>();
 
@@ -131,15 +140,18 @@ export class RadarTracker {
       id: plane.id,
       callsign: plane.callsign,
       aircraftType: plane.aircraftType,
+      origin: plane.flightPlan.origin,
       destination: plane.flightPlan.destination,
       owner: plane.owner,
       position: { ...plane.position },
       altitudeFt: plane.altitudeFt,
       groundSpeedKts: groundSpeedKts(plane),
       verticalSpeedFpm: plane.verticalSpeedFpm,
+      assignedAltitudeFt: plane.targets.altitudeFt,
       headingDeg: plane.headingDeg,
       navigatingTo: navigatingTo(plane),
       history: previous ? [previous.position, ...previous.history].slice(0, MAX_HISTORY) : [],
+      seenAtSec: this.updateTimeSec,
       scan,
     });
   }

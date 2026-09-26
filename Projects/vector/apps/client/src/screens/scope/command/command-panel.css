@@ -1048,3 +1048,30 @@
   text-transform: uppercase;
   background: rgba(8, 14, 18, 0.95);
 }
+
+.command-panel__requested {
+  margin-left: var(--space-2);
+  padding: 1px 6px;
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  background: rgba(76, 242, 160, 0.08);
+  border: 1px solid rgba(76, 242, 160, 0.3);
+  border-radius: 4px;
+}
+
+.option-grid--altitudes button.option--requested {
+  position: relative;
+  border-color: rgba(76, 242, 160, 0.55);
+}
+
+.option-grid--altitudes button.option--requested::after {
+  content: 'REQ';
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 0.55rem;
+  letter-spacing: 0.05em;
+}

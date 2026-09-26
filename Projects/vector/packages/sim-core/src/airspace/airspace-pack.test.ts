@@ -74,8 +74,41 @@ describe('New York airspace pack', () => {
 
   it('includes the video map layers', () => {
     expect(pack.videoMap.shoreline.length).toBeGreaterThan(100);
-    expect(pack.videoMap.classB).toHaveLength(16);
+    // New York and Philadelphia Class B, and the region's Class C airports.
+    expect(pack.videoMap.classB.map((area) => area.name)).toEqual(
+      expect.arrayContaining(['New York', 'Philadelphia']),
+    );
+    expect(pack.videoMap.classC.length).toBeGreaterThan(10);
     expect(pack.videoMap.minimumVectoringAltitudes.length).toBeGreaterThan(40);
+    expect(pack.videoMap.airways.some((airway) => airway.id === 'J60')).toBe(true);
+    expect(pack.videoMap.airports.map((airport) => airport.icao)).toEqual(
+      expect.arrayContaining(['KPHL', 'KISP', 'KHPN', 'KTEB', 'KBDL']),
+    );
+    expect(new Set(pack.videoMap.artccBoundaries.map((b) => b.artcc))).toEqual(
+      new Set(['ZNY', 'ZBW', 'ZDC', 'ZOB']),
+    );
+  });
+
+  it('covers the wider region up to the flight levels', () => {
+    expect(pack.boundaryRadiusNm).toBeCloseTo(150, 0);
+    expect(pack.airspace.boundary.ceilingFt).toBe(45_000);
+    expect(pack.airspace.transitionAltitudeFt).toBe(18_000);
+  });
+
+  it('uses TRACON MVAs where they apply and Center MIAs beyond', () => {
+    const nearJfk = pack.minimumVectoringAltitude({ lat: 40.6, lon: -73.6 });
+    expect(nearJfk).toBeLessThanOrEqual(3_000);
+    // Over the Catskills, well outside the TRACON chart.
+    const catskills = pack.minimumVectoringAltitude({ lat: 42.1, lon: -74.3 });
+    expect(catskills).toBeGreaterThanOrEqual(5_000);
+  });
+
+  it('knows which Center owns the airspace around the region', () => {
+    expect(pack.centerAt({ lat: 40.7, lon: -73.9 }, 30_000).id).toBe('ZNY');
+    expect(pack.centerAt({ lat: 42.4, lon: -71.0 }, 30_000).id).toBe('ZBW');
+    expect(pack.centerAt({ lat: 38.9, lon: -77.0 }, 30_000).id).toBe('ZDC');
+    expect(pack.isCenter('ZOB')).toBe(true);
+    expect(pack.isCenter('N90')).toBe(false);
   });
 });
 

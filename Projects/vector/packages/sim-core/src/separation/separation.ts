@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { groundSpeedKts, type AircraftState } from '../aircraft/aircraft';
 import { finalApproachGeometry } from '../aircraft/navigation';
 import { toRadians } from '../math/angles';
-import { magneticToTrue } from '../math/geo';
+import { distanceNm, magneticToTrue, type LatLon } from '../math/geo';
 
 // Separation monitoring and Conflict Alert. Aircraft pairs that involve the
 // player's traffic are checked against the lateral and vertical minima; pairs
@@ -53,7 +53,13 @@ export const emptySeparationState = (): SeparationState => ({
 });
 
 export interface SeparationSettings {
+  /** Terminal minimum, near the radar. */
   lateralNm: number;
+  /** En route minimum, where either aircraft is beyond the terminal range. */
+  enrouteLateralNm: number;
+  /** Distance from the radar within which the terminal minimum applies. */
+  terminalRangeNm: number;
+  radarPosition: LatLon;
   verticalFt: number;
   lookaheadSec: number;
   playerId: string;
@@ -95,12 +101,20 @@ function track(aircraft: Readonly<AircraftState>, referenceLat: number, variatio
   };
 }
 
-/** The lateral minimum for a pair: 2.5 NM in trail on the same final inside 10 NM, otherwise the setting. */
+/**
+ * The lateral minimum for a pair: 2.5 NM in trail on the same final inside
+ * 10 NM; the terminal minimum near the radar; the en route minimum where
+ * either aircraft is farther out.
+ */
 export function requiredLateralNm(
   a: Readonly<AircraftState>,
   b: Readonly<AircraftState>,
   settings: SeparationSettings,
 ): number {
+  const terminal =
+    distanceNm(settings.radarPosition, a.position) <= settings.terminalRangeNm &&
+    distanceNm(settings.radarPosition, b.position) <= settings.terminalRangeNm;
+  if (!terminal) return Math.max(settings.lateralNm, settings.enrouteLateralNm);
   const na = a.navigation;
   const nb = b.navigation;
   if (

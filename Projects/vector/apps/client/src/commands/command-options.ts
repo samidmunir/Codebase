@@ -1,6 +1,8 @@
 import {
   bearingTrue,
+  destinationPoint,
   distanceNm,
+  magneticToTrue,
   trueToMagnetic,
   type AircraftPerformance,
   type AircraftState,
@@ -50,13 +52,35 @@ export function ilsRunways(pack: AirspacePack, aircraft: Readonly<AircraftState>
     .map((runway) => runway.id);
 }
 
-/** Handoff to the New York Center radio site nearest the aircraft, on its altitude band. */
+/** How far past the boundary to look when deciding which Center an aircraft is leaving into. */
+const EXIT_LOOKAHEAD_NM = 10;
+const EXIT_SEARCH_STEP_NM = 5;
+const EXIT_SEARCH_LIMIT_NM = 500;
+
+/** Where the aircraft will be just after it leaves the airspace on its current heading. */
+export function exitPoint(pack: AirspacePack, aircraft: Readonly<AircraftState>) {
+  const { center, magneticVariationDeg } = pack.airspace;
+  const course = magneticToTrue(aircraft.headingDeg, magneticVariationDeg);
+  const radius = pack.boundaryRadiusNm + EXIT_LOOKAHEAD_NM;
+  let point = aircraft.position;
+  for (let flown = 0; flown < EXIT_SEARCH_LIMIT_NM; flown += EXIT_SEARCH_STEP_NM) {
+    if (distanceNm(center, point) > radius) break;
+    point = destinationPoint(aircraft.position, course, flown + EXIT_SEARCH_STEP_NM);
+  }
+  return point;
+}
+
+/**
+ * Handoff to the Center the aircraft is leaving into (by where its heading
+ * takes it across the boundary), on that Center's radio site nearest the
+ * aircraft for its altitude band.
+ */
 export function centerHandoff(
   pack: AirspacePack,
   aircraft: Readonly<AircraftState>,
 ): AtcCommand | undefined {
-  const { center } = pack.airspace.controllers;
-  const band = aircraft.altitudeFt >= 18_000 ? 'high' : 'low';
+  const center = pack.centerAt(exitPoint(pack, aircraft), aircraft.altitudeFt);
+  const band = aircraft.altitudeFt >= pack.airspace.transitionAltitudeFt ? 'high' : 'low';
   const candidates = center.sites
     .map((site) => ({
       site,
@@ -99,8 +123,14 @@ export interface FixGroup {
   fixes: FixOption[];
 }
 
-/** Fixes farther than this are left out of the direct-to list. */
+/** Fixes farther than this are left out of the direct-to list: farther for fast, high traffic. */
 const DIRECT_TO_RANGE_NM = 40;
+const DIRECT_TO_RANGE_HIGH_NM = 120;
+
+export const directToRangeNm = (aircraft: Readonly<AircraftState>, pack: AirspacePack) =>
+  aircraft.altitudeFt >= pack.airspace.transitionAltitudeFt
+    ? DIRECT_TO_RANGE_HIGH_NM
+    : DIRECT_TO_RANGE_NM;
 
 /**
  * Fixes still ahead of the aircraft on its route, in flying order: the rest of
@@ -154,13 +184,14 @@ export function directToGroups(
     .filter((o) => o.distanceNm > 1);
 
   const groups: FixGroup[] = route.length > 0 ? [{ title: 'Route', fixes: route }] : [];
+  const range = directToRangeNm(aircraft, pack);
   const onRoute = new Set(routeIds);
   const others = pack.fixes
     .filter((fix) => !onRoute.has(fix.ident))
     .map((fix) => option(fix, false))
-    .filter((o) => o.distanceNm > 1 && o.distanceNm <= DIRECT_TO_RANGE_NM);
+    .filter((o) => o.distanceNm > 1 && o.distanceNm <= range);
 
-  for (let inner = 0; inner < DIRECT_TO_RANGE_NM; inner += ringNm) {
+  for (let inner = 0; inner < range; inner += ringNm) {
     const outer = inner + ringNm;
     const fixes = others
       .filter((o) => o.distanceNm > inner && o.distanceNm <= outer)
