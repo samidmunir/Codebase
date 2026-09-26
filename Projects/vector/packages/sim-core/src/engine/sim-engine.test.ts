@@ -47,6 +47,15 @@ describe('SimEngine clock', () => {
     expect(engine.advance(1_000)).toBeLessThanOrEqual(2);
   });
 
+  it('reports a smooth display time between ticks', () => {
+    const engine = createEngine();
+    engine.advance(1_250);
+    expect(engine.simTimeSec).toBe(1);
+    expect(engine.displayTimeSec).toBeCloseTo(1.25);
+    engine.pause();
+    expect(engine.displayTimeSec).toBe(1);
+  });
+
   it('reports UTC time from the start time plus sim time', () => {
     const engine = createEngine();
     for (let i = 0; i < 90; i++) engine.step();
@@ -115,6 +124,15 @@ describe('SimEngine aircraft', () => {
       'headingReached',
       'speedReached',
     ]);
+  });
+
+  it('transfers ownership and changes phase', () => {
+    const engine = createEngine();
+    const aircraft = engine.addAircraft(newAircraft({ owner: 'KJFK_TWR', phase: 'departure' }));
+    engine.setOwner(aircraft.id, 'N90');
+    engine.setPhase(aircraft.id, 'enroute');
+    expect(engine.getAircraft(aircraft.id)).toMatchObject({ owner: 'N90', phase: 'enroute' });
+    expect(() => engine.setOwner('AC99', 'N90')).toThrow(/AC99/);
   });
 
   it('stops notifying after unsubscribe', () => {

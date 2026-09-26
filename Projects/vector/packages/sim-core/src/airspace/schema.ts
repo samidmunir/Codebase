@@ -241,6 +241,12 @@ export const airspaceFileSchema = z.object({
   description: z.string(),
   center: latLonSchema,
   magneticVariationDeg: z.number(),
+  /** The radar that feeds the scope. Targets update as its beam sweeps past them. */
+  radar: z.object({
+    name: z.string(),
+    position: latLonSchema,
+    rangeNm: z.number().positive(),
+  }),
   /** Area the player controls. Arrivals enter and departures leave across it. */
   boundary: z.object({ ring: ringSchema, ceilingFt: z.number().positive() }),
   airports: z.array(z.string()).min(1),
