@@ -1,4 +1,9 @@
-import { defaultSettings, type SessionSettings } from '@vector/shared';
+import {
+  defaultSettings,
+  IN_SESSION_TRAFFIC_KEYS,
+  parseSettingsPatch,
+  type SessionSettings,
+} from '@vector/shared';
 import {
   aircraftStateSchema,
   aircraftTargetsSchema,
@@ -51,11 +56,12 @@ import {
   MAX_GATE_HOLDS,
   newDepartureEntry,
   queuedAt,
+  weightedPick,
   type ActiveRunways,
   type DepartureEntry,
 } from '../traffic/operations';
 import type { Wind } from '../weather/wind';
-import { normalizeHeading } from '../math/angles';
+import { headingDifference, normalizeHeading } from '../math/angles';
 import { bearingTrue, destinationPoint, distanceNm, trueToMagnetic } from '../math/geo';
 import type { AircraftPerformance } from '../performance/performance';
 import type { PerformanceCatalog } from '../performance/performance';
@@ -99,6 +105,10 @@ const STABILIZED_SPEED_MARGIN_KTS = 10;
 const DEFAULT_MISSED_APPROACH_ALTITUDE_FT = 3_000;
 /** Altitudes arrivals are typically handed over at, when the STAR doesn't publish one. */
 const ARRIVAL_ENTRY_ALTITUDES_FT = [11_000, 12_000, 13_000];
+/** Transits enter and leave at least this far apart around the airspace (degrees). */
+const MIN_TRANSIT_TURN_DEG = 110;
+/** Level altitudes transits cross at. */
+const TRANSIT_ALTITUDES_FT = [9_000, 10_000, 11_000, 12_000, 13_000, 14_000, 15_000];
 /** New arrivals wait if another aircraft is this close to the entry point at a similar altitude. */
 const ARRIVAL_ENTRY_SPACING_NM = 6;
 /** Line-up and takeoff roll after a takeoff clearance. */
@@ -275,6 +285,7 @@ export class SimEngine {
     this.executeDueInstructions();
     this.updateDepartures();
     this.updateArrivals();
+    this.updateTransits();
 
     const landed: { aircraft: AircraftState; airport: string; runway: string }[] = [];
     for (const aircraft of this.state.aircraft) {
@@ -696,6 +707,164 @@ export class SimEngine {
       runway: clearance.runway,
       reason,
     });
+  }
+
+  // ---- In-session traffic tuning ---------------------------------------------------
+
+  /**
+   * Changes traffic rates or the departure queue cap while the session runs.
+   * Only the in-session traffic settings can change; new rates take effect at
+   * once (the next spawns are rescheduled).
+   */
+  updateTrafficSettings(
+    patch: Partial<Pick<SessionSettings, InSessionTrafficKey>>,
+  ): ValidationResult {
+    const keys = Object.keys(patch);
+    const unsupported = keys.filter(
+      (key) => !(IN_SESSION_TRAFFIC_KEYS as readonly string[]).includes(key),
+    );
+    if (unsupported.length > 0)
+      return { ok: false, reason: `Can't change ${unsupported.join(', ')} during a session` };
+    try {
+      parseSettingsPatch('session', patch);
+    } catch (error) {
+      return { ok: false, reason: error instanceof Error ? error.message : 'Invalid settings' };
+    }
+    const before = { ...this.state.settings };
+    Object.assign(this.state.settings, patch);
+
+    const operations = this.state.operations;
+    if (operations && this.airspace) {
+      const tick = this.state.tick;
+      const interval = (rate: number) =>
+        departureInterval(this.rng, rate, this.state.config.tickSeconds);
+      for (const airport of this.airspace.airspace.airports) {
+        if (
+          patch['traffic.arrivalRatePerHour'] !== undefined &&
+          patch['traffic.arrivalRatePerHour'] !== before['traffic.arrivalRatePerHour']
+        ) {
+          operations.nextArrivalTick[airport] =
+            tick + interval(patch['traffic.arrivalRatePerHour']);
+        }
+        if (
+          patch['traffic.departureRatePerHour'] !== undefined &&
+          patch['traffic.departureRatePerHour'] !== before['traffic.departureRatePerHour']
+        ) {
+          operations.nextDepartureTick[airport] =
+            tick + interval(patch['traffic.departureRatePerHour']);
+        }
+      }
+      if (
+        patch['traffic.transitRatePerHour'] !== undefined &&
+        patch['traffic.transitRatePerHour'] !== before['traffic.transitRatePerHour']
+      ) {
+        operations.nextTransitTick = tick + interval(patch['traffic.transitRatePerHour']);
+      }
+    }
+    this.emit({ type: 'settingsChanged', keys });
+    return { ok: true };
+  }
+
+  // ---- Transits ---------------------------------------------------------------
+
+  private updateTransits(): void {
+    const operations = this.state.operations;
+    if (!operations || !this.airspace) return;
+    const rate = this.state.settings['traffic.transitRatePerHour'];
+    if (rate <= 0 || this.state.tick < operations.nextTransitTick) return;
+    const spawned = this.spawnTransit();
+    operations.nextTransitTick =
+      this.state.tick +
+      (spawned
+        ? departureInterval(this.rng, rate, this.state.config.tickSeconds)
+        : Math.ceil(30 / this.state.config.tickSeconds));
+  }
+
+  /** An overflight crossing the airspace: in from one departure gate's direction, out toward another's. */
+  private spawnTransit(): boolean {
+    const pack = this.airspace!;
+    const { center } = pack.airspace;
+    const random = this.rng;
+    const gates = Object.entries(pack.traffic.departureGates).flatMap(([name, idents]) => {
+      const fixes = idents.map((ident) => pack.fix(ident)).filter((fix) => fix !== undefined);
+      return fixes.length > 0 ? [{ name, fixes }] : [];
+    });
+    if (gates.length < 2) return false;
+
+    const entryGate = random.pick(gates);
+    const entryFix = random.pick(entryGate.fixes);
+    const entryBearing = bearingTrue(center, entryFix.position);
+    const exits = gates.filter(
+      (gate) =>
+        Math.abs(headingDifference(entryBearing, bearingTrue(center, gate.fixes[0]!.position))) >=
+        MIN_TRANSIT_TURN_DEG,
+    );
+    if (exits.length === 0) return false;
+    const exitGate = random.pick(exits);
+    const exitFix = random.pick(exitGate.fixes);
+
+    // City pair: somewhere in the entry direction to somewhere in the exit direction.
+    const allTraffic = Object.values(pack.traffic.airports);
+    const citiesToward = (gate: string) =>
+      allTraffic.flatMap((t) => t.destinations).filter((d) => d.gate === gate);
+    const from = citiesToward(entryGate.name);
+    const to = citiesToward(exitGate.name);
+    if (from.length === 0 || to.length === 0) return false;
+    const origin = weightedPick(random, from).icao;
+    const destination = weightedPick(random, to).icao;
+
+    const airline = weightedPick(
+      random,
+      allTraffic.flatMap((t) => t.airlines),
+    );
+    const types = airline.types.filter((type) => this.performance.has(type));
+    if (types.length === 0) return false;
+    const info = this.airlines.get(airline.icao);
+    const [low, high] = info?.flightNumbers ?? [100, 2999];
+    const inUse = new Set([
+      ...this.state.aircraft.map((a) => a.callsign),
+      ...(this.state.operations?.departureQueue ?? []).map((d) => d.callsign),
+    ]);
+    let callsign = '';
+    for (let attempt = 0; attempt < 50 && (!callsign || inUse.has(callsign)); attempt++) {
+      callsign = `${airline.icao}${random.int(low, high)}`;
+    }
+
+    const entry = destinationPoint(center, entryBearing, pack.boundaryRadiusNm - 1);
+    const altitude = random.pick(TRANSIT_ALTITUDES_FT);
+    const crowded = this.state.aircraft.some(
+      (other) =>
+        distanceNm(other.position, entry) < ARRIVAL_ENTRY_SPACING_NM &&
+        Math.abs(other.altitudeFt - altitude) < 1_000,
+    );
+    if (crowded) return false;
+
+    const variation = this.state.world.magneticVariationDeg;
+    const aircraft = this.addAircraft({
+      callsign,
+      ...(info ? { telephony: info.telephony } : {}),
+      aircraftType: random.pick(types),
+      squawk: `${random.int(1, 6)}${random.int(0, 7)}${random.int(0, 7)}${random.int(0, 7)}`,
+      flightPlan: { origin, destination, route: [exitFix.ident] },
+      phase: 'enroute',
+      owner: this.state.playerId,
+      position: entry,
+      altitudeFt: altitude,
+      headingDeg: Math.round(trueToMagnetic(bearingTrue(entry, exitFix.position), variation)) % 360,
+      iasKts: 280,
+      targets: { speedMode: 'normal' },
+    });
+    this.mutableAircraft(aircraft.id).navigation = {
+      mode: 'direct',
+      fix: exitFix.ident,
+      position: { ...exitFix.position },
+    };
+
+    const facility = pack.airspace.controllers.approach.approachCallsign;
+    const spoken = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    this.transmit('pilot', aircraft.id, `${facility}, ${spoken}, ${altitudeWords(altitude)}.`);
+    this.emit({ type: 'transitEntered', aircraftId: aircraft.id, exitFix: exitFix.ident });
+    return true;
   }
 
   // ---- Arrivals ---------------------------------------------------------------
@@ -1177,3 +1346,5 @@ export function towerId(airport: string): string {
 function towerFacility(airport: string): string {
   return `${airport.length === 4 && airport.startsWith('K') ? airport.slice(1) : airport} TWR`;
 }
+
+type InSessionTrafficKey = (typeof IN_SESSION_TRAFFIC_KEYS)[number];

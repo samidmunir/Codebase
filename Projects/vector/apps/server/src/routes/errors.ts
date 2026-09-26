@@ -3,7 +3,9 @@ import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import { InvalidCredentialsError, InvalidSessionError } from '../auth/auth-service';
 import { UnauthorizedError } from '../auth/authenticate';
+import { SavedSessionLimitError, SavedSessionNotFoundError } from '../sessions/sessions-repository';
 import { EmailTakenError } from '../users/users-repository';
+import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
 
 const body = (code: string, message: string, fields?: Record<string, string>): ApiError => ({
@@ -36,6 +38,15 @@ export function errorHandler(
   if (error instanceof SettingsValidationError) {
     const fields = Object.fromEntries(error.issues.map((issue) => [issue.key, issue.message]));
     return reply.code(400).send(body('invalid_settings', 'Some settings are invalid', fields));
+  }
+  if (error instanceof SavedSessionNotFoundError)
+    return reply.code(404).send(body('session_not_found', error.message));
+  if (error instanceof SavedSessionLimitError)
+    return reply.code(409).send(body('session_limit', error.message));
+  if (error instanceof InvalidSnapshotError)
+    return reply.code(400).send(body('invalid_snapshot', error.message));
+  if ('statusCode' in error && error.statusCode === 413) {
+    return reply.code(413).send(body('too_large', 'That session is too large to save'));
   }
   if ('statusCode' in error && error.statusCode === 429) {
     return reply

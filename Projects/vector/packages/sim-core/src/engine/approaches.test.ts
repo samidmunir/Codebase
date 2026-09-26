@@ -114,6 +114,7 @@ function createEngine(overrides: Partial<SessionSettings> = {}, withAirspace = t
       'pilots.responseDelaySec': [1, 1],
       'traffic.arrivalRatePerHour': 0,
       'traffic.departureRatePerHour': 0,
+      'traffic.transitRatePerHour': 0,
       ...overrides,
     },
     ...(withAirspace ? { airspace: newYork, airlines } : {}),
@@ -204,7 +205,10 @@ describe('approaches with the New York airspace', () => {
 
 describe('arrivals', () => {
   it('enter at the boundary on their STARs, check in, and fly the route', () => {
-    const engine = createEngine({ 'traffic.arrivalRatePerHour': 12 });
+    const engine = createEngine({
+      'traffic.arrivalRatePerHour': 12,
+      'traffic.transitRatePerHour': 0,
+    });
     const entered: SimEvent[] = [];
     engine.subscribe((event) => event.type === 'arrivalEntered' && entered.push(event));
     run(engine, 1_800);

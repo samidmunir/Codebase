@@ -389,7 +389,7 @@ Airspace data ships as static assets with the client in v1. It can move behind a
 | 8   | **Arrivals & approaches**              | Arrival spawning on arrival routes, ILS eligibility with "unable" replies, localizer/glideslope capture, automatic handoff to Tower once established, pilot slowdown, stabilized-approach gate, automatic go-arounds with control returned to the player, landing                              |
 | 9   | **Separation**                         | Conflict detection and prediction, Conflict Alert visuals and audio, violation log                                                                                                                                                                                                             |
 | 10  | **Accounts & user settings**           | Register, login, token refresh and logout, plus user preferences saved to the account                                                                                                                                                                                                          |
-| 11  | **Save & load**                        | Snapshot serialization, saved sessions API, save/load/rename/delete UI, exact resume                                                                                                                                                                                                           |
+| 11  | **Save & load**                        | Snapshot serialization, saved sessions API, save/load/rename/delete UI, exact resume, transit overflights, in-session traffic tuning                                                                                                                                                           |
 | 12  | **Session flow, settings UI & polish** | Home, airspace selection, session config (wind, runways, difficulty), saved sessions and settings screens, UX polish, performance pass, end-to-end tests                                                                                                                                       |
 
 Each milestone is developed on a `vector/feature/<name>` branch and merged into `vector/develop`. `vector/develop` merges into `main` when the milestone set is complete.
@@ -424,6 +424,7 @@ A player can:
 | Departure control | Automatic Tower-to-player transfer at the radar-contact altitude                                                                                                                     |
 | Aircraft commands | UI only. No text entry, and no keyboard shortcuts for aircraft                                                                                                                       |
 | Configurability   | Every tunable value is a setting with a realistic default                                                                                                                            |
+| Traffic tuning    | Difficulty sets starting arrival, departure and transit rates and the queue cap. The player can tune these four during a session (Traffic panel), and the values are saved with it   |
 | Map               | Vector draws its own video map from real geodata (US Census TIGER shoreline, FAA Class B and MVA). A real-world map (MapLibre + OpenStreetMap tiles) is an optional layer underneath |
 
 ## 10. Open Questions

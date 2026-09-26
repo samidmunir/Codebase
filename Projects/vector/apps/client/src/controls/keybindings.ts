@@ -14,6 +14,7 @@ export type GameAction =
   | 'toggleCommsLog'
   | 'toggleDepartureQueue'
   | 'toggleMapLayers'
+  | 'toggleTraffic'
   | 'openSettings'
   | 'saveSession'
   | 'closeMenu';
@@ -56,8 +57,20 @@ export function actionsByBinding(settings: UserSettings): Map<string, GameAction
   return map;
 }
 
+/** Inputs that don't take typed text, so shortcuts still work while they have focus. */
+const NON_TEXT_INPUTS = new Set([
+  'range',
+  'checkbox',
+  'radio',
+  'button',
+  'submit',
+  'reset',
+  'color',
+]);
+
 /** Whether keyboard focus is somewhere that should receive typing instead. */
 export function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
-  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+  if (target instanceof HTMLInputElement) return !NON_TEXT_INPUTS.has(target.type);
+  return target.isContentEditable || ['TEXTAREA', 'SELECT'].includes(target.tagName);
 }

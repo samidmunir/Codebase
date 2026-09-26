@@ -295,6 +295,12 @@ export const USER_SETTINGS = {
     description: 'Open the map layers panel.',
     default: 'KeyM',
   }),
+  'controls.keys.toggleTraffic': setting.keybinding({
+    category: 'controls',
+    label: 'Traffic panel',
+    description: 'Open the traffic panel to tune arrival, departure and transit rates.',
+    default: 'KeyT',
+  }),
   'controls.keys.openSettings': setting.keybinding({
     category: 'controls',
     label: 'Open settings',
@@ -347,6 +353,17 @@ export const SESSION_SETTINGS = {
     max: 20,
     step: 1,
     default: 5,
+  }),
+  'traffic.transitRatePerHour': setting.number({
+    category: 'traffic',
+    label: 'Transit rate',
+    description:
+      'Overflights per hour crossing the airspace without landing. Hand them to Center before they leave.',
+    min: 0,
+    max: 20,
+    step: 1,
+    unit: '/hr',
+    default: 4,
   }),
   'traffic.fleetMix': setting.select({
     category: 'traffic',

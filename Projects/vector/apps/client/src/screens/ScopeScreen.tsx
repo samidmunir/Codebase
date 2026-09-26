@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { applyDifficulty, defaultSettings } from '@vector/shared';
-import type { AirspacePack, LatLon } from '@vector/sim-core';
+import type { LatLon } from '@vector/sim-core';
 import { findAirspace } from '../airspaces/registry';
+import { ApiRequestError } from '../api/api-client';
+import { getSavedSession } from '../api/sessions-api';
 import { draftPreview, EMPTY_DRAFT, type InstructionDraft } from '../commands/draft';
 import { useGameControls } from '../controls/use-game-controls';
 import { Basemap, BASEMAP_ATTRIBUTION, type BasemapHandle } from '../scope/Basemap';
@@ -17,7 +19,9 @@ import { CommsLog } from './scope/CommsLog';
 import { DeparturesPanel } from './scope/DeparturesPanel';
 import { MapLayersPanel } from './scope/MapLayersPanel';
 import { useConflictSounds } from './scope/use-conflict-sounds';
+import { SaveSessionDialog } from './scope/SaveSessionDialog';
 import { ScopeTopBar } from './scope/ScopeTopBar';
+import { TrafficPanel } from './scope/TrafficPanel';
 import { formatPosition } from './scope/format';
 import './scope-screen.css';
 import './scope/command/command-panel.css';
@@ -31,33 +35,55 @@ export function ScopeScreen() {
   const { airspaceId = '' } = useParams();
   const [searchParams] = useSearchParams();
   const difficulty = parseDifficulty(searchParams.get('difficulty')) ?? DEFAULT_DIFFICULTY;
+  const savedId = searchParams.get('session');
   const entry = findAirspace(airspaceId);
+  const loadKey = `${entry?.id}:${savedId ? `session=${savedId}` : difficulty}`;
   const [loaded, setLoaded] = useState<{ id: string; state: LoadState } | undefined>(undefined);
 
   useEffect(() => {
     if (!entry?.load) return;
     let cancelled = false;
-    const finish = (state: LoadState) =>
-      !cancelled && setLoaded({ id: `${entry.id}:${difficulty}`, state });
-    entry
-      .load()
-      .then((pack: AirspacePack) =>
-        finish({
-          kind: 'ready',
-          session: new ScopeSession(pack, applyDifficulty(defaultSettings('session'), difficulty)),
-        }),
-      )
+    const finish = (state: LoadState) => !cancelled && setLoaded({ id: loadKey, state });
+    const start = async (): Promise<ScopeSession> => {
+      if (!savedId) {
+        const pack = await entry.load!();
+        return new ScopeSession(pack, {
+          kind: 'new',
+          settings: applyDifficulty(defaultSettings('session'), difficulty),
+        });
+      }
+      const [pack, saved] = await Promise.all([entry.load!(), getSavedSession(savedId)]);
+      if (saved.airspaceId !== entry.id) throw new Error('That session is for another airspace.');
+      try {
+        return new ScopeSession(pack, {
+          kind: 'saved',
+          snapshot: saved.snapshot,
+          savedId: saved.id,
+          name: saved.name,
+        });
+      } catch {
+        throw new Error(`"${saved.name}" can't be resumed with this version of Vector.`);
+      }
+    };
+    start()
+      .then((session) => finish({ kind: 'ready', session }))
       .catch((error: unknown) =>
-        finish({ kind: 'error', message: error instanceof Error ? error.message : String(error) }),
+        finish({
+          kind: 'error',
+          message:
+            error instanceof ApiRequestError || error instanceof Error
+              ? error.message
+              : String(error),
+        }),
       );
     return () => {
       cancelled = true;
     };
-  }, [entry, difficulty]);
+  }, [entry, difficulty, savedId, loadKey]);
 
   const state: LoadState = !entry?.load
     ? { kind: 'error', message: `Airspace "${airspaceId}" is not available.` }
-    : loaded?.id === `${entry.id}:${difficulty}`
+    : loaded?.id === loadKey
       ? loaded.state
       : { kind: 'loading' };
 
@@ -66,7 +92,7 @@ export function ScopeScreen() {
       <div className="scope-screen scope-screen--message">
         <div className="scope-loading" role="status">
           <span className="scope-loading__ring" aria-hidden="true" />
-          Loading airspace
+          {savedId ? 'Loading saved session' : 'Loading airspace'}
         </div>
       </div>
     );
@@ -81,10 +107,13 @@ export function ScopeScreen() {
       </div>
     );
   }
-  return <Scope session={state.session} difficultyLabel={DIFFICULTY_LABELS[difficulty]} />;
+  return <Scope session={state.session} />;
 }
 
-function Scope({ session, difficultyLabel }: { session: ScopeSession; difficultyLabel: string }) {
+/** How long the "Saved" confirmation shows. */
+const TOAST_MS = 3_000;
+
+function Scope({ session }: { session: ScopeSession }) {
   const settings = useUserSettings();
   const status = useSyncExternalStore(
     (listener) => session.subscribe(listener),
@@ -93,6 +122,9 @@ function Scope({ session, difficultyLabel }: { session: ScopeSession; difficulty
   const scopeRef = useRef<RadarScopeHandle>(null);
   const basemapRef = useRef<BasemapHandle>(null);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [trafficOpen, setTrafficOpen] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [toast, setToast] = useState<string | undefined>(undefined);
   const [commsOpen, setCommsOpen] = useState(true);
   const [departuresOpen, setDeparturesOpen] = useState(true);
   const [cursor, setCursor] = useState<LatLon | undefined>(undefined);
@@ -119,6 +151,26 @@ function Scope({ session, difficultyLabel }: { session: ScopeSession; difficulty
 
   useConflictSounds(session);
 
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(undefined), TOAST_MS);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  // Traffic and map layers share the right-hand side: one open at a time.
+  const toggleLayers = () => {
+    setLayersOpen((open) => !open);
+    setTrafficOpen(false);
+  };
+  const toggleTraffic = () => {
+    setTrafficOpen((open) => !open);
+    setLayersOpen(false);
+  };
+  const openSave = () => {
+    session.pause();
+    setSaveOpen(true);
+  };
+
   // Development only: expose the session for debugging and browser tests.
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -132,11 +184,19 @@ function Scope({ session, difficultyLabel }: { session: ScopeSession; difficulty
     zoomIn: () => scopeRef.current?.zoomBy(1),
     zoomOut: () => scopeRef.current?.zoomBy(-1),
     centerScope: () => scopeRef.current?.recenter(),
-    toggleMapLayers: () => setLayersOpen((open) => !open),
+    toggleMapLayers: toggleLayers,
+    toggleTraffic,
+    saveSession: openSave,
     toggleCommsLog: () => setCommsOpen((open) => !open),
     toggleDepartureQueue: () => setDeparturesOpen((open) => !open),
-    // Closes the topmost panel: map layers first, then the selected aircraft.
-    closeMenu: () => (layersOpen ? setLayersOpen(false) : select(undefined)),
+    // Closes the topmost panel: the save dialog, then side panels, then the selected aircraft.
+    closeMenu: () => {
+      if (saveOpen) setSaveOpen(false);
+      else if (layersOpen || trafficOpen) {
+        setLayersOpen(false);
+        setTrafficOpen(false);
+      } else select(undefined);
+    },
   });
 
   const { airspace } = session.pack;
@@ -172,7 +232,10 @@ function Scope({ session, difficultyLabel }: { session: ScopeSession; difficulty
         onTogglePause={() => session.togglePause()}
         onSetSpeed={(speed) => session.setSpeed(speed)}
         layersOpen={layersOpen}
-        onToggleLayers={() => setLayersOpen((open) => !open)}
+        onToggleLayers={toggleLayers}
+        trafficOpen={trafficOpen}
+        onToggleTraffic={toggleTraffic}
+        onSave={openSave}
         commsOpen={commsOpen}
         onToggleComms={() => setCommsOpen((open) => !open)}
         departuresOpen={departuresOpen}
@@ -180,6 +243,11 @@ function Scope({ session, difficultyLabel }: { session: ScopeSession; difficulty
       />
 
       {status.paused && <div className="scope-paused">Paused</div>}
+      {toast && (
+        <div className="scope-toast" role="status">
+          {toast}
+        </div>
+      )}
 
       {selection && selected && (
         <CommandPanel
@@ -197,6 +265,25 @@ function Scope({ session, difficultyLabel }: { session: ScopeSession; difficulty
       )}
 
       {layersOpen && <MapLayersPanel settings={settings} onClose={() => setLayersOpen(false)} />}
+
+      {trafficOpen && (
+        <TrafficPanel
+          session={session}
+          trafficKey={status.trafficKey}
+          onClose={() => setTrafficOpen(false)}
+        />
+      )}
+
+      {saveOpen && (
+        <SaveSessionDialog
+          session={session}
+          onClose={() => setSaveOpen(false)}
+          onSaved={(name) => {
+            setSaveOpen(false);
+            setToast(`Saved “${name}”`);
+          }}
+        />
+      )}
 
       {departuresOpen && (
         <DeparturesPanel
@@ -231,7 +318,11 @@ function Scope({ session, difficultyLabel }: { session: ScopeSession; difficulty
 
         <div className="scope-notice">
           <span className="scope-notice__dot" aria-hidden="true" />
-          {difficultyLabel} · {status.aircraftCount} aircraft · click an aircraft to instruct it
+          {session.saved ? `${session.saved.name} · ` : ''}
+          {session.difficulty === 'custom'
+            ? 'Custom'
+            : DIFFICULTY_LABELS[session.difficulty]} · {status.aircraftCount} aircraft · click an
+          aircraft to instruct it
         </div>
 
         <div className="scope-zoom" role="group" aria-label="Zoom">
