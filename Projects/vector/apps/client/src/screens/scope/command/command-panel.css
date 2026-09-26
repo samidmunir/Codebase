@@ -912,3 +912,120 @@
 .option__ineligible {
   background: var(--color-alert);
 }
+
+/* ---- Radio / alerts tabs ------------------------------------------------------------ */
+
+.comms-log__tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.comms-log__tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.comms-log__tabs button[aria-selected='true'] {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.alert-badge {
+  min-width: 18px;
+  padding: 1px 5px;
+  color: #1a1204;
+  font-size: 0.65rem;
+  letter-spacing: 0;
+  text-align: center;
+  background: var(--color-caution);
+  border-radius: 999px;
+}
+
+.alert-badge--loss {
+  color: #fff;
+  background: var(--color-alert);
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+.alerts-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-2) var(--space-3);
+}
+
+.alerts-list__title {
+  margin: var(--space-2) 0 var(--space-1);
+  color: var(--color-text-faint);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.alerts-list__section {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.alert-row {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 6px var(--space-2);
+  color: var(--color-text);
+  font-family: var(--font-data);
+  font-size: 0.74rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.alert-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.alert-row--predicted {
+  border-color: rgba(255, 181, 71, 0.45);
+}
+
+.alert-row--loss {
+  border-color: rgba(255, 77, 87, 0.6);
+  background: rgba(255, 77, 87, 0.08);
+}
+
+.alert-row__kind {
+  font-weight: 700;
+}
+
+.alert-row--predicted .alert-row__kind {
+  color: var(--color-caution);
+}
+
+.alert-row--loss .alert-row__kind {
+  color: var(--color-alert);
+}
+
+.alert-row__time,
+.alert-row__detail {
+  color: var(--color-text-muted);
+}

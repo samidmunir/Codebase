@@ -19,6 +19,9 @@ export interface ScopePalette {
   sweep: string;
   measure: string;
   hover: string;
+  route: string;
+  alert: string;
+  caution: string;
 }
 
 export function scopePalette(settings: UserSettings): ScopePalette {
@@ -40,6 +43,9 @@ export function scopePalette(settings: UserSettings): ScopePalette {
     sweep: '76, 242, 160',
     measure: '#ffd27a',
     hover: '#ffffff',
+    route: '#5ac8ff',
+    alert: '#ff4d57',
+    caution: '#ffb547',
   };
 }
 

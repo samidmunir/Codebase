@@ -20,6 +20,7 @@ export * from './math/angles';
 export * from './math/geo';
 export * from './performance/performance';
 export * from './random/seeded-random';
+export * from './separation/separation';
 export * from './snapshot/snapshot';
 export * from './traffic/arrival-route';
 export * from './traffic/departure-procedure';
