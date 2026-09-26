@@ -18,6 +18,10 @@ v1 is intentionally focused on **one airspace done well**, but every layer is bu
 3. **Simulation is independent of the UI**: the sim engine is a pure TypeScript package with no DOM or network dependencies.
 4. **Deterministic and serializable**: any moment of a session can be saved and restored exactly.
 5. **Built in milestones**: each milestone ends in something runnable and tested.
+6. **UI-only aircraft control**: every aircraft instruction is issued through the UI (selection, menus, panels). There is **no text or command-line entry**, now or later.
+7. **Keyboard is for the game, not the aircraft**: shortcuts control the sim, menus and display (pause, sim speed, zoom, layers, panels). They never issue aircraft instructions.
+8. **If it can vary, it's a setting**: any tunable value (thresholds, timings, display options, audio, realism limits) is exposed as a setting with a sensible default, not hard-coded.
+9. **Airborne only**: no ground or taxi simulation. Aircraft exist from the moment they're ready for departure until they land or leave the airspace.
 
 ---
 
@@ -28,7 +32,7 @@ Register / Login
       │
       ▼
 Home ──► New Session ──► Select Airspace ──► Configure ──► Radar Scope (live)
-  │                      (New York ✔,       (runway configs,      │
+  │                      (New York ✔,       (wind, runways,       │
   │                       others "coming     traffic density)     │
   │                       soon")                                  ▼
   │                                                       Pause ──► Save ──► Close
@@ -51,8 +55,11 @@ Home ──► New Session ──► Select Airspace ──► Configure ──�
 - The player controls **all arrival and departure traffic for all three airports** in a single session.
 - Other airspaces may appear as locked "coming soon" cards, so the foundation for choosing between them exists from day one.
 - **Session configuration** before launch:
-  - Active **runway configuration** per airport (chosen from realistic presets, e.g. JFK "Arrive 22L / Depart 22R, 31L")
+  - **Wind** per airport (direction and speed), either generated realistically or set by the player
+  - **Active runways** per airport, derived from the wind (runways with an acceptable headwind/crosswind component are available; the rest are not)
   - **Traffic density**: Light / Medium / Heavy
+  - **Gameplay and realism settings** for this session (see 3.9)
+- In v1, wind stays the same for the whole session and is used to pick active runways. Wind drift on aircraft in flight comes later.
 
 ### 3.2 Radar Scope (STARS-style display)
 
@@ -95,23 +102,51 @@ Each aircraft has:
 ### 3.4 Traffic Generation
 
 - **Arrivals** spawn at the edge of the N90 sector on realistic arrival routes into JFK, EWR and LGA, at realistic handoff altitudes and speeds.
-- **Departures** appear after takeoff from the active runways, climbing on initial departure procedures and headings.
+- **Departures** appear in a **departure queue** at each airport once they are ready to go (see 3.5.1). Nothing takes off until the player clears it.
 - Airline mix, aircraft types and destinations reflect each airport's real-world traffic (e.g. heavy international widebodies at JFK, JetBlue presence at JFK, United hub at EWR, regional jets and narrowbodies at LGA).
 - **Scenario/spawn definitions** are data files, so densities and traffic patterns can be tuned without code changes.
 - Target of **20–40 simultaneous aircraft** under Heavy density.
 
-### 3.5 Issuing Instructions (Click / Context Menu)
+### 3.5 Issuing Instructions (UI only)
 
-- **Click a target or data block** to select an aircraft and open a **radial or context command menu**.
-- v1 commands:
+All aircraft control happens through the UI. **There is no text or command-line entry.**
+
+- **Click a target, data block, departure queue entry or comms log entry** to select an aircraft and open its **radial or context command menu**.
+- Values are chosen with UI controls such as heading dials, altitude and speed pickers, and fix lists. Nothing is typed.
+- Menus only offer **valid values** (e.g. altitudes within the aircraft's performance, fixes that exist, runways that are active).
+- In-flight commands:
   - **Heading**: turn left / right / fly heading `XXX`
   - **Altitude**: climb / descend and maintain `XXXX`
   - **Speed**: maintain / increase / reduce to `XXX` kts (with "resume normal speed")
   - **Direct to fix**: pick from nearby fixes
-  - **Cleared ILS approach**: runway `XX` at the aircraft's destination (intercept, localizer capture, glideslope descent)
+  - **Cleared ILS approach**: an active runway at the aircraft's destination (see 3.5.2)
   - **Handoff**: arrivals to the correct Tower (Kennedy / Newark / LaGuardia), departures to New York Center
-- Menus only offer **valid values** (e.g. altitudes within the aircraft's performance, fixes that exist).
-- Keyboard shortcuts for common actions (power-user friendly; typed command entry can be added later).
+
+#### 3.5.1 Departures
+
+1. When a departure is ready, it appears in its airport's **departure queue** panel with its callsign, type, destination and requested departure. It also shows on the scope at the airport.
+2. The player selects it and **assigns a departure runway** from that airport's active runways, which **clears it for takeoff**.
+3. The aircraft takes off and flies the **published departure procedure** for that runway (initial heading or route, initial altitude, speed limits) on its own.
+4. Until it passes the **radar-contact altitude** (a setting, e.g. 1,500 ft), it appears on the scope as a **dimmed, non-interactive target**. At that altitude the pilot checks in, and the data block becomes **fully active and controllable**.
+5. From then on, the player climbs, vectors and routes it, then hands it off to New York Center.
+
+#### 3.5.2 Arrivals & the ILS Approach
+
+"Cleared ILS approach" is only accepted when the aircraft is in a position where a real pilot could fly it. All thresholds below are settings with realistic defaults:
+
+| Criterion | Default |
+|---|---|
+| Intercept angle to the localizer | ≤ 30° |
+| Distance from the runway threshold | Within a set range (e.g. 5–25 NM) |
+| Lateral position | Within the localizer's usable width, on the correct side |
+| Altitude | At or below glideslope intercept altitude (intercept from below), and above the minimum vectoring altitude |
+| Speed | Slow enough to slow down to final approach speed before the stabilized-approach gate |
+
+- If the criteria are **not met**, the pilot replies **"unable"** with a reason (e.g. `Unable, too high for the approach, Delta 412`) and keeps the current instruction. A setting can also show approach eligibility in the command menu, as a player aid.
+- If the criteria **are met**, the aircraft intercepts the localizer, captures the glideslope, and **slows down on its own** according to its type's performance.
+- **Stabilized-approach gate** (setting, default 1,000 ft AGL): if the aircraft is not on the localizer, on the glideslope, and at or near final approach speed by the gate, it performs an **automatic go-around**.
+- **Go-around**: the aircraft flies the published missed approach (or runway heading and a set altitude), reports it on the radio, and becomes **controllable again** so the player can re-sequence it.
+- After a successful approach and a handoff to Tower, the aircraft lands and is removed from the scope. It does not taxi.
 
 ### 3.6 Radio / Communications Log
 
@@ -128,14 +163,39 @@ Each aircraft has:
 - A **violation log** records every loss of separation (time, aircraft, distance and altitude difference).
 - No scoring in v1. The violation log is for awareness only.
 
-### 3.8 Session Controls
+### 3.8 Session Controls & Keyboard Shortcuts
 
 - **Pause / resume**
-- **Sim speed**: 1x, 2x, 4x
+- **Sim speed**: 1x, 2x, 4x (available speeds are a setting)
 - **Save session** (while paused)
 - **Exit to home**
+- **Keyboard shortcuts** are for game, menu and display controls **only**: pause/resume, sim speed, zoom, center scope, toggle map layers and panels, open settings, save, close menus. **No shortcut ever issues an aircraft instruction.**
+- Every shortcut can be rebound in Settings.
 
-### 3.9 Accounts & Saved Sessions
+### 3.9 Settings
+
+Any value that can reasonably vary is a setting. Settings come in two scopes:
+
+- **User preferences** are saved to the player's account and apply everywhere: display, audio and controls.
+- **Session settings** are chosen when the session is created and saved with it: gameplay and realism.
+
+Every setting has a realistic default and a "reset to default" option.
+
+| Category | Examples |
+|---|---|
+| **Display** | Theme and brightness, map layer visibility and colors, data block font size, trail length, leader line length, range ring spacing, sweep effect on/off, UI animation level |
+| **Audio** | Master volume, Conflict Alert sound on/off, UI sounds on/off |
+| **Controls** | Keyboard shortcut bindings, mouse/scroll zoom sensitivity, menu style (radial or list) |
+| **Traffic** | Density, arrival spawn rate, departure queue rate, airline and aircraft type mix |
+| **Weather** | Wind mode (generated or manual), wind direction and speed per airport, maximum tailwind and crosswind for active runways |
+| **Separation** | Lateral minimum (NM), vertical minimum (ft), Conflict Alert look-ahead time |
+| **Radar** | Sweep interval, history trail count |
+| **Pilots** | Response delay range, readback detail |
+| **Departures** | Radar-contact altitude (when departures become controllable) |
+| **Approaches** | ILS intercept angle limit, intercept distance range, stabilized-approach gate altitude, go-around on/off, show approach eligibility in menus |
+| **Sim** | Available sim speeds |
+
+### 3.10 Accounts & Saved Sessions
 
 - **Register / login / logout** with email and password.
 - **Save** the current session to the player's account with a name (auto-suggested, e.g. `New York — Medium — 14:32Z`).
@@ -143,15 +203,20 @@ Each aircraft has:
 - **Loading** restores the session exactly as it was, paused, and ready to resume.
 - Saves are versioned so older saves keep loading as the simulator evolves.
 
-### 3.10 Out of Scope for v1 (planned for later)
+### 3.11 Out of Scope for v1 (planned for later)
 
 - Scoring, ratings and performance analytics
 - Voice commands and text-to-speech pilot readbacks
-- Typed command line entry
-- Weather, wind, altimeter changes and runway config changes mid-session
-- Holding patterns, go-arounds and missed approaches
+- Wind drift on aircraft in flight, weather cells, altimeter changes, and wind or runway changes mid-session
+- Holding patterns and controller-initiated go-arounds
 - Emergencies (medical, engine failure, NORDO)
-- Tower and Center positions, ground movement
+- Tower and Center positions
+
+### 3.12 Never in Scope
+
+- Text or command-line aircraft instructions
+- Keyboard shortcuts that control aircraft
+- Ground movement and taxi simulation
 - Additional airspaces (e.g. SoCal, Chicago, Atlanta, London)
 - Multiplayer and shared airspace
 - Autosave and cloud sync across devices during a live session
@@ -187,13 +252,16 @@ Projects/vector/
 │   │   ├── commands/           # One module per ATC instruction (command pattern)
 │   │   ├── traffic/            # Spawning and scenario playback
 │   │   ├── separation/         # Conflict detection and alerts
+│   │   ├── approach/           # ILS eligibility, stabilized-approach checks, go-arounds
+│   │   ├── weather/            # Wind and active-runway selection
+│   │   ├── settings/           # Session settings schema and defaults
 │   │   ├── navigation/         # Geo math, fixes, procedures, ILS
 │   │   ├── comms/              # Phraseology generation and readbacks
 │   │   └── snapshot/           # Serialize / restore full sim state
 │   └── shared/                 # Zod schemas and types shared by client + server
 ├── data/
 │   ├── airspaces/
-│   │   └── new-york/           # airspace.json, airports/, fixes, procedures, video maps, runway configs
+│   │   └── new-york/           # airspace.json, airports/, fixes, procedures, video maps, runway wind limits
 │   ├── aircraft-types/         # Performance profiles per ICAO type
 │   └── airlines/               # ICAO codes, telephony, liveries/colors
 ├── migrations/                 # PostgreSQL migrations
@@ -203,12 +271,14 @@ Projects/vector/
 
 ### 4.3 Key Design Decisions
 
-- **Airspace packs.** An *airspace* is a self-contained data pack (airports, runways, runway configs, fixes, procedures, video maps, traffic profiles). The selection screen simply lists available packs. Adding "SoCal" later means adding `data/airspaces/socal/`, not new engine code.
+- **Airspace packs.** An *airspace* is a self-contained data pack (airports, runways, fixes, procedures, video maps, traffic profiles). The selection screen simply lists available packs. Adding "SoCal" later means adding `data/airspaces/socal/`, not new engine code.
 - **Fixed-timestep simulation loop.** The sim advances in fixed ticks (e.g. 1 s of sim time) independently of rendering. Sim speed multiplies ticks per real second. The renderer interpolates between states for smooth animation, while radar targets only update on the sweep interval.
 - **Command pattern.** Each instruction is a self-contained command (validate → apply → produce phraseology). New instructions plug in without touching existing ones.
 - **Deterministic engine.** A seeded random number generator drives all randomness (spawns, pilot delays), so a saved session resumes exactly as it would have continued.
-- **Snapshots.** The entire sim state (clock, RNG state, aircraft, pending spawns, comms log, violations, runway configs) serializes to one versioned JSON document, which is what gets saved to the server.
+- **Snapshots.** The entire sim state (clock, RNG state, aircraft, pending spawns, comms log, violations, wind, active runways, session settings) serializes to one versioned JSON document, which is what gets saved to the server.
 - **Browser now, server later.** In v1 the sim runs in the browser for zero-latency control. Because `sim-core` has no browser dependencies, it can later run on the Node server for authoritative multiplayer.
+- **Settings as a schema.** Every setting is defined once (key, type, range, default, scope) in a shared Zod schema. The settings UI, validation, the sim engine and persistence all read from that one definition, so adding a setting means adding one schema entry.
+- **Input layer split.** Aircraft commands only come through the command UI. Keyboard shortcuts go through a separate, rebindable game-controls layer that has no access to the command system.
 - **Renderer abstraction.** The scope renderer consumes a read-only view of sim state, so the rendering technique (Canvas 2D today, WebGL later if needed) can change independently.
 
 ### 4.4 Data Model (v1)
@@ -216,6 +286,7 @@ Projects/vector/
 ```
 users           id, email, password_hash, display_name, created_at
 auth_sessions   id, user_id, refresh_token_hash, expires_at, revoked_at
+user_settings   user_id, settings (JSONB), settings_version, updated_at
 saved_sessions  id, user_id, name, airspace_id, snapshot_version,
                 snapshot (JSONB), sim_time, aircraft_count,
                 created_at, updated_at
@@ -229,6 +300,9 @@ POST   /api/auth/login
 POST   /api/auth/refresh
 POST   /api/auth/logout
 GET    /api/auth/me
+
+GET    /api/settings                 # user preferences (defaults filled in)
+PUT    /api/settings                 # update user preferences
 
 GET    /api/sessions                 # list saved sessions (metadata only)
 POST   /api/sessions                 # save a new session
@@ -255,7 +329,7 @@ Airspace data ships as static assets with the client in v1. It can move behind a
 
 - **Look:** a modern take on a real STARS scope, with a near-black background, a restrained color palette (muted map lines, bright targets, amber/red alerts) and a subtle glow on targets and the sweep.
 - **Typography:** a clean monospace font for data blocks and the comms log, and a modern sans-serif for menus and screens.
-- **Layout:** the scope is the hero and takes up almost all of the screen. The comms log, selected-aircraft panel and session bar sit in collapsible panels around it.
+- **Layout:** the scope is the hero and takes up almost all of the screen. The comms log, departure queues, selected-aircraft panel and session bar sit in collapsible panels around it.
 - **Motion:** smooth zoom and pan, animated menu transitions and fading history trails. Motion never makes the display harder to read.
 - **Pre-session screens** (login, home, airspace selection, saved sessions) share the same aesthetic: dark, glassy panels and map-inspired backgrounds.
 - **Accessibility:** readable contrast, scalable data-block font size and keyboard navigation for menus.
@@ -268,14 +342,16 @@ Airspace data ships as static assets with the client in v1. It can move behind a
 |---|---|---|
 | 1 | **Project foundation** | Monorepo, TypeScript, lint/format, Vitest, Vite client shell, Fastify server shell, PostgreSQL + migrations |
 | 2 | **Sim-core engine** | Fixed-timestep loop, geo math, aircraft state and flight model, performance profiles, seeded RNG, unit tests |
-| 3 | **New York airspace data** | Airspace pack schema (Zod), KJFK/KEWR/KLGA runways, fixes, procedures, runway configs and video maps, plus a data build pipeline |
-| 4 | **Radar scope** | Canvas renderer: video maps, targets, trails, data blocks, pan/zoom, range/bearing tool and the core visual design |
-| 5 | **Controller instructions** | Selection, context menus, command pattern implementation, pilot delay, comms log with phraseology and readbacks |
-| 6 | **Traffic & procedures** | Arrival/departure spawning, procedures, ILS approach and landing, handoffs to Tower and Center, density settings |
-| 7 | **Separation** | Conflict detection and prediction, Conflict Alert visuals and audio, violation log |
-| 8 | **Accounts** | Register, login, token refresh and logout (client + server) |
-| 9 | **Save & load** | Snapshot serialization, saved sessions API, save/load/rename/delete UI, exact resume |
-| 10 | **Session flow & polish** | Home, airspace selection, session config, saved sessions screens, UX polish, performance pass, end-to-end tests |
+| 3 | **Settings framework** | Shared settings schema, defaults, and the user/session scope split, so later milestones read their values from settings from day one |
+| 4 | **New York airspace data** | Airspace pack schema (Zod), KJFK/KEWR/KLGA runways, fixes, departure/arrival/missed-approach procedures, ILS data and video maps, plus a data build pipeline |
+| 5 | **Radar scope** | Canvas renderer: video maps, targets, trails, data blocks, pan/zoom, range/bearing tool, game-control keyboard layer and the core visual design |
+| 6 | **Controller instructions** | Selection, command menus and value pickers, command pattern implementation, pilot delay, comms log with phraseology and readbacks |
+| 7 | **Departures** | Wind-based active runways, departure queues, runway assignment and takeoff, published departure procedures, radar-contact altitude, handoff to Center |
+| 8 | **Arrivals & approaches** | Arrival spawning on arrival routes, ILS eligibility with "unable" replies, localizer/glideslope capture, pilot slowdown, stabilized-approach gate, automatic go-arounds, handoff to Tower and landing |
+| 9 | **Separation** | Conflict detection and prediction, Conflict Alert visuals and audio, violation log |
+| 10 | **Accounts & user settings** | Register, login, token refresh and logout, plus user preferences saved to the account |
+| 11 | **Save & load** | Snapshot serialization, saved sessions API, save/load/rename/delete UI, exact resume |
+| 12 | **Session flow, settings UI & polish** | Home, airspace selection, session config (wind, runways, density), saved sessions and settings screens, UX polish, performance pass, end-to-end tests |
 
 Each milestone is developed on a `vector/feature/<name>` branch and merged into `vector/develop`. `vector/develop` merges into `main` when the milestone set is complete.
 
@@ -286,18 +362,20 @@ Each milestone is developed on a `vector/feature/<name>` branch and merged into 
 A player can:
 
 1. Register and log in.
-2. Choose **New York** from the airspace selection screen, choose runway configurations and traffic density, and launch a session.
-3. See realistic arrival and departure traffic for KJFK, KEWR and KLGA on a polished STARS-style scope.
-4. Select aircraft and issue heading, altitude, speed, direct-to, ILS approach and handoff instructions through context menus, with realistic readbacks in the comms log.
-5. Watch aircraft respond with realistic performance, intercept the ILS and land, or climb out and be handed off to Center.
-6. Get Conflict Alerts on losses of separation, logged in the violation log.
-7. Pause, change sim speed, **save the session, close the browser, log back in later, load it and resume exactly where they left off**.
+2. Choose **New York** from the airspace selection screen, set the wind (which determines active runways) and traffic density, and launch a session.
+3. See realistic arrival traffic and departure queues for KJFK, KEWR and KLGA on a polished STARS-style scope.
+4. Clear departures for takeoff by assigning an active runway, watch them fly the departure procedure, and take control once they pass the radar-contact altitude.
+5. Select aircraft and issue heading, altitude, speed, direct-to, ILS approach and handoff instructions **entirely through the UI**, with realistic readbacks in the comms log.
+6. Get an "unable" when an ILS clearance doesn't meet the approach criteria, and see an automatic go-around when an approach isn't stabilized.
+7. Watch arrivals intercept the ILS, slow down and land, and departures climb out and get handed off to Center.
+8. Get Conflict Alerts on losses of separation, logged in the violation log.
+9. Change display, audio, control and gameplay settings.
+10. Pause, change sim speed, **save the session, close the browser, log back in later, load it and resume exactly where they left off**.
 
 ---
 
 ## 9. Open Questions
 
-- Which **runway configuration presets** should ship first for each airport? (For example, the most common real-world JFK/EWR/LGA combinations.)
-- Should **departures** be pre-cleared to a SID and initial altitude, or should the player issue the initial climb?
-- Is a **mouse-only** workflow acceptable for v1, or should keyboard shortcuts be a v1 requirement?
-- Should the **audible Conflict Alert** be on by default?
+- **Generated wind**: should it be random but realistic for the region, or based on real historical or live weather (METAR)?
+- **Departure queue pacing**: should departures keep queuing until the player clears them (the queue can build up), or should waiting too long have consequences later?
+- **Tower handoff timing**: must arrivals be handed to Tower before a certain point on final (e.g. by 5 NM), or can the handoff happen anytime after ILS clearance?
