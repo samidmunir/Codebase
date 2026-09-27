@@ -24,16 +24,25 @@ export function radarSensors(
   const { radar, radars } = pack.airspace;
   const interval = settings['radar.sweepIntervalSec'];
   const primarySite = radars.find((site) => site.name === radar.name);
-  const primary = terminalRadar({
-    id: primarySite?.id ?? 'PRIMARY',
-    position: radar.position,
-    antennaElevationFt: primarySite?.antennaElevationFt ?? DEFAULT_PRIMARY_ELEVATION_FT,
-    rangeNm: radar.rangeNm,
-    intervalSec: interval,
-  });
+  const primary = {
+    ...terminalRadar({
+      id: primarySite?.id ?? 'PRIMARY',
+      position: radar.position,
+      antennaElevationFt: primarySite?.antennaElevationFt ?? DEFAULT_PRIMARY_ELEVATION_FT,
+      rangeNm: radar.rangeNm,
+      intervalSec: interval,
+    }),
+    // The primary radar keeps the scope's original beam timing.
+    phase: 0,
+  };
 
   if (settings['radar.coverage'] === 'everywhere' || radars.length === 0) {
-    const everywhere = { ...primary, covers: () => true };
+    // One radar sees the whole region; its sweep reaches the boundary.
+    const everywhere = {
+      ...primary,
+      covers: () => true,
+      sweepRadiusNm: Math.max(radar.rangeNm, pack.boundaryRadiusNm),
+    };
     return { sensors: [everywhere], primary: everywhere };
   }
   const terminal = radars

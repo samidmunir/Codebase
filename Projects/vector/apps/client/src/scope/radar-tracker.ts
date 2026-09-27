@@ -62,7 +62,28 @@ export interface RadarSensor {
   id: string;
   antenna: LatLon;
   intervalSec: number;
+  /** Where the beam starts its turn at time 0, as a fraction of a turn (radars aren't in step). */
+  phase: number;
   covers: (aircraft: Readonly<AircraftState>) => boolean;
+  /** Radius of the sweep drawn on the scope; radars without one (modeled coverage) aren't drawn. */
+  sweepRadiusNm?: number | undefined;
+}
+
+/** A stable beam phase for a radar id, so each radar turns independently. */
+export function phaseFor(id: string): number {
+  let hash = 0;
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return (hash % 1000) / 1000;
+}
+
+/** A radar's beam on the scope: where it is and how far it reaches. */
+export interface Sweep {
+  id: string;
+  antenna: LatLon;
+  radiusNm: number;
+  /** Beam position as a fraction of a turn from north (0..1). */
+  progress: number;
+  primary: boolean;
 }
 
 /** Radio line-of-sight range in NM between an antenna and a target, heights in feet. */
@@ -85,6 +106,8 @@ export function terminalRadar(site: {
     id: site.id,
     antenna: site.position,
     intervalSec: site.intervalSec,
+    phase: phaseFor(site.id),
+    sweepRadiusNm: site.rangeNm,
     covers: (aircraft) =>
       distanceNm(site.position, aircraft.position) <=
       Math.min(site.rangeNm, radarHorizonNm(antennaHeightFt, aircraft.altitudeFt - groundFt)),
@@ -97,6 +120,7 @@ export function enrouteRadar(center: LatLon, floorFt: number, intervalSec: numbe
     id: 'LRR',
     antenna: center,
     intervalSec,
+    phase: 0,
     covers: (aircraft) => aircraft.altitudeFt >= floorFt,
   };
 }
@@ -131,16 +155,28 @@ export class RadarTracker {
     this.primary = primary;
   }
 
-  /** The drawn sweep's position as a fraction of a turn from north (0..1). */
+  /** The primary radar's beam position as a fraction of a turn from north (0..1). */
   sweepProgress(timeSec: number): number {
-    const turns = timeSec / this.primary.intervalSec;
-    return turns - Math.floor(turns);
+    return beamProgress(this.primary, timeSec);
+  }
+
+  /** Every drawn radar's beam at a time, for the scope's sweeps. */
+  sweeps(timeSec: number): Sweep[] {
+    return this.sensors
+      .filter((sensor) => sensor.sweepRadiusNm !== undefined)
+      .map((sensor) => ({
+        id: sensor.id,
+        antenna: sensor.antenna,
+        radiusNm: sensor.sweepRadiusNm!,
+        progress: beamProgress(sensor, timeSec),
+        primary: sensor.id === this.primary.id,
+      }));
   }
 
   /** The rotation a radar's beam is on at a position: it increments as the beam passes that bearing. */
   private scanAt(sensor: RadarSensor, timeSec: number, position: LatLon): number {
     const azimuth = bearingTrue(sensor.antenna, position) / 360;
-    return Math.floor(timeSec / sensor.intervalSec - azimuth);
+    return Math.floor(timeSec / sensor.intervalSec + sensor.phase - azimuth);
   }
 
   /**
@@ -262,4 +298,10 @@ export class RadarTracker {
     this.gone.clear();
     this.started = false;
   }
+}
+
+/** A radar's beam position as a fraction of a turn from north (0..1). */
+function beamProgress(sensor: RadarSensor, timeSec: number): number {
+  const turns = timeSec / sensor.intervalSec + sensor.phase;
+  return turns - Math.floor(turns);
 }

@@ -65,6 +65,12 @@ const CENTER_NAMES: Record<string, string> = {
 /** TRACON MVA charts (FUS3) and Center MIA charts in the region. */
 const MVA_CHARTS = ['N90_MVA_FUS3', 'PHL_MVA_FUS3'] as const;
 const MIA_CHARTS = ['ZNY_TAV', 'ZBW_TAV', 'ZDC_TAV', 'ZOB_TAV'] as const;
+/**
+ * The terminal radars that feed the scope: the New York TRACON's own sites plus
+ * Philadelphia. (NASR lists many more ASRs in the region; beyond these, the
+ * modeled long-range coverage fills in above its floor.)
+ */
+const MAIN_RADARS = ['JFK', 'EWR', 'ISP', 'HPN', 'PHL'] as const;
 /** Standard ASR-9/ASR-11 instrumented range, and its antenna height above the field. */
 const ASR_RANGE_NM = 60;
 const ASR_ANTENNA_HEIGHT_FT = 50;
@@ -480,7 +486,7 @@ function buildRadarSites(cifp: CifpData, arcSites: readonly ArcSite[], rdrCsv: s
         .map((r) => r.facility),
     ),
   ];
-  for (const faaId of asrAirports) {
+  for (const faaId of asrAirports.filter((id) => (MAIN_RADARS as readonly string[]).includes(id))) {
     const airport = airportOf(faaId);
     if (!airport || distanceNm(CENTER, airport.position) > RADAR_SITE_RADIUS_NM) continue;
     // Arc centers near this airport: average them (several arcs can fit slightly apart).

@@ -12,6 +12,7 @@ import {
 import { pixelsPerNm, project, type Camera, type ScreenPoint } from '../camera';
 import { dataBlockLines } from '../data-block';
 import type { RadarTarget } from '../radar-tracker';
+import type { Sweep } from '../radar-tracker';
 import type { RoutePreview } from '../route-preview';
 import { trafficCategory } from '../traffic-category';
 import { placeDataBlocks } from './label-placement';
@@ -36,11 +37,8 @@ export interface TrafficFrame {
   /** Sim seconds per tick, and the current sim time (for trail ages). */
   tickSeconds: number;
   simTimeSec: number;
-  /** Radar antenna the sweep rotates around, and its range. */
-  scopeCenter: LatLon;
-  sweepRadiusNm: number;
-  /** 0..1 progress of the current radar sweep. */
-  sweepProgress: number;
+  /** Each drawn radar's beam: its antenna, reach and position in its turn. */
+  sweeps: readonly Sweep[];
   /** Alternates data block line 2. */
   timeShare: 0 | 1;
   hoveredId: string | undefined;
@@ -98,7 +96,8 @@ export function drawTrafficLayer(
   const { camera, settings, palette } = frame;
   ctx.clearRect(0, 0, camera.width, camera.height);
 
-  if (settings['display.sweepEffect']) drawSweep(ctx, frame);
+  if (settings['display.sweepEffect'])
+    for (const sweep of frame.sweeps) drawSweep(ctx, frame, sweep);
   if (settings['display.heatTrail']) drawHeatTrails(ctx, frame);
   if (frame.route) drawRoute(ctx, frame, frame.route);
 
@@ -511,16 +510,18 @@ function drawPreview(
   ctx.restore();
 }
 
-function drawSweep(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
+function drawSweep(ctx: CanvasRenderingContext2D, frame: TrafficFrame, sweep: Sweep): void {
   const { camera, palette } = frame;
-  const center = project(camera, frame.scopeCenter);
-  const radius = frame.sweepRadiusNm * pixelsPerNm(camera);
-  const angle = -Math.PI / 2 + frame.sweepProgress * Math.PI * 2;
+  const center = project(camera, sweep.antenna);
+  const radius = sweep.radiusNm * pixelsPerNm(camera);
+  const angle = -Math.PI / 2 + sweep.progress * Math.PI * 2;
+  // The primary radar's beam is a little brighter than the others.
+  const strength = sweep.primary ? 1 : 0.6;
 
   const gradient = ctx.createConicGradient(angle - SWEEP_WEDGE_RAD, center.x, center.y);
   const wedge = SWEEP_WEDGE_RAD / (Math.PI * 2);
   gradient.addColorStop(0, `rgba(${palette.sweep}, 0)`);
-  gradient.addColorStop(wedge * 0.999, `rgba(${palette.sweep}, 0.10)`);
+  gradient.addColorStop(wedge * 0.999, `rgba(${palette.sweep}, ${0.1 * strength})`);
   gradient.addColorStop(wedge, `rgba(${palette.sweep}, 0)`);
   gradient.addColorStop(1, `rgba(${palette.sweep}, 0)`);
 
@@ -529,7 +530,7 @@ function drawSweep(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
   ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = `rgba(${palette.sweep}, 0.28)`;
+  ctx.strokeStyle = `rgba(${palette.sweep}, ${0.28 * strength})`;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(center.x, center.y);

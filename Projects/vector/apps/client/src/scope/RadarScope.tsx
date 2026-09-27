@@ -217,10 +217,7 @@ export function RadarScope({
         trackOf: (id: string) => session.engine.track(id),
         tickSeconds: session.engine.config.tickSeconds,
         simTimeSec: session.engine.displayTimeSec,
-        scopeCenter: session.pack.airspace.radar.position,
-        // Drawn out to the boundary: the scope shows the whole region's radar picture.
-        sweepRadiusNm: Math.max(session.pack.airspace.radar.rangeNm, session.pack.boundaryRadiusNm),
-        sweepProgress: session.radar.sweepProgress(session.engine.displayTimeSec),
+        sweeps: session.radar.sweeps(session.engine.displayTimeSec),
         timeShare: Math.floor(now / TIME_SHARE_MS) % 2 === 0 ? 0 : 1,
         hoveredId: hoveredRef.current,
         ...selectionRef.current,

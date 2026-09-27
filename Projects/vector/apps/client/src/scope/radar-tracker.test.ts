@@ -18,6 +18,7 @@ const everywhere: RadarSensor = {
   id: 'R',
   antenna: ANTENNA,
   intervalSec: INTERVAL,
+  phase: 0,
   covers: () => true,
 };
 const singleRadar = () => new RadarTracker([everywhere], everywhere);
@@ -266,5 +267,31 @@ describe('navigatingTo', () => {
     expect(
       procedure([{ pathTerminator: 'FM', fix: 'WATJA', position: base.position, courseDeg: 61 }]),
     ).toBeUndefined();
+  });
+});
+
+describe('radar sweeps', () => {
+  it('draws a sweep for each terminal radar, turning independently', () => {
+    const a = terminalRadar({
+      id: 'JFK',
+      position: ANTENNA,
+      antennaElevationFt: 63,
+      rangeNm: 60,
+      intervalSec: 4.8,
+    });
+    const b = terminalRadar({
+      id: 'EWR',
+      position: destinationPoint(ANTENNA, 280, 20),
+      antennaElevationFt: 60,
+      rangeNm: 60,
+      intervalSec: 4.8,
+    });
+    const lrr = enrouteRadar(ANTENNA, 6_000, 12);
+    const radar = new RadarTracker([a, b, lrr], a);
+    const sweeps = radar.sweeps(10);
+    // Long-range coverage is modeled, not a drawn antenna.
+    expect(sweeps.map((s) => s.id)).toEqual(['JFK', 'EWR']);
+    expect(sweeps.every((s) => s.radiusNm === 60)).toBe(true);
+    expect(sweeps[0]!.progress).not.toBeCloseTo(sweeps[1]!.progress, 2);
   });
 });
