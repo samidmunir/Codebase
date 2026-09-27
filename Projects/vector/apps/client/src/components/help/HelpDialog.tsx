@@ -107,6 +107,10 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
               <li>Drag to pan · scroll or pinch to zoom · double-click to zoom in</li>
               <li>Right-drag to measure bearing and distance</li>
               <li>Hover a fix in the Direct list to find it on the scope</li>
+              <li>
+                <kbd>Ctrl</kbd>-click a fix (<kbd>⌘</kbd>-click on a Mac) to send the selected
+                aircraft direct to it
+              </li>
             </ul>
           </section>
 

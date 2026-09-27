@@ -113,7 +113,12 @@ export function selectRunwayConfig(
       withinLimits: components.every(
         (c) => -c.headwindKts <= limits.maxTailwindKts && c.crosswindKts <= limits.maxCrosswindKts,
       ),
-      headwind: Math.min(...components.map((c) => c.headwindKts)),
+      // Configurations are compared by their primary arrival and departure runways; extra
+      // runways in a dual configuration only need to be within limits.
+      headwind: Math.min(
+        windComponents(wind, runwayHeading(config.arrivals[0]!)).headwindKts,
+        windComponents(wind, runwayHeading(config.departures[0]!)).headwindKts,
+      ),
       crosswind: Math.max(...components.map((c) => c.crosswindKts)),
       tailwindOverLimit: components.some((c) => -c.headwindKts > limits.maxTailwindKts),
     };

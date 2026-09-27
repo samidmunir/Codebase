@@ -340,6 +340,13 @@ export const USER_SETTINGS = {
     unit: 'x',
     default: 1,
   }),
+  'controls.ctrlClickDirectTo': setting.boolean({
+    category: 'controls',
+    label: 'Ctrl-click a fix for direct-to',
+    description:
+      'With an aircraft selected, Ctrl-click (Cmd-click on a Mac) a fix on the scope to send the aircraft direct to it. Holding Ctrl highlights the fix under the cursor.',
+    default: true,
+  }),
   'controls.directToRingNm': setting.select({
     category: 'controls',
     label: 'Direct-to distance rings',

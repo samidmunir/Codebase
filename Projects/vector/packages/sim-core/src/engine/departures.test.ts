@@ -55,6 +55,26 @@ describe('wind and runways', () => {
     }
   });
 
+  it('runs dual runway operations at JFK only when the wind allows them on every runway', () => {
+    const jfk = (directionDeg: number, speedKts: number) =>
+      createEngine({
+        'weather.windMode': 'manual',
+        'weather.manualWindDirectionDeg': directionDeg,
+        'weather.manualWindSpeedKts': speedKts,
+      }).activeRunways.KJFK;
+    // A moderate southwest wind: land both 22s, depart 22R and 31L.
+    expect(jfk(220, 12)).toMatchObject({
+      configId: '22s-dual',
+      arrivals: ['22L', '22R'],
+      departures: ['22R', '31L'],
+    });
+    // A strong southwest wind puts too much crosswind on 31L: 22s only.
+    expect(jfk(220, 26)).toMatchObject({ configId: '22s', arrivals: ['22L'], departures: ['22R'] });
+    // A strong southeast wind is too much crosswind for 22L arrivals: 13L only.
+    expect(jfk(130, 26)).toMatchObject({ configId: '13s', arrivals: ['13L'] });
+    expect(jfk(130, 10)).toMatchObject({ configId: '13s-dual', arrivals: ['13L', '22L'] });
+  });
+
   it('uses a runway configuration the player chose over the wind', () => {
     const engine = SimEngine.create({
       performance,
@@ -83,7 +103,12 @@ describe('wind and runways', () => {
       'weather.manualWindSpeedKts': 18,
     });
     expect(engine.winds.KJFK).toEqual({ directionDeg: 310, speedKts: 18 });
-    expect(engine.activeRunways.KJFK).toMatchObject({ arrivals: ['31R'], departures: ['31L'] });
+    // Light enough for dual operations: arrivals on both 31s, departures on 31L.
+    expect(engine.activeRunways.KJFK).toMatchObject({
+      configId: '31s-dual',
+      arrivals: ['31R', '31L'],
+      departures: ['31L'],
+    });
   });
 });
 

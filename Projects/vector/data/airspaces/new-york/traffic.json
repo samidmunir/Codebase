@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "notes": "Curated operations profile. Runway configurations are common real-world New York flows, and airline and destination weights approximate each airport's real traffic. Not FAA-published data. cityPositions are the airports' reference points, for trip lengths and cruise levels.",
+  "notes": "Curated operations profile. Runway configurations are common real-world New York flows, and airline and destination weights approximate each airport's real traffic. Not FAA-published data. cityPositions are the airports' reference points, for trip lengths and cruise levels. Runway configurations are in order of preference; dual configurations come first and are used when the wind is within limits on every runway in them.",
   "departureGates": {
     "north": [
       "GAYEL",
@@ -38,12 +38,33 @@
       "initialAltitudeFt": 5000,
       "runwayConfigs": [
         {
+          "id": "22s-dual",
+          "arrivals": [
+            "22L",
+            "22R"
+          ],
+          "departures": [
+            "22R",
+            "31L"
+          ]
+        },
+        {
           "id": "22s",
           "arrivals": [
             "22L"
           ],
           "departures": [
             "22R"
+          ]
+        },
+        {
+          "id": "31s-dual",
+          "arrivals": [
+            "31R",
+            "31L"
+          ],
+          "departures": [
+            "31L"
           ]
         },
         {
@@ -56,12 +77,32 @@
           ]
         },
         {
+          "id": "13s-dual",
+          "arrivals": [
+            "13L",
+            "22L"
+          ],
+          "departures": [
+            "13R"
+          ]
+        },
+        {
           "id": "13s",
           "arrivals": [
             "13L"
           ],
           "departures": [
             "13R"
+          ]
+        },
+        {
+          "id": "4s-dual",
+          "arrivals": [
+            "04R",
+            "04L"
+          ],
+          "departures": [
+            "04L"
           ]
         },
         {

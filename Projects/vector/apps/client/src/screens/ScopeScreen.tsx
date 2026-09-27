@@ -265,6 +265,20 @@ function Scope({ session }: { session: ScopeSession }) {
         leaderDirections={leaderDirections}
         preview={preview}
         highlightFix={selected ? hoveredFix : undefined}
+        onFixCommand={(ident) => {
+          if (!selected) return;
+          const fix = session.pack.fix(ident);
+          if (!fix) return;
+          const result = session.issueInstruction(selected.id, [
+            { type: 'directTo', fix: fix.ident, position: fix.position },
+          ]);
+          if (!result.ok) setToast(`${selected.callsign}: ${result.reason}`);
+          else if (selection?.draft.directTo || selection?.draft.heading)
+            setSelection({
+              id: selected.id,
+              draft: { ...selection.draft, directTo: undefined, heading: undefined },
+            });
+        }}
       />
       <div className="scope-vignette" aria-hidden="true" />
 

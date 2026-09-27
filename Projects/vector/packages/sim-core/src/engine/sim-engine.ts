@@ -1125,8 +1125,8 @@ export class SimEngine {
   private spawnArrival(airport: string): boolean {
     const pack = this.airspace!;
     const operations = this.state.operations!;
-    const runway = operations.runways[airport]?.arrivals[0];
-    if (!runway) return false;
+    const arrivalRunways = operations.runways[airport]?.arrivals ?? [];
+    if (arrivalRunways.length === 0) return false;
 
     const inUse = new Set([
       ...this.state.aircraft.map((a) => a.callsign),
@@ -1149,12 +1149,15 @@ export class SimEngine {
     );
     const gate = pack.fix(flight.gateFix);
     if (!gate) return false;
-    const route = arrivalRouteFrom(
-      pack,
-      airport,
-      runway,
-      bearingTrue(pack.airspace.center, gate.position),
-    );
+    // With more than one arrival runway in use, arrivals are spread across them: start
+    // from a random one, and take the first with an arrival route from this direction.
+    const first = this.rng.int(0, arrivalRunways.length - 1);
+    const fromBearing = bearingTrue(pack.airspace.center, gate.position);
+    let route: ArrivalRoute | undefined;
+    for (let k = 0; k < arrivalRunways.length && !route; k++) {
+      const runway = arrivalRunways[(first + k) % arrivalRunways.length]!;
+      route = arrivalRouteFrom(pack, airport, runway, fromBearing);
+    }
     if (!route) return false;
 
     const altitude = this.arrivalEntryAltitude(
