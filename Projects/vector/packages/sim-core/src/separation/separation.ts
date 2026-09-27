@@ -18,6 +18,10 @@ export const conflictSchema = z.object({
   sinceTick: z.number().int().min(0),
   lateralNm: z.number().min(0),
   verticalFt: z.number().min(0),
+  /** The wake turbulence minimum (behind a heavier aircraft on final) is what is lost. */
+  wake: z.boolean().optional(),
+  /** The lateral minimum that applies to the pair. */
+  requiredLateralNm: z.number().positive().optional(),
 });
 
 export type Conflict = z.infer<typeof conflictSchema>;
@@ -34,6 +38,10 @@ export const violationSchema = z.object({
   /** The minima that applied. */
   requiredLateralNm: z.number().positive(),
   requiredVerticalFt: z.number().positive(),
+  /** Wake turbulence spacing behind a heavier aircraft on final, rather than radar separation. */
+  wake: z.boolean().optional(),
+  /** For wake losses: the leading and following aircraft's wake categories. */
+  wakeCategories: z.tuple([z.string(), z.string()]).optional(),
 });
 
 export type Violation = z.infer<typeof violationSchema>;
@@ -64,6 +72,79 @@ export interface SeparationSettings {
   lookaheadSec: number;
   playerId: string;
   magneticVariationDeg: number;
+  /** Wake turbulence category by aircraft type. Without it, no wake spacing is applied. */
+  wakeCategory?: (aircraftType: string) => WakeCategory | undefined;
+}
+
+export type WakeCategory = 'small' | 'large' | 'b757' | 'heavy' | 'super';
+
+/**
+ * Wake turbulence minima in NM, by leading then following aircraft's
+ * category, for aircraft following another on an instrument approach
+ * (FAA Order JO 7110.65, 5-5-4). Pairs not listed need only the radar minimum.
+ */
+export const WAKE_MINIMA_NM: Readonly<Record<WakeCategory, Partial<Record<WakeCategory, number>>>> =
+  {
+    super: { super: 4, heavy: 6, b757: 7, large: 7, small: 8 },
+    heavy: { heavy: 4, b757: 5, large: 5, small: 6 },
+    b757: { b757: 4, large: 4, small: 5 },
+    large: { small: 4 },
+    small: {},
+  };
+
+export const WAKE_CATEGORY_LABELS: Readonly<Record<WakeCategory, string>> = {
+  super: 'super',
+  heavy: 'heavy',
+  b757: 'B757',
+  large: 'large',
+  small: 'small',
+};
+
+export interface WakePair {
+  /** The aircraft ahead on the approach, and the one following it. */
+  leaderId: string;
+  followerId: string;
+  leader: WakeCategory;
+  follower: WakeCategory;
+  requiredNm: number;
+}
+
+/**
+ * Wake turbulence spacing for a pair: when both are cleared for the same
+ * runway's approach, the one farther out follows the other, and must stay the
+ * wake minimum behind it (whatever their altitudes: wake sinks behind the
+ * leader along the glidepath).
+ */
+export function wakeSpacing(
+  a: Readonly<AircraftState>,
+  b: Readonly<AircraftState>,
+  settings: SeparationSettings,
+): WakePair | undefined {
+  if (!settings.wakeCategory) return undefined;
+  const na = a.navigation;
+  const nb = b.navigation;
+  if (
+    na.mode !== 'approach' ||
+    nb.mode !== 'approach' ||
+    na.clearance.airport !== nb.clearance.airport ||
+    na.clearance.runway !== nb.clearance.runway
+  )
+    return undefined;
+  const along = (aircraft: Readonly<AircraftState>, clearance: typeof na.clearance) =>
+    finalApproachGeometry(aircraft.position, clearance, settings.magneticVariationDeg).alongTrackNm;
+  const [leader, follower] = along(a, na.clearance) <= along(b, nb.clearance) ? [a, b] : [b, a];
+  const leaderCategory = settings.wakeCategory(leader.aircraftType);
+  const followerCategory = settings.wakeCategory(follower.aircraftType);
+  if (!leaderCategory || !followerCategory) return undefined;
+  const requiredNm = WAKE_MINIMA_NM[leaderCategory][followerCategory];
+  if (requiredNm === undefined) return undefined;
+  return {
+    leaderId: leader.id,
+    followerId: follower.id,
+    leader: leaderCategory,
+    follower: followerCategory,
+    requiredNm,
+  };
 }
 
 /** Reduced in-trail minimum on the same final approach course, inside this distance of the runway. */
@@ -170,31 +251,47 @@ export function updateSeparation(
     for (let j = i + 1; j < tracks.length; j++) {
       const a = tracks[i]!;
       const b = tracks[j]!;
-      // Only pairs involving the player's traffic.
-      if (a.aircraft.owner !== settings.playerId && b.aircraft.owner !== settings.playerId)
-        continue;
+      // Pairs involving the player's traffic, and wake spacing on final even once Tower
+      // has the aircraft: the spacing there comes from the player's sequencing.
+      const players =
+        a.aircraft.owner === settings.playerId || b.aircraft.owner === settings.playerId;
+      const wakePair = wakeSpacing(a.aircraft, b.aircraft, settings);
+      if (!players && !wakePair) continue;
 
-      const lateralMin = requiredLateralNm(a.aircraft, b.aircraft, settings);
+      const radarMin = players ? requiredLateralNm(a.aircraft, b.aircraft, settings) : 0;
+      const wakeMin = wakePair && wakePair.requiredNm > radarMin ? wakePair.requiredNm : 0;
       const lateral = Math.hypot(a.x - b.x, a.y - b.y);
       const vertical = Math.abs(a.aircraft.altitudeFt - b.aircraft.altitudeFt);
       // Quick reject: too far apart to conflict within the look-ahead.
       const closing = Math.hypot(a.vx - b.vx, a.vy - b.vy) * settings.lookaheadSec;
-      if (lateral - closing > lateralMin + 1) continue;
+      if (lateral - closing > Math.max(radarMin, wakeMin) + 1) continue;
+
+      /** Which minimum a lateral and vertical distance breaks, if any. */
+      const broken = (lateralNm: number, verticalFt: number): 'radar' | 'wake' | undefined =>
+        lateralNm < radarMin && verticalFt < settings.verticalFt
+          ? 'radar'
+          : lateralNm < wakeMin
+            ? 'wake'
+            : undefined;
 
       let kind: Conflict['kind'] | undefined;
-      if (lateral < lateralMin && vertical < settings.verticalFt) kind = 'loss';
+      let minimum = broken(lateral, vertical);
+      if (minimum) kind = 'loss';
       else {
         for (let t = PREDICTION_STEP_SEC; t <= settings.lookaheadSec; t += PREDICTION_STEP_SEC) {
           const dx = a.x + a.vx * t - (b.x + b.vx * t);
           const dy = a.y + a.vy * t - (b.y + b.vy * t);
           const dz = a.aircraft.altitudeFt + a.vz * t - (b.aircraft.altitudeFt + b.vz * t);
-          if (Math.hypot(dx, dy) < lateralMin && Math.abs(dz) < settings.verticalFt) {
+          minimum = broken(Math.hypot(dx, dy), Math.abs(dz));
+          if (minimum) {
             kind = 'predicted';
             break;
           }
         }
       }
-      if (!kind) continue;
+      if (!kind || !minimum) continue;
+      const wake = minimum === 'wake';
+      const lateralMin = wake ? wakeMin : radarMin;
 
       const aircraftIds = pairKey(a.aircraft.id, b.aircraft.id);
       const id = aircraftIds.join('|');
@@ -206,6 +303,8 @@ export function updateSeparation(
         sinceTick: before && before.kind === kind ? before.sinceTick : tick,
         lateralNm: lateral,
         verticalFt: vertical,
+        requiredLateralNm: lateralMin,
+        ...(wake ? { wake: true } : {}),
       };
       current.push(conflict);
       if (!before) started.push(conflict);
@@ -217,6 +316,12 @@ export function updateSeparation(
         if (ongoing) {
           ongoing.closestLateralNm = Math.min(ongoing.closestLateralNm, lateral);
           ongoing.closestVerticalFt = Math.min(ongoing.closestVerticalFt, vertical);
+          // A wake loss that closes inside the radar minimum is a loss of separation.
+          if (!wake && ongoing.wake) {
+            delete ongoing.wake;
+            delete ongoing.wakeCategories;
+            ongoing.requiredLateralNm = radarMin;
+          }
         } else {
           const [first, second] = aircraftIds.map((aid) => monitored.find((m) => m.id === aid)!);
           const violation: Violation = {
@@ -228,6 +333,12 @@ export function updateSeparation(
             closestVerticalFt: vertical,
             requiredLateralNm: lateralMin,
             requiredVerticalFt: settings.verticalFt,
+            ...(wake && wakePair
+              ? {
+                  wake: true,
+                  wakeCategories: [wakePair.leader, wakePair.follower] as [string, string],
+                }
+              : {}),
           };
           state.violations.push(violation);
           violationsStarted.push(violation);

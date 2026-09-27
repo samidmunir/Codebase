@@ -41,6 +41,8 @@ export const activeRunwaysSchema = z.object({
   configId: z.string(),
   arrivals: z.array(z.string()).min(1),
   departures: z.array(z.string()).min(1),
+  /** The player picked this configuration: the wind doesn't change it. */
+  chosenByPlayer: z.boolean().optional(),
 });
 
 export type ActiveRunways = z.infer<typeof activeRunwaysSchema>;
@@ -53,6 +55,12 @@ export const operationsStateSchema = z.object({
   /** Seed for how the wind varies, fixed for the session. */
   windSeed: z.number().int().min(0).optional(),
   runways: z.record(z.string(), activeRunwaysSchema),
+  /** Runway changes announced for when the wind no longer suits the runways, by airport. */
+  pendingRunwayChanges: z
+    .record(z.string(), activeRunwaysSchema.extend({ atTick: z.number().int().min(0) }))
+    .default({}),
+  /** When each airport last changed runways (to avoid changing back and forth). */
+  lastRunwayChangeTick: z.record(z.string(), z.number().int()).default({}),
   departureQueue: z.array(departureEntrySchema),
   /** Departures ready but held at the gate because the queue is full, per airport. */
   gateHolds: z.record(z.string(), z.number().int().min(0)),
@@ -122,6 +130,7 @@ export function initialOperations(
       configId: config.id,
       arrivals: [...config.arrivals],
       departures: [...config.departures],
+      ...(chosen ? { chosenByPlayer: true } : {}),
     };
   }
   return {
@@ -130,6 +139,8 @@ export function initialOperations(
     // From the generator's state without drawing from it, so traffic is unchanged.
     windSeed: (random.getState() ^ 0x5bd1e995) >>> 0,
     runways,
+    pendingRunwayChanges: {},
+    lastRunwayChangeTick: {},
     departureQueue: [],
     gateHolds: Object.fromEntries(airports.map((icao) => [icao, 0])),
     nextDepartureTick: Object.fromEntries(airports.map((icao) => [icao, tick])),

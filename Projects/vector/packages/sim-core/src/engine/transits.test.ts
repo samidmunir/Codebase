@@ -223,3 +223,66 @@ describe('wind over a session', () => {
     expect(JSON.stringify(engine.winds)).toBe(start);
   });
 });
+
+describe('runway changes', () => {
+  // Tight limits and a changeable wind, so the runways stop suiting it within a few hours.
+  const changeable = {
+    'weather.windVariation': 'moderate',
+    'weather.windVariationPeriodMin': 10,
+    'weather.maxTailwindKts': 0,
+    'weather.maxCrosswindKts': 12,
+    'weather.runwayChangeNoticeMin': 10,
+  } as const;
+
+  it('announces a change when the wind no longer suits the runways, then makes it', () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 40 && checked < 3; seed++) {
+      const engine = createEngine(changeable, seed);
+      const planned: Extract<SimEvent, { type: 'runwayChangePlanned' }>[] = [];
+      const changed: Extract<SimEvent, { type: 'runwayChanged' }>[] = [];
+      engine.subscribe((event) => {
+        if (event.type === 'runwayChangePlanned') planned.push(event);
+        if (event.type === 'runwayChanged') changed.push(event);
+      });
+      for (let t = 0; t < 6 * 3_600 && changed.length === 0; t++) engine.step();
+      if (changed.length === 0) continue;
+      checked++;
+      const [plan] = planned;
+      const [change] = changed;
+      expect(change!.airport).toBe(plan!.airport);
+      expect(change!.runways.configId).toBe(plan!.runways.configId);
+      // After the notice (10 minutes), and the airport now uses the new runways.
+      expect(engine.tick).toBe(plan!.atTick);
+      expect(engine.activeRunways[plan!.airport]!.configId).toBe(plan!.runways.configId);
+      expect(engine.pendingRunwayChanges[plan!.airport]).toBeUndefined();
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
+  it('keeps runways the player chose, and never changes with the setting off', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const off = createEngine({ ...changeable, 'weather.runwayChanges': false }, seed);
+      const start = JSON.stringify(off.activeRunways);
+      run(off, 4 * 3_600);
+      expect(JSON.stringify(off.activeRunways)).toBe(start);
+    }
+    const chosen = SimEngine.create({
+      performance,
+      world: { magneticVariationDeg: newYork.airspace.magneticVariationDeg },
+      seed: 3,
+      startTimeUtc: '2026-09-26T14:00:00Z',
+      settings: {
+        ...defaultSettings('session'),
+        ...changeable,
+        'traffic.arrivalRatePerHour': 0,
+        'traffic.departureRatePerHour': 0,
+      },
+      airspace: newYork,
+      airlines,
+      runwayConfigs: { KJFK: newYork.traffic.airports.KJFK!.runwayConfigs.at(-1)!.id },
+    });
+    const jfk = chosen.activeRunways.KJFK!.configId;
+    run(chosen, 4 * 3_600);
+    expect(chosen.activeRunways.KJFK!.configId).toBe(jfk);
+  });
+});

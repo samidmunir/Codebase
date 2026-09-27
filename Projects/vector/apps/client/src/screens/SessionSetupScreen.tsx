@@ -8,11 +8,12 @@ import {
   SESSION_SETTINGS,
   type SessionSettings,
 } from '@vector/shared';
-import type { AirspacePack } from '@vector/sim-core';
+import { withGust, type AirspacePack } from '@vector/sim-core';
 import { findAirspace } from '../airspaces/registry';
 import { SettingRow } from '../components/settings/SettingControl';
 import { useGameControls } from '../controls/use-game-controls';
 import { shortAirport } from '../scope/data-block';
+import { formatWind } from './scope/format';
 import { DIFFICULTY_LABELS } from '../settings/difficulty';
 import {
   defaultSetupSettings,
@@ -30,7 +31,14 @@ const keysIn = (prefix: string) =>
   (Object.keys(SESSION_SETTINGS) as SessionKey[]).filter((key) => key.startsWith(prefix));
 
 const TRAFFIC_KEYS: SessionKey[] = [...IN_SESSION_TRAFFIC_KEYS, 'traffic.fleetMix'];
-const WIND_LIMIT_KEYS: SessionKey[] = ['weather.maxTailwindKts', 'weather.maxCrosswindKts'];
+const WIND_LIMIT_KEYS: SessionKey[] = [
+  'weather.maxTailwindKts',
+  'weather.maxCrosswindKts',
+  'weather.windVariation',
+  'weather.windVariationPeriodMin',
+  'weather.runwayChanges',
+  'weather.runwayChangeNoticeMin',
+];
 
 /** Rules and realism, collapsed by default: most players keep the defaults. */
 const ADVANCED_GROUPS: { label: string; keys: SessionKey[] }[] = [
@@ -43,11 +51,6 @@ const ADVANCED_GROUPS: { label: string; keys: SessionKey[] }[] = [
   { label: 'Radar', keys: keysIn('radar.') },
   { label: 'Simulation', keys: keysIn('sim.') },
 ];
-
-const formatWind = (wind: { directionDeg: number; speedKts: number }) =>
-  wind.speedKts < 1
-    ? 'Calm'
-    : `${String(Math.round(wind.directionDeg) % 360 || 360).padStart(3, '0')}° ${Math.round(wind.speedKts)} kt`;
 
 /** Choose difficulty, traffic, wind, runways and rules, then start the session. */
 export function SessionSetupScreen() {
@@ -166,6 +169,7 @@ export function SessionSetupScreen() {
                 <>
                   {row('weather.manualWindDirectionDeg')}
                   {row('weather.manualWindSpeedKts')}
+                  {row('weather.manualWindGustKts')}
                 </>
               ) : (
                 <div className="setting-row">
@@ -302,10 +306,15 @@ export function SessionSetupScreen() {
               <dt>Wind</dt>
               <dd>
                 {manualWind
-                  ? formatWind({
-                      directionDeg: settings['weather.manualWindDirectionDeg'],
-                      speedKts: settings['weather.manualWindSpeedKts'],
-                    })
+                  ? formatWind(
+                      withGust(
+                        {
+                          directionDeg: settings['weather.manualWindDirectionDeg'],
+                          speedKts: settings['weather.manualWindSpeedKts'],
+                        },
+                        settings['weather.manualWindGustKts'] || undefined,
+                      ),
+                    )
                   : 'Random'}
               </dd>
             </div>

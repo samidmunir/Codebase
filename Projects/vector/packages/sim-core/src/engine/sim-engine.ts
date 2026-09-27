@@ -45,6 +45,8 @@ import { isHemisphericLevel, requestedCruiseAltitude } from '../traffic/cruise-l
 import {
   emptySeparationState,
   updateSeparation,
+  WAKE_CATEGORY_LABELS,
+  type WakeCategory,
   type Conflict,
   type Violation,
 } from '../separation/separation';
@@ -80,7 +82,15 @@ import {
   type ActiveRunways,
   type DepartureEntry,
 } from '../traffic/operations';
-import { regionalWind, variedWind, WIND_VARIATIONS, type Wind } from '../weather/wind';
+import {
+  regionalWind,
+  variedWind,
+  withGust,
+  configWithinLimits,
+  selectRunwayConfig,
+  WIND_VARIATIONS,
+  type Wind,
+} from '../weather/wind';
 import { headingDifference, normalizeHeading } from '../math/angles';
 import {
   bearingTrue,
@@ -157,6 +167,8 @@ const flightLevelLabel = (altitudeFt: number, transitionAltitudeFt: number) =>
 const CENTER_UPDATE_SEC = 5;
 /** How often the reported wind is updated when it varies. */
 const WIND_UPDATE_SEC = 60;
+/** An airport keeps its runways at least this long after a change, so it doesn't swap back and forth. */
+const MIN_RUNWAY_CHANGE_INTERVAL_SEC = 30 * 60;
 /** Center lifts a resolution once aircraft are this many minima apart and diverging. */
 const CENTER_CLEAR_FACTOR = 1.5;
 /** Center never resolves a conflict below this. */
@@ -343,8 +355,11 @@ export class SimEngine {
     const variation = this.state.world.magneticVariationDeg;
     this.state.tick++;
     this.executeDueInstructions();
-    if (this.state.tick % Math.max(1, Math.round(WIND_UPDATE_SEC / tickSeconds)) === 0)
+    if (this.state.tick % Math.max(1, Math.round(WIND_UPDATE_SEC / tickSeconds)) === 0) {
       this.updateWinds();
+      this.reviewRunways();
+    }
+    this.applyDueRunwayChanges();
     this.updateDepartures();
     this.updateArrivals();
     this.updateTransits();
@@ -650,6 +665,12 @@ export class SimEngine {
         lookaheadSec: settings['separation.conflictAlertLookaheadSec'],
         playerId: this.state.playerId,
         magneticVariationDeg: this.state.world.magneticVariationDeg,
+        ...(settings['separation.wakeTurbulence']
+          ? {
+              wakeCategory: (type: string) =>
+                this.performance.has(type) ? this.performance.get(type).wakeCategory : undefined,
+            }
+          : {}),
       },
       this.state.tick,
       // Height above the nearer of the aircraft's airports.
@@ -1339,6 +1360,74 @@ export class SimEngine {
     return this.state.operations?.winds ?? {};
   }
 
+  /** Runway changes announced and not yet made, by airport. */
+  get pendingRunwayChanges(): Readonly<
+    Record<string, Readonly<ActiveRunways & { atTick: number }>>
+  > {
+    return this.state.operations?.pendingRunwayChanges ?? {};
+  }
+
+  /**
+   * Announces a runway change at airports whose runways the wind no longer
+   * suits (over the tailwind or crosswind limit), when a better configuration
+   * exists. Runways the player chose, and airports that changed recently, are
+   * left alone.
+   */
+  private reviewRunways(): void {
+    const operations = this.state.operations;
+    const pack = this.airspace;
+    const settings = this.state.settings;
+    if (!operations || !pack || !settings['weather.runwayChanges']) return;
+    const { tickSeconds } = this.state.config;
+    const limits = {
+      maxTailwindKts: settings['weather.maxTailwindKts'],
+      maxCrosswindKts: settings['weather.maxCrosswindKts'],
+    };
+    const minInterval = Math.round(MIN_RUNWAY_CHANGE_INTERVAL_SEC / tickSeconds);
+    for (const [airport, current] of Object.entries(operations.runways)) {
+      if (current.chosenByPlayer || operations.pendingRunwayChanges[airport]) continue;
+      const last = operations.lastRunwayChangeTick[airport];
+      if (last !== undefined && this.state.tick - last < minInterval) continue;
+      const wind = operations.winds[airport];
+      const configs = pack.traffic.airports[airport]?.runwayConfigs ?? [];
+      const config = configs.find((c) => c.id === current.configId);
+      if (!wind || !config) continue;
+      const heading = (runway: string) => pack.runway(airport, runway).magneticHeadingDeg;
+      if (configWithinLimits(config, heading, wind, limits)) continue;
+      const better = selectRunwayConfig(configs, heading, wind, limits);
+      if (better.id === config.id || !configWithinLimits(better, heading, wind, limits)) continue;
+      const change = {
+        configId: better.id,
+        arrivals: [...better.arrivals],
+        departures: [...better.departures],
+        atTick:
+          this.state.tick +
+          Math.round((settings['weather.runwayChangeNoticeMin'] * 60) / tickSeconds),
+      };
+      operations.pendingRunwayChanges[airport] = change;
+      const { atTick, ...runways } = cloneJson(change);
+      this.emit({ type: 'runwayChangePlanned', airport, runways, atTick });
+    }
+  }
+
+  /** Makes announced runway changes that are due. */
+  private applyDueRunwayChanges(): void {
+    const operations = this.state.operations;
+    if (!operations) return;
+    for (const [airport, change] of Object.entries(operations.pendingRunwayChanges)) {
+      if (this.state.tick < change.atTick) continue;
+      const runways: ActiveRunways = {
+        configId: change.configId,
+        arrivals: change.arrivals,
+        departures: change.departures,
+      };
+      operations.runways[airport] = runways;
+      operations.lastRunwayChangeTick[airport] = this.state.tick;
+      delete operations.pendingRunwayChanges[airport];
+      this.emit({ type: 'runwayChanged', airport, runways: cloneJson(runways) });
+    }
+  }
+
   /** One wind for the whole region (the average of the airports'), if there is an airspace. */
   get regionalWind(): Wind | undefined {
     return regionalWind(this.winds);
@@ -1446,10 +1535,13 @@ export class SimEngine {
       this.rng,
       {
         windMode: settings['weather.windMode'],
-        manualWind: {
-          directionDeg: settings['weather.manualWindDirectionDeg'],
-          speedKts: settings['weather.manualWindSpeedKts'],
-        },
+        manualWind: withGust(
+          {
+            directionDeg: settings['weather.manualWindDirectionDeg'],
+            speedKts: settings['weather.manualWindSpeedKts'],
+          },
+          settings['weather.manualWindGustKts'] || undefined,
+        ),
         maxTailwindKts: settings['weather.maxTailwindKts'],
         maxCrosswindKts: settings['weather.maxCrosswindKts'],
         departureRatePerHour: settings['traffic.departureRatePerHour'],
@@ -1866,6 +1958,17 @@ export class SimEngine {
       const nearMidAir = score.nearMidAirViolations.indexOf(violation.id);
       if (nearMidAir !== -1) {
         score.nearMidAirViolations.splice(nearMidAir, 1);
+        continue;
+      }
+      if (violation.wake) {
+        const [leader] = violation.wakeCategories ?? ['heavier'];
+        const shortfall = 1 - violation.closestLateralNm / violation.requiredLateralNm;
+        this.award(
+          'wakeLoss',
+          -Math.round(settings['scoring.wakeLossRp'] * (1 + Math.max(0, shortfall))),
+          [...violation.callsigns],
+          `wake spacing behind a ${WAKE_CATEGORY_LABELS[leader as WakeCategory] ?? leader}, ${violation.closestLateralNm.toFixed(1)} of ${violation.requiredLateralNm} NM`,
+        );
         continue;
       }
       const penalty = separationPenalty(

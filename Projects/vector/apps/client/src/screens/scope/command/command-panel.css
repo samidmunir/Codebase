@@ -777,6 +777,21 @@
   font-size: 0.72rem;
 }
 
+.departure-airport__change {
+  margin-top: 6px;
+  padding: 4px 8px;
+  color: var(--color-caution, #f5c451);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  background: rgba(245, 196, 81, 0.08);
+  border: 1px solid rgba(245, 196, 81, 0.25);
+  border-radius: 4px;
+}
+
+.departure-airport__change b {
+  color: var(--color-text);
+}
+
 .departure-airport__runways abbr {
   color: var(--color-text-faint);
   text-decoration: none;

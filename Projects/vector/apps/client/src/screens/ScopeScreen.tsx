@@ -1,3 +1,4 @@
+import { shortAirport } from '../scope/data-block';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router';
 import { applyDifficulty, defaultSettings } from '@vector/shared';
@@ -180,6 +181,26 @@ function Scope({ session }: { session: ScopeSession }) {
 
   useConflictSounds(session);
   useInterfaceSounds(session);
+
+  // Runway changes: announced ahead, then made.
+  useEffect(
+    () =>
+      session.engine.subscribe((event) => {
+        const runways = (r: { arrivals: string[]; departures: string[] }) =>
+          `landing ${r.arrivals.join('/')}, departing ${r.departures.join('/')}`;
+        if (event.type === 'runwayChangePlanned') {
+          const minutes = Math.round(
+            ((event.atTick - session.engine.tick) * session.engine.config.tickSeconds) / 60,
+          );
+          setToast(
+            `${shortAirport(event.airport)} runway change ${minutes > 0 ? `in ${minutes} min` : 'now'}: ${runways(event.runways)}`,
+          );
+        } else if (event.type === 'runwayChanged') {
+          setToast(`${shortAirport(event.airport)} now ${runways(event.runways)}`);
+        }
+      }),
+    [session],
+  );
 
   useEffect(() => {
     if (!toast) return;

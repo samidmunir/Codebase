@@ -24,8 +24,8 @@ export function formatAltitudeLabel(altitudeFt: number, transitionAltitudeFt = 1
     : rounded.toLocaleString('en-US');
 }
 
-/** '220° 12 kt', or 'Calm'. */
+/** '220° 12 kt', '220° 14G26 kt', or 'Calm'. */
 export const formatWind = (wind: Wind) =>
   wind.directionDeg === 0 || wind.speedKts <= 2
     ? 'Calm'
-    : `${String(wind.directionDeg).padStart(3, '0')}° ${wind.speedKts} kt`;
+    : `${String(wind.directionDeg).padStart(3, '0')}° ${wind.speedKts}${wind.gustKts !== undefined ? `G${wind.gustKts}` : ''} kt`;

@@ -574,11 +574,22 @@ export const SESSION_SETTINGS = {
     unit: 'kts',
     default: 12,
   }),
+  'weather.manualWindGustKts': setting.number({
+    category: 'weather',
+    label: 'Manual wind gusts',
+    description:
+      'Peak gusts, used when wind is Manual. 0 for none; gusts are only reported at least 10 kt above the steady wind. Crosswind limits are judged at the gust.',
+    min: 0,
+    max: 60,
+    step: 1,
+    unit: 'kts',
+    default: 0,
+  }),
   'weather.windVariation': setting.select({
     category: 'weather',
     label: 'Wind variation',
     description:
-      'How much the wind drifts during a session, around its starting value. Slight: up to 20° and 4 kt. Moderate: up to 40° and 8 kt. Active runways stay as they are.',
+      'How much the wind drifts during a session, around its starting value. Slight: up to 20° and 4 kt. Moderate: up to 40° and 8 kt.',
     options: [
       { value: 'off', label: 'Off (steady)' },
       { value: 'slight', label: 'Slight' },
@@ -595,6 +606,24 @@ export const SESSION_SETTINGS = {
     step: 5,
     unit: 'min',
     default: 20,
+  }),
+  'weather.runwayChanges': setting.boolean({
+    category: 'weather',
+    label: 'Change runways when the wind shifts',
+    description:
+      'When the wind puts the runways in use over the tailwind or crosswind limit, the airport announces a runway change and switches after the notice time. Runways you picked yourself are kept.',
+    default: true,
+  }),
+  'weather.runwayChangeNoticeMin': setting.number({
+    category: 'weather',
+    label: 'Runway change notice',
+    description:
+      'How long before a runway change it is announced, so you can plan the arrivals already on their way.',
+    min: 0,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 10,
   }),
   'weather.maxTailwindKts': setting.number({
     category: 'weather',
@@ -658,6 +687,13 @@ export const SESSION_SETTINGS = {
     step: 100,
     unit: 'ft',
     default: 1000,
+  }),
+  'separation.wakeTurbulence': setting.boolean({
+    category: 'separation',
+    label: 'Wake turbulence spacing on final',
+    description:
+      'Aircraft following a heavier one on the same approach need more than the radar minimum behind it: 4–6 NM behind a heavy, 4–5 NM behind a B757, 4–8 NM behind a super, and 4 NM for a small behind a large (FAA 7110.65).',
+    default: true,
   }),
   'separation.conflictAlertLookaheadSec': setting.number({
     category: 'separation',
@@ -862,6 +898,17 @@ export const SESSION_SETTINGS = {
     step: 10,
     unit: 'RP',
     default: 150,
+  }),
+  'scoring.wakeLossRp': setting.number({
+    category: 'scoring',
+    label: 'Wake turbulence spacing lost',
+    description:
+      'RP lost when an aircraft on final gets closer behind a heavier one than wake spacing allows, up to double the shorter the spacing. Closing inside the radar minimum counts as a loss of separation instead.',
+    min: 0,
+    max: 1000,
+    step: 10,
+    unit: 'RP',
+    default: 80,
   }),
   'scoring.penaltyMaxLateralNm': setting.number({
     category: 'scoring',

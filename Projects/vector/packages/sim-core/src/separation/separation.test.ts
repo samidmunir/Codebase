@@ -1,7 +1,12 @@
 import { defaultSettings, type SessionSettings } from '@vector/shared';
 import { describe, expect, it } from 'vitest';
 import type { AircraftState } from '../aircraft/aircraft';
-import { requiredLateralNm } from './separation';
+import {
+  requiredLateralNm,
+  updateSeparation,
+  wakeSpacing,
+  emptySeparationState,
+} from './separation';
 import type { SimEvent } from '../engine/events';
 import { SimEngine } from '../engine/sim-engine';
 import { destinationPoint } from '../math/geo';
@@ -191,5 +196,85 @@ describe('in-trail separation on final', () => {
     expect(requiredLateralNm(far(41.5), far(41.55), settings)).toBe(5);
     // One near the radar and one far out: still the en route minimum.
     expect(requiredLateralNm(onFinal(9), far(41.5), settings)).toBe(5);
+  });
+
+  describe('wake turbulence spacing', () => {
+    const wakeSettings = {
+      ...settings,
+      wakeCategory: (type: string) => performance.get(type).wakeCategory,
+    };
+    const typed = (aircraft: AircraftState, aircraftType: string, altitudeFt = 2_000) =>
+      ({ ...aircraft, aircraftType, altitudeFt }) as AircraftState;
+
+    it('needs 5 NM for a large behind a heavy, whichever is listed first', () => {
+      const heavy = typed(onFinal(6), 'B77W');
+      const large = typed(onFinal(10), 'B738');
+      expect(wakeSpacing(large, heavy, wakeSettings)).toMatchObject({
+        leaderId: heavy.id,
+        followerId: large.id,
+        leader: 'heavy',
+        follower: 'large',
+        requiredNm: 5,
+      });
+      // A heavy behind a large, or two larges: the radar minimum is enough.
+      expect(
+        wakeSpacing(typed(onFinal(6), 'B738'), typed(onFinal(10), 'B77W'), wakeSettings),
+      ).toBeUndefined();
+      expect(
+        wakeSpacing(typed(onFinal(6), 'A320'), typed(onFinal(10), 'B738'), wakeSettings),
+      ).toBeUndefined();
+      // Different runways: no wake spacing.
+      expect(wakeSpacing(heavy, typed(onFinal(10, '22R'), 'B738'), wakeSettings)).toBeUndefined();
+    });
+
+    it('raises a wake loss 4 NM behind a heavy, even with 1,000 ft between them', () => {
+      const state = emptySeparationState();
+      const heavy = typed(onFinal(6), 'B77W', 2_000);
+      const large = typed(onFinal(10), 'B738', 3_200);
+      const result = updateSeparation(
+        state,
+        [heavy, large],
+        { ...wakeSettings, lookaheadSec: 5 },
+        10,
+        () => 13,
+      );
+      expect(result.violationsStarted).toHaveLength(1);
+      expect(result.violationsStarted[0]).toMatchObject({
+        wake: true,
+        requiredLateralNm: 5,
+        wakeCategories: ['heavy', 'large'],
+      });
+      expect(state.conflicts[0]).toMatchObject({ kind: 'loss', wake: true });
+      // Without wake categories (the setting off) it is fine.
+      const off = emptySeparationState();
+      updateSeparation(off, [heavy, large], { ...settings, lookaheadSec: 5 }, 10, () => 13);
+      expect(off.conflicts).toHaveLength(0);
+    });
+
+    it('still watches wake spacing once Tower has both aircraft', () => {
+      const state = emptySeparationState();
+      const heavy = { ...typed(onFinal(6), 'B77W'), owner: 'KJFK_TWR' } as AircraftState;
+      const large = { ...typed(onFinal(9.5), 'B738'), owner: 'KJFK_TWR' } as AircraftState;
+      updateSeparation(state, [heavy, large], { ...wakeSettings, lookaheadSec: 5 }, 10, () => 13);
+      expect(state.conflicts[0]).toMatchObject({ kind: 'loss', wake: true });
+      // Two larges with Tower: nothing to watch.
+      const larges = emptySeparationState();
+      updateSeparation(
+        larges,
+        [{ ...heavy, aircraftType: 'A320' } as AircraftState, large],
+        { ...wakeSettings, lookaheadSec: 5 },
+        10,
+        () => 13,
+      );
+      expect(larges.conflicts).toHaveLength(0);
+    });
+
+    it('keeps 5.5 NM behind a heavy clear of alerts', () => {
+      const state = emptySeparationState();
+      const heavy = typed(onFinal(6), 'B77W');
+      const large = typed(onFinal(11.5), 'B738');
+      updateSeparation(state, [heavy, large], { ...wakeSettings, lookaheadSec: 5 }, 10, () => 13);
+      expect(state.conflicts).toHaveLength(0);
+    });
   });
 });

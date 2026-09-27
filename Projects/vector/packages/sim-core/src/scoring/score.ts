@@ -8,6 +8,7 @@ export const scoreKindSchema = z.enum([
   'departureHandoff',
   'transitHandoff',
   'separationLoss',
+  'wakeLoss',
   'nearMidAir',
   'goAround',
   'leftWithoutHandoff',

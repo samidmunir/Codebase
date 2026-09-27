@@ -52,6 +52,7 @@ export function DeparturesPanel({ session, onClose }: DeparturesPanelProps) {
           const wind = engine.winds[icao];
           const entries = engine.departureQueue.filter((entry) => entry.airport === icao);
           const held = engine.gateHolds(icao);
+          const change = engine.pendingRunwayChanges[icao];
 
           return (
             <section
@@ -75,6 +76,13 @@ export function DeparturesPanel({ session, onClose }: DeparturesPanelProps) {
                   <span>
                     <abbr title="Departure runways">DEP</abbr> {runways.departures.join(' ')}
                   </span>
+                </div>
+              )}
+              {change && (
+                <div className="departure-airport__change" role="status">
+                  Runway change in{' '}
+                  {countdown((change.atTick - engine.tick) * engine.config.tickSeconds)}: ARR{' '}
+                  <b>{change.arrivals.join(' ')}</b> DEP <b>{change.departures.join(' ')}</b>
                 </div>
               )}
 

@@ -254,4 +254,49 @@ describe('RP scoring', () => {
     });
     expect(restored.score).toEqual(engine.score);
   });
+
+  it('takes RP for wake spacing lost behind a heavy on final', () => {
+    const engine = createEngine();
+    const runway = newYork.airport('KJFK').runways.find((r) => r.id === '22L')!;
+    const ils = runway.ils!;
+    const outbound = ils.courseDeg + variation + 180;
+    const onFinal = (callsign: string, aircraftType: string, alongNm: number) => {
+      const aircraft = engine.addAircraft(
+        yours({
+          callsign,
+          aircraftType,
+          flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
+          phase: 'arrival',
+          position: destinationPoint(runway.threshold, outbound, alongNm),
+          altitudeFt: Math.round(alongNm * 318 + 13),
+          headingDeg: ils.courseDeg,
+          iasKts: 160,
+        }),
+      );
+      engine.issueInstruction(aircraft.id, [
+        {
+          type: 'clearedIls',
+          clearance: {
+            airport: 'KJFK',
+            runway: '22L',
+            approachId: newYork.ilsApproaches('KJFK', '22L')[0]!.id,
+            threshold: runway.threshold,
+            thresholdElevationFt: runway.thresholdElevationFt,
+            courseDeg: ils.courseDeg,
+            glideslopeDeg: ils.glideslopeAngleDeg,
+            thresholdCrossingHeightFt: ils.thresholdCrossingHeightFt ?? 50,
+          },
+        },
+      ]);
+    };
+    onFinal('BAW1', 'B77W', 6);
+    onFinal('DAL2', 'B738', 10);
+    run(engine, 400);
+    expect(engine.violations[0]).toMatchObject({ wake: true, requiredLateralNm: 5 });
+    expect(engine.score.tally.wakeLoss?.count).toBe(1);
+    expect(engine.score.tally.separationLoss).toBeUndefined();
+    const event = engine.score.events.find((e) => e.kind === 'wakeLoss')!;
+    expect(event.rp).toBeLessThan(-80);
+    expect(event.detail).toMatch(/^wake spacing behind a heavy, \d\.\d of 5 NM$/);
+  });
 });

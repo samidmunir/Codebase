@@ -2,6 +2,7 @@ import type { ScoreEvent } from '../scoring/score';
 import type { AtcCommand } from '../commands/commands';
 import type { Conflict, Violation } from '../separation/separation';
 import type { CommsEntry } from '../snapshot/snapshot';
+import type { ActiveRunways } from '../traffic/operations';
 
 export type SimEvent =
   | { type: 'aircraftAdded'; aircraftId: string }
@@ -30,6 +31,9 @@ export type SimEvent =
   | { type: 'settingsChanged'; keys: string[] }
   /** The reported wind at one or more airports changed. */
   | { type: 'windChanged' }
+  /** An airport will change runways at `atTick` (the wind no longer suits the ones in use). */
+  | { type: 'runwayChangePlanned'; airport: string; runways: ActiveRunways; atTick: number }
+  | { type: 'runwayChanged'; airport: string; runways: ActiveRunways }
   /** The pilot could not accept an ILS clearance. */
   | { type: 'ilsUnable'; aircraftId: string; reason: string }
   | { type: 'goAround'; aircraftId: string; airport: string; runway: string; reason: string }

@@ -7,6 +7,8 @@ export const windSchema = z.object({
   /** Direction the wind blows from, magnetic, in tens of degrees (10-360); 0 when calm. */
   directionDeg: z.number().min(0).max(360),
   speedKts: z.number().min(0),
+  /** Peak gust, when the wind is gusting (reported only 10 kt or more above the steady wind). */
+  gustKts: z.number().min(0).optional(),
 });
 
 export type Wind = z.infer<typeof windSchema>;
@@ -28,6 +30,20 @@ const WIND_REGIMES = [
   { weight: 0.08, fromDeg: 0, toDeg: 360 }, // anything else
 ];
 const CALM_CHANCE = 0.05;
+/** Gusts are reported when peaks are at least this much above the steady wind (as in a METAR). */
+export const GUST_REPORT_SPREAD_KTS = 10;
+/** Winds this light don't gust. */
+const MIN_GUSTING_WIND_KTS = 10;
+
+/** A wind with its gust, if the gust is enough above the steady wind to be reported. */
+export function withGust(wind: Wind, gustKts: number | undefined): Wind {
+  const steady: Wind = { directionDeg: wind.directionDeg, speedKts: wind.speedKts };
+  return gustKts !== undefined &&
+    wind.directionDeg !== 0 &&
+    gustKts - wind.speedKts >= GUST_REPORT_SPREAD_KTS
+    ? { ...steady, gustKts: Math.round(gustKts) }
+    : steady;
+}
 
 const roundDirection = (deg: number) => Math.round((((deg % 360) + 360) % 360) / 10) * 10 || 360;
 
@@ -36,11 +52,15 @@ function randomRegionalWind(random: SeededRandom): Wind {
   if (random.chance(CALM_CHANCE)) return { directionDeg: 0, speedKts: random.int(0, 3) };
   let pick = random.next();
   const regime = WIND_REGIMES.find((r) => (pick -= r.weight) < 0) ?? WIND_REGIMES[0]!;
+  // Gusty days are windier on average, with peaks 10–18 kt above the steady wind.
   const gusty = random.chance(0.2) ? random.range(0, 8) : 0;
-  return {
+  const wind = {
     directionDeg: roundDirection(random.range(regime.fromDeg, regime.toDeg)),
     speedKts: Math.round(4 + random.range(0, 12) + gusty),
   };
+  return gusty > 0 && wind.speedKts >= MIN_GUSTING_WIND_KTS
+    ? withGust(wind, wind.speedKts + GUST_REPORT_SPREAD_KTS + gusty)
+    : wind;
 }
 
 /**
@@ -58,10 +78,14 @@ export function generateWinds(
       winds[airport] = { ...regional };
       continue;
     }
-    winds[airport] = {
+    const local = {
       directionDeg: roundDirection(regional.directionDeg + random.int(-1, 1) * 10),
       speedKts: Math.max(0, regional.speedKts + random.int(-3, 3)),
     };
+    winds[airport] =
+      regional.gustKts === undefined
+        ? local
+        : withGust(local, local.speedKts + (regional.gustKts - regional.speedKts));
   }
   return winds;
 }
@@ -72,22 +96,37 @@ export function manualWinds(airports: readonly string[], wind: Wind): Record<str
 }
 
 export interface WindComponents {
-  /** Positive is a headwind, negative a tailwind. */
+  /** Positive is a headwind, negative a tailwind (steady wind). */
   headwindKts: number;
+  /** Crosswind at the gust when the wind is gusting, as crosswind limits are judged. */
   crosswindKts: number;
 }
 
 export function windComponents(wind: Wind, runwayHeadingDeg: number): WindComponents {
   const angle = toRadians(headingDifference(runwayHeadingDeg, wind.directionDeg));
+  const peakKts = Math.max(wind.speedKts, wind.gustKts ?? 0);
   return {
     headwindKts: wind.speedKts * Math.cos(angle),
-    crosswindKts: Math.abs(wind.speedKts * Math.sin(angle)),
+    crosswindKts: Math.abs(peakKts * Math.sin(angle)),
   };
 }
 
 export interface RunwayLimits {
   maxTailwindKts: number;
   maxCrosswindKts: number;
+}
+
+/** Whether every runway in a configuration is within the tailwind and crosswind limits. */
+export function configWithinLimits(
+  config: RunwayConfig,
+  runwayHeading: (runway: string) => number,
+  wind: Wind,
+  limits: RunwayLimits,
+): boolean {
+  return [...config.arrivals, ...config.departures].every((runway) => {
+    const c = windComponents(wind, runwayHeading(runway));
+    return -c.headwindKts <= limits.maxTailwindKts && c.crosswindKts <= limits.maxCrosswindKts;
+  });
 }
 
 /**
@@ -205,10 +244,14 @@ export function variedWind(
   const speedKts = Math.round(base.speedKts + drift('speed') * variation.speedKts);
   if (base.directionDeg === 0)
     return { directionDeg: 0, speedKts: Math.min(3, Math.max(0, speedKts)) };
-  return {
+  const wind = {
     directionDeg: roundDirection(base.directionDeg + drift('direction') * variation.directionDeg),
     speedKts: Math.max(0, speedKts),
   };
+  if (base.gustKts === undefined) return wind;
+  // Gusts come and go: the spread above the steady wind drifts too.
+  const spread = base.gustKts - base.speedKts + drift('gust') * (variation.speedKts * 0.75);
+  return withGust(wind, wind.speedKts + spread);
 }
 
 /** One wind for the region: the vector average of the airports' winds. */
@@ -224,5 +267,9 @@ export function regionalWind(winds: Readonly<Record<string, Wind>>): Wind | unde
   }
   const speedKts = Math.round(Math.hypot(x, y) / list.length);
   if (speedKts <= 0 || (x === 0 && y === 0)) return { directionDeg: 0, speedKts: 0 };
-  return { directionDeg: roundDirection((Math.atan2(x, y) * 180) / Math.PI), speedKts };
+  const spreads = list.flatMap((w) => (w.gustKts === undefined ? [] : [w.gustKts - w.speedKts]));
+  return withGust(
+    { directionDeg: roundDirection((Math.atan2(x, y) * 180) / Math.PI), speedKts },
+    spreads.length > 0 ? speedKts + Math.max(...spreads) : undefined,
+  );
 }

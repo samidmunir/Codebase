@@ -59,6 +59,9 @@ export interface TrafficFrame {
     kind: 'predicted' | 'loss';
     lateralNm: number;
     verticalFt: number;
+    /** Wake turbulence spacing on final, rather than radar separation. */
+    wake?: boolean | undefined;
+    requiredLateralNm?: number | undefined;
   }[];
   /** Real time in ms, for flashing alerts. */
   nowMs: number;
@@ -103,9 +106,12 @@ export function drawTrafficLayer(
 
   // Conflict Alert state per aircraft: an actual loss outranks a prediction.
   const alertOf = new Map<string, 'predicted' | 'loss'>();
+  // Aircraft whose only alerts are for wake spacing show 'WK' instead of 'CA'.
+  const radarAlert = new Set<string>();
   for (const conflict of frame.conflicts) {
     for (const id of conflict.aircraftIds) {
       if (alertOf.get(id) !== 'loss') alertOf.set(id, conflict.kind);
+      if (!conflict.wake) radarAlert.add(id);
     }
   }
   const flashOn = Math.floor(frame.nowMs / 400) % 2 === 0;
@@ -295,7 +301,7 @@ export function drawTrafficLayer(
       ctx.shadowColor = ctx.fillStyle;
       ctx.shadowBlur = 8;
       ctx.font = `700 ${fontSize}px "JetBrains Mono", monospace`;
-      ctx.fillText('CA', blockX, blockY - lineHeight);
+      ctx.fillText(radarAlert.has(target.id) ? 'CA' : 'WK', blockX, blockY - lineHeight);
       ctx.restore();
     }
 
@@ -480,8 +486,10 @@ function drawConflictLines(ctx: CanvasRenderingContext2D, frame: TrafficFrame): 
     ctx.font = '600 11px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    // Lateral and vertical distance, e.g. '4.6 NM · 800 ft'.
-    const label = `${conflict.lateralNm.toFixed(1)} NM · ${(Math.round(conflict.verticalFt / 100) * 100).toLocaleString('en-US')} ft`;
+    // Lateral and vertical distance, e.g. '4.6 NM · 800 ft', or the wake spacing, 'WAKE 3.8/5 NM'.
+    const label = conflict.wake
+      ? `WAKE ${conflict.lateralNm.toFixed(1)}/${conflict.requiredLateralNm ?? '?'} NM`
+      : `${conflict.lateralNm.toFixed(1)} NM · ${(Math.round(conflict.verticalFt / 100) * 100).toLocaleString('en-US')} ft`;
     ctx.fillText(label, (pa.x + pb.x) / 2, (pa.y + pb.y) / 2 - 10);
     ctx.restore();
   }
