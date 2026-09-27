@@ -35,6 +35,10 @@ export interface SessionStatus {
   violationCount: number;
   /** Changes whenever the in-session traffic settings change. */
   trafficKey: string;
+  /** RP earned so far this session. */
+  rp: number;
+  /** Changes whenever RP is earned or lost. */
+  scoreEventCount: number;
 }
 
 export type TrafficSettings = Pick<SessionSettings, (typeof IN_SESSION_TRAFFIC_KEYS)[number]>;
@@ -219,6 +223,8 @@ export class ScopeSession {
       conflictsKey: this.engine.conflicts.map((c) => `${c.id}:${c.kind}`).join(','),
       violationCount: this.engine.violations.length,
       trafficKey: IN_SESSION_TRAFFIC_KEYS.map((key) => this.engine.settings[key]).join(','),
+      rp: this.engine.score.total,
+      scoreEventCount: this.engine.score.nextEventNumber,
     };
   }
 
@@ -237,7 +243,8 @@ export class ScopeSession {
       next.queueVersion !== this.status.queueVersion ||
       next.conflictsKey !== this.status.conflictsKey ||
       next.violationCount !== this.status.violationCount ||
-      next.trafficKey !== this.status.trafficKey;
+      next.trafficKey !== this.status.trafficKey ||
+      next.scoreEventCount !== this.status.scoreEventCount;
     if (!changed) return;
     this.status = next;
     for (const listener of this.listeners) listener();

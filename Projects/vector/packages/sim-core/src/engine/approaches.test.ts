@@ -144,6 +144,18 @@ describe('approaches with the New York airspace', () => {
     );
     run(engine, 600);
     expect(events.some((e) => e.type === 'landed' && e.aircraftId === aircraft.id)).toBe(true);
+    // Landing earns RP.
+    expect(engine.score.tally.landing).toEqual({ count: 1, rp: 100 });
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: 'scored',
+        event: expect.objectContaining({
+          rp: 100,
+          callsigns: ['JBU1024'],
+          detail: 'landed JFK 22L',
+        }),
+      }),
+    );
   });
 
   it('goes around when not established at the stabilized-approach gate, and comes back to the player', () => {
@@ -172,6 +184,7 @@ describe('approaches with the New York airspace', () => {
       runway: '22L',
       reason: 'not established on the ILS',
     });
+    expect(engine.score.tally.goAround).toEqual({ count: 1, rp: -25 });
     const plane = engine.getAircraft(aircraft.id)!;
     expect(plane).toMatchObject({ phase: 'goAround', owner: 'N90' });
     expect(plane.targets.altitudeFt).toBe(3_000);

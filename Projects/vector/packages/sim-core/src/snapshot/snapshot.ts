@@ -1,3 +1,4 @@
+import { emptyScoreState, scoreStateSchema } from '../scoring/score';
 import { trackPointSchema } from '../aircraft/track';
 import { resolveSettings } from '@vector/shared';
 import { z } from 'zod';
@@ -65,6 +66,8 @@ export const simStateSchema = z.object({
     violations: [],
     nextViolationNumber: 1,
   }),
+  /** RP earned and lost this session. */
+  score: scoreStateSchema.default(emptyScoreState),
   /** Center's level-change resolutions in force, by the aircraft moved. */
   centerResolutions: z
     .record(

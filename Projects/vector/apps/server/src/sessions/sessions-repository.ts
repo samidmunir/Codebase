@@ -22,6 +22,7 @@ export interface SnapshotRecord {
   snapshotVersion: number;
   simTimeSec: number;
   aircraftCount: number;
+  rp: number;
   difficulty: SessionDifficulty | null;
 }
 
@@ -32,12 +33,13 @@ interface SummaryRow {
   difficulty: SessionDifficulty | null;
   sim_time_sec: number;
   aircraft_count: number;
+  rp: number;
   created_at: Date;
   updated_at: Date;
 }
 
 const SUMMARY_COLUMNS =
-  'id, name, airspace_id, difficulty, sim_time_sec, aircraft_count, created_at, updated_at';
+  'id, name, airspace_id, difficulty, sim_time_sec, aircraft_count, rp, created_at, updated_at';
 
 const toSummary = (row: SummaryRow): SavedSessionSummary => ({
   id: row.id,
@@ -46,6 +48,7 @@ const toSummary = (row: SummaryRow): SavedSessionSummary => ({
   difficulty: row.difficulty,
   simTimeSec: row.sim_time_sec,
   aircraftCount: row.aircraft_count,
+  rp: row.rp,
   createdAt: row.created_at.toISOString(),
   updatedAt: row.updated_at.toISOString(),
 });
@@ -78,8 +81,8 @@ export function savedSessionsRepository(db: Database) {
     ): Promise<SavedSessionSummary> {
       const { rows } = await db.query<SummaryRow>(
         `INSERT INTO saved_sessions
-           (user_id, name, airspace_id, snapshot, snapshot_version, sim_time_sec, aircraft_count, difficulty)
-         SELECT $1, $2, $3, $4, $5, $6, $7, $8
+           (user_id, name, airspace_id, snapshot, snapshot_version, sim_time_sec, aircraft_count, difficulty, rp)
+         SELECT $1, $2, $3, $4, $5, $6, $7, $8, $10
          WHERE (SELECT count(*) FROM saved_sessions WHERE user_id = $1) < $9
          RETURNING ${SUMMARY_COLUMNS}`,
         [
@@ -92,6 +95,7 @@ export function savedSessionsRepository(db: Database) {
           input.aircraftCount,
           input.difficulty,
           limit,
+          input.rp,
         ],
       );
       const row = rows[0];
@@ -102,7 +106,7 @@ export function savedSessionsRepository(db: Database) {
     async replace(userId: string, id: string, input: SnapshotRecord): Promise<SavedSessionSummary> {
       const { rows } = await db.query<SummaryRow>(
         `UPDATE saved_sessions SET snapshot = $3, snapshot_version = $4, sim_time_sec = $5,
-           aircraft_count = $6, difficulty = $7, updated_at = now()
+           aircraft_count = $6, difficulty = $7, rp = $8, updated_at = now()
          WHERE user_id = $1 AND id = $2
          RETURNING ${SUMMARY_COLUMNS}`,
         [
@@ -113,6 +117,7 @@ export function savedSessionsRepository(db: Database) {
           input.simTimeSec,
           input.aircraftCount,
           input.difficulty,
+          input.rp,
         ],
       );
       const row = rows[0];

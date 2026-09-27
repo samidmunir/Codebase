@@ -26,6 +26,13 @@ import {
 } from '../commands/ils-eligibility';
 import { TRACK_SAMPLE_SEC, trackPoint, type TrackPoint } from '../aircraft/track';
 import {
+  emptyScoreState,
+  recordScore,
+  separationPenalty,
+  type ScoreKind,
+  type ScoreState,
+} from '../scoring/score';
+import {
   centerRouteTarget,
   predictedConflict,
   resolveConflict,
@@ -129,6 +136,18 @@ const DEFAULT_MISSED_APPROACH_ALTITUDE_FT = 3_000;
 /** Arrival descent profile: about 300 ft per NM, leveling off this far from the airport. */
 const ARRIVAL_PROFILE_FT_PER_NM = 300;
 const ARRIVAL_PROFILE_LEVEL_NM = 25;
+/** A handoff within this of the requested level earns the requested level bonus. */
+const REQUESTED_LEVEL_TOLERANCE_FT = 300;
+/** Vertical distance under which a very close pass is a near midair collision. */
+const NEAR_MID_AIR_VERTICAL_FT = 500;
+
+const shortIcao = (icao: string) =>
+  icao.length === 4 && icao.startsWith('K') ? icao.slice(1) : icao;
+const flightLevelLabel = (altitudeFt: number, transitionAltitudeFt: number) =>
+  altitudeFt >= transitionAltitudeFt
+    ? `FL${Math.round(altitudeFt / 100)}`
+    : `${altitudeFt.toLocaleString('en-US')} ft`;
+
 /** Center re-plans its traffic this often. */
 const CENTER_UPDATE_SEC = 5;
 /** Center lifts a resolution once aircraft are this many minima apart and diverging. */
@@ -200,6 +219,7 @@ export class SimEngine {
         separation: emptySeparationState(),
         tracks: {},
         centerResolutions: {},
+        score: emptyScoreState(),
       },
       options,
     );
@@ -580,6 +600,7 @@ export class SimEngine {
     for (const conflict of started) this.emit({ type: 'conflictStarted', conflict });
     for (const conflict of ended) this.emit({ type: 'conflictEnded', conflict });
     for (const violation of violationsStarted) this.emit({ type: 'separationLost', violation });
+    this.scoreSeparation();
   }
 
   // ---- Instructions and radio ------------------------------------------------
@@ -1609,6 +1630,147 @@ export class SimEngine {
 
   private emit(event: SimEvent): void {
     for (const listener of this.listeners) listener(event, this.state.tick);
+    if (event.type !== 'scored') this.scoreFor(event);
+  }
+
+  // ---- Scoring (RP) -----------------------------------------------------------------
+
+  /** RP earned and lost so far this session. */
+  get score(): Readonly<ScoreState> {
+    return this.state.score;
+  }
+
+  private award(kind: ScoreKind, rp: number, callsigns: string[], detail: string): void {
+    if (rp === 0) return;
+    const event = recordScore(this.state.score, {
+      tick: this.state.tick,
+      kind,
+      rp: Math.round(rp),
+      callsigns,
+      detail,
+    });
+    this.emit({ type: 'scored', event });
+  }
+
+  /** Scores the events that earn or cost RP. */
+  private scoreFor(event: SimEvent): void {
+    const pack = this.airspace;
+    if (!pack) return;
+    const settings = this.state.settings;
+    const aircraftOf = (id: string) => this.getAircraft(id);
+    switch (event.type) {
+      case 'landed': {
+        const aircraft = aircraftOf(event.aircraftId);
+        if (!aircraft) return;
+        this.award(
+          'landing',
+          settings['scoring.landingRp'],
+          [aircraft.callsign],
+          `landed ${shortIcao(event.airport)} ${event.runway}`,
+        );
+        return;
+      }
+      case 'ownerChanged': {
+        const aircraft = aircraftOf(event.aircraftId);
+        if (!aircraft || event.from !== this.state.playerId || !pack.isCenter(event.to)) return;
+        const airports = pack.airspace.airports;
+        if (airports.includes(aircraft.flightPlan.destination)) return; // arrivals aren't handed to Center
+        const departure = airports.includes(aircraft.flightPlan.origin);
+        const requested = aircraft.flightPlan.requestedAltitudeFt;
+        const atRequested =
+          requested !== undefined &&
+          (aircraft.targets.altitudeFt === requested ||
+            Math.abs(aircraft.altitudeFt - requested) < REQUESTED_LEVEL_TOLERANCE_FT);
+        const center = pack.centers.find((c) => c.id === event.to)!;
+        const rp =
+          (departure
+            ? settings['scoring.departureHandoffRp']
+            : settings['scoring.transitHandoffRp']) +
+          (atRequested ? settings['scoring.requestedLevelBonusRp'] : 0);
+        this.award(
+          departure ? 'departureHandoff' : 'transitHandoff',
+          rp,
+          [aircraft.callsign],
+          `handed to ${center.callsign}${atRequested ? `, cleared to requested ${flightLevelLabel(requested!, pack.airspace.transitionAltitudeFt)}` : ''}`,
+        );
+        return;
+      }
+      case 'goAround': {
+        const aircraft = aircraftOf(event.aircraftId);
+        if (!aircraft) return;
+        this.award(
+          'goAround',
+          -settings['scoring.goAroundRp'],
+          [aircraft.callsign],
+          `went around, ${shortIcao(event.airport)} ${event.runway}`,
+        );
+        return;
+      }
+      case 'leftAirspace': {
+        const aircraft = aircraftOf(event.aircraftId);
+        if (event.handedOff || aircraft?.owner !== this.state.playerId) return;
+        this.award(
+          'leftWithoutHandoff',
+          -settings['scoring.leftWithoutHandoffRp'],
+          [event.callsign],
+          'left your airspace without a handoff',
+        );
+        return;
+      }
+      default:
+        return;
+    }
+  }
+
+  /**
+   * Separation scoring, after each separation update: a near midair collision
+   * as soon as it happens; any other loss of separation when it ends, by how
+   * close the aircraft came (nothing at or beyond the penalty distance).
+   */
+  private scoreSeparation(): void {
+    const settings = this.state.settings;
+    const score = this.state.score;
+    const openViolation = (ids: readonly [string, string]) =>
+      this.state.separation.violations.find(
+        (v) =>
+          v.endTick === undefined && v.aircraftIds[0] === ids[0] && v.aircraftIds[1] === ids[1],
+      );
+    for (const conflict of this.state.separation.conflicts) {
+      if (
+        conflict.kind !== 'loss' ||
+        conflict.lateralNm >= settings['scoring.nearMidAirNm'] ||
+        conflict.verticalFt >= NEAR_MID_AIR_VERTICAL_FT
+      )
+        continue;
+      const violation = openViolation(conflict.aircraftIds);
+      if (!violation || score.nearMidAirViolations.includes(violation.id)) continue;
+      score.nearMidAirViolations.push(violation.id);
+      this.award(
+        'nearMidAir',
+        -settings['scoring.nearMidAirRp'],
+        [...violation.callsigns],
+        `near midair collision, ${conflict.lateralNm.toFixed(1)} NM, ${Math.round(conflict.verticalFt / 100) * 100} ft`,
+      );
+    }
+    for (const violation of this.state.separation.violations) {
+      if (violation.endTick !== this.state.tick) continue;
+      const nearMidAir = score.nearMidAirViolations.indexOf(violation.id);
+      if (nearMidAir !== -1) {
+        score.nearMidAirViolations.splice(nearMidAir, 1);
+        continue;
+      }
+      const penalty = separationPenalty(
+        violation.closestLateralNm,
+        settings['scoring.separationLossRp'],
+        settings['scoring.penaltyMaxLateralNm'],
+      );
+      this.award(
+        'separationLoss',
+        -penalty,
+        [...violation.callsigns],
+        `loss of separation, ${violation.closestLateralNm.toFixed(1)} NM, ${Math.round(violation.closestVerticalFt / 100) * 100} ft`,
+      );
+    }
   }
 }
 

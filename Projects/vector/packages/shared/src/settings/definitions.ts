@@ -16,6 +16,7 @@ export type SettingCategory =
   | 'departures'
   | 'approaches'
   | 'center'
+  | 'scoring'
   | 'sim';
 
 interface SettingMeta {

@@ -11,6 +11,7 @@ import {
   type Camera,
   type ScreenPoint,
 } from './camera';
+import { stepCameraAnimation, type CameraAnimation } from './camera-animation';
 import { drawMapLayer } from './render/map-layer';
 import { routePreview } from './route-preview';
 import { scopePalette } from './render/palette';
@@ -98,6 +99,26 @@ export function RadarScope({
     mapDirtyRef.current = true;
   };
 
+  // Smooth zoom: the camera eases toward a target zoom (keeping the anchor point under the
+  // cursor), or glides to a whole new view when recentering.
+  const animationRef = useRef<CameraAnimation | undefined>(undefined);
+  const instantMotion = () => settingsRef.current['display.uiAnimations'] !== 'full';
+  const zoomSmoothly = (anchor: ScreenPoint, zoomChange: number) => {
+    const camera = cameraRef.current;
+    if (!camera) return;
+    const animation = animationRef.current;
+    const fromZoom = animation?.kind === 'zoom' ? animation.zoom : camera.zoom;
+    const zoom = clampZoom(fromZoom + zoomChange);
+    if (instantMotion()) setCamera(zoomAround(camera, anchor, zoom));
+    else animationRef.current = { kind: 'zoom', anchor, zoom };
+  };
+
+  // The wheel listener is attached once; it zooms through this ref.
+  const zoomSmoothlyRef = useRef(zoomSmoothly);
+  useEffect(() => {
+    zoomSmoothlyRef.current = zoomSmoothly;
+  });
+
   const fittedCamera = (width: number, height: number): Camera => {
     const base: Camera = { center: session.pack.airspace.center, zoom: 9, width, height };
     return { ...base, zoom: zoomToFit(base, viewRadiusNm() + FIT_MARGIN_NM) };
@@ -107,17 +128,14 @@ export function RadarScope({
     zoomBy(steps) {
       const camera = cameraRef.current;
       if (!camera) return;
-      setCamera(
-        zoomAround(
-          camera,
-          { x: camera.width / 2, y: camera.height / 2 },
-          camera.zoom + steps * 0.5,
-        ),
-      );
+      zoomSmoothly({ x: camera.width / 2, y: camera.height / 2 }, steps * 0.5);
     },
     recenter() {
       const camera = cameraRef.current;
-      if (camera) setCamera(fittedCamera(camera.width, camera.height));
+      if (!camera) return;
+      const fitted = fittedCamera(camera.width, camera.height);
+      if (instantMotion()) setCamera(fitted);
+      else animationRef.current = { kind: 'fly', to: fitted };
     },
   }));
 
@@ -159,8 +177,16 @@ export function RadarScope({
     const frame = (now: number) => {
       frameId = requestAnimationFrame(frame);
       // Clamp so a background tab doesn't try to catch up on minutes of sim time.
-      session.frame(Math.min(now - last, 250));
+      const elapsedMs = Math.min(now - last, 250);
+      session.frame(elapsedMs);
       last = now;
+
+      if (cameraRef.current && animationRef.current) {
+        const next = stepCameraAnimation(cameraRef.current, animationRef.current, elapsedMs);
+        cameraRef.current = next.camera;
+        mapDirtyRef.current = true;
+        if (next.done) animationRef.current = undefined;
+      }
 
       const camera = cameraRef.current;
       if (!camera || camera.width === 0) return;
@@ -224,7 +250,7 @@ export function RadarScope({
       const sensitivity = settingsRef.current['controls.zoomSensitivity'];
       // Trackpad pinch arrives as ctrl+wheel with small deltas.
       const delta = -event.deltaY * (event.ctrlKey ? 0.01 : 0.0022) * sensitivity;
-      setCamera(zoomAround(camera, pointFromEvent(event, canvas), clampZoom(camera.zoom + delta)));
+      zoomSmoothlyRef.current(pointFromEvent(event, canvas), delta);
     };
     canvas.addEventListener('wheel', onWheel, { passive: false });
     return () => canvas.removeEventListener('wheel', onWheel);
@@ -239,6 +265,8 @@ export function RadarScope({
       const at = unproject(camera, point);
       gestureRef.current = { kind: 'measure', from: at, to: at };
     } else if (event.button === 0) {
+      // Grabbing the scope stops any zoom in progress where it is.
+      animationRef.current = undefined;
       gestureRef.current = { kind: 'pan', start: point, camera, moved: false };
     }
   };
@@ -281,8 +309,7 @@ export function RadarScope({
 
   const onDoubleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const camera = cameraRef.current;
-    if (camera)
-      setCamera(zoomAround(camera, pointFromEvent(event, event.currentTarget), camera.zoom + 1));
+    if (camera) zoomSmoothly(pointFromEvent(event, event.currentTarget), 1);
   };
 
   return (

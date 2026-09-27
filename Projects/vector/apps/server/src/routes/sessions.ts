@@ -52,6 +52,7 @@ function snapshotRecord(
     snapshotVersion: parsed.schemaVersion,
     simTimeSec: parsed.state.tick * parsed.state.config.tickSeconds,
     aircraftCount: parsed.state.aircraft.length,
+    rp: parsed.state.score.total,
     difficulty,
   };
 }
@@ -66,10 +67,14 @@ export async function sessionsRoutes(app: FastifyInstance, options: SessionsRout
     return parsed.data.id;
   };
 
-  app.get('/sessions', { preHandler }, async (request): Promise<SavedSessionList> => ({
-    sessions: await sessions.list(request.userId!),
-    limit,
-  }));
+  app.get('/sessions', { preHandler }, async (request): Promise<SavedSessionList> => {
+    const list = await sessions.list(request.userId!);
+    return {
+      sessions: list,
+      limit,
+      careerRp: list.reduce((total, session) => total + session.rp, 0),
+    };
+  });
 
   app.get('/sessions/:id', { preHandler }, async (request): Promise<SavedSession> =>
     sessions.get(request.userId!, sessionId(request)),

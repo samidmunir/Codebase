@@ -40,6 +40,8 @@ export const savedSessionSummarySchema = z.object({
   /** Simulated time elapsed in the session, in seconds. */
   simTimeSec: z.number().min(0),
   aircraftCount: z.number().int().min(0),
+  /** RP earned in the session so far. */
+  rp: z.number().int(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
@@ -51,5 +53,7 @@ export type SavedSession = z.infer<typeof savedSessionSchema>;
 export const savedSessionListSchema = z.object({
   sessions: z.array(savedSessionSummarySchema),
   limit: z.number().int().positive(),
+  /** RP across all of the account's saved sessions. */
+  careerRp: z.number().int(),
 });
 export type SavedSessionList = z.infer<typeof savedSessionListSchema>;

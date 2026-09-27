@@ -25,6 +25,8 @@ import {
   useInterfaceSounds,
 } from './scope/use-conflict-sounds';
 import { SaveSessionDialog } from './scope/SaveSessionDialog';
+import { ScorePanel } from './scope/ScorePanel';
+import { ScoreToasts } from './scope/ScoreToasts';
 import { SettingsDialog } from './scope/SettingsDialog';
 import { ScopeTopBar } from './scope/ScopeTopBar';
 import { TrafficPanel } from './scope/TrafficPanel';
@@ -140,6 +142,7 @@ function Scope({ session }: { session: ScopeSession }) {
   const basemapRef = useRef<BasemapHandle>(null);
   const [layersOpen, setLayersOpen] = useState(false);
   const [trafficOpen, setTrafficOpen] = useState(false);
+  const [scoreOpen, setScoreOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string | undefined>(undefined);
@@ -182,14 +185,21 @@ function Scope({ session }: { session: ScopeSession }) {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  // Traffic and map layers share the right-hand side: one open at a time.
+  // Traffic, RP and map layers share the right-hand side: one open at a time.
   const toggleLayers = () => {
     setLayersOpen((open) => !open);
     setTrafficOpen(false);
+    setScoreOpen(false);
   };
   const toggleTraffic = () => {
     setTrafficOpen((open) => !open);
     setLayersOpen(false);
+    setScoreOpen(false);
+  };
+  const toggleScore = () => {
+    setScoreOpen((open) => !open);
+    setLayersOpen(false);
+    setTrafficOpen(false);
   };
   const openSave = () => {
     session.pause();
@@ -211,6 +221,7 @@ function Scope({ session }: { session: ScopeSession }) {
     centerScope: () => scopeRef.current?.recenter(),
     toggleMapLayers: toggleLayers,
     toggleTraffic,
+    toggleScore,
     saveSession: openSave,
     openSettings: () => setSettingsOpen((open) => !open),
     toggleCommsLog: () => setCommsOpen((open) => !open),
@@ -219,9 +230,10 @@ function Scope({ session }: { session: ScopeSession }) {
     closeMenu: () => {
       if (settingsOpen) setSettingsOpen(false);
       else if (saveOpen) setSaveOpen(false);
-      else if (layersOpen || trafficOpen) {
+      else if (layersOpen || trafficOpen || scoreOpen) {
         setLayersOpen(false);
         setTrafficOpen(false);
+        setScoreOpen(false);
       } else select(undefined);
     },
   });
@@ -265,6 +277,8 @@ function Scope({ session }: { session: ScopeSession }) {
         onToggleTraffic={toggleTraffic}
         onSave={openSave}
         onOpenSettings={() => setSettingsOpen(true)}
+        scoreOpen={scoreOpen}
+        onToggleScore={toggleScore}
         commsOpen={commsOpen}
         onToggleComms={() => setCommsOpen((open) => !open)}
         departuresOpen={departuresOpen}
@@ -295,6 +309,16 @@ function Scope({ session }: { session: ScopeSession }) {
       )}
 
       {layersOpen && <MapLayersPanel settings={settings} onClose={() => setLayersOpen(false)} />}
+
+      <ScoreToasts session={session} />
+
+      {scoreOpen && (
+        <ScorePanel
+          session={session}
+          scoreEventCount={status.scoreEventCount}
+          onClose={() => setScoreOpen(false)}
+        />
+      )}
 
       {trafficOpen && (
         <TrafficPanel

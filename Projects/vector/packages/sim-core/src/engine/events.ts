@@ -1,3 +1,4 @@
+import type { ScoreEvent } from '../scoring/score';
 import type { AtcCommand } from '../commands/commands';
 import type { Conflict, Violation } from '../separation/separation';
 import type { CommsEntry } from '../snapshot/snapshot';
@@ -33,6 +34,8 @@ export type SimEvent =
   | { type: 'conflictStarted'; conflict: Conflict }
   | { type: 'conflictEnded'; conflict: Conflict }
   /** Two aircraft lost the required separation (logged as a violation). */
-  | { type: 'separationLost'; violation: Violation };
+  | { type: 'separationLost'; violation: Violation }
+  /** RP was earned or lost. */
+  | { type: 'scored'; event: ScoreEvent };
 
 export type SimEventListener = (event: SimEvent, tick: number) => void;

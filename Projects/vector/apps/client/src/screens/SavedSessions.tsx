@@ -6,11 +6,12 @@ import { ApiRequestError } from '../api/api-client';
 import { deleteSavedSession, listSavedSessions, renameSavedSession } from '../api/sessions-api';
 import { DIFFICULTY_LABELS } from '../settings/difficulty';
 import { formatSimDuration, formatSavedAt } from './saved-session-format';
+import { formatRp } from './scope/score-format';
 
 type ListState =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
-  | { kind: 'ready'; sessions: SavedSessionSummary[]; limit: number };
+  | { kind: 'ready'; sessions: SavedSessionSummary[]; limit: number; careerRp: number };
 
 const errorMessage = (error: unknown) =>
   error instanceof ApiRequestError ? error.message : "Couldn't reach the server.";
@@ -25,7 +26,10 @@ export function SavedSessions() {
   useEffect(() => {
     let cancelled = false;
     listSavedSessions()
-      .then(({ sessions, limit }) => !cancelled && setState({ kind: 'ready', sessions, limit }))
+      .then(
+        ({ sessions, limit, careerRp }) =>
+          !cancelled && setState({ kind: 'ready', sessions, limit, careerRp }),
+      )
       .catch(
         (error: unknown) => !cancelled && setState({ kind: 'error', message: errorMessage(error) }),
       );
@@ -65,7 +69,8 @@ export function SavedSessions() {
   const remove = async (id: string) => {
     try {
       await deleteSavedSession(id);
-      setState({ ...state, sessions: state.sessions.filter((s) => s.id !== id) });
+      const sessions = state.sessions.filter((s) => s.id !== id);
+      setState({ ...state, sessions, careerRp: sessions.reduce((sum, s) => sum + s.rp, 0) });
       setConfirmDelete(undefined);
       setActionError(undefined);
     } catch (error) {
@@ -78,6 +83,7 @@ export function SavedSessions() {
       <div className="saved-sessions__header">
         <h2 id="saved-sessions-title">Saved sessions</h2>
         <span>
+          <strong className="saved-sessions__career">{formatRp(state.careerRp)}</strong> career ·{' '}
           {state.sessions.length} of {state.limit}
         </span>
       </div>
@@ -96,6 +102,7 @@ export function SavedSessions() {
               : saved.difficulty
                 ? DIFFICULTY_LABELS[saved.difficulty]
                 : undefined,
+            formatRp(saved.rp),
             formatSimDuration(saved.simTimeSec),
             `${saved.aircraftCount} aircraft`,
           ].filter(Boolean);
