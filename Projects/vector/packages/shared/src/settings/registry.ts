@@ -761,12 +761,13 @@ export const SESSION_SETTINGS = {
   'scoring.departureHandoffRp': setting.number({
     category: 'scoring',
     label: 'Departure handed off',
-    description: 'RP for each departure handed to Center before it leaves your airspace.',
+    description:
+      'RP for each departure Center accepts before it leaves your airspace (bonuses below come on top).',
     min: 0,
     max: 500,
     step: 5,
     unit: 'RP',
-    default: 60,
+    default: 40,
   }),
   'scoring.requestedLevelBonusRp': setting.number({
     category: 'scoring',
@@ -777,17 +778,29 @@ export const SESSION_SETTINGS = {
     max: 500,
     step: 5,
     unit: 'RP',
-    default: 40,
+    default: 30,
   }),
-  'scoring.transitHandoffRp': setting.number({
+  'scoring.routeFlownBonusRp': setting.number({
     category: 'scoring',
-    label: 'Overflight handed off',
-    description: 'RP for each overflight handed to Center before it leaves your airspace.',
+    label: 'Route flown bonus',
+    description:
+      'Extra RP when a departure passed its departure gate fix, or an overflight its exit fix, before the handoff.',
     min: 0,
     max: 500,
     step: 5,
     unit: 'RP',
-    default: 50,
+    default: 30,
+  }),
+  'scoring.transitHandoffRp': setting.number({
+    category: 'scoring',
+    label: 'Overflight handed off',
+    description:
+      'RP for each overflight Center accepts before it leaves your airspace (bonuses below come on top).',
+    min: 0,
+    max: 500,
+    step: 5,
+    unit: 'RP',
+    default: 30,
   }),
   'scoring.separationLossRp': setting.number({
     category: 'scoring',
@@ -866,6 +879,28 @@ export const SESSION_SETTINGS = {
     label: 'Center separates its traffic',
     description: 'Center changes levels to keep aircraft it controls apart from each other.',
     default: true,
+  }),
+  'center.handoffWindowNm': setting.number({
+    category: 'center',
+    label: 'Handoff window',
+    description:
+      'Center accepts a departure or overflight only within this distance of where it will cross your boundary.',
+    min: 5,
+    max: 60,
+    step: 5,
+    unit: 'NM',
+    default: 25,
+  }),
+  'center.handoffMinimumAltitudeFt': setting.number({
+    category: 'center',
+    label: 'Minimum handoff altitude',
+    description:
+      'Center accepts a handoff only at or above this altitude, and never below the FAA minimum IFR altitude where the aircraft is and where it leaves. (Real handoff altitudes are set in facility agreements that aren’t published; this is a typical floor.)',
+    min: 0,
+    max: 24_000,
+    step: 1_000,
+    unit: 'ft',
+    default: 10_000,
   }),
   'center.conflictLookaheadSec': setting.number({
     category: 'center',

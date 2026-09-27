@@ -66,6 +66,8 @@ export const simStateSchema = z.object({
     violations: [],
     nextViolationNumber: 1,
   }),
+  /** Departures and overflights that have passed their gate or exit fix, by aircraft id. */
+  routeFixPassed: z.record(z.string(), z.boolean()).default({}),
   /** RP earned and lost this session. */
   score: scoreStateSchema.default(emptyScoreState),
   /** Center's level-change resolutions in force, by the aircraft moved. */

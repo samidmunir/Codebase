@@ -1,8 +1,8 @@
+import type { SessionSettings } from '@vector/shared';
 import {
+  assessHandoff,
   bearingTrue,
-  destinationPoint,
   distanceNm,
-  magneticToTrue,
   trueToMagnetic,
   type AircraftPerformance,
   type AircraftState,
@@ -52,24 +52,6 @@ export function ilsRunways(pack: AirspacePack, aircraft: Readonly<AircraftState>
     .map((runway) => runway.id);
 }
 
-/** How far past the boundary to look when deciding which Center an aircraft is leaving into. */
-const EXIT_LOOKAHEAD_NM = 10;
-const EXIT_SEARCH_STEP_NM = 5;
-const EXIT_SEARCH_LIMIT_NM = 500;
-
-/** Where the aircraft will be just after it leaves the airspace on its current heading. */
-export function exitPoint(pack: AirspacePack, aircraft: Readonly<AircraftState>) {
-  const { center, magneticVariationDeg } = pack.airspace;
-  const course = magneticToTrue(aircraft.headingDeg, magneticVariationDeg);
-  const radius = pack.boundaryRadiusNm + EXIT_LOOKAHEAD_NM;
-  let point = aircraft.position;
-  for (let flown = 0; flown < EXIT_SEARCH_LIMIT_NM; flown += EXIT_SEARCH_STEP_NM) {
-    if (distanceNm(center, point) > radius) break;
-    point = destinationPoint(aircraft.position, course, flown + EXIT_SEARCH_STEP_NM);
-  }
-  return point;
-}
-
 /**
  * Handoff to the Center the aircraft is leaving into (by where its heading
  * takes it across the boundary), on that Center's radio site nearest the
@@ -78,8 +60,12 @@ export function exitPoint(pack: AirspacePack, aircraft: Readonly<AircraftState>)
 export function centerHandoff(
   pack: AirspacePack,
   aircraft: Readonly<AircraftState>,
+  handoffSettings: Pick<
+    SessionSettings,
+    'center.handoffWindowNm' | 'center.handoffMinimumAltitudeFt'
+  > = { 'center.handoffWindowNm': 25, 'center.handoffMinimumAltitudeFt': 10_000 },
 ): AtcCommand | undefined {
-  const center = pack.centerAt(exitPoint(pack, aircraft), aircraft.altitudeFt);
+  const { center } = assessHandoff(pack, aircraft, handoffSettings);
   const band = aircraft.altitudeFt >= pack.airspace.transitionAltitudeFt ? 'high' : 'low';
   const candidates = center.sites
     .map((site) => ({
@@ -253,6 +239,10 @@ export function planningNotes(
   pack: AirspacePack,
   aircraft: Readonly<AircraftState>,
   altitudeLabel: (altitudeFt: number) => string,
+  handoffSettings?: Pick<
+    SessionSettings,
+    'center.handoffWindowNm' | 'center.handoffMinimumAltitudeFt'
+  >,
 ): PlanningNote[] {
   const { destination } = aircraft.flightPlan;
   if (pack.airspace.airports.includes(destination)) {
@@ -291,13 +281,23 @@ export function planningNotes(
       tone: cleared ? 'good' : 'normal',
     });
   }
-  const exit = exitPoint(pack, aircraft);
-  const center = pack.centerAt(exit, aircraft.altitudeFt);
-  const toBoundary = Math.max(0, distanceNm(aircraft.position, exit) - EXIT_LOOKAHEAD_NM);
-  notes.push({
-    label: 'Exit',
-    value: `${center.callsign.replace(' Center', '')} · ${Math.round(toBoundary)} NM`,
-    tone: toBoundary < 15 ? 'caution' : 'normal',
-  });
+  if (handoffSettings) {
+    const handoff = assessHandoff(pack, aircraft, handoffSettings);
+    const name = handoff.center.callsign.replace(' Center', '');
+    if (handoff.toBoundaryNm === undefined) {
+      notes.push({ label: 'Exit', value: 'not heading out', tone: 'normal' });
+    } else if (handoff.ok) {
+      notes.push({ label: 'Handoff', value: `${name} · now`, tone: 'good' });
+    } else if (!handoff.withinWindow) {
+      const inNm = Math.round(handoff.toBoundaryNm - handoffSettings['center.handoffWindowNm']);
+      notes.push({ label: 'Handoff', value: `${name} · in ${inNm} NM`, tone: 'normal' });
+    } else {
+      notes.push({
+        label: 'Handoff',
+        value: `climb to ${altitudeLabel(handoff.minimumAltitudeFt)}`,
+        tone: 'caution',
+      });
+    }
+  }
   return notes;
 }

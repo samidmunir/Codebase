@@ -55,19 +55,71 @@ const handoff = (engine: SimEngine, id: string) =>
   ]);
 
 describe('RP scoring', () => {
-  it('rewards departure handoffs, with a bonus when cleared to the requested level', () => {
+  it('only lets Center take a handoff near the boundary and high enough', () => {
     const engine = createEngine();
-    const climbing = engine.addAircraft(yours({ targets: { altitudeFt: 30_000 } }));
-    const low = engine.addAircraft(yours({ callsign: 'DAL200', position: at(40, 100) }));
-    handoff(engine, climbing.id);
-    handoff(engine, low.id);
+    const early = engine.addAircraft(yours({ position: at(45, 100), headingDeg: 45 - variation }));
+    const low = engine.addAircraft(
+      yours({
+        callsign: 'DAL200',
+        position: at(40, 140),
+        headingDeg: 40 - variation,
+        altitudeFt: 8_000,
+      }),
+    );
+    expect(handoff(engine, early.id)).toMatchObject({
+      ok: false,
+      reason: expect.stringMatching(/within 25 NM of the boundary \(\d+ NM to go\)/),
+    });
+    expect(handoff(engine, low.id)).toMatchObject({
+      ok: false,
+      reason: expect.stringMatching(/at or above 10,000 ft/),
+    });
+  });
+
+  it('rewards a departure handoff, with a bonus for being cleared to the requested level', () => {
+    const engine = createEngine();
+    const cleared = engine.addAircraft(
+      yours({ position: at(45, 135), headingDeg: 45 - variation, targets: { altitudeFt: 30_000 } }),
+    );
+    const notCleared = engine.addAircraft(
+      yours({ callsign: 'DAL200', position: at(35, 135), headingDeg: 35 - variation }),
+    );
+    expect(handoff(engine, cleared.id)).toEqual({ ok: true });
+    expect(handoff(engine, notCleared.id)).toEqual({ ok: true });
     run(engine, 5);
     const events = engine.score.events;
     expect(events.map((e) => [e.callsigns[0], e.kind, e.rp])).toEqual([
-      ['DAL100', 'departureHandoff', 100],
-      ['DAL200', 'departureHandoff', 60],
+      ['DAL100', 'departureHandoff', 70],
+      ['DAL200', 'departureHandoff', 40],
     ]);
     expect(events[0]!.detail).toBe('handed to Boston Center, cleared to requested FL300');
+  });
+
+  it('adds the route bonus when the departure passed its gate fix', () => {
+    // A wide handoff window so the handoff can follow right after the gate.
+    const engine = createEngine({ 'center.handoffWindowNm': 150 });
+    const merit = newYork.fix('MERIT')!;
+    const aircraft = engine.addAircraft(
+      yours({
+        position: destinationPoint(merit.position, 225, 1),
+        headingDeg: 45 - variation,
+        flightPlan: {
+          origin: 'KJFK',
+          destination: 'KBOS',
+          route: ['MERIT'],
+          requestedAltitudeFt: 30_000,
+        },
+        targets: { altitudeFt: 30_000 },
+      }),
+    );
+    run(engine, 30);
+    expect(engine.routeFlown(aircraft.id)).toBe(true);
+    handoff(engine, aircraft.id);
+    run(engine, 5);
+    expect(engine.score.events.at(-1)).toMatchObject({
+      rp: 100,
+      detail: expect.stringContaining('via MERIT, cleared to requested FL300'),
+    });
   });
 
   it('rewards overflight handoffs', () => {
@@ -75,22 +127,24 @@ describe('RP scoring', () => {
     const transit = engine.addAircraft(
       yours({
         flightPlan: { origin: 'KORD', destination: 'KBOS', route: [], requestedAltitudeFt: 34_000 },
+        position: at(45, 135),
+        headingDeg: 45 - variation,
         altitudeFt: 34_000,
       }),
     );
     handoff(engine, transit.id);
     run(engine, 5);
-    expect(engine.score.tally.transitHandoff).toEqual({ count: 1, rp: 90 });
+    expect(engine.score.tally.transitHandoff).toEqual({ count: 1, rp: 60 });
   });
 
   it('takes RP for an aircraft that leaves without a handoff, but not for one handed off', () => {
     const engine = createEngine();
     engine.addAircraft(yours({ position: at(0, 158), headingDeg: 360 - variation }));
     const handedOff = engine.addAircraft(
-      yours({ callsign: 'DAL300', position: at(5, 158), headingDeg: 5 - variation }),
+      yours({ callsign: 'DAL300', position: at(5, 140), headingDeg: 5 - variation }),
     );
     handoff(engine, handedOff.id);
-    run(engine, 90);
+    run(engine, 240);
     expect(engine.listAircraft()).toHaveLength(0);
     expect(engine.score.tally.leftWithoutHandoff).toEqual({ count: 1, rp: -100 });
     expect(engine.score.events.find((e) => e.kind === 'leftWithoutHandoff')!.callsigns).toEqual([
@@ -176,7 +230,7 @@ describe('RP scoring', () => {
 
   it('keeps the score in snapshots', () => {
     const engine = createEngine();
-    const a = engine.addAircraft(yours({}));
+    const a = engine.addAircraft(yours({ position: at(45, 135), headingDeg: 45 - variation }));
     handoff(engine, a.id);
     run(engine, 5);
     const restored = SimEngine.fromSnapshot(engine.toSnapshot(), performance, {

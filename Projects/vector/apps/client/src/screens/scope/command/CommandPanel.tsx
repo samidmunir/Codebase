@@ -1,5 +1,11 @@
 import { useMemo, useState } from 'react';
-import { formatFrequency, headingDifference, type AircraftState } from '@vector/sim-core';
+import {
+  assessHandoff,
+  formatFrequency,
+  headingDifference,
+  routeExitFix,
+  type AircraftState,
+} from '@vector/sim-core';
 import {
   altitudeOptions,
   centerHandoff,
@@ -153,7 +159,7 @@ export function CommandPanel(props: CommandPanelProps) {
       </dl>
 
       <ul className="command-panel__plan" aria-label="Planning">
-        {planningNotes(pack, aircraft, altitudeLabel).map((note) => (
+        {planningNotes(pack, aircraft, altitudeLabel, session.engine.settings).map((note) => (
           <li key={note.label} data-tone={note.tone}>
             <span>{note.label}</span> {note.value}
           </li>
@@ -484,24 +490,85 @@ function HandoffTab({
   draft: InstructionDraft;
   update: (patch: Partial<InstructionDraft>) => void;
 }) {
-  const handoff = centerHandoff(session.pack, aircraft);
+  const { pack, engine } = session;
+  const settings = engine.settings;
+  const handoff = centerHandoff(pack, aircraft, settings);
   if (!handoff || handoff.type !== 'handoff')
     return <p className="command-panel__hint">No Center frequency nearby.</p>;
+  const assessment = assessHandoff(pack, aircraft, settings);
+  const label = (ft: number) => formatAltitudeLabel(ft, pack.airspace.transitionAltitudeFt);
+  const requested = aircraft.flightPlan.requestedAltitudeFt;
+  const exitFix = routeExitFix(pack, aircraft);
+  const departure = pack.airspace.airports.includes(aircraft.flightPlan.origin);
+  const base = departure
+    ? settings['scoring.departureHandoffRp']
+    : settings['scoring.transitHandoffRp'];
+  const checks: { label: string; met: boolean; note: string }[] = [
+    {
+      label: `Within ${settings['center.handoffWindowNm']} NM of the boundary`,
+      met: assessment.withinWindow,
+      note:
+        assessment.toBoundaryNm === undefined
+          ? 'not heading out'
+          : `${Math.round(assessment.toBoundaryNm)} NM to go`,
+    },
+    {
+      label: `At or above ${label(assessment.minimumAltitudeFt)}`,
+      met: assessment.highEnough,
+      note: label(aircraft.altitudeFt),
+    },
+  ];
+  const bonuses: { label: string; met: boolean; rp: number }[] = [
+    {
+      label: exitFix
+        ? `Flew ${departure ? 'its gate' : 'its exit fix'} ${exitFix.ident}`
+        : 'Flew its route',
+      met: engine.routeFlown(aircraft.id),
+      rp: settings['scoring.routeFlownBonusRp'],
+    },
+    {
+      label: requested
+        ? `Cleared to requested ${label(requested)}`
+        : 'Cleared to its requested level',
+      met:
+        requested !== undefined &&
+        (aircraft.targets.altitudeFt === requested ||
+          Math.abs(aircraft.altitudeFt - requested) < 300),
+      rp: settings['scoring.requestedLevelBonusRp'],
+    },
+  ];
   return (
     <div className="handoff-tab">
       <button
         type="button"
         className="handoff-option"
         aria-pressed={draft.handoff === true}
+        disabled={!assessment.ok}
         onClick={() => update({ handoff: !draft.handoff })}
       >
         <span className="handoff-option__facility">{handoff.facility}</span>
         <span className="handoff-option__frequency">{formatFrequency(handoff.frequencyMhz)}</span>
       </button>
-      <p className="command-panel__hint">
-        Hand departures and overflights to the Center they are leaving into, before they cross the
-        boundary.
-      </p>
+      <ul className="handoff-checks" aria-label="Center accepts the handoff when">
+        {checks.map((check) => (
+          <li key={check.label} data-met={check.met}>
+            <span aria-hidden="true">{check.met ? '✓' : '○'}</span> {check.label}
+            <small>{check.note}</small>
+          </li>
+        ))}
+      </ul>
+      <ul className="handoff-checks handoff-checks--bonus" aria-label="RP for this handoff">
+        <li data-met>
+          <span aria-hidden="true">+</span> Handoff <small>{base} RP</small>
+        </li>
+        {bonuses.map((bonus) => (
+          <li key={bonus.label} data-met={bonus.met}>
+            <span aria-hidden="true">{bonus.met ? '+' : '○'}</span> {bonus.label}
+            <small>{bonus.rp} RP</small>
+          </li>
+        ))}
+      </ul>
+      {!assessment.ok && <p className="command-panel__hint">{assessment.reason}.</p>}
     </div>
   );
 }

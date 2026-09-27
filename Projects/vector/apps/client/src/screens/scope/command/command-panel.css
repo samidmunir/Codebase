@@ -1114,3 +1114,44 @@
   border-color: rgba(255, 181, 71, 0.45);
   background: rgba(255, 181, 71, 0.06);
 }
+
+.handoff-checks {
+  display: grid;
+  gap: 6px;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.handoff-checks li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: baseline;
+  color: var(--color-text-muted);
+}
+
+.handoff-checks li[data-met='true'] {
+  color: var(--color-text);
+}
+
+.handoff-checks li[data-met='true'] > span {
+  color: var(--color-target);
+}
+
+.handoff-checks small {
+  color: var(--color-text-faint);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+}
+
+.handoff-checks--bonus {
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.handoff-option:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

@@ -164,3 +164,25 @@ describe('traffic rates of zero', () => {
     expect(countTransits(engine, 1_800)).toBeGreaterThan(3);
   });
 });
+
+describe('flying the route', () => {
+  it('sends an overflight on toward its destination once past its exit fix', () => {
+    const engine = createEngine({ 'traffic.transitRatePerHour': 20 });
+    let checked = false;
+    engine.subscribe((event) => {
+      if (event.type !== 'fixPassed' || checked) return;
+      const transit = engine.getAircraft(event.aircraftId);
+      if (!transit || transit.flightPlan.route[0] !== event.fix) return;
+      checked = true;
+    });
+    for (let t = 0; t < 3_600 && !checked; t++) engine.step();
+    expect(checked).toBe(true);
+    const flown = engine
+      .listAircraft()
+      .filter((a) => engine.routeFlown(a.id) && a.navigation.mode === 'direct');
+    expect(flown.length).toBeGreaterThan(0);
+    for (const a of flown) {
+      expect(a.navigation).toMatchObject({ mode: 'direct', fix: a.flightPlan.destination });
+    }
+  });
+});

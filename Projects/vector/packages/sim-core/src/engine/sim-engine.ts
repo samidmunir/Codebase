@@ -32,6 +32,7 @@ import {
   type ScoreKind,
   type ScoreState,
 } from '../scoring/score';
+import { assessHandoff, routeExitFix } from '../atc/handoff';
 import {
   centerRouteTarget,
   predictedConflict,
@@ -136,6 +137,10 @@ const DEFAULT_MISSED_APPROACH_ALTITUDE_FT = 3_000;
 /** Arrival descent profile: about 300 ft per NM, leveling off this far from the airport. */
 const ARRIVAL_PROFILE_FT_PER_NM = 300;
 const ARRIVAL_PROFILE_LEVEL_NM = 25;
+/** Departures waiting for vectors at the end of their procedure resume the route above this. */
+const ROUTE_RESUME_MIN_HEIGHT_FT = 3_000;
+/** A departure's gate or an overflight's exit fix counts as passed within this distance. */
+const ROUTE_FIX_PASSED_NM = 2;
 /** A handoff within this of the requested level earns the requested level bonus. */
 const REQUESTED_LEVEL_TOLERANCE_FT = 300;
 /** Vertical distance under which a very close pass is a near midair collision. */
@@ -220,6 +225,7 @@ export class SimEngine {
         tracks: {},
         centerResolutions: {},
         score: emptyScoreState(),
+        routeFixPassed: {},
       },
       options,
     );
@@ -360,6 +366,7 @@ export class SimEngine {
       if (navigation.fixPassed) {
         this.emit({ type: 'fixPassed', aircraftId: aircraft.id, fix: navigation.fixPassed });
       }
+      this.continueRoute(aircraft, navigation);
       if (navigation.localizerCaptured)
         this.emit({ type: 'localizerCaptured', aircraftId: aircraft.id });
       if (navigation.glideslopeCaptured)
@@ -402,6 +409,57 @@ export class SimEngine {
       this.updateCenterTraffic();
     this.removeExitedAircraft();
     this.checkSeparation();
+  }
+
+  // ---- Departure and overflight routes -------------------------------------------------
+
+  /**
+   * Departures and overflights fly their route: a finished departure procedure
+   * continues to the departure gate fix, and once past its gate (or an
+   * overflight past its exit fix) the aircraft heads on toward its destination.
+   * Passing the fix, however the aircraft got there, is recorded for scoring.
+   */
+  private continueRoute(
+    aircraft: AircraftState,
+    events: { fixPassed?: string; procedureCompleted?: string },
+  ): void {
+    const pack = this.airspace;
+    if (!pack || pack.airspace.airports.includes(aircraft.flightPlan.destination)) return;
+    const exitFix = routeExitFix(pack, aircraft);
+    if (!exitFix) return;
+    if (
+      !this.state.routeFixPassed[aircraft.id] &&
+      (events.fixPassed === exitFix.ident ||
+        distanceNm(aircraft.position, exitFix.position) <= ROUTE_FIX_PASSED_NM)
+    ) {
+      this.state.routeFixPassed[aircraft.id] = true;
+    }
+    const destination = pack.traffic.cityPositions[aircraft.flightPlan.destination];
+    // A procedure that ends "fly heading, expect vectors" (VM/FM legs) with no vectors
+    // given: the pilot proceeds on the filed route to the gate.
+    const navigation = aircraft.navigation;
+    const awaitingVectors =
+      navigation.mode === 'procedure' &&
+      ['VM', 'FM'].includes(navigation.legs[navigation.legIndex]?.pathTerminator ?? '') &&
+      aircraft.altitudeFt >= ROUTE_RESUME_MIN_HEIGHT_FT;
+    if ((events.procedureCompleted || awaitingVectors) && !this.state.routeFixPassed[aircraft.id]) {
+      this.applyCommand(aircraft, {
+        type: 'directTo',
+        fix: exitFix.ident,
+        position: exitFix.position,
+      });
+    } else if (events.fixPassed === exitFix.ident && destination) {
+      this.applyCommand(aircraft, {
+        type: 'directTo',
+        fix: aircraft.flightPlan.destination,
+        position: destination,
+      });
+    }
+  }
+
+  /** Whether a departure or overflight has passed its gate or exit fix. */
+  routeFlown(aircraftId: string): boolean {
+    return this.state.routeFixPassed[aircraftId] === true;
   }
 
   // ---- Center (computer controller) ---------------------------------------------
@@ -626,12 +684,16 @@ export class SimEngine {
     const aircraft = this.getAircraft(aircraftId);
     if (!aircraft) return { ok: false, reason: 'Aircraft is no longer on the scope' };
     const { speedLimitBelowFt, speedLimitKts } = this.state.config.flightModel;
-    return validateInstruction(aircraft, commands, {
+    const result = validateInstruction(aircraft, commands, {
       playerId: this.state.playerId,
       performance: this.performance.get(aircraft.aircraftType),
       speedLimitBelowFt,
       speedLimitKts,
     });
+    if (!result.ok || !this.airspace || !commands.some((c) => c.type === 'handoff')) return result;
+    // Center has to accept the handoff: close to the boundary, high enough, and leaving.
+    const handoff = assessHandoff(this.airspace, aircraft, this.state.settings);
+    return handoff.ok ? result : { ok: false, reason: handoff.reason! };
   }
 
   /**
@@ -1581,6 +1643,7 @@ export class SimEngine {
     this.state.aircraft.splice(index, 1);
     delete this.state.tracks[id];
     delete this.state.centerResolutions[id];
+    delete this.state.routeFixPassed[id];
     this.state.pendingInstructions = this.state.pendingInstructions.filter(
       (p) => p.aircraftId !== id,
     );
@@ -1685,16 +1748,25 @@ export class SimEngine {
           (aircraft.targets.altitudeFt === requested ||
             Math.abs(aircraft.altitudeFt - requested) < REQUESTED_LEVEL_TOLERANCE_FT);
         const center = pack.centers.find((c) => c.id === event.to)!;
+        const routeFlown = this.routeFlown(aircraft.id);
         const rp =
           (departure
             ? settings['scoring.departureHandoffRp']
             : settings['scoring.transitHandoffRp']) +
+          (routeFlown ? settings['scoring.routeFlownBonusRp'] : 0) +
           (atRequested ? settings['scoring.requestedLevelBonusRp'] : 0);
+        const fix = routeExitFix(pack, aircraft)?.ident;
+        const notes = [
+          routeFlown && fix ? `via ${fix}` : undefined,
+          atRequested
+            ? `cleared to requested ${flightLevelLabel(requested!, pack.airspace.transitionAltitudeFt)}`
+            : undefined,
+        ].filter(Boolean);
         this.award(
           departure ? 'departureHandoff' : 'transitHandoff',
           rp,
           [aircraft.callsign],
-          `handed to ${center.callsign}${atRequested ? `, cleared to requested ${flightLevelLabel(requested!, pack.airspace.transitionAltitudeFt)}` : ''}`,
+          `handed to ${center.callsign}${notes.length ? `, ${notes.join(', ')}` : ''}`,
         );
         return;
       }

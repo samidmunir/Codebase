@@ -184,8 +184,13 @@ describe('planning notes', () => {
       altitudeFt: 20_000,
       targets: { ...aircraft({}).targets, altitudeFt: 30_000 },
     });
-    const notes = planningNotes(pack, departure, label);
+    const settings = { 'center.handoffWindowNm': 25, 'center.handoffMinimumAltitudeFt': 10_000 };
+    const notes = planningNotes(pack, departure, label, settings);
     expect(notes[0]).toEqual({ label: 'Requested', value: 'FL300 ✓', tone: 'good' });
-    expect(notes[1]!.value).toMatch(/^Boston · \d+ NM$/);
+    // Far from the boundary: Boston Center will take it once it is within 25 NM.
+    expect(notes[1]).toMatchObject({
+      label: 'Handoff',
+      value: expect.stringMatching(/^Boston · in \d+ NM$/),
+    });
   });
 });

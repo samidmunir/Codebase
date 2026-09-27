@@ -359,3 +359,36 @@ describe('snapshots with operations', () => {
     expect(resumed.toSnapshot()).toEqual(continuous.toSnapshot());
   });
 });
+
+describe('departure routes', () => {
+  it('fly on to the gate fix after the procedure, then toward the destination', () => {
+    const engine = createEngine({ 'traffic.departureRatePerHour': 10 });
+    for (const entry of engine.departureQueue) {
+      engine.releaseDeparture(entry.id, engine.activeRunways[entry.airport]!.departures[0]!);
+    }
+    const completed = new Set<string>();
+    engine.subscribe(
+      (event) => event.type === 'procedureCompleted' && completed.add(event.aircraftId),
+    );
+    run(engine, 2_400);
+    const departed = engine
+      .listAircraft()
+      .filter(
+        (a) => completed.has(a.id) && newYork.airspace.airports.includes(a.flightPlan.origin),
+      );
+    expect(departed.length).toBeGreaterThan(0);
+    for (const aircraft of departed) {
+      const gate = aircraft.flightPlan.route.at(-1)!;
+      // Either still on its way to the gate, or past it and heading for the destination.
+      if (engine.routeFlown(aircraft.id)) {
+        expect(aircraft.navigation).toMatchObject({
+          mode: 'direct',
+          fix: aircraft.flightPlan.destination,
+        });
+      } else {
+        expect(aircraft.navigation).toMatchObject({ mode: 'direct', fix: gate });
+      }
+    }
+    expect(departed.some((a) => engine.routeFlown(a.id))).toBe(true);
+  });
+});
