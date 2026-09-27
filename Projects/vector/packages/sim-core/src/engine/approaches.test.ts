@@ -33,9 +33,10 @@ function aircraftAt(overrides: Partial<AircraftState>): AircraftState {
     verticalSpeedFpm: 0,
     flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
     phase: 'arrival',
-    // 3 NM left of the centerline, on a 26° intercept from the left.
+    // 3 NM left of the centerline at 2,000 ft, on a 26° intercept from the left: it joins
+    // the localizer about 6 NM out, just below the glideslope.
     targets: {
-      altitudeFt: 3_000,
+      altitudeFt: 2_000,
       headingDeg: 250,
       turnDirection: 'shortest',
       iasKts: 180,
@@ -43,7 +44,7 @@ function aircraftAt(overrides: Partial<AircraftState>): AircraftState {
     },
     navigation: { mode: 'heading' },
     position: onFinal(12, 3),
-    altitudeFt: 3_000,
+    altitudeFt: 2_000,
     headingDeg: 250,
     iasKts: 180,
     ...overrides,
@@ -80,8 +81,14 @@ describe('ILS eligibility', () => {
     ['too high', { altitudeFt: 6_000 }, /too high/],
     [
       'too fast to slow down in time',
-      { position: onFinal(6, 0.5), altitudeFt: 1_800, iasKts: 250 },
+      { position: onFinal(7, 0.5), altitudeFt: 1_800, iasKts: 250 },
       /slow down in time/,
+    ],
+    ['a join too close to the runway', { position: onFinal(8, 3) }, /join the localizer too close/],
+    [
+      'too high to get down to the glideslope from where it joins',
+      { position: onFinal(14, 3), altitudeFt: 4_500 },
+      /too high/,
     ],
   ])('rejects %s', (_name, overrides, reason) => {
     const result = ilsEligibility(aircraftAt(overrides), ILS_22L, context());
@@ -192,25 +199,62 @@ describe('approaches with the New York airspace', () => {
     expect(worstOvershootNm).toBeLessThan(0.6);
   });
 
-  it('goes around when not established at the stabilized-approach gate, and comes back to the player', () => {
-    // A 1,500 ft gate is about 4.5 NM out on a 3° glideslope.
-    const engine = createEngine({ 'approaches.stabilizedGateFt': 1_500 });
+  it('captures the glideslope from above after a late localizer join (KLGA ILS 22)', () => {
+    // Cleared 470 ft below the glidepath, 12 NM out on a 30° intercept: it joins the localizer
+    // at about 8.5 NM, by which time the glidepath is 500 ft below it.
+    const runway = newYork.runway('KLGA', '22');
+    const clearance: IlsClearance = {
+      airport: 'KLGA',
+      runway: '22',
+      approachId: 'I22',
+      threshold: runway.threshold,
+      thresholdElevationFt: runway.thresholdElevationFt,
+      courseDeg: runway.ils!.courseDeg,
+      glideslopeDeg: runway.ils!.glideslopeAngleDeg,
+      thresholdCrossingHeightFt: runway.ils!.thresholdCrossingHeightFt ?? 50,
+    };
+    const lgaOutbound = normalizeHeading(magneticToTrue(clearance.courseDeg, variation) + 180);
+    const start = destinationPoint(
+      destinationPoint(clearance.threshold, lgaOutbound, 12),
+      lgaOutbound + 90,
+      2,
+    );
+    const heading = normalizeHeading(clearance.courseDeg + 30);
+    const engine = createEngine();
     const events: SimEvent[] = [];
     engine.subscribe((event) => events.push(event));
-    // Cleared above the MVA and below the glidepath, but too far off the centerline to join before the gate.
     const aircraft = engine.addAircraft({
-      ...newAircraft({
-        position: onFinal(6, 1.2),
-        headingDeg: 250,
-        altitudeFt: 2_000,
-        iasKts: 140,
-      }),
+      ...newAircraft({ position: start, headingDeg: heading, altitudeFt: 3_400, iasKts: 180 }),
+      flightPlan: { origin: 'KATL', destination: 'KLGA', route: [] },
+    });
+    engine.setTargets(aircraft.id, { headingDeg: heading, altitudeFt: 3_400, iasKts: 180 });
+    engine.issueInstruction(aircraft.id, [{ type: 'clearedIls', clearance }]);
+    for (let i = 0; i < 900 && engine.getAircraft(aircraft.id); i++) engine.step();
+
+    expect(events.some((e) => e.type === 'ilsUnable')).toBe(false);
+    expect(events.some((e) => e.type === 'glideslopeCaptured')).toBe(true);
+    expect(events.some((e) => e.type === 'goAround')).toBe(false);
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: 'landed', airport: 'KLGA', runway: '22' }),
+    );
+  });
+
+  it('goes around when not established at the stabilized-approach gate, and comes back to the player', () => {
+    const engine = createEngine();
+    const events: SimEvent[] = [];
+    engine.subscribe((event) => events.push(event));
+    // Cleared on a good 26° intercept, 12 NM out, below the glidepath...
+    const aircraft = engine.addAircraft({
+      ...newAircraft({ position: onFinal(12, 3), headingDeg: 250, altitudeFt: 2_000, iasKts: 160 }),
       flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
       telephony: 'JetBlue',
     });
-    engine.setTargets(aircraft.id, { headingDeg: 250, altitudeFt: 2_000, iasKts: 140 });
+    engine.setTargets(aircraft.id, { headingDeg: 250, altitudeFt: 2_000, iasKts: 160 });
     engine.issueInstruction(aircraft.id, [{ type: 'clearedIls', clearance: ILS_22L }]);
-    run(engine, 90);
+    run(engine, 5);
+    // ...then turned onto a 6° intercept, which can't reach the localizer before the gate.
+    engine.issueInstruction(aircraft.id, [{ type: 'heading', headingDeg: 230, turn: 'left' }]);
+    run(engine, 240);
 
     const goAround = events.find((e) => e.type === 'goAround');
     expect(goAround).toMatchObject({
@@ -233,7 +277,7 @@ describe('approaches with the New York airspace', () => {
   it('replies unable to the approach but follows the rest of the instruction', () => {
     const engine = createEngine();
     const aircraft = engine.addAircraft({
-      ...newAircraft({ position: onFinal(12, 3), headingDeg: 250, altitudeFt: 7_000, iasKts: 210 }),
+      ...newAircraft({ position: onFinal(16, 3), headingDeg: 250, altitudeFt: 7_000, iasKts: 210 }),
       flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
       telephony: 'JetBlue',
     });

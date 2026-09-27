@@ -16,9 +16,13 @@ const LOCALIZER_GAIN_DEG_PER_NM = 40;
 const LOCALIZER_MAX_CORRECTION_DEG = 30;
 /** Localizer capture is possible within this distance of the threshold. */
 const LOCALIZER_RANGE_NM = 30;
-/** Glideslope capture window around the glidepath (captured from below or slightly above). */
+/**
+ * Glideslope capture window around the glidepath. From below, the glidepath
+ * comes down to meet the aircraft; from above, the pilot descends to meet it
+ * (capturing from above), so capture is always close to the glidepath.
+ */
 const GLIDESLOPE_BELOW_FT = 20;
-const GLIDESLOPE_ABOVE_FT = 300;
+const GLIDESLOPE_ABOVE_FT = 60;
 /** Extra distance pilots allow to be at final approach speed before the stabilized-approach gate. */
 const FINAL_SPEED_MARGIN_NM = 1;
 
@@ -143,6 +147,11 @@ export function updateNavigation(
     ) {
       navigation.glideslopeCaptured = true;
       events.glideslopeCaptured = true;
+    } else if (!navigation.glideslopeCaptured && aircraft.altitudeFt > glidepath) {
+      // Above the glideslope on the localizer (a late or shallow intercept): descend at a
+      // normal descent rate, well above the glidepath's, to capture it from above. Aiming
+      // at the field keeps the flight model from easing off; capture stops the descent.
+      aircraft.targets.altitudeFt = clearance.thresholdElevationFt;
     }
   }
 
