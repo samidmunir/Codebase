@@ -2,14 +2,15 @@ import type { SessionSettings } from '@vector/shared';
 import type { AircraftState } from '../aircraft/aircraft';
 import type { AirspacePack } from '../airspace/airspace-pack';
 import type { CenterController } from '../airspace/schema';
+import { pointInRing } from '../airspace/airspace-pack';
+import { normalizeHeading } from '../math/angles';
 import { destinationPoint, distanceNm, magneticToTrue, type LatLon } from '../math/geo';
 
 // When Center accepts a handoff. The receiving controller takes an aircraft
-// that is close to the boundary it will leave through, high enough for their
-// airspace, and actually leaving. The minimum altitude is the higher of the
-// FAA minimum vectoring / minimum IFR altitude where the aircraft is and where
-// it will cross, and the session's handoff floor (real facilities set handoff
-// altitudes in letters of agreement, which aren't published).
+// that is close to where it leaves the TRACON's airspace (N90's outline),
+// high enough (17,000 ft eastbound and 18,000 ft westbound by default, and
+// never below the FAA minimum vectoring / minimum IFR altitude where it is and
+// where it leaves), and actually leaving.
 
 /** The receiving Center is the one this far past the boundary crossing. */
 const CENTER_LOOKAHEAD_NM = 10;
@@ -17,22 +18,53 @@ const CENTER_LOOKAHEAD_NM = 10;
 const SEARCH_STEP_NM = 1;
 const SEARCH_LIMIT_NM = 400;
 
-/** Where an aircraft's heading takes it across the airspace boundary, and how far that is. */
+/**
+ * The boundary handoffs are measured against: the TRACON's own airspace when
+ * the pack has its outline, otherwise the edge of the whole airspace.
+ */
+function handoffArea(pack: AirspacePack): {
+  name: string;
+  inside: (position: LatLon) => boolean;
+} {
+  const { traconBoundary } = pack.videoMap;
+  const ring = traconBoundary.lines.reduce<readonly (readonly [number, number])[]>(
+    (longest, line) => (line.length > longest.length ? line : longest),
+    [],
+  );
+  if (ring.length >= 4) {
+    return { name: `${traconBoundary.name} boundary`, inside: (p) => pointInRing(p, ring) };
+  }
+  const { center } = pack.airspace;
+  const radius = pack.boundaryRadiusNm;
+  return { name: 'boundary', inside: (p) => distanceNm(center, p) <= radius };
+}
+
+/**
+ * Where an aircraft's heading takes it out of the handoff area, and how far
+ * that is. An aircraft outside it that will cross through it leaves on the
+ * far side; one outside that never enters it is already past (distance 0).
+ */
 export function boundaryCrossing(
   pack: AirspacePack,
   aircraft: Readonly<AircraftState>,
 ): { point: LatLon; distanceNm: number } | undefined {
-  const { center, magneticVariationDeg } = pack.airspace;
-  const radius = pack.boundaryRadiusNm;
-  const course = magneticToTrue(aircraft.headingDeg, magneticVariationDeg);
-  if (distanceNm(center, aircraft.position) > radius)
-    return { point: aircraft.position, distanceNm: 0 };
+  const area = handoffArea(pack);
+  const course = magneticToTrue(aircraft.headingDeg, pack.airspace.magneticVariationDeg);
+  let wasInside = area.inside(aircraft.position);
+  let enteredAt: number | undefined = wasInside ? 0 : undefined;
   for (let flown = SEARCH_STEP_NM; flown <= SEARCH_LIMIT_NM; flown += SEARCH_STEP_NM) {
     const point = destinationPoint(aircraft.position, course, flown);
-    if (distanceNm(center, point) > radius) return { point, distanceNm: flown };
+    const inside = area.inside(point);
+    if (inside && !wasInside) enteredAt = flown;
+    if (!inside && wasInside) return { point, distanceNm: flown };
+    wasInside = inside;
   }
-  return undefined;
+  // Never inside along its path: already out.
+  return enteredAt === undefined ? { point: aircraft.position, distanceNm: 0 } : undefined;
 }
+
+/** The name of the boundary handoffs are measured against, e.g. 'N90 boundary'. */
+export const handoffBoundaryName = (pack: AirspacePack) => handoffArea(pack).name;
 
 export interface HandoffAssessment {
   /** The Center it will be handed to (the one it leaves into). */
@@ -49,7 +81,7 @@ export interface HandoffAssessment {
 
 type HandoffSettings = Pick<
   SessionSettings,
-  'center.handoffWindowNm' | 'center.handoffMinimumAltitudeFt'
+  'center.handoffWindowNm' | 'center.handoffMinimumEastboundFt' | 'center.handoffMinimumWestboundFt'
 >;
 
 /** Whether Center will take a departure or overflight now, and what's missing if not. */
@@ -67,8 +99,13 @@ export function assessHandoff(
     CENTER_LOOKAHEAD_NM,
   );
   const center = pack.centerAt(beyond, aircraft.altitudeFt);
+  // Eastbound (magnetic course 000–179) and westbound flights have their own floors.
+  const eastbound = normalizeHeading(aircraft.headingDeg) < 180;
+  const directionalFloorFt = eastbound
+    ? settings['center.handoffMinimumEastboundFt']
+    : settings['center.handoffMinimumWestboundFt'];
   const minimumAltitudeFt = Math.max(
-    settings['center.handoffMinimumAltitudeFt'],
+    directionalFloorFt,
     pack.minimumVectoringAltitude(aircraft.position) ?? 0,
     pack.minimumVectoringAltitude(exit) ?? 0,
   );
@@ -85,9 +122,11 @@ export function assessHandoff(
     reason = 'Arrivals stay with you until Tower takes them';
   else if (!crossing) reason = 'Not heading out of your airspace';
   else if (!withinWindow)
-    reason = `${center.callsign} takes it within ${window} NM of the boundary (${Math.round(crossing.distanceNm)} NM to go)`;
+    reason = `${center.callsign} takes it within ${window} NM of the ${handoffBoundaryName(pack)} (${Math.round(crossing.distanceNm)} NM to go)`;
   else if (!highEnough)
-    reason = `${center.callsign} needs it at or above ${label(minimumAltitudeFt)}`;
+    reason = `${center.callsign} needs it at or above ${label(minimumAltitudeFt)}${
+      minimumAltitudeFt === directionalFloorFt ? (eastbound ? ' (eastbound)' : ' (westbound)') : ''
+    }`;
 
   return {
     center,

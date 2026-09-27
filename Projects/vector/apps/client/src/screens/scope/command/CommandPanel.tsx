@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   assessHandoff,
   formatFrequency,
+  handoffBoundaryName,
   headingDifference,
   routeExitFix,
   type AircraftState,
@@ -505,7 +506,7 @@ function HandoffTab({
     : settings['scoring.transitHandoffRp'];
   const checks: { label: string; met: boolean; note: string }[] = [
     {
-      label: `Within ${settings['center.handoffWindowNm']} NM of the boundary`,
+      label: `Within ${settings['center.handoffWindowNm']} NM of the ${handoffBoundaryName(pack)}`,
       met: assessment.withinWindow,
       note:
         assessment.toBoundaryNm === undefined

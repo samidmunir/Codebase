@@ -884,23 +884,34 @@ export const SESSION_SETTINGS = {
     category: 'center',
     label: 'Handoff window',
     description:
-      'Center accepts a departure or overflight only within this distance of where it will cross your boundary.',
+      'Center accepts a departure or overflight only within this distance of where it will leave the N90 TRACON’s airspace.',
     min: 5,
     max: 60,
     step: 5,
     unit: 'NM',
-    default: 25,
+    default: 20,
   }),
-  'center.handoffMinimumAltitudeFt': setting.number({
+  'center.handoffMinimumEastboundFt': setting.number({
     category: 'center',
-    label: 'Minimum handoff altitude',
+    label: 'Minimum handoff altitude, eastbound',
     description:
-      'Center accepts a handoff only at or above this altitude, and never below the FAA minimum IFR altitude where the aircraft is and where it leaves. (Real handoff altitudes are set in facility agreements that aren’t published; this is a typical floor.)',
+      'Center accepts an eastbound flight (magnetic course 000–179) only at or above this altitude, and never below the FAA minimum IFR altitude where it is and where it leaves.',
     min: 0,
     max: 24_000,
     step: 1_000,
     unit: 'ft',
-    default: 10_000,
+    default: 17_000,
+  }),
+  'center.handoffMinimumWestboundFt': setting.number({
+    category: 'center',
+    label: 'Minimum handoff altitude, westbound',
+    description:
+      'Center accepts a westbound flight (magnetic course 180–359) only at or above this altitude, and never below the FAA minimum IFR altitude where it is and where it leaves.',
+    min: 0,
+    max: 24_000,
+    step: 1_000,
+    unit: 'ft',
+    default: 18_000,
   }),
   'center.conflictLookaheadSec': setting.number({
     category: 'center',

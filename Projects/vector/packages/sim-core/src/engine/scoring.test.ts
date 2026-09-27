@@ -55,34 +55,49 @@ const handoff = (engine: SimEngine, id: string) =>
   ]);
 
 describe('RP scoring', () => {
-  it('only lets Center take a handoff near the boundary and high enough', () => {
+  it('only lets Center take a handoff near the N90 boundary and high enough', () => {
     const engine = createEngine();
-    const early = engine.addAircraft(yours({ position: at(45, 100), headingDeg: 45 - variation }));
-    const low = engine.addAircraft(
+    // The N90 boundary is about 87 NM out on this bearing.
+    const early = engine.addAircraft(yours({ position: at(45, 30), headingDeg: 45 - variation }));
+    const lowEast = engine.addAircraft(
       yours({
         callsign: 'DAL200',
-        position: at(40, 140),
+        position: at(40, 75),
         headingDeg: 40 - variation,
-        altitudeFt: 8_000,
+        altitudeFt: 15_000,
+      }),
+    );
+    // About 71 NM out to the west: westbound traffic needs FL180.
+    const lowWest = engine.addAircraft(
+      yours({
+        callsign: 'DAL300',
+        flightPlan: { origin: 'KJFK', destination: 'KORD', route: [], requestedAltitudeFt: 36_000 },
+        position: at(270, 60),
+        headingDeg: 270 - variation,
+        altitudeFt: 17_000,
       }),
     );
     expect(handoff(engine, early.id)).toMatchObject({
       ok: false,
-      reason: expect.stringMatching(/within 25 NM of the boundary \(\d+ NM to go\)/),
+      reason: expect.stringMatching(/within 20 NM of the N90 boundary \(\d+ NM to go\)/),
     });
-    expect(handoff(engine, low.id)).toMatchObject({
+    expect(handoff(engine, lowEast.id)).toMatchObject({
       ok: false,
-      reason: expect.stringMatching(/at or above 10,000 ft/),
+      reason: expect.stringMatching(/at or above (FL170|17,000 ft) \(eastbound\)/),
+    });
+    expect(handoff(engine, lowWest.id)).toMatchObject({
+      ok: false,
+      reason: expect.stringMatching(/at or above FL180 \(westbound\)/),
     });
   });
 
   it('rewards a departure handoff, with a bonus for being cleared to the requested level', () => {
     const engine = createEngine();
     const cleared = engine.addAircraft(
-      yours({ position: at(45, 135), headingDeg: 45 - variation, targets: { altitudeFt: 30_000 } }),
+      yours({ position: at(45, 75), headingDeg: 45 - variation, targets: { altitudeFt: 30_000 } }),
     );
     const notCleared = engine.addAircraft(
-      yours({ callsign: 'DAL200', position: at(35, 135), headingDeg: 35 - variation }),
+      yours({ callsign: 'DAL200', position: at(35, 75), headingDeg: 35 - variation }),
     );
     expect(handoff(engine, cleared.id)).toEqual({ ok: true });
     expect(handoff(engine, notCleared.id)).toEqual({ ok: true });
@@ -127,7 +142,7 @@ describe('RP scoring', () => {
     const transit = engine.addAircraft(
       yours({
         flightPlan: { origin: 'KORD', destination: 'KBOS', route: [], requestedAltitudeFt: 34_000 },
-        position: at(45, 135),
+        position: at(45, 75),
         headingDeg: 45 - variation,
         altitudeFt: 34_000,
       }),

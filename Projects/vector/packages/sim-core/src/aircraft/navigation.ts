@@ -1,7 +1,12 @@
 import { clamp, headingDifference, normalizeHeading, toRadians } from '../math/angles';
 import { bearingTrue, distanceNm, magneticToTrue, trueToMagnetic, type LatLon } from '../math/geo';
 import type { AircraftPerformance } from '../performance/performance';
-import { trueAirspeedKts, type AircraftState, type IlsClearance } from './aircraft';
+import {
+  trueAirspeedKts,
+  type AircraftState,
+  type IlsClearance,
+  type ResolvedLeg,
+} from './aircraft';
 import { turnRateDegPerSec, type FlightModelConfig } from './flight-model';
 
 // Lateral and vertical guidance: flying direct to a fix and flying an ILS.
@@ -219,6 +224,34 @@ const DEFAULT_LEG_DISTANCE_NM = 3;
 /** An intercept leg ends when the aircraft is this close to the next leg's course. */
 const INTERCEPT_CAPTURE_NM = 0.3;
 
+/** Pilots respect a procedure speed restriction from this far out along the route. */
+const SPEED_RESTRICTION_LOOKAHEAD_NM = 20;
+/** Deceleration pilots plan with, and the distance they want to be slowed by before the fix. */
+const PLANNED_DECELERATION_KT_PER_SEC = 0.8;
+const SPEED_RESTRICTION_MARGIN_NM = 2;
+
+/** The next speed-restricted fix ahead on a procedure, and the distance to it along the route. */
+function nextSpeedRestriction(
+  aircraft: AircraftState,
+  legs: readonly ResolvedLeg[],
+  fromIndex: number,
+): { kts: number; distanceNm: number } | undefined {
+  let distance = 0;
+  let from = aircraft.position;
+  for (let i = fromIndex; i < legs.length; i++) {
+    const leg = legs[i]!;
+    if (leg.position) {
+      distance += distanceNm(from, leg.position);
+      from = leg.position;
+    } else if (leg.distanceNm !== undefined) {
+      distance += leg.distanceNm;
+    }
+    if (leg.speedLimitKts !== undefined) return { kts: leg.speedLimitKts, distanceNm: distance };
+    if (distance > SPEED_RESTRICTION_LOOKAHEAD_NM * 3) return undefined;
+  }
+  return undefined;
+}
+
 /**
  * Flies the current procedure leg and advances through the legs. Holds and
  * procedure turns end the procedure; the aircraft then keeps its heading.
@@ -243,11 +276,22 @@ function flyProcedure(aircraft: AircraftState, magneticVariationDeg: number): Na
       aircraft.targets.turnDirection = next.turnDirection ?? 'shortest';
     };
 
-    // Speed limits apply while flying toward a restricted fix.
-    if (leg.speedLimitKts !== undefined) {
-      if (aircraft.targets.speedMode === 'normal' || aircraft.targets.iasKts > leg.speedLimitKts) {
+    // Pilots plan for the next speed restriction ahead: they don't accelerate past it,
+    // and start slowing early enough to meet it at the fix.
+    const restriction = nextSpeedRestriction(aircraft, navigation.legs, navigation.legIndex);
+    if (restriction) {
+      const slowingNm =
+        (Math.max(0, aircraft.iasKts - restriction.kts) / PLANNED_DECELERATION_KT_PER_SEC) *
+        (trueAirspeedKts(aircraft) / 3600);
+      const applies =
+        restriction.distanceNm <= SPEED_RESTRICTION_LOOKAHEAD_NM ||
+        restriction.distanceNm <= slowingNm + SPEED_RESTRICTION_MARGIN_NM;
+      if (
+        applies &&
+        (aircraft.targets.speedMode === 'normal' || aircraft.targets.iasKts > restriction.kts)
+      ) {
         aircraft.targets.speedMode = 'assigned';
-        aircraft.targets.iasKts = leg.speedLimitKts;
+        aircraft.targets.iasKts = restriction.kts;
       }
     }
 

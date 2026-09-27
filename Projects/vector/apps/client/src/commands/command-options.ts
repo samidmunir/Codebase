@@ -62,8 +62,14 @@ export function centerHandoff(
   aircraft: Readonly<AircraftState>,
   handoffSettings: Pick<
     SessionSettings,
-    'center.handoffWindowNm' | 'center.handoffMinimumAltitudeFt'
-  > = { 'center.handoffWindowNm': 25, 'center.handoffMinimumAltitudeFt': 10_000 },
+    | 'center.handoffWindowNm'
+    | 'center.handoffMinimumEastboundFt'
+    | 'center.handoffMinimumWestboundFt'
+  > = {
+    'center.handoffWindowNm': 20,
+    'center.handoffMinimumEastboundFt': 17_000,
+    'center.handoffMinimumWestboundFt': 18_000,
+  },
 ): AtcCommand | undefined {
   const { center } = assessHandoff(pack, aircraft, handoffSettings);
   const band = aircraft.altitudeFt >= pack.airspace.transitionAltitudeFt ? 'high' : 'low';
@@ -241,7 +247,9 @@ export function planningNotes(
   altitudeLabel: (altitudeFt: number) => string,
   handoffSettings?: Pick<
     SessionSettings,
-    'center.handoffWindowNm' | 'center.handoffMinimumAltitudeFt'
+    | 'center.handoffWindowNm'
+    | 'center.handoffMinimumEastboundFt'
+    | 'center.handoffMinimumWestboundFt'
   >,
 ): PlanningNote[] {
   const { destination } = aircraft.flightPlan;

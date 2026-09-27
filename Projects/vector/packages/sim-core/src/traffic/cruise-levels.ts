@@ -14,7 +14,8 @@ interface Band {
 
 /** Cruise bands by trip length: short hops stay low, long hauls go high. */
 const BANDS: Band[] = [
-  { maxTripNm: 150, lowFt: 16_000, highFt: 23_000 },
+  // Short hops still file at or above the Center handoff floors (17,000 east, FL180 west).
+  { maxTripNm: 150, lowFt: 17_000, highFt: 23_000 },
   { maxTripNm: 350, lowFt: 23_000, highFt: 32_000 },
   { maxTripNm: 1_000, lowFt: 30_000, highFt: 38_000 },
   { maxTripNm: Infinity, lowFt: 34_000, highFt: 41_000 },

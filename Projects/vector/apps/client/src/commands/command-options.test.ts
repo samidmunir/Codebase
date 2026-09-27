@@ -184,10 +184,14 @@ describe('planning notes', () => {
       altitudeFt: 20_000,
       targets: { ...aircraft({}).targets, altitudeFt: 30_000 },
     });
-    const settings = { 'center.handoffWindowNm': 25, 'center.handoffMinimumAltitudeFt': 10_000 };
+    const settings = {
+      'center.handoffWindowNm': 20,
+      'center.handoffMinimumEastboundFt': 17_000,
+      'center.handoffMinimumWestboundFt': 18_000,
+    };
     const notes = planningNotes(pack, departure, label, settings);
     expect(notes[0]).toEqual({ label: 'Requested', value: 'FL300 ✓', tone: 'good' });
-    // Far from the boundary: Boston Center will take it once it is within 25 NM.
+    // Far from the N90 boundary: Boston Center takes it near the TRACON's northern edge.
     expect(notes[1]).toMatchObject({
       label: 'Handoff',
       value: expect.stringMatching(/^Boston · in \d+ NM$/),
