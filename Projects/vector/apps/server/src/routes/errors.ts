@@ -43,8 +43,13 @@ export function errorHandler(
     return reply.code(404).send(body('session_not_found', error.message));
   if (error instanceof SavedSessionLimitError)
     return reply.code(409).send(body('session_limit', error.message));
-  if (error instanceof InvalidSnapshotError)
+  if (error instanceof InvalidSnapshotError) {
+    request.log.warn(
+      { detail: error.detail.slice(0, 2_000) },
+      'rejected an invalid session snapshot',
+    );
     return reply.code(400).send(body('invalid_snapshot', error.message));
+  }
   if ('statusCode' in error && error.statusCode === 413) {
     return reply.code(413).send(body('too_large', 'That session is too large to save'));
   }

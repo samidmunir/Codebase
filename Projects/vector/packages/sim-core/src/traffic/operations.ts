@@ -132,13 +132,18 @@ export function initialOperations(
   };
 }
 
+/** "Never" for spawn scheduling: about 30 years of 1-second ticks. */
+export const NEVER_TICKS = 1_000_000_000;
+
 /** Ticks until the next departure is ready at an airport, around the configured rate. */
 export function departureInterval(
   random: SeededRandom,
   ratePerHour: number,
   tickSeconds: number,
 ): number {
-  if (ratePerHour <= 0) return Number.MAX_SAFE_INTEGER;
+  // Off: far in the future, but small enough to add to any tick and still be a safe
+  // integer in a saved session (turning the rate back on reschedules at once).
+  if (ratePerHour <= 0) return NEVER_TICKS;
   const meanSeconds = 3600 / ratePerHour;
   return Math.max(1, Math.round((meanSeconds * random.range(0.6, 1.4)) / tickSeconds));
 }

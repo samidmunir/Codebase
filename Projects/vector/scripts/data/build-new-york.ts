@@ -23,7 +23,7 @@ import {
   type CifpProcedureRecord,
 } from './lib/cifp';
 import { cachedDownload, onlyFile, text, unzipMatching } from './lib/download';
-import { boxAround, inBox, simplify } from './lib/geometry';
+import { boxAround, coverageOutline, inBox, simplify } from './lib/geometry';
 import { parseMva } from './lib/mva';
 import { findRadarSites } from './lib/radar-sites';
 import { parseArtccBoundaries, parseCenterSites, parseFrequencies, parseRadars } from './lib/nasr';
@@ -49,6 +49,10 @@ const BOUNDARY_CEILING_FT = 45_000;
 const MAP_RADIUS_NM = 165;
 /** Detailed shoreline this close to the center; coarser beyond. */
 const DETAILED_SHORELINE_RADIUS_NM = 60;
+/** Grid spacing for tracing the TRACON outline from its MVA chart (degrees, about 0.4 NM). */
+const TRACON_OUTLINE_STEP_DEG = 0.007;
+/** Smallest piece of outline kept (drops specks from gaps between chart sectors). */
+const TRACON_OUTLINE_MIN_POINTS = 40;
 /** Simplification tolerance for Class B and C outlines. */
 const CLASS_AIRSPACE_TOLERANCE_M = 40;
 /** Other airports shown on the map need a runway at least this long. */
@@ -681,6 +685,10 @@ async function main() {
       ([lon, lat]) => distanceNm(CENTER, { lat: lat!, lon: lon! }) <= MAP_RADIUS_NM,
     );
   const altitudeSectors = [...mvaSectors, ...miaSectors].filter(nearMap);
+  // The New York TRACON's own airspace: the area its MVA chart covers.
+  const traconOutline = coverageOutline(mva, TRACON_OUTLINE_STEP_DEG)
+    .filter((line) => line.length >= TRACON_OUTLINE_MIN_POINTS)
+    .map((line) => simplify(line.map(round), 120));
 
   console.log('- FAA NASR ARTCC boundaries');
   const artccBoundaries = parseArtccBoundaries(
@@ -857,6 +865,7 @@ async function main() {
       airways,
       airports: mapAirports,
       artccBoundaries: artccBoundaries.map(({ artcc, level, ring }) => ({ artcc, level, ring })),
+      traconBoundary: { name: 'N90', lines: traconOutline },
     },
     false,
   );

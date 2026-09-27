@@ -250,6 +250,13 @@ export const USER_SETTINGS = {
     description: 'Show the region’s other airports and their runways, for orientation.',
     default: true,
   }),
+  'map.traconBoundary': setting.boolean({
+    category: 'map',
+    label: 'N90 TRACON boundary',
+    description:
+      'Show the New York TRACON’s own airspace (the approach/departure area), traced from its MVA chart. Beyond it is Center airspace, which you also work here.',
+    default: true,
+  }),
   'map.artccBoundaries': setting.boolean({
     category: 'map',
     label: 'Center boundaries',
@@ -259,8 +266,9 @@ export const USER_SETTINGS = {
   }),
   'map.sectorBoundary': setting.boolean({
     category: 'map',
-    label: 'Sector boundary',
-    description: 'Show the boundary of your airspace.',
+    label: 'Your airspace boundary',
+    description:
+      'Show the edge of the airspace you control in this session (the dashed circle, 150 NM around New York). Aircraft enter and leave across it.',
     default: true,
   }),
   'map.geography': setting.boolean({

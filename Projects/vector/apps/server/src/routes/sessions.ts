@@ -28,7 +28,8 @@ export interface SessionsRouteOptions {
 
 /** Thrown when a snapshot isn't one the simulator can resume. */
 export class InvalidSnapshotError extends Error {
-  constructor() {
+  /** What failed validation (logged, not sent to the player). */
+  constructor(readonly detail: string) {
     super("That session couldn't be saved: the simulation data is invalid");
     this.name = 'InvalidSnapshotError';
   }
@@ -44,8 +45,8 @@ function snapshotRecord(
   let parsed;
   try {
     parsed = parseSnapshot(snapshot);
-  } catch {
-    throw new InvalidSnapshotError();
+  } catch (error) {
+    throw new InvalidSnapshotError(error instanceof Error ? error.message : String(error));
   }
   return {
     snapshot: parsed,

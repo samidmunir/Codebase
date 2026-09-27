@@ -260,3 +260,84 @@ export function leftOfEdge(a: Point, b: Point, offsetMeters: number): Point {
   const mid: Point = [(pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2];
   return toDegrees([mid[0] - (dy / length) * offsetMeters, mid[1] + (dx / length) * offsetMeters]);
 }
+
+// ---- Outlines ------------------------------------------------------------------
+
+/** Whether a point is inside a ring (ray casting). */
+export function insideRing([x, y]: Point, ring: readonly Point[]): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]!;
+    const [xj, yj] = ring[j]!;
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * The outline of the area a set of polygons covers, traced on a grid (marching
+ * squares) so polygons that don't share exact edges still merge cleanly.
+ * `stepDeg` is the grid spacing in degrees of latitude; longitude is scaled.
+ */
+export function coverageOutline(
+  polygons: readonly { exterior: readonly Point[]; holes: readonly (readonly Point[])[] }[],
+  stepDeg: number,
+): Line[] {
+  const box = polygons.reduce(
+    (b, p) => {
+      const r = ringBox(p.exterior as Point[]);
+      return {
+        minLon: Math.min(b.minLon, r.minLon),
+        maxLon: Math.max(b.maxLon, r.maxLon),
+        minLat: Math.min(b.minLat, r.minLat),
+        maxLat: Math.max(b.maxLat, r.maxLat),
+      };
+    },
+    { minLon: Infinity, maxLon: -Infinity, minLat: Infinity, maxLat: -Infinity },
+  );
+  const lonStep = stepDeg / Math.cos((((box.minLat + box.maxLat) / 2) * Math.PI) / 180);
+  // One cell of margin all round so the outline closes.
+  const cols = Math.ceil((box.maxLon - box.minLon) / lonStep) + 3;
+  const rows = Math.ceil((box.maxLat - box.minLat) / stepDeg) + 3;
+  const lonAt = (c: number) => box.minLon + (c - 1) * lonStep;
+  const latAt = (r: number) => box.minLat + (r - 1) * stepDeg;
+  const boxes = polygons.map((p) => ringBox(p.exterior as Point[]));
+  const covered = (lon: number, lat: number) =>
+    polygons.some(
+      (p, i) =>
+        inBox([lon, lat], boxes[i]!) &&
+        insideRing([lon, lat], p.exterior) &&
+        !p.holes.some((hole) => insideRing([lon, lat], hole)),
+    );
+  const grid: boolean[][] = [];
+  for (let r = 0; r < rows; r++) {
+    grid.push([]);
+    for (let c = 0; c < cols; c++) grid[r]!.push(covered(lonAt(c), latAt(r)));
+  }
+
+  // Marching squares: one segment per cell edge crossing, between edge midpoints.
+  const edges: [Point, Point][] = [];
+  const mid = (r1: number, c1: number, r2: number, c2: number): Point => [
+    (lonAt(c1) + lonAt(c2)) / 2,
+    (latAt(r1) + latAt(r2)) / 2,
+  ];
+  for (let r = 0; r + 1 < rows; r++) {
+    for (let c = 0; c + 1 < cols; c++) {
+      const bl = grid[r]![c]!;
+      const br = grid[r]![c + 1]!;
+      const tr = grid[r + 1]![c + 1]!;
+      const tl = grid[r + 1]![c]!;
+      const crossings: Point[] = [];
+      if (bl !== br) crossings.push(mid(r, c, r, c + 1));
+      if (br !== tr) crossings.push(mid(r, c + 1, r + 1, c + 1));
+      if (tr !== tl) crossings.push(mid(r + 1, c + 1, r + 1, c));
+      if (tl !== bl) crossings.push(mid(r + 1, c, r, c));
+      if (crossings.length === 2) edges.push([crossings[0]!, crossings[1]!]);
+      else if (crossings.length === 4) {
+        edges.push([crossings[0]!, crossings[1]!]);
+        edges.push([crossings[2]!, crossings[3]!]);
+      }
+    }
+  }
+  return chainEdges(edges);
+}

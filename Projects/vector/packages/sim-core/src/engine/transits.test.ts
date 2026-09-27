@@ -5,6 +5,7 @@ import { isHemisphericLevel } from '../traffic/cruise-levels';
 import { bearingTrue, distanceNm, type LatLon } from '../math/geo';
 import { airlines, newYork, performance } from '../testing/fixtures';
 import type { SimEvent } from './events';
+import { parseSnapshot } from '../snapshot/snapshot';
 import { SimEngine } from './sim-engine';
 
 function createEngine(overrides: Partial<SessionSettings> = {}, seed = 5) {
@@ -144,5 +145,22 @@ describe('in-session traffic tuning', () => {
     run(engine, 900);
     run(restored, 900);
     expect(restored.toSnapshot()).toEqual(engine.toSnapshot());
+  });
+});
+
+describe('traffic rates of zero', () => {
+  it('keep the session savable (no out-of-range spawn times) and resume when raised', () => {
+    const engine = createEngine({ 'traffic.transitRatePerHour': 5 });
+    run(engine, 60);
+    engine.updateTrafficSettings({
+      'traffic.transitRatePerHour': 0,
+      'traffic.arrivalRatePerHour': 0,
+      'traffic.departureRatePerHour': 0,
+    });
+    run(engine, 600);
+    const snapshot = JSON.parse(JSON.stringify(engine.toSnapshot()));
+    expect(() => parseSnapshot(snapshot)).not.toThrow();
+    engine.updateTrafficSettings({ 'traffic.transitRatePerHour': 20 });
+    expect(countTransits(engine, 1_800)).toBeGreaterThan(3);
   });
 });

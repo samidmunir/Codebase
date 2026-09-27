@@ -242,6 +242,10 @@ export const videoMapFileSchema = z.object({
       }),
     )
     .default([]),
+  /** The TRACON's own airspace, traced from its minimum vectoring altitude chart. */
+  traconBoundary: z
+    .object({ name: z.string(), lines: z.array(lineSchema) })
+    .default({ name: '', lines: [] }),
   /** Air route traffic control center boundaries. */
   artccBoundaries: z
     .array(z.object({ artcc: z.string(), level: z.enum(['low', 'high']), ring: ringSchema }))
