@@ -1,7 +1,8 @@
 import { Link } from 'react-router';
+import type { Wind } from '@vector/sim-core';
 import type { SessionStatus } from '../../sim/scope-session';
 import { shortAirport } from '../../scope/data-block';
-import { formatUtc } from './format';
+import { formatUtc, formatWind } from './format';
 import { formatRp } from './score-format';
 
 interface ScopeTopBarProps {
@@ -24,6 +25,58 @@ interface ScopeTopBarProps {
   onOpenHelp: () => void;
   scoreOpen: boolean;
   onToggleScore: () => void;
+  /** For pointing the wind arrow on a true-north display. */
+  magneticVariationDeg: number;
+}
+
+function WindReadout({
+  wind,
+  winds,
+  windKey,
+  magneticVariationDeg,
+}: {
+  wind: Wind;
+  winds: Readonly<Record<string, Wind>>;
+  windKey: string;
+  magneticVariationDeg: number;
+}) {
+  const calm = formatWind(wind) === 'Calm';
+  // The arrow points where the wind blows to.
+  const towardDeg = wind.directionDeg + magneticVariationDeg + 180;
+  const detail = Object.entries(winds)
+    .map(([icao, w]) => `${shortAirport(icao)} ${formatWind(w)}`)
+    .join('\n');
+  return (
+    <div
+      className="scope-wind"
+      title={`Regional wind (magnetic)\n${detail}`}
+      aria-label={`Wind ${formatWind(wind)}`}
+    >
+      <span className="scope-wind__label">Wind</span>
+      {!calm && (
+        <svg
+          className="scope-wind__arrow"
+          viewBox="0 0 16 16"
+          width="13"
+          height="13"
+          aria-hidden="true"
+          style={{ rotate: `${towardDeg}deg` }}
+        >
+          <path
+            d="M8 14 V3 M4.5 6.5 L8 2.5 L11.5 6.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+      <span key={windKey} className="scope-wind__value">
+        {formatWind(wind)}
+      </span>
+    </div>
+  );
 }
 
 export function ScopeTopBar(props: ScopeTopBarProps) {
@@ -65,9 +118,19 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
         </div>
       </div>
 
-      <div className="scope-clock" aria-label="UTC time">
-        {formatUtc(status.utcTime)}
-        <span className="scope-clock__zone">Z</span>
+      <div className="scope-topbar__center">
+        <div className="scope-clock" aria-label="UTC time">
+          {formatUtc(status.utcTime)}
+          <span className="scope-clock__zone">Z</span>
+        </div>
+        {status.regionalWind && (
+          <WindReadout
+            wind={status.regionalWind}
+            winds={status.winds}
+            windKey={status.windKey}
+            magneticVariationDeg={props.magneticVariationDeg}
+          />
+        )}
       </div>
 
       <div className="scope-topbar__controls">

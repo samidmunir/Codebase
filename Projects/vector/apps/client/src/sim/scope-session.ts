@@ -11,6 +11,7 @@ import {
   type AtcCommand,
   type SimSnapshot,
   type ValidationResult,
+  type Wind,
 } from '@vector/sim-core';
 import { airlines, performanceCatalog } from '../airspaces/registry';
 import { radarSensors } from '../scope/radar-coverage';
@@ -40,6 +41,11 @@ export interface SessionStatus {
   rp: number;
   /** Changes whenever RP is earned or lost. */
   scoreEventCount: number;
+  /** One wind for the region, and each airport's. */
+  regionalWind: Wind | undefined;
+  winds: Readonly<Record<string, Wind>>;
+  /** Changes whenever a reported wind changes. */
+  windKey: string;
 }
 
 export type TrafficSettings = Pick<SessionSettings, (typeof IN_SESSION_TRAFFIC_KEYS)[number]>;
@@ -224,6 +230,11 @@ export class ScopeSession {
       trafficKey: IN_SESSION_TRAFFIC_KEYS.map((key) => this.engine.settings[key]).join(','),
       rp: this.engine.score.total,
       scoreEventCount: this.engine.score.nextEventNumber,
+      regionalWind: this.engine.regionalWind,
+      winds: this.engine.winds,
+      windKey: Object.entries(this.engine.winds)
+        .map(([icao, w]) => `${icao}:${w.directionDeg}/${w.speedKts}`)
+        .join(','),
     };
   }
 
@@ -243,7 +254,8 @@ export class ScopeSession {
       next.conflictsKey !== this.status.conflictsKey ||
       next.violationCount !== this.status.violationCount ||
       next.trafficKey !== this.status.trafficKey ||
-      next.scoreEventCount !== this.status.scoreEventCount;
+      next.scoreEventCount !== this.status.scoreEventCount ||
+      next.windKey !== this.status.windKey;
     if (!changed) return;
     this.status = next;
     for (const listener of this.listeners) listener();

@@ -28,6 +28,8 @@ export type SimEvent =
   | { type: 'arrivalEntered'; aircraftId: string; airport: string; star: string }
   | { type: 'transitEntered'; aircraftId: string; exitFix: string }
   | { type: 'settingsChanged'; keys: string[] }
+  /** The reported wind at one or more airports changed. */
+  | { type: 'windChanged' }
   /** The pilot could not accept an ILS clearance. */
   | { type: 'ilsUnable'; aircraftId: string; reason: string }
   | { type: 'goAround'; aircraftId: string; airport: string; runway: string; reason: string }

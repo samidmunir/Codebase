@@ -46,7 +46,12 @@ export const activeRunwaysSchema = z.object({
 export type ActiveRunways = z.infer<typeof activeRunwaysSchema>;
 
 export const operationsStateSchema = z.object({
+  /** Wind at each airport now (changes over the session with wind variation). */
   winds: z.record(z.string(), windSchema),
+  /** Wind at each airport when the session started, which the wind varies around. */
+  baseWinds: z.record(z.string(), windSchema).optional(),
+  /** Seed for how the wind varies, fixed for the session. */
+  windSeed: z.number().int().min(0).optional(),
   runways: z.record(z.string(), activeRunwaysSchema),
   departureQueue: z.array(departureEntrySchema),
   /** Departures ready but held at the gate because the queue is full, per airport. */
@@ -121,6 +126,9 @@ export function initialOperations(
   }
   return {
     winds,
+    baseWinds: Object.fromEntries(Object.entries(winds).map(([icao, wind]) => [icao, { ...wind }])),
+    // From the generator's state without drawing from it, so traffic is unchanged.
+    windSeed: (random.getState() ^ 0x5bd1e995) >>> 0,
     runways,
     departureQueue: [],
     gateHolds: Object.fromEntries(airports.map((icao) => [icao, 0])),

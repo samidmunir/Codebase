@@ -1,8 +1,8 @@
 // STARS-style full data block formatting.
 //   Line 1: callsign
 //   Line 2: altitude (hundreds of ft; flight levels read the same, 350 = FL350)
-//           + trend + ground speed (tens of kts), time-shared with aircraft
-//           type + destination.
+//           + trend + speed (tens of kts: indicated or ground speed), time-shared
+//           with aircraft type + destination.
 
 /** Vertical speeds below this are shown as level. */
 const LEVEL_THRESHOLD_FPM = 300;
@@ -34,10 +34,12 @@ export interface DataBlockTarget {
   destination: string;
   altitudeFt: number;
   groundSpeedKts: number;
+  /** Indicated airspeed, shown instead of ground speed when chosen. */
+  iasKts?: number | undefined;
   verticalSpeedFpm: number;
   /** Cleared altitude; shown after the altitude while climbing or descending to it. */
   assignedAltitudeFt?: number | undefined;
-  /** No radar covers it: the block shows CST instead of ground speed. */
+  /** No radar covers it: the block shows CST instead of speed. */
   coasting?: boolean | undefined;
   /** Fix or approach being flown to (not shown on a plain heading). */
   navigatingTo?: string | undefined;
@@ -49,6 +51,8 @@ export function formatGroundSpeedKnots(groundSpeedKts: number): string {
 }
 
 export type DataBlockStyle = 'expanded' | 'stars';
+/** Which speed the data block shows. */
+export type DataBlockSpeed = 'indicated' | 'ground';
 
 /** '→CAMRN' for a fix; approaches ('ILS22L') as they are. */
 export function navigationLabel(navigatingTo: string | undefined): string | undefined {
@@ -58,15 +62,19 @@ export function navigationLabel(navigatingTo: string | undefined): string | unde
 
 /**
  * The lines of a data block.
- * - 'expanded': callsign / altitude + trend + full ground speed / type + destination (+ where it's navigating to).
- * - 'stars': callsign / altitude + trend + ground speed in tens, time-shared with where it's
+ * - 'expanded': callsign / altitude + trend + full speed / type + destination (+ where it's navigating to).
+ * - 'stars': callsign / altitude + trend + speed in tens, time-shared with where it's
  *   navigating to (like the STARS scratchpad), or type + destination.
+ * The speed is ground speed, or indicated airspeed when `speed` is 'indicated'.
  */
 export function dataBlockLines(
   target: DataBlockTarget,
   timeShare: 0 | 1,
   style: DataBlockStyle = 'stars',
+  speed: DataBlockSpeed = 'ground',
 ): string[] {
+  const speedKts =
+    speed === 'indicated' && target.iasKts !== undefined ? target.iasKts : target.groundSpeedKts;
   const altitude = `${formatAltitude(target.altitudeFt)}${trendIndicator(target.verticalSpeedFpm)}`;
   const typeAndDestination = `${target.aircraftType.padEnd(4)} ${shortAirport(target.destination)}`;
   const route = navigationLabel(target.navigatingTo);
@@ -79,13 +87,13 @@ export function dataBlockLines(
         : '';
     return [
       target.callsign,
-      `${altitude}${assigned} ${target.coasting ? 'CST' : formatGroundSpeedKnots(target.groundSpeedKts)}`,
+      `${altitude}${assigned} ${target.coasting ? 'CST' : formatGroundSpeedKnots(speedKts)}`,
       route ? `${typeAndDestination} ${route}` : typeAndDestination,
     ];
   }
   const line2 =
     timeShare === 0
-      ? `${altitude}${target.coasting ? 'CST' : formatGroundSpeed(target.groundSpeedKts)}`
+      ? `${altitude}${target.coasting ? 'CST' : formatGroundSpeed(speedKts)}`
       : (route ?? typeAndDestination);
   return [target.callsign, line2];
 }

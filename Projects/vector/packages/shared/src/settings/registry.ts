@@ -24,12 +24,40 @@ export const USER_SETTINGS = {
     category: 'display',
     label: 'Data block style',
     description:
-      'Expanded: callsign, altitude with full ground speed, then type and destination. STARS: the real two-line format, ground speed in tens of knots, time-shared with type and destination.',
+      'Expanded: callsign, altitude with the full speed, then type and destination. STARS: the real two-line format, speed in tens of knots, time-shared with type and destination.',
     options: [
       { value: 'expanded', label: 'Expanded' },
       { value: 'stars', label: 'STARS' },
     ],
     default: 'expanded',
+  }),
+  'display.dataBlockSpeed': setting.select({
+    category: 'display',
+    label: 'Data block speed',
+    description:
+      'Indicated airspeed is what the pilot flies and what speed restrictions and your speed assignments use. Ground speed is the speed over the ground (the real scope shows this); it reads higher at altitude.',
+    options: [
+      { value: 'indicated', label: 'Indicated airspeed (IAS)' },
+      { value: 'ground', label: 'Ground speed' },
+    ],
+    default: 'indicated',
+  }),
+  'display.dimClearedApproaches': setting.boolean({
+    category: 'display',
+    label: 'Dim aircraft cleared for the ILS',
+    description:
+      'Draw aircraft cleared for an approach faded, so the traffic that still needs you stands out. Selected, hovered and conflicting aircraft are drawn at full strength.',
+    default: true,
+  }),
+  'display.clearedApproachOpacity': setting.number({
+    category: 'display',
+    label: 'Cleared approach opacity',
+    description: 'How strongly aircraft cleared for the ILS are drawn when dimmed.',
+    min: 15,
+    max: 90,
+    step: 5,
+    unit: '%',
+    default: 45,
   }),
   'display.dataBlockFontSize': setting.number({
     category: 'display',
@@ -545,6 +573,28 @@ export const SESSION_SETTINGS = {
     step: 1,
     unit: 'kts',
     default: 12,
+  }),
+  'weather.windVariation': setting.select({
+    category: 'weather',
+    label: 'Wind variation',
+    description:
+      'How much the wind drifts during a session, around its starting value. Slight: up to 20° and 4 kt. Moderate: up to 40° and 8 kt. Active runways stay as they are.',
+    options: [
+      { value: 'off', label: 'Off (steady)' },
+      { value: 'slight', label: 'Slight' },
+      { value: 'moderate', label: 'Moderate' },
+    ],
+    default: 'slight',
+  }),
+  'weather.windVariationPeriodMin': setting.number({
+    category: 'weather',
+    label: 'Wind change pace',
+    description: 'About how long one swing of the wind takes. Shorter is more changeable.',
+    min: 5,
+    max: 60,
+    step: 5,
+    unit: 'min',
+    default: 20,
   }),
   'weather.maxTailwindKts': setting.number({
     category: 'weather',

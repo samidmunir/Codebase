@@ -17,12 +17,16 @@ export interface RadarTarget {
   position: LatLon;
   altitudeFt: number;
   groundSpeedKts: number;
+  /** Indicated airspeed. */
+  iasKts: number;
   verticalSpeedFpm: number;
   /** Altitude the aircraft is cleared to (its target). */
   assignedAltitudeFt: number;
   headingDeg: number;
   /** Where the aircraft is navigating when not on a plain heading: a fix, or an ILS ('ILS22L'). */
   navigatingTo: string | undefined;
+  /** Cleared for an approach (ILS). */
+  approachCleared: boolean;
   /** Previous returns, newest first. */
   history: LatLon[];
   /** Sim time of this return, in seconds. */
@@ -272,10 +276,12 @@ export class RadarTracker {
       position: { ...plane.position },
       altitudeFt: plane.altitudeFt,
       groundSpeedKts: groundSpeedKts(plane),
+      iasKts: plane.iasKts,
       verticalSpeedFpm: plane.verticalSpeedFpm,
       assignedAltitudeFt: plane.targets.altitudeFt,
       headingDeg: plane.headingDeg,
       navigatingTo: navigatingTo(plane),
+      approachCleared: plane.navigation.mode === 'approach',
       history: previous ? [previous.position, ...previous.history].slice(0, MAX_HISTORY) : [],
       seenAtSec: this.updateTimeSec,
       coasting: false,

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { DepartureEntry } from '@vector/sim-core';
 import { shortAirport } from '../../scope/data-block';
 import type { ScopeSession } from '../../sim/scope-session';
+import { formatWind } from './format';
 
 interface DeparturesPanelProps {
   session: ScopeSession;
@@ -9,9 +10,6 @@ interface DeparturesPanelProps {
   queueVersion: number;
   onClose: () => void;
 }
-
-const formatWind = (direction: number, speed: number) =>
-  speed <= 2 ? 'Calm' : `${String(direction).padStart(3, '0')}° ${speed} kt`;
 
 function countdown(seconds: number): string {
   const s = Math.max(0, Math.round(seconds));
@@ -63,11 +61,7 @@ export function DeparturesPanel({ session, onClose }: DeparturesPanelProps) {
             >
               <div className="departure-airport__header">
                 <span className="departure-airport__code">{shortAirport(icao)}</span>
-                {wind && (
-                  <span className="departure-airport__wind">
-                    {formatWind(wind.directionDeg, wind.speedKts)}
-                  </span>
-                )}
+                {wind && <span className="departure-airport__wind">{formatWind(wind)}</span>}
                 <span className="departure-airport__count">
                   {entries.length}/{maxQueue}
                   {held > 0 && <span className="departure-airport__held"> · {held} at gate</span>}

@@ -186,3 +186,40 @@ describe('flying the route', () => {
     }
   });
 });
+
+describe('wind over a session', () => {
+  it('drifts slightly around the starting wind, and resumes exactly from a save', () => {
+    const engine = createEngine({ 'weather.windVariation': 'slight' }, 11);
+    const start = { ...engine.winds };
+    const seen = new Set<string>();
+    let changes = 0;
+    engine.subscribe((event) => event.type === 'windChanged' && changes++);
+    for (let minute = 0; minute < 120; minute++) {
+      run(engine, 60);
+      seen.add(JSON.stringify(engine.winds));
+      for (const [airport, wind] of Object.entries(engine.winds)) {
+        const base = start[airport]!;
+        expect(Math.abs(wind.speedKts - base.speedKts)).toBeLessThanOrEqual(4);
+      }
+    }
+    expect(changes).toBeGreaterThan(3);
+    expect(seen.size).toBeGreaterThan(3);
+    expect(engine.regionalWind).toBeDefined();
+
+    const restored = SimEngine.fromSnapshot(
+      JSON.parse(JSON.stringify(engine.toSnapshot())),
+      performance,
+      { airspace: newYork, airlines },
+    );
+    run(engine, 1_800);
+    run(restored, 1_800);
+    expect(restored.winds).toEqual(engine.winds);
+  });
+
+  it('stays steady when variation is off', () => {
+    const engine = createEngine({ 'weather.windVariation': 'off' }, 11);
+    const start = JSON.stringify(engine.winds);
+    run(engine, 3_600);
+    expect(JSON.stringify(engine.winds)).toBe(start);
+  });
+});

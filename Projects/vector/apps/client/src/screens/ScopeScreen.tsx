@@ -286,6 +286,7 @@ function Scope({ session }: { session: ScopeSession }) {
         facility={airspace.facility}
         name={airspace.name}
         airports={airspace.airports}
+        magneticVariationDeg={airspace.magneticVariationDeg}
         status={status}
         onTogglePause={() => session.togglePause()}
         onSetSpeed={(speed) => session.setSpeed(speed)}

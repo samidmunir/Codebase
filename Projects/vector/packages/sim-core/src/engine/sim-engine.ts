@@ -80,7 +80,7 @@ import {
   type ActiveRunways,
   type DepartureEntry,
 } from '../traffic/operations';
-import type { Wind } from '../weather/wind';
+import { regionalWind, variedWind, WIND_VARIATIONS, type Wind } from '../weather/wind';
 import { headingDifference, normalizeHeading } from '../math/angles';
 import {
   bearingTrue,
@@ -155,6 +155,8 @@ const flightLevelLabel = (altitudeFt: number, transitionAltitudeFt: number) =>
 
 /** Center re-plans its traffic this often. */
 const CENTER_UPDATE_SEC = 5;
+/** How often the reported wind is updated when it varies. */
+const WIND_UPDATE_SEC = 60;
 /** Center lifts a resolution once aircraft are this many minima apart and diverging. */
 const CENTER_CLEAR_FACTOR = 1.5;
 /** Center never resolves a conflict below this. */
@@ -341,6 +343,8 @@ export class SimEngine {
     const variation = this.state.world.magneticVariationDeg;
     this.state.tick++;
     this.executeDueInstructions();
+    if (this.state.tick % Math.max(1, Math.round(WIND_UPDATE_SEC / tickSeconds)) === 0)
+      this.updateWinds();
     this.updateDepartures();
     this.updateArrivals();
     this.updateTransits();
@@ -1333,6 +1337,36 @@ export class SimEngine {
   /** Wind at each airport (magnetic direction). Empty without an airspace. */
   get winds(): Readonly<Record<string, Wind>> {
     return this.state.operations?.winds ?? {};
+  }
+
+  /** One wind for the whole region (the average of the airports'), if there is an airspace. */
+  get regionalWind(): Wind | undefined {
+    return regionalWind(this.winds);
+  }
+
+  /** Lets the wind drift around its starting value, as set by the wind variation settings. */
+  private updateWinds(): void {
+    const operations = this.state.operations;
+    if (!operations?.baseWinds || operations.windSeed === undefined) return;
+    const settings = this.state.settings;
+    const amount = WIND_VARIATIONS[settings['weather.windVariation']];
+    const variation = {
+      ...amount,
+      periodSec: settings['weather.windVariationPeriodMin'] * 60,
+    };
+    const timeSec = this.state.tick * this.state.config.tickSeconds;
+    const winds: Record<string, Wind> = {};
+    let changed = false;
+    for (const [airport, base] of Object.entries(operations.baseWinds)) {
+      const wind = variedWind(base, airport, operations.windSeed, timeSec, variation);
+      const before = operations.winds[airport];
+      if (before?.directionDeg !== wind.directionDeg || before.speedKts !== wind.speedKts)
+        changed = true;
+      winds[airport] = wind;
+    }
+    if (!changed) return;
+    operations.winds = winds;
+    this.emit({ type: 'windChanged' });
   }
 
   /** Arrival and departure runways in use at each airport. */

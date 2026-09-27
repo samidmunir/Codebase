@@ -128,7 +128,12 @@ export function drawTrafficLayer(
   // Data block lines and positions, then leader directions that keep blocks apart.
   const blocks = new Map(
     ordered.map((target) => {
-      const lines = dataBlockLines(target, frame.timeShare, settings['display.dataBlockStyle']);
+      const lines = dataBlockLines(
+        target,
+        frame.timeShare,
+        settings['display.dataBlockStyle'],
+        settings['display.dataBlockSpeed'],
+      );
       return [
         target.id,
         {
@@ -167,6 +172,16 @@ export function drawTrafficLayer(
     const category = palette.traffic[trafficCategory(target, frame.airports)];
     const color = alert === 'loss' ? palette.alert : owned ? category.target : palette.unowned;
     const position = project(camera, target.position);
+    // Cleared for the ILS: faded, unless it needs attention or is being looked at.
+    const dim =
+      settings['display.dimClearedApproaches'] &&
+      target.approachCleared &&
+      !selected &&
+      !hovered &&
+      !alert
+        ? settings['display.clearedApproachOpacity'] / 100
+        : 1;
+    ctx.globalAlpha = dim;
 
     // History trail, fading with age.
     for (let i = 0; i < Math.min(trailLength, target.history.length); i++) {
@@ -268,7 +283,7 @@ export function drawTrafficLayer(
     }
     lines.forEach((text, i) => {
       // Type and destination (the expanded style's third line) are secondary: dim them.
-      ctx.globalAlpha = i === 2 ? 0.65 : 1;
+      ctx.globalAlpha = dim * (i === 2 ? 0.65 : 1);
       ctx.fillText(text, blockX, blockY + i * lineHeight);
     });
     ctx.restore();
@@ -284,6 +299,7 @@ export function drawTrafficLayer(
       ctx.restore();
     }
 
+    ctx.globalAlpha = 1;
     hits.push({ id: target.id, center: position, block: { x: blockX, y: blockY, width, height } });
     if (selected && frame.preview) drawPreview(ctx, frame, target.position, frame.preview);
   }
