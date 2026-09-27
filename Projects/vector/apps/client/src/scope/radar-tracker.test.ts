@@ -1,10 +1,26 @@
 import { destinationPoint, type AircraftState, type LatLon } from '@vector/sim-core';
 import { describe, expect, it } from 'vitest';
-import { navigatingTo, RadarTracker } from './radar-tracker';
+import {
+  enrouteRadar,
+  navigatingTo,
+  radarHorizonNm,
+  RadarTracker,
+  terminalRadar,
+  type RadarSensor,
+} from './radar-tracker';
 
 const ANTENNA = { lat: 40.6386, lon: -73.7698 };
 const INTERVAL = 4;
 const STEP = 0.05;
+
+/** A radar that sees everything, for testing the sweep timing. */
+const everywhere: RadarSensor = {
+  id: 'R',
+  antenna: ANTENNA,
+  intervalSec: INTERVAL,
+  covers: () => true,
+};
+const singleRadar = () => new RadarTracker([everywhere], everywhere);
 
 /** A position `distanceNm` from the antenna on a true bearing. */
 const at = (bearing: number, distanceNm = 20): LatLon =>
@@ -54,7 +70,7 @@ function run(radar: RadarTracker, planes: () => AircraftState[], from: number, t
 
 describe('RadarTracker', () => {
   it('paints every aircraft on the first update so the scope starts full', () => {
-    const radar = new RadarTracker(INTERVAL, ANTENNA);
+    const radar = singleRadar();
     radar.update(1.3, [aircraft('1', at(10)), aircraft('2', at(200))]);
     expect(
       radar
@@ -65,7 +81,7 @@ describe('RadarTracker', () => {
   });
 
   it('updates each aircraft when the beam passes its bearing from the antenna', () => {
-    const radar = new RadarTracker(INTERVAL, ANTENNA);
+    const radar = singleRadar();
     const east = aircraft('east', at(90));
     const south = aircraft('south', at(180));
     const updates = run(radar, () => [east, south], 0, 8);
@@ -84,7 +100,7 @@ describe('RadarTracker', () => {
   });
 
   it('updates each aircraft exactly once per rotation', () => {
-    const radar = new RadarTracker(INTERVAL, ANTENNA);
+    const radar = singleRadar();
     let position = at(45);
     const updates = run(
       radar,
@@ -99,7 +115,7 @@ describe('RadarTracker', () => {
   });
 
   it('keeps previous returns as history, newest first', () => {
-    const radar = new RadarTracker(INTERVAL, ANTENNA);
+    const radar = singleRadar();
     const positions = [at(90, 20), at(90, 21), at(90, 22)];
     radar.update(0, [aircraft('1', positions[0]!)]);
     radar.update(1.1, [aircraft('1', positions[1]!)]);
@@ -108,7 +124,7 @@ describe('RadarTracker', () => {
   });
 
   it('shows new aircraft only once the beam reaches them', () => {
-    const radar = new RadarTracker(INTERVAL, ANTENNA);
+    const radar = singleRadar();
     radar.update(0, []);
     const west = aircraft('west', at(270)); // three-quarters of a turn: 3 s
     radar.update(0.5, [west]);
@@ -118,20 +134,84 @@ describe('RadarTracker', () => {
     expect(radar.get('west')).toBeDefined();
   });
 
-  it('removes aircraft that are gone once the beam passes their last position', () => {
-    const radar = new RadarTracker(INTERVAL, ANTENNA);
+  it('removes aircraft that are gone a few seconds later', () => {
+    const radar = singleRadar();
     radar.update(0, [aircraft('1', at(180))]);
-    radar.update(1.9, []);
+    radar.update(1, []);
+    radar.update(5.5, []);
     expect(radar.get('1')).toBeDefined();
-    radar.update(2.05, []);
+    radar.update(6.1, []);
     expect(radar.get('1')).toBeUndefined();
   });
 
   it('moves the sweep beam continuously', () => {
-    const radar = new RadarTracker(INTERVAL, ANTENNA);
+    const radar = singleRadar();
     expect(radar.sweepProgress(11)).toBe(0.75);
     expect(radar.sweepProgress(11.5)).toBe(0.875);
     expect(radar.sweepProgress(12)).toBe(0);
+  });
+});
+
+describe('RadarTracker with several radars', () => {
+  const east = destinationPoint(ANTENNA, 90, 80); // a second antenna 80 NM east
+  const jfk = terminalRadar({
+    id: 'JFK',
+    position: ANTENNA,
+    antennaElevationFt: 63,
+    rangeNm: 60,
+    intervalSec: 4,
+  });
+  const other = terminalRadar({
+    id: 'EAST',
+    position: east,
+    antennaElevationFt: 50,
+    rangeNm: 60,
+    intervalSec: 5,
+  });
+
+  it('limits a terminal radar to its range and to line of sight for low aircraft', () => {
+    expect(radarHorizonNm(50, 0)).toBeCloseTo(8.7, 1);
+    expect(radarHorizonNm(50, 10_000)).toBeGreaterThan(120);
+    const at5000 = (nm: number) => ({ ...aircraft('1', at(0, nm)), altitudeFt: 5_000 });
+    expect(jfk.covers(at5000(55))).toBe(true);
+    expect(jfk.covers(at5000(65))).toBe(false); // beyond its 60 NM range
+    const low = { ...aircraft('2', at(0, 35)), altitudeFt: 400 };
+    expect(jfk.covers(low)).toBe(false); // below the radar horizon at 35 NM
+  });
+
+  it('updates an aircraft on each covering radar’s sweep', () => {
+    const radar = new RadarTracker([jfk, other], jfk);
+    // Between the two antennas, covered by both.
+    const between = { ...aircraft('1', destinationPoint(ANTENNA, 90, 40)), altitudeFt: 10_000 };
+    const updates = run(radar, () => [between], 0, 20);
+    // 5 JFK rotations and 4 of the other radar's in 20 s, plus the first paint (a sweep can coincide).
+    expect(updates['1']!.length).toBeGreaterThanOrEqual(8);
+    expect(updates['1']!.length).toBeLessThanOrEqual(10);
+  });
+
+  it('coasts an aircraft outside coverage, then picks it up again', () => {
+    const lrr = enrouteRadar(ANTENNA, 6_000, 12);
+    const radar = new RadarTracker([jfk, lrr], jfk);
+    const far = (altitudeFt: number) => ({ ...aircraft('1', at(0, 100)), altitudeFt });
+    radar.update(0, [far(8_000)]);
+    expect(radar.get('1')).toMatchObject({ coasting: false, altitudeFt: 8_000 });
+    // Descends below the long-range floor, 100 NM out: no radar sees it.
+    radar.update(1, [far(5_000)]);
+    expect(radar.get('1')).toMatchObject({ coasting: true, altitudeFt: 8_000 });
+    radar.update(30, [far(5_000)]);
+    expect(radar.get('1')!.altitudeFt).toBe(8_000);
+    // Climbs back into coverage: repainted on the next long-range sweep.
+    radar.update(31, [far(7_000)]);
+    radar.update(44, [far(7_000)]);
+    expect(radar.get('1')).toMatchObject({ coasting: false, altitudeFt: 7_000 });
+  });
+
+  it('never shows aircraft no radar has covered yet', () => {
+    const radar = new RadarTracker([jfk], jfk);
+    const low = { ...aircraft('1', at(0, 100)), altitudeFt: 3_000 };
+    radar.update(0, [low]);
+    radar.update(10, [low]);
+    expect(radar.get('1')).toBeUndefined();
   });
 });
 

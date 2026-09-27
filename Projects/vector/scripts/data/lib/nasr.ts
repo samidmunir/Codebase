@@ -170,3 +170,27 @@ export function parseArtccBoundaries(content: string, artccs: readonly string[])
   }
   return boundaries.filter((boundary) => boundary.ring.length >= 4);
 }
+
+// ---- Radars (RDR.csv) ---------------------------------------------------------
+
+export interface RadarRecord {
+  /** FAA identifier of the facility, e.g. 'PHL'. */
+  facility: string;
+  facilityType: string;
+  radarType: string;
+}
+
+/** RDR.csv: radars by facility (no positions; ASRs sit at their airports). */
+export function parseRadars(csv: string): RadarRecord[] {
+  const [header, ...lines] = csv.split(/\r?\n/).filter((line) => line.trim() !== '');
+  const columns = csvFields(header!);
+  const [facility, type, radar] = ['FACILITY_ID', 'FACILITY_TYPE', 'RADAR_TYPE'].map((name) => {
+    const i = columns.indexOf(name);
+    if (i === -1) throw new Error(`RDR.csv has no ${name} column`);
+    return i;
+  }) as [number, number, number];
+  return lines.map((line) => {
+    const f = csvFields(line);
+    return { facility: f[facility]!, facilityType: f[type]!, radarType: f[radar]! };
+  });
+}

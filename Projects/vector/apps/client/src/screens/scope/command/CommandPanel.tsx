@@ -3,6 +3,7 @@ import { formatFrequency, headingDifference, type AircraftState } from '@vector/
 import {
   altitudeOptions,
   centerHandoff,
+  planningNotes,
   directToGroups,
   ilsClearance,
   ilsRunways,
@@ -30,8 +31,9 @@ interface CommandPanelProps {
   aircraft: Readonly<AircraftState>;
   draft: InstructionDraft;
   onDraftChange: (draft: InstructionDraft) => void;
-  leaderDirection: LeaderDirection;
-  onLeaderDirectionChange: (direction: LeaderDirection) => void;
+  /** The data block position the player chose; undefined when placed automatically. */
+  leaderDirection: LeaderDirection | undefined;
+  onLeaderDirectionChange: (direction: LeaderDirection | undefined) => void;
   /** A direct-to fix is hovered or focused (undefined when it no longer is). */
   onFixHover?: (ident: string | undefined) => void;
   onClose: () => void;
@@ -150,13 +152,29 @@ export function CommandPanel(props: CommandPanelProps) {
         </div>
       </dl>
 
+      <ul className="command-panel__plan" aria-label="Planning">
+        {planningNotes(pack, aircraft, altitudeLabel).map((note) => (
+          <li key={note.label} data-tone={note.tone}>
+            <span>{note.label}</span> {note.value}
+          </li>
+        ))}
+      </ul>
+
       <div className="command-panel__status">
         <span className={owned ? 'status-chip status-chip--owned' : 'status-chip'}>{owner}</span>
         {pending && <span className="status-chip status-chip--pending">Awaiting readback</span>}
         <div className="leader-picker" role="group" aria-label="Data block position">
           {DIRECTION_GRID.map((direction, i) =>
             direction === null ? (
-              <span key={i} className="leader-picker__center" aria-hidden="true" />
+              <button
+                key={i}
+                type="button"
+                className="leader-picker__center"
+                aria-label="Place data block automatically"
+                title="Automatic"
+                aria-pressed={props.leaderDirection === undefined}
+                onClick={() => props.onLeaderDirectionChange(undefined)}
+              />
             ) : (
               <button
                 key={i}

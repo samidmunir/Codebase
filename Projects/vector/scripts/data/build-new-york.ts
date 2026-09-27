@@ -26,7 +26,7 @@ import { cachedDownload, onlyFile, text, unzipMatching } from './lib/download';
 import { boxAround, inBox, simplify } from './lib/geometry';
 import { parseMva } from './lib/mva';
 import { findRadarSites } from './lib/radar-sites';
-import { parseArtccBoundaries, parseCenterSites, parseFrequencies } from './lib/nasr';
+import { parseArtccBoundaries, parseCenterSites, parseFrequencies, parseRadars } from './lib/nasr';
 import { buildShoreline } from './lib/shoreline';
 
 // ---- Configuration -------------------------------------------------------------
@@ -65,6 +65,13 @@ const CENTER_NAMES: Record<string, string> = {
 /** TRACON MVA charts (FUS3) and Center MIA charts in the region. */
 const MVA_CHARTS = ['N90_MVA_FUS3', 'PHL_MVA_FUS3'] as const;
 const MIA_CHARTS = ['ZNY_TAV', 'ZBW_TAV', 'ZDC_TAV', 'ZOB_TAV'] as const;
+/** Standard ASR-9/ASR-11 instrumented range, and its antenna height above the field. */
+const ASR_RANGE_NM = 60;
+const ASR_ANTENNA_HEIGHT_FT = 50;
+/** ASR sites farther than this from the center are left out (their coverage doesn't reach). */
+const RADAR_SITE_RADIUS_NM = BOUNDARY_RADIUS_NM + ASR_RANGE_NM;
+/** A chart arc center this close to an airport is that airport's ASR antenna. */
+const RADAR_AIRPORT_MATCH_NM = 4;
 /** MVA arcs at least this large are radar range arcs, not obstacle clearance circles. */
 const RADAR_MIN_ARC_NM = 20;
 /** Center radio sites farther than this are left out. */
@@ -442,6 +449,69 @@ function buildMapAirports(cifp: CifpData) {
     .sort((a, b) => a.icao.localeCompare(b.icao));
 }
 
+// ---- Radars ----------------------------------------------------------------------
+
+interface ArcSite {
+  lat: number;
+  lon: number;
+  arcRadiiNm: number[];
+}
+
+/**
+ * Terminal radar (ASR) sites in the region. Where a TRACON's MVA chart has
+ * range arcs, their center is the antenna; other ASRs listed in NASR sit at
+ * their airport's reference point (within about a mile of the real antenna).
+ */
+function buildRadarSites(cifp: CifpData, arcSites: readonly ArcSite[], rdrCsv: string) {
+  const airportOf = (faaId: string) => cifp.allAirports.find((a) => a.icao === `K${faaId}`);
+  const sites: {
+    id: string;
+    name: string;
+    kind: 'asr';
+    position: { lat: number; lon: number };
+    antennaElevationFt: number;
+    rangeNm: number;
+    source: 'chart' | 'airport';
+  }[] = [];
+  const asrAirports = [
+    ...new Set(
+      parseRadars(rdrCsv)
+        .filter((r) => r.radarType === 'ASR' && r.facilityType === 'AIRPORT')
+        .map((r) => r.facility),
+    ),
+  ];
+  for (const faaId of asrAirports) {
+    const airport = airportOf(faaId);
+    if (!airport || distanceNm(CENTER, airport.position) > RADAR_SITE_RADIUS_NM) continue;
+    // Arc centers near this airport: average them (several arcs can fit slightly apart).
+    const arcs = arcSites.filter(
+      (site) =>
+        distanceNm(site, airport.position) < RADAR_AIRPORT_MATCH_NM &&
+        Math.max(...site.arcRadiiNm) >= ASR_RANGE_NM - 5,
+    );
+    const position =
+      arcs.length > 0
+        ? {
+            lat: arcs.reduce((sum, a) => sum + a.lat, 0) / arcs.length,
+            lon: arcs.reduce((sum, a) => sum + a.lon, 0) / arcs.length,
+          }
+        : airport.position;
+    sites.push({
+      id: faaId,
+      name: `${faaId} ASR`,
+      kind: 'asr',
+      position: {
+        lat: Math.round(position.lat * 1e5) / 1e5,
+        lon: Math.round(position.lon * 1e5) / 1e5,
+      },
+      antennaElevationFt: airport.elevationFt + ASR_ANTENNA_HEIGHT_FT,
+      rangeNm: ASR_RANGE_NM,
+      source: arcs.length > 0 ? 'chart' : 'airport',
+    });
+  }
+  return sites.sort((a, b) => distanceNm(CENTER, a.position) - distanceNm(CENTER, b.position));
+}
+
 // ---- Boundary ------------------------------------------------------------------
 
 function circleRing(
@@ -663,6 +733,26 @@ async function main() {
 
   const jfk = airports.find((a) => a.icao === 'KJFK')!;
 
+  console.log('- FAA NASR radars');
+  const rdrCsv = text(
+    onlyFile(
+      unzipMatching(
+        await cachedDownload(
+          `https://nfdc.faa.gov/webContent/28DaySub/extra/${NASR_CSV_EDITION}_RDR_CSV.zip`,
+          `nasr/${NASR_CSV_EDITION}_RDR_CSV.zip`,
+        ),
+        /RDR\.csv$/,
+      ),
+      /RDR\.csv$/,
+    ),
+  );
+  const arcSites = findRadarSites(
+    mvaSectors.flatMap((sector) => [sector.exterior, ...sector.holes]),
+    RADAR_MIN_ARC_NM,
+    CENTER.lat,
+  );
+  const radars = buildRadarSites(cifp, arcSites, rdrCsv);
+
   // The JFK airport surveillance radar: the MVA chart's long range arcs are centered on it.
   const radarSite = findRadarSites(
     mva.flatMap((sector) => [sector.exterior, ...sector.holes]),
@@ -689,6 +779,7 @@ async function main() {
       },
       rangeNm: Math.max(...radarSite.arcRadiiNm),
     },
+    radars: radars.map(({ source: _source, ...site }) => site),
     boundary: { ring: circleRing(CENTER, BOUNDARY_RADIUS_NM), ceilingFt: BOUNDARY_CEILING_FT },
     transitionAltitudeFt: 18_000,
     airports: [...AIRPORTS],
@@ -712,7 +803,7 @@ async function main() {
         name: 'FAA National Airspace System Resources (NASR)',
         url: 'https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/',
         edition: NASR_EDITION,
-        usedFor: 'Tower frequencies, Center radio sites and ARTCC boundaries',
+        usedFor: 'Tower frequencies, Center radio sites, ARTCC boundaries and ASR radar sites',
       },
       {
         name: 'FAA Class Airspace',

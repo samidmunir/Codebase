@@ -70,6 +70,13 @@ export const USER_SETTINGS = {
     step: 1,
     default: 2,
   }),
+  'display.autoPlaceDataBlocks': setting.boolean({
+    category: 'display',
+    label: 'Keep data blocks apart',
+    description:
+      'Automatically move data blocks to a clear side of their target when they would overlap. Blocks you place yourself stay where you put them.',
+    default: true,
+  }),
   'display.heatTrail': setting.boolean({
     category: 'display',
     label: 'Heat trail',
@@ -268,6 +275,13 @@ export const USER_SETTINGS = {
     description: 'Show TRACON MVA sectors and their minimum altitudes.',
     default: false,
   }),
+  'map.radarSites': setting.boolean({
+    category: 'map',
+    label: 'Radar sites',
+    description:
+      'Show the terminal radars that feed the scope and their 60 NM range. Low aircraft far from them drop out of coverage and coast.',
+    default: false,
+  }),
   'map.minimumIfrAltitudes': setting.boolean({
     category: 'map',
     label: 'Minimum IFR altitudes',
@@ -403,6 +417,12 @@ export const USER_SETTINGS = {
     label: 'RP panel',
     description: 'Show or hide your RP total and how it was earned.',
     default: 'KeyR',
+  }),
+  'controls.keys.openHelp': setting.keybinding({
+    category: 'controls',
+    label: 'Quick reference',
+    description: 'Show symbols, colors, controls and how to work each kind of flight.',
+    default: 'Shift+Slash',
   }),
   'controls.keys.openSettings': setting.keybinding({
     category: 'controls',
@@ -589,14 +609,46 @@ export const SESSION_SETTINGS = {
   // ---- Radar ---------------------------------------------------------------
   'radar.sweepIntervalSec': setting.number({
     category: 'radar',
-    label: 'Radar update interval',
+    label: 'Terminal radar rotation',
     description:
-      'How often targets update on the scope. Real terminal radar updates about every 4.8 s.',
+      'How often each terminal radar (ASR) sweeps and updates the targets it covers. Real ASRs turn about every 4.8 s.',
     min: 1,
     max: 12,
     step: 0.1,
     unit: 's',
     default: 4.8,
+  }),
+  'radar.coverage': setting.select({
+    category: 'radar',
+    label: 'Radar coverage',
+    description:
+      'Realistic: aircraft show only where a radar covers them (terminal radars within range and line of sight, long-range radar above its floor), and coast elsewhere. Everywhere: one radar sees the whole region.',
+    options: [
+      { value: 'realistic', label: 'Realistic' },
+      { value: 'everywhere', label: 'Everywhere' },
+    ],
+    default: 'realistic',
+  }),
+  'radar.enrouteFloorFt': setting.number({
+    category: 'radar',
+    label: 'Long-range radar floor',
+    description:
+      'Long-range (en route) radar covers the whole region at and above this altitude. Below it, aircraft need a terminal radar.',
+    min: 0,
+    max: 18_000,
+    step: 500,
+    unit: 'ft',
+    default: 6_000,
+  }),
+  'radar.enrouteIntervalSec': setting.number({
+    category: 'radar',
+    label: 'Long-range radar rotation',
+    description: 'How often long-range radar updates the targets only it covers (about 12 s).',
+    min: 4,
+    max: 24,
+    step: 0.5,
+    unit: 's',
+    default: 12,
   }),
 
   // ---- Pilots --------------------------------------------------------------
@@ -640,10 +692,10 @@ export const SESSION_SETTINGS = {
     label: 'Max intercept angle',
     description: 'Largest angle to the localizer at which a pilot accepts the approach.',
     min: 10,
-    max: 45,
+    max: 90,
     step: 5,
     unit: '°',
-    default: 30,
+    default: 60,
   }),
   'approaches.interceptDistanceNm': setting.range({
     category: 'approaches',

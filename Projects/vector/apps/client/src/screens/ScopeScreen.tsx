@@ -10,7 +10,7 @@ import { useGameControls } from '../controls/use-game-controls';
 import { Basemap, BASEMAP_ATTRIBUTION, type BasemapHandle } from '../scope/Basemap';
 import type { Camera } from '../scope/camera';
 import { RadarScope, type RadarScopeHandle } from '../scope/RadarScope';
-import { DEFAULT_LEADER_DIRECTION, type LeaderDirection } from '../scope/render/traffic-layer';
+import type { LeaderDirection } from '../scope/render/traffic-layer';
 import { DEFAULT_DIFFICULTY, DIFFICULTY_LABELS, parseDifficulty } from '../settings/difficulty';
 import { useUserSettings } from '../settings/user-settings-store';
 import { ScopeSession } from '../sim/scope-session';
@@ -25,6 +25,7 @@ import {
   useInterfaceSounds,
 } from './scope/use-conflict-sounds';
 import { SaveSessionDialog } from './scope/SaveSessionDialog';
+import { HelpDialog } from '../components/help/HelpDialog';
 import { ScorePanel } from './scope/ScorePanel';
 import { ScoreToasts } from './scope/ScoreToasts';
 import { SettingsDialog } from './scope/SettingsDialog';
@@ -145,6 +146,7 @@ function Scope({ session }: { session: ScopeSession }) {
   const [scoreOpen, setScoreOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [toast, setToast] = useState<string | undefined>(undefined);
   const [commsOpen, setCommsOpen] = useState(true);
   const [departuresOpen, setDeparturesOpen] = useState(true);
@@ -224,11 +226,13 @@ function Scope({ session }: { session: ScopeSession }) {
     toggleScore,
     saveSession: openSave,
     openSettings: () => setSettingsOpen((open) => !open),
+    openHelp: () => setHelpOpen((open) => !open),
     toggleCommsLog: () => setCommsOpen((open) => !open),
     toggleDepartureQueue: () => setDeparturesOpen((open) => !open),
     // Closes the topmost panel: the save dialog, then side panels, then the selected aircraft.
     closeMenu: () => {
-      if (settingsOpen) setSettingsOpen(false);
+      if (helpOpen) setHelpOpen(false);
+      else if (settingsOpen) setSettingsOpen(false);
       else if (saveOpen) setSaveOpen(false);
       else if (layersOpen || trafficOpen || scoreOpen) {
         setLayersOpen(false);
@@ -277,6 +281,7 @@ function Scope({ session }: { session: ScopeSession }) {
         onToggleTraffic={toggleTraffic}
         onSave={openSave}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
         scoreOpen={scoreOpen}
         onToggleScore={toggleScore}
         commsOpen={commsOpen}
@@ -299,9 +304,14 @@ function Scope({ session }: { session: ScopeSession }) {
           aircraft={selected}
           draft={selection.draft}
           onDraftChange={(draft) => setSelection({ id: selected.id, draft })}
-          leaderDirection={leaderDirections.get(selected.id) ?? DEFAULT_LEADER_DIRECTION}
+          leaderDirection={leaderDirections.get(selected.id)}
           onLeaderDirectionChange={(direction) =>
-            setLeaderDirections((current) => new Map(current).set(selected.id, direction))
+            setLeaderDirections((current) => {
+              const next = new Map(current);
+              if (direction === undefined) next.delete(selected.id);
+              else next.set(selected.id, direction);
+              return next;
+            })
           }
           onFixHover={setHoveredFix}
           onClose={() => select(undefined)}
@@ -329,6 +339,7 @@ function Scope({ session }: { session: ScopeSession }) {
       )}
 
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
 
       {saveOpen && (
         <SaveSessionDialog

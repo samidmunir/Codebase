@@ -17,6 +17,360 @@
     },
     "rangeNm": 60
   },
+  "radars": [
+    {
+      "id": "JFK",
+      "name": "JFK ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.63587,
+        "lon": -73.76694
+      },
+      "antennaElevationFt": 63,
+      "rangeNm": 60
+    },
+    {
+      "id": "EWR",
+      "name": "EWR ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.68765,
+        "lon": -74.16291
+      },
+      "antennaElevationFt": 68,
+      "rangeNm": 60
+    },
+    {
+      "id": "HPN",
+      "name": "HPN ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.06695,
+        "lon": -73.70757
+      },
+      "antennaElevationFt": 489,
+      "rangeNm": 60
+    },
+    {
+      "id": "ISP",
+      "name": "ISP ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.80137,
+        "lon": -73.09489
+      },
+      "antennaElevationFt": 149,
+      "rangeNm": 60
+    },
+    {
+      "id": "SWF",
+      "name": "SWF ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.50411,
+        "lon": -74.10483
+      },
+      "antennaElevationFt": 541,
+      "rangeNm": 60
+    },
+    {
+      "id": "WRI",
+      "name": "WRI ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.01579,
+        "lon": -74.59072
+      },
+      "antennaElevationFt": 191,
+      "rangeNm": 60
+    },
+    {
+      "id": "ABE",
+      "name": "ABE ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.65236,
+        "lon": -75.44041
+      },
+      "antennaElevationFt": 444,
+      "rangeNm": 60
+    },
+    {
+      "id": "PHL",
+      "name": "PHL ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 39.85512,
+        "lon": -75.27922
+      },
+      "antennaElevationFt": 86,
+      "rangeNm": 60
+    },
+    {
+      "id": "ACY",
+      "name": "ACY ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 39.45758,
+        "lon": -74.57716
+      },
+      "antennaElevationFt": 125,
+      "rangeNm": 60
+    },
+    {
+      "id": "AVP",
+      "name": "AVP ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.33847,
+        "lon": -75.72339
+      },
+      "antennaElevationFt": 1012,
+      "rangeNm": 60
+    },
+    {
+      "id": "BDL",
+      "name": "BDL ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.93903,
+        "lon": -72.68432
+      },
+      "antennaElevationFt": 223,
+      "rangeNm": 60
+    },
+    {
+      "id": "RDG",
+      "name": "RDG ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.3785,
+        "lon": -75.96525
+      },
+      "antennaElevationFt": 393,
+      "rangeNm": 60
+    },
+    {
+      "id": "CEF",
+      "name": "CEF ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 42.19402,
+        "lon": -72.53479
+      },
+      "antennaElevationFt": 291,
+      "rangeNm": 60
+    },
+    {
+      "id": "DOV",
+      "name": "DOV ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 39.12954,
+        "lon": -75.46596
+      },
+      "antennaElevationFt": 79,
+      "rangeNm": 60
+    },
+    {
+      "id": "ALB",
+      "name": "ALB ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 42.74912,
+        "lon": -73.80198
+      },
+      "antennaElevationFt": 335,
+      "rangeNm": 60
+    },
+    {
+      "id": "BGM",
+      "name": "BGM ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 42.20844,
+        "lon": -75.97961
+      },
+      "antennaElevationFt": 1686,
+      "rangeNm": 60
+    },
+    {
+      "id": "PVD",
+      "name": "PVD ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.72233,
+        "lon": -71.42772
+      },
+      "antennaElevationFt": 104,
+      "rangeNm": 60
+    },
+    {
+      "id": "MDT",
+      "name": "MDT ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.19319,
+        "lon": -76.76262
+      },
+      "antennaElevationFt": 360,
+      "rangeNm": 60
+    },
+    {
+      "id": "BWI",
+      "name": "BWI ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 39.17573,
+        "lon": -76.66899
+      },
+      "antennaElevationFt": 193,
+      "rangeNm": 60
+    },
+    {
+      "id": "ELM",
+      "name": "ELM ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 42.15986,
+        "lon": -76.89175
+      },
+      "antennaElevationFt": 1005,
+      "rangeNm": 60
+    },
+    {
+      "id": "FMH",
+      "name": "FMH ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.65914,
+        "lon": -70.52281
+      },
+      "antennaElevationFt": 180,
+      "rangeNm": 60
+    },
+    {
+      "id": "BOS",
+      "name": "BOS ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 42.36294,
+        "lon": -71.00639
+      },
+      "antennaElevationFt": 69,
+      "rangeNm": 60
+    },
+    {
+      "id": "SYR",
+      "name": "SYR ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 43.11118,
+        "lon": -76.10632
+      },
+      "antennaElevationFt": 471,
+      "rangeNm": 60
+    },
+    {
+      "id": "MHT",
+      "name": "MHT ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 42.93281,
+        "lon": -71.43575
+      },
+      "antennaElevationFt": 316,
+      "rangeNm": 60
+    },
+    {
+      "id": "ADW",
+      "name": "ADW ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 38.81079,
+        "lon": -76.86738
+      },
+      "antennaElevationFt": 330,
+      "rangeNm": 60
+    },
+    {
+      "id": "ACK",
+      "name": "ACK ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.2533,
+        "lon": -70.06051
+      },
+      "antennaElevationFt": 97,
+      "rangeNm": 60
+    },
+    {
+      "id": "DCA",
+      "name": "DCA ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 38.85144,
+        "lon": -77.03772
+      },
+      "antennaElevationFt": 64,
+      "rangeNm": 60
+    },
+    {
+      "id": "NHK",
+      "name": "NHK ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 38.28633,
+        "lon": -76.40997
+      },
+      "antennaElevationFt": 89,
+      "rangeNm": 60
+    },
+    {
+      "id": "DAA",
+      "name": "DAA ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 38.71492,
+        "lon": -77.18089
+      },
+      "antennaElevationFt": 124,
+      "rangeNm": 60
+    },
+    {
+      "id": "IAD",
+      "name": "IAD ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 38.94746,
+        "lon": -77.45993
+      },
+      "antennaElevationFt": 362,
+      "rangeNm": 60
+    },
+    {
+      "id": "MRB",
+      "name": "MRB ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 39.40236,
+        "lon": -77.983
+      },
+      "antennaElevationFt": 615,
+      "rangeNm": 60
+    },
+    {
+      "id": "NYG",
+      "name": "NYG ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 38.50363,
+        "lon": -77.30503
+      },
+      "antennaElevationFt": 60,
+      "rangeNm": 60
+    }
+  ],
   "boundary": {
     "ring": [
       [
@@ -1423,7 +1777,7 @@
       "name": "FAA National Airspace System Resources (NASR)",
       "url": "https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/",
       "edition": "2026-09-03",
-      "usedFor": "Tower frequencies, Center radio sites and ARTCC boundaries"
+      "usedFor": "Tower frequencies, Center radio sites, ARTCC boundaries and ASR radar sites"
     },
     {
       "name": "FAA Class Airspace",

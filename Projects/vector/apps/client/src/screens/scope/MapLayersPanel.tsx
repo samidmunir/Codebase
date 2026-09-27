@@ -21,6 +21,7 @@ const MAP_LAYERS: BooleanKey[] = [
   'map.airwaysLow',
   'map.minimumVectoringAltitudes',
   'map.minimumIfrAltitudes',
+  'map.radarSites',
 ];
 
 const TRAFFIC_COLORS = [

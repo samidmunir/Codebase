@@ -76,4 +76,9 @@ describe('data block', () => {
     };
     expect(dataBlockLines(level, 0, 'expanded')[1]).toMatch(/^350 {2}\d{3}$/);
   });
+
+  it('shows CST instead of ground speed while coasting', () => {
+    expect(dataBlockLines({ ...target, coasting: true }, 0, 'expanded')[1]).toMatch(/ CST$/);
+    expect(dataBlockLines({ ...target, coasting: true }, 0, 'stars')[1]).toMatch(/CST$/);
+  });
 });

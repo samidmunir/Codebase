@@ -230,3 +230,74 @@ export function minimumVectoringAltitude(
 ): number | undefined {
   return pack.minimumVectoringAltitude(position);
 }
+
+/** Track miles needed per 1,000 ft of descent (the 3:1 rule). */
+const DESCENT_NM_PER_1000FT = 3;
+/** Arrivals are planned down to about this height above the field before the approach. */
+const APPROACH_HEIGHT_FT = 3_000;
+/** Warn this many miles before the descent should start. */
+const DESCENT_WARNING_NM = 5;
+
+export interface PlanningNote {
+  label: string;
+  value: string;
+  tone: 'normal' | 'good' | 'caution';
+}
+
+/**
+ * Planning help for the command panel: for arrivals, distance to the airport
+ * and when to start down (3:1); for departures and overflights, the requested
+ * level and where they leave, with how far to go.
+ */
+export function planningNotes(
+  pack: AirspacePack,
+  aircraft: Readonly<AircraftState>,
+  altitudeLabel: (altitudeFt: number) => string,
+): PlanningNote[] {
+  const { destination } = aircraft.flightPlan;
+  if (pack.airspace.airports.includes(destination)) {
+    const airport = pack.airport(destination);
+    const distance = distanceNm(aircraft.position, airport.position);
+    const toLose = Math.max(0, aircraft.altitudeFt - airport.elevationFt - APPROACH_HEIGHT_FT);
+    const needed = (toLose / 1000) * DESCENT_NM_PER_1000FT;
+    const descending = aircraft.targets.altitudeFt < aircraft.altitudeFt - 100;
+    const shortName = destination.startsWith('K') ? destination.slice(1) : destination;
+    const notes: PlanningNote[] = [
+      { label: shortName, value: `${Math.round(distance)} NM`, tone: 'normal' },
+    ];
+    if (toLose > 0 && aircraft.phase === 'arrival') {
+      notes.push(
+        descending
+          ? { label: 'Descent', value: 'descending', tone: 'good' }
+          : distance <= needed + DESCENT_WARNING_NM
+            ? { label: 'Descent', value: 'start down now', tone: 'caution' }
+            : {
+                label: 'Descent',
+                value: `start in ${Math.round(distance - needed)} NM`,
+                tone: 'normal',
+              },
+      );
+    }
+    return notes;
+  }
+
+  const notes: PlanningNote[] = [];
+  const requested = aircraft.flightPlan.requestedAltitudeFt;
+  if (requested !== undefined) {
+    const cleared = aircraft.targets.altitudeFt === requested;
+    notes.push({
+      label: 'Requested',
+      value: `${altitudeLabel(requested)}${cleared ? ' ✓' : ''}`,
+      tone: cleared ? 'good' : 'normal',
+    });
+  }
+  const exit = exitPoint(pack, aircraft);
+  const center = pack.centerAt(exit, aircraft.altitudeFt);
+  const toBoundary = Math.max(0, distanceNm(aircraft.position, exit) - EXIT_LOOKAHEAD_NM);
+  notes.push({
+    label: 'Exit',
+    value: `${center.callsign.replace(' Center', '')} · ${Math.round(toBoundary)} NM`,
+    tone: toBoundary < 15 ? 'caution' : 'normal',
+  });
+  return notes;
+}

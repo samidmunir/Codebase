@@ -21,6 +21,7 @@ interface ScopeTopBarProps {
   onToggleTraffic: () => void;
   onSave: () => void;
   onOpenSettings: () => void;
+  onOpenHelp: () => void;
   scoreOpen: boolean;
   onToggleScore: () => void;
 }
@@ -120,6 +121,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
           className="scope-button"
           aria-pressed={props.departuresOpen}
           onClick={props.onToggleDepartures}
+          title="Departure queues (Q)"
         >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
@@ -131,7 +133,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
               strokeLinejoin="round"
             />
           </svg>
-          Departures
+          <span className="scope-button__label">Departures</span>
         </button>
 
         <button
@@ -139,6 +141,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
           className="scope-button"
           aria-pressed={props.commsOpen}
           onClick={props.onToggleComms}
+          title="Radio log (L)"
         >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
@@ -149,7 +152,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
               strokeLinejoin="round"
             />
           </svg>
-          Radio
+          <span className="scope-button__label">Radio</span>
         </button>
 
         <button
@@ -157,6 +160,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
           className="scope-button"
           aria-pressed={props.trafficOpen}
           onClick={props.onToggleTraffic}
+          title="Traffic (T)"
         >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
@@ -170,7 +174,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
             <circle cx="5.5" cy="8" r="1.6" fill="currentColor" />
             <circle cx="11" cy="11.5" r="1.6" fill="currentColor" />
           </svg>
-          Traffic
+          <span className="scope-button__label">Traffic</span>
         </button>
 
         <button
@@ -178,6 +182,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
           className="scope-button"
           aria-pressed={props.layersOpen}
           onClick={props.onToggleLayers}
+          title="Map layers (M)"
         >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
@@ -195,10 +200,15 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
               strokeLinejoin="round"
             />
           </svg>
-          Layers
+          <span className="scope-button__label">Layers</span>
         </button>
 
-        <button type="button" className="scope-button" onClick={props.onSave} title="Save session">
+        <button
+          type="button"
+          className="scope-button"
+          onClick={props.onSave}
+          title="Save session (Shift+S)"
+        >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
               d="M3 2.5 H11 L13.5 5 V13.5 H2.5 V3 Z M5 2.5 V6 H10.5 V2.5 M5 13.5 V9.5 H11 V13.5"
@@ -208,7 +218,19 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
               strokeLinejoin="round"
             />
           </svg>
-          Save
+          <span className="scope-button__label">Save</span>
+        </button>
+
+        <button
+          type="button"
+          className="scope-button scope-button--icon"
+          onClick={props.onOpenHelp}
+          aria-label="Quick reference"
+          title="Quick reference (?)"
+        >
+          <span className="scope-button__glyph" aria-hidden="true">
+            ?
+          </span>
         </button>
 
         <button

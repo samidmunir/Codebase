@@ -1,4 +1,10 @@
-import { bearingTrue, groundSpeedKts, type AircraftState, type LatLon } from '@vector/sim-core';
+import {
+  bearingTrue,
+  distanceNm,
+  groundSpeedKts,
+  type AircraftState,
+  type LatLon,
+} from '@vector/sim-core';
 
 /** What the radar last saw of an aircraft. */
 export interface RadarTarget {
@@ -21,11 +27,13 @@ export interface RadarTarget {
   history: LatLon[];
   /** Sim time of this return, in seconds. */
   seenAtSec: number;
+  /** No radar covers the aircraft now: it is shown where it was last seen. */
+  coasting: boolean;
 }
 
 interface TrackedTarget extends RadarTarget {
-  /** Rotation in which this target was last scanned. */
-  scan: number;
+  /** Per covering radar, the rotation it last saw the target in. */
+  scans: Map<string, number>;
 }
 
 /** The fix or approach an aircraft is flying to, or undefined on a heading. */
@@ -47,45 +55,98 @@ export function navigatingTo(aircraft: Readonly<AircraftState>): string | undefi
 const MAX_HISTORY = 20;
 
 /**
- * A rotating radar. The beam turns once per interval, clockwise from north,
- * around the antenna. Each aircraft is updated when the beam passes its
- * bearing from the antenna, so targets refresh one by one as the beam sweeps
- * over them, each exactly once per rotation.
+ * A radar sensor. Its beam turns once per interval, clockwise from north,
+ * around the antenna, and it sees an aircraft only where `covers` says so.
+ */
+export interface RadarSensor {
+  id: string;
+  antenna: LatLon;
+  intervalSec: number;
+  covers: (aircraft: Readonly<AircraftState>) => boolean;
+}
+
+/** Radio line-of-sight range in NM between an antenna and a target, heights in feet. */
+export function radarHorizonNm(antennaHeightFt: number, targetHeightFt: number): number {
+  return 1.23 * (Math.sqrt(Math.max(0, antennaHeightFt)) + Math.sqrt(Math.max(0, targetHeightFt)));
+}
+
+/** A terminal radar (ASR): its instrumented range, limited by line of sight to low targets. */
+export function terminalRadar(site: {
+  id: string;
+  position: LatLon;
+  antennaElevationFt: number;
+  rangeNm: number;
+  intervalSec: number;
+  antennaHeightFt?: number;
+}): RadarSensor {
+  const antennaHeightFt = site.antennaHeightFt ?? 50;
+  const groundFt = site.antennaElevationFt - antennaHeightFt;
+  return {
+    id: site.id,
+    antenna: site.position,
+    intervalSec: site.intervalSec,
+    covers: (aircraft) =>
+      distanceNm(site.position, aircraft.position) <=
+      Math.min(site.rangeNm, radarHorizonNm(antennaHeightFt, aircraft.altitudeFt - groundFt)),
+  };
+}
+
+/** Long-range (en route) radar coverage, modeled over the whole region above a floor. */
+export function enrouteRadar(center: LatLon, floorFt: number, intervalSec: number): RadarSensor {
+  return {
+    id: 'LRR',
+    antenna: center,
+    intervalSec,
+    covers: (aircraft) => aircraft.altitudeFt >= floorFt,
+  };
+}
+
+/** Removed aircraft stay on the scope this long (until the next sweeps pass them). */
+const REMOVAL_DELAY_SEC = 5;
+
+/**
+ * Radar targets from several sensors. Each aircraft is repainted whenever the
+ * beam of a radar that covers it passes its bearing from that antenna. With
+ * no radar covering it, the aircraft keeps flying in the sim but the scope
+ * shows it coasting at its last position until coverage returns.
  */
 export class RadarTracker {
   private readonly targets = new Map<string, TrackedTarget>();
-  /** Aircraft not yet painted, with the rotation they were first seen in. */
-  private readonly pending = new Map<string, number>();
+  /** Aircraft not yet painted: per covering radar, the rotation they were first seen in. */
+  private readonly pending = new Map<string, Map<string, number>>();
+  /** Aircraft that left the sim, and when. */
+  private readonly gone = new Map<string, number>();
   private started = false;
-
-  constructor(
-    private intervalSec: number,
-    private readonly antenna: LatLon,
-  ) {}
-
-  setInterval(intervalSec: number): void {
-    this.intervalSec = intervalSec;
-  }
-
-  /** Beam position as a fraction of a turn from north (0..1). */
-  sweepProgress(timeSec: number): number {
-    const turns = timeSec / this.intervalSec;
-    return turns - Math.floor(turns);
-  }
-
-  /** The rotation the beam is on at a position: it increments as the beam passes that bearing. */
-  private scanAt(timeSec: number, position: LatLon): number {
-    const azimuth = bearingTrue(this.antenna, position) / 360;
-    return Math.floor(timeSec / this.intervalSec - azimuth);
-  }
-
   /** Sim time of the update being processed. */
   private updateTimeSec = 0;
 
+  /** `primary` is the radar whose sweep is drawn on the scope. */
+  constructor(
+    private sensors: readonly RadarSensor[],
+    private primary: RadarSensor,
+  ) {}
+
+  setSensors(sensors: readonly RadarSensor[], primary: RadarSensor): void {
+    this.sensors = sensors;
+    this.primary = primary;
+  }
+
+  /** The drawn sweep's position as a fraction of a turn from north (0..1). */
+  sweepProgress(timeSec: number): number {
+    const turns = timeSec / this.primary.intervalSec;
+    return turns - Math.floor(turns);
+  }
+
+  /** The rotation a radar's beam is on at a position: it increments as the beam passes that bearing. */
+  private scanAt(sensor: RadarSensor, timeSec: number, position: LatLon): number {
+    const azimuth = bearingTrue(sensor.antenna, position) / 360;
+    return Math.floor(timeSec / sensor.intervalSec - azimuth);
+  }
+
   /**
-   * Updates targets the beam has passed since the last call. Pass a smooth time
-   * (e.g. the engine's display time) so targets refresh right as the beam
-   * crosses them. Returns true when anything changed.
+   * Updates targets the beams have passed since the last call. Pass a smooth time
+   * (e.g. the engine's display time) so targets refresh right as a beam crosses
+   * them. Returns true when anything changed.
    */
   update(timeSec: number, aircraft: readonly Readonly<AircraftState>[]): boolean {
     this.updateTimeSec = timeSec;
@@ -94,34 +155,63 @@ export class RadarTracker {
 
     for (const plane of aircraft) {
       seen.add(plane.id);
-      const scan = this.scanAt(timeSec, plane.position);
+      this.gone.delete(plane.id);
+      const covering = this.sensors.filter((sensor) => sensor.covers(plane));
+      const scans = new Map(covering.map((s) => [s.id, this.scanAt(s, timeSec, plane.position)]));
       const existing = this.targets.get(plane.id);
 
       if (existing) {
-        if (scan !== existing.scan) {
-          this.paint(plane, scan, existing);
+        // Repaint when any covering radar's beam has passed it since that radar last saw it.
+        const passed = covering.some((sensor) => {
+          const last = existing.scans.get(sensor.id);
+          return last !== undefined && last !== scans.get(sensor.id);
+        });
+        if (passed) {
+          this.paint(plane, scans, existing);
           changed = true;
+        } else {
+          // Radars that just started covering it wait for their beam; ones that no longer cover it forget it.
+          for (const id of [...existing.scans.keys()])
+            if (!scans.has(id)) existing.scans.delete(id);
+          for (const [id, scan] of scans) if (!existing.scans.has(id)) existing.scans.set(id, scan);
+          const coasting = covering.length === 0;
+          if (coasting !== existing.coasting) {
+            existing.coasting = coasting;
+            changed = true;
+          }
         }
+      } else if (covering.length === 0) {
+        this.pending.delete(plane.id);
       } else if (!this.started) {
-        // Paint everything on the first update so the scope doesn't start empty.
-        this.paint(plane, scan, undefined);
+        // Paint everything covered on the first update so the scope doesn't start empty.
+        this.paint(plane, scans, undefined);
         changed = true;
       } else {
-        // New aircraft appear when the beam first passes them.
-        const firstSeen = this.pending.get(plane.id);
-        if (firstSeen === undefined) this.pending.set(plane.id, scan);
-        else if (scan !== firstSeen) {
+        // New aircraft appear when a covering radar's beam first passes them.
+        const firstSeen = this.pending.get(plane.id) ?? new Map<string, number>();
+        const passed = [...scans].some(([id, scan]) => {
+          const first = firstSeen.get(id);
+          return first !== undefined && first !== scan;
+        });
+        if (passed) {
           this.pending.delete(plane.id);
-          this.paint(plane, scan, undefined);
+          this.paint(plane, scans, undefined);
           changed = true;
+        } else {
+          for (const [id, scan] of scans) if (!firstSeen.has(id)) firstSeen.set(id, scan);
+          this.pending.set(plane.id, firstSeen);
         }
       }
     }
 
-    // Aircraft that are gone disappear when the beam passes their last position.
-    for (const [id, target] of this.targets) {
-      if (!seen.has(id) && this.scanAt(timeSec, target.position) !== target.scan) {
+    // Aircraft that are gone disappear shortly after (when the sweeps pass their last position).
+    for (const id of this.targets.keys()) {
+      if (seen.has(id)) continue;
+      const since = this.gone.get(id);
+      if (since === undefined) this.gone.set(id, timeSec);
+      else if (timeSec - since >= REMOVAL_DELAY_SEC) {
         this.targets.delete(id);
+        this.gone.delete(id);
         changed = true;
       }
     }
@@ -133,7 +223,7 @@ export class RadarTracker {
 
   private paint(
     plane: Readonly<AircraftState>,
-    scan: number,
+    scans: Map<string, number>,
     previous: TrackedTarget | undefined,
   ): void {
     this.targets.set(plane.id, {
@@ -152,7 +242,8 @@ export class RadarTracker {
       navigatingTo: navigatingTo(plane),
       history: previous ? [previous.position, ...previous.history].slice(0, MAX_HISTORY) : [],
       seenAtSec: this.updateTimeSec,
-      scan,
+      coasting: false,
+      scans,
     });
   }
 
@@ -164,10 +255,11 @@ export class RadarTracker {
     return this.targets.get(id);
   }
 
-  /** Clears all targets; the next update paints everything again (e.g. after loading a session). */
+  /** Clears all targets; the next update paints everything covered again (e.g. after loading a session). */
   reset(): void {
     this.targets.clear();
     this.pending.clear();
+    this.gone.clear();
     this.started = false;
   }
 }

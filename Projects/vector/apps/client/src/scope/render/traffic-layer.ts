@@ -14,6 +14,7 @@ import { dataBlockLines } from '../data-block';
 import type { RadarTarget } from '../radar-tracker';
 import type { RoutePreview } from '../route-preview';
 import { trafficCategory } from '../traffic-category';
+import { placeDataBlocks } from './label-placement';
 import { HEAT_AGE_RANGE_SEC, heatColor, heatFade, heatValue } from './heat-scale';
 import { withAlpha, type ScopePalette } from './palette';
 
@@ -44,8 +45,10 @@ export interface TrafficFrame {
   timeShare: 0 | 1;
   hoveredId: string | undefined;
   selectedId: string | undefined;
-  /** Data block position per aircraft (0 = north, clockwise in 45° steps). Default northeast. */
+  /** Data block positions the player chose (0 = north, clockwise in 45° steps). Default northeast. */
   leaderDirections: ReadonlyMap<string, LeaderDirection>;
+  /** Automatic data block positions, kept between frames (updated in place). */
+  autoLeaderDirections: Map<string, LeaderDirection>;
   /** Preview of the instruction being composed for the selected aircraft. */
   preview: InstructionPreview | undefined;
   /** Fix highlighted on the map (hovered in the direct-to list). */
@@ -123,6 +126,40 @@ export function drawTrafficLayer(
     target.id === frame.selectedId ? 2 : target.owner === frame.playerId ? 1 : 0;
   const ordered = [...frame.targets].sort((a, b) => rank(a) - rank(b));
 
+  // Data block lines and positions, then leader directions that keep blocks apart.
+  const blocks = new Map(
+    ordered.map((target) => {
+      const lines = dataBlockLines(target, frame.timeShare, settings['display.dataBlockStyle']);
+      return [
+        target.id,
+        {
+          lines,
+          width: Math.max(...lines.map((text) => ctx.measureText(text).width)),
+          height: lineHeight * lines.length,
+        },
+      ];
+    }),
+  );
+  const directions = settings['display.autoPlaceDataBlocks']
+    ? placeDataBlocks(
+        ordered.map((target) => {
+          const { x, y } = project(camera, target.position);
+          const { width, height } = blocks.get(target.id)!;
+          return {
+            id: target.id,
+            x,
+            y,
+            width,
+            height,
+            priority: rank(target),
+            fixed: frame.leaderDirections.get(target.id),
+          };
+        }),
+        leaderLength,
+        frame.autoLeaderDirections,
+      )
+    : frame.leaderDirections;
+
   for (const target of ordered) {
     const owned = target.owner === frame.playerId;
     const hovered = target.id === frame.hoveredId;
@@ -156,9 +193,15 @@ export function drawTrafficLayer(
       ctx.stroke();
     }
 
-    // Position symbol.
+    // Position symbol: '#' while coasting (no radar covers it), as on STARS.
     ctx.save();
-    if (owned) {
+    if (target.coasting) {
+      ctx.fillStyle = withAlpha(color, 0.8);
+      ctx.font = `700 ${fontSize + 1}px "JetBrains Mono", monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('#', position.x, position.y);
+    } else if (owned) {
       ctx.shadowColor = color;
       ctx.shadowBlur = hovered ? 18 : 10;
       ctx.fillStyle = color;
@@ -183,7 +226,7 @@ export function drawTrafficLayer(
     }
 
     // Leader line, then the data block on the chosen side.
-    const direction = frame.leaderDirections.get(target.id) ?? DEFAULT_LEADER_DIRECTION;
+    const direction = directions.get(target.id) ?? DEFAULT_LEADER_DIRECTION;
     const angle = -Math.PI / 2 + (direction * Math.PI) / 4;
     const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
     const lineEnd = {
@@ -199,9 +242,7 @@ export function drawTrafficLayer(
       ctx.stroke();
     }
 
-    const lines = dataBlockLines(target, frame.timeShare, settings['display.dataBlockStyle']);
-    const width = Math.max(...lines.map((text) => ctx.measureText(text).width));
-    const height = lineHeight * lines.length;
+    const { lines, width, height } = blocks.get(target.id)!;
     const blockX =
       cos > 0.3 ? lineEnd.x + 3 : cos < -0.3 ? lineEnd.x - 3 - width : lineEnd.x - width / 2;
     const blockY = sin < -0.3 ? lineEnd.y - height : sin > 0.3 ? lineEnd.y : lineEnd.y - height / 2;
@@ -424,7 +465,8 @@ function drawConflictLines(ctx: CanvasRenderingContext2D, frame: TrafficFrame): 
     ctx.font = '600 11px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const label = `${conflict.lateralNm.toFixed(1)} NM ${String(Math.round(conflict.verticalFt / 100)).padStart(2, '0')}`;
+    // Lateral and vertical distance, e.g. '4.6 NM · 800 ft'.
+    const label = `${conflict.lateralNm.toFixed(1)} NM · ${(Math.round(conflict.verticalFt / 100) * 100).toLocaleString('en-US')} ft`;
     ctx.fillText(label, (pa.x + pb.x) / 2, (pa.y + pb.y) / 2 - 10);
     ctx.restore();
   }

@@ -1,4 +1,4 @@
-import type { AircraftState } from '@vector/sim-core';
+import { destinationPoint, type AircraftState } from '@vector/sim-core';
 import { describe, expect, it } from 'vitest';
 import { performanceCatalog } from '../airspaces/registry';
 import { newYorkPack as pack } from '../testing/new-york-pack';
@@ -10,6 +10,7 @@ import {
   ilsRunways,
   isDeparting,
   minimumVectoringAltitude,
+  planningNotes,
   speedOptions,
 } from './command-options';
 
@@ -145,5 +146,46 @@ describe('command options', () => {
     const offshore = minimumVectoringAltitude(pack, { lat: 40.3, lon: -73.6 });
     expect(manhattan).toBeGreaterThan(offshore!);
     expect(offshore).toBeGreaterThanOrEqual(1_500);
+  });
+});
+
+describe('planning notes', () => {
+  const label = (ft: number) => (ft >= 18_000 ? `FL${ft / 100}` : `${ft}`);
+
+  it('tells when to start an arrival down (3:1)', () => {
+    const jfk = pack.airport('KJFK').position;
+    const arrival = (nm: number, targetFt = 35_000) =>
+      aircraft({
+        flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
+        phase: 'arrival',
+        position: destinationPoint(jfk, 45, nm),
+        altitudeFt: 35_000,
+        targets: { ...aircraft({}).targets, altitudeFt: targetFt },
+      });
+    // FL350 to 3,000 ft above the field is about 96 NM of descent.
+    expect(planningNotes(pack, arrival(150), label)).toEqual([
+      { label: 'JFK', value: '150 NM', tone: 'normal' },
+      { label: 'Descent', value: 'start in 54 NM', tone: 'normal' },
+    ]);
+    expect(planningNotes(pack, arrival(100), label)[1]).toMatchObject({
+      value: 'start down now',
+      tone: 'caution',
+    });
+    expect(planningNotes(pack, arrival(100, 11_000), label)[1]).toMatchObject({
+      value: 'descending',
+      tone: 'good',
+    });
+  });
+
+  it('shows the requested level and where a departure leaves', () => {
+    const departure = aircraft({
+      flightPlan: { origin: 'KJFK', destination: 'KBOS', route: [], requestedAltitudeFt: 30_000 },
+      headingDeg: 360,
+      altitudeFt: 20_000,
+      targets: { ...aircraft({}).targets, altitudeFt: 30_000 },
+    });
+    const notes = planningNotes(pack, departure, label);
+    expect(notes[0]).toEqual({ label: 'Requested', value: 'FL300 ✓', tone: 'good' });
+    expect(notes[1]!.value).toMatch(/^Boston · \d+ NM$/);
   });
 });

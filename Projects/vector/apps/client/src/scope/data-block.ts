@@ -37,6 +37,8 @@ export interface DataBlockTarget {
   verticalSpeedFpm: number;
   /** Cleared altitude; shown after the altitude while climbing or descending to it. */
   assignedAltitudeFt?: number | undefined;
+  /** No radar covers it: the block shows CST instead of ground speed. */
+  coasting?: boolean | undefined;
   /** Fix or approach being flown to (not shown on a plain heading). */
   navigatingTo?: string | undefined;
 }
@@ -77,13 +79,13 @@ export function dataBlockLines(
         : '';
     return [
       target.callsign,
-      `${altitude}${assigned} ${formatGroundSpeedKnots(target.groundSpeedKts)}`,
+      `${altitude}${assigned} ${target.coasting ? 'CST' : formatGroundSpeedKnots(target.groundSpeedKts)}`,
       route ? `${typeAndDestination} ${route}` : typeAndDestination,
     ];
   }
   const line2 =
     timeShare === 0
-      ? `${altitude}${formatGroundSpeed(target.groundSpeedKts)}`
+      ? `${altitude}${target.coasting ? 'CST' : formatGroundSpeed(target.groundSpeedKts)}`
       : (route ?? typeAndDestination);
   return [target.callsign, line2];
 }

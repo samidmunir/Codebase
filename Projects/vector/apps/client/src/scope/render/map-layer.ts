@@ -163,6 +163,27 @@ export function drawMapLayer(
     }
   }
 
+  if (settings['map.radarSites']) {
+    const primary = pack.airspace.radar;
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (const site of pack.airspace.radars) {
+      const { x, y } = project(camera, site.position);
+      const isPrimary = site.name === primary.name;
+      ctx.strokeStyle = isPrimary ? palette.radarPrimary : palette.radarSite;
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 6]);
+      ctx.beginPath();
+      ctx.arc(x, y, site.rangeNm * scale, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeRect(x - 3, y - 3, 6, 6);
+      ctx.fillText(site.id, x + 6, y);
+    }
+  }
+
   if (settings['map.sectorBoundary']) {
     ctx.strokeStyle = palette.boundary;
     ctx.lineWidth = 1.5;

@@ -68,8 +68,8 @@ describe('ILS eligibility', () => {
     ['beyond the runway', { position: onFinal(-4, 0) }, /not in position/],
     ['outside localizer coverage', { position: onFinal(22, 6) }, /not in position/],
     [
-      'a steep intercept',
-      { targets: { ...aircraftAt({}).targets, headingDeg: 180 } },
+      'an intercept steeper than 60°',
+      { targets: { ...aircraftAt({}).targets, headingDeg: 290 } },
       /intercept angle too steep/,
     ],
     [
@@ -94,12 +94,13 @@ describe('ILS eligibility', () => {
     expect(!result.ok && result.reason).toMatch(/minimum vectoring altitude/);
   });
 
-  it('follows the intercept angle setting', () => {
-    const steep = aircraftAt({ targets: { ...aircraftAt({}).targets, headingDeg: 265 } });
-    expect(ilsEligibility(steep, ILS_22L, context()).ok).toBe(false);
+  it('accepts intercepts up to 60° by default, and follows the setting', () => {
+    // The final course is 223.8°: 283° is a 59° intercept from the left.
+    const sixty = aircraftAt({ targets: { ...aircraftAt({}).targets, headingDeg: 283 } });
+    expect(ilsEligibility(sixty, ILS_22L, context())).toEqual({ ok: true });
     expect(
-      ilsEligibility(steep, ILS_22L, context({ 'approaches.maxInterceptAngleDeg': 45 })).ok,
-    ).toBe(true);
+      ilsEligibility(sixty, ILS_22L, context({ 'approaches.maxInterceptAngleDeg': 30 })).ok,
+    ).toBe(false);
   });
 });
 
@@ -156,6 +157,39 @@ describe('approaches with the New York airspace', () => {
         }),
       }),
     );
+  });
+
+  it('captures the localizer cleanly from a 60° intercept and lands', () => {
+    const engine = createEngine();
+    const events: SimEvent[] = [];
+    engine.subscribe((event) => events.push(event));
+    const aircraft = engine.addAircraft({
+      ...newAircraft({ position: onFinal(14, 4), headingDeg: 283, altitudeFt: 3_000, iasKts: 180 }),
+      flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
+    });
+    engine.setTargets(aircraft.id, { headingDeg: 283, altitudeFt: 3_000, iasKts: 180 });
+    engine.issueInstruction(aircraft.id, [{ type: 'clearedIls', clearance: ILS_22L }]);
+    let worstOvershootNm = 0;
+    for (let i = 0; i < 900 && engine.getAircraft(aircraft.id); i++) {
+      engine.step();
+      const plane = engine.getAircraft(aircraft.id);
+      if (plane) {
+        const along = distanceNm(plane.position, runway22L.threshold);
+        // After capture, the worst distance from the final course (an overshoot would show here).
+        const captured = events.some((e) => e.type === 'localizerCaptured');
+        if (captured && along > 2) {
+          const bearingFromThreshold = normalizeHeading(
+            magneticToTrue(ILS_22L.courseDeg, variation) + 180,
+          );
+          const onCourse = destinationPoint(runway22L.threshold, bearingFromThreshold, along);
+          worstOvershootNm = Math.max(worstOvershootNm, distanceNm(onCourse, plane.position));
+        }
+      }
+    }
+    expect(events.some((e) => e.type === 'goAround')).toBe(false);
+    expect(events.some((e) => e.type === 'landed' && e.aircraftId === aircraft.id)).toBe(true);
+    // Rolls out close to the centerline instead of flying through it.
+    expect(worstOvershootNm).toBeLessThan(0.6);
   });
 
   it('goes around when not established at the stabilized-approach gate, and comes back to the player', () => {

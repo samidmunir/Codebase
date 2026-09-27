@@ -13,6 +13,7 @@ import {
   type ValidationResult,
 } from '@vector/sim-core';
 import { airlines, performanceCatalog } from '../airspaces/registry';
+import { radarSensors } from '../scope/radar-coverage';
 import { RadarTracker } from '../scope/radar-tracker';
 
 /** Sim time run before the session starts, so traffic is already spread out. */
@@ -98,10 +99,8 @@ export class ScopeSession {
     this.engine.subscribe((event) => {
       if (event.type.startsWith('departure') || event.type === 'tookOff') this.queueVersion++;
     });
-    this.radar = new RadarTracker(
-      this.engine.settings['radar.sweepIntervalSec'],
-      pack.airspace.radar.position,
-    );
+    const { sensors, primary } = radarSensors(pack, this.engine.settings);
+    this.radar = new RadarTracker(sensors, primary);
     this.radar.update(this.engine.displayTimeSec, this.engine.listAircraft());
     this.status = this.readStatus();
   }

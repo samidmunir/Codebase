@@ -85,6 +85,8 @@ export function RadarScope({
   const gestureRef = useRef<Gesture | undefined>(undefined);
   const callbacksRef = useRef({ onCameraChange, onCursorChange, onSelect });
   const selectionRef = useRef({ selectedId, leaderDirections, preview, highlightFix });
+  // Automatic data block positions persist between frames so blocks stay put.
+  const autoLeaderDirectionsRef = useRef(new Map<string, LeaderDirection>());
   useEffect(() => {
     callbacksRef.current = { onCameraChange, onCursorChange, onSelect };
     selectionRef.current = { selectedId, leaderDirections, preview, highlightFix };
@@ -222,6 +224,7 @@ export function RadarScope({
         timeShare: Math.floor(now / TIME_SHARE_MS) % 2 === 0 ? 0 : 1,
         hoveredId: hoveredRef.current,
         ...selectionRef.current,
+        autoLeaderDirections: autoLeaderDirectionsRef.current,
         highlightFix: selectionRef.current.highlightFix
           ? session.pack.fix(selectionRef.current.highlightFix)
           : undefined,

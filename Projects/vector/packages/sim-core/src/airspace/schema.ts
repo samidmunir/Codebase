@@ -343,6 +343,23 @@ export const airspaceFileSchema = z.object({
     position: latLonSchema,
     rangeNm: z.number().positive(),
   }),
+  /**
+   * Terminal radars (ASRs) whose coverage feeds the scope, with the primary
+   * one above. Beyond them, long-range radar coverage is modeled by session
+   * settings (an altitude floor and update rate).
+   */
+  radars: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        kind: z.enum(['asr']),
+        position: latLonSchema,
+        antennaElevationFt: z.number(),
+        rangeNm: z.number().positive(),
+      }),
+    )
+    .default([]),
   /** Area the player controls. Arrivals enter and departures leave across it. */
   boundary: z.object({ ring: ringSchema, ceilingFt: z.number().positive() }),
   /** Altitudes at and above this are flight levels (18,000 ft in the United States). */
