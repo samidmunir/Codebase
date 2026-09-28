@@ -1170,3 +1170,37 @@
   opacity: 0.5;
   cursor: default;
 }
+
+.descend-via {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin-bottom: var(--space-3);
+  padding: 8px 12px;
+  color: var(--color-text);
+  text-align: left;
+  background: rgba(76, 242, 160, 0.06);
+  border: 1px solid rgba(76, 242, 160, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.descend-via[aria-pressed='true'] {
+  background: rgba(76, 242, 160, 0.18);
+  border-color: var(--color-target);
+}
+
+.descend-via:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.descend-via__title {
+  font-weight: 600;
+}
+
+.descend-via__detail {
+  color: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+}

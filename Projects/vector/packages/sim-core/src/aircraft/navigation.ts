@@ -326,20 +326,14 @@ function flyProcedure(
       const applies =
         restriction.distanceNm <= SPEED_RESTRICTION_LOOKAHEAD_NM ||
         restriction.distanceNm <= slowingNm + SPEED_RESTRICTION_MARGIN_NM;
-      if (
-        applies &&
-        (aircraft.targets.speedMode === 'normal' || aircraft.targets.iasKts > restriction.kts)
-      ) {
-        aircraft.targets.speedMode = 'assigned';
-        aircraft.targets.iasKts = restriction.kts;
-      }
-    }
+      if (applies) navigation.speedLimitKts = restriction.kts;
+      else delete navigation.speedLimitKts;
+    } else delete navigation.speedLimitKts;
+    planDescentVia(aircraft);
 
     if (FIX_LEGS.has(pt) && leg.position) {
       if (flyToFix(aircraft, navigation, leg.position, magneticVariationDeg, config)) {
         if (leg.fix) events.fixPassed = leg.fix;
-        // Restrictions end at the fix: resume normal speed unless the next leg has its own.
-        if (leg.speedLimitKts !== undefined) aircraft.targets.speedMode = 'normal';
         advance();
         continue;
       }
@@ -399,6 +393,105 @@ function flyProcedure(
     return finishProcedure(aircraft, events);
   }
   return events;
+}
+
+/** A published altitude restriction still ahead on the procedure being flown. */
+export interface RestrictionAhead {
+  fix: string;
+  /** Cross at or above this altitude. */
+  minFt?: number;
+  /** Cross at or below this altitude. */
+  maxFt?: number;
+  /** Along the route from the aircraft. */
+  distanceNm: number;
+}
+
+/**
+ * The altitude restrictions ahead on the procedure an aircraft is flying, in
+ * order, with the distance along the route to each. Stops at a heading leg,
+ * where the route's length is no longer known.
+ */
+export function restrictionsAhead(aircraft: Readonly<AircraftState>): RestrictionAhead[] {
+  const navigation = aircraft.navigation;
+  if (navigation.mode !== 'procedure') return [];
+  const ahead: RestrictionAhead[] = [];
+  let from = aircraft.position;
+  let distance = 0;
+  for (const leg of navigation.legs.slice(navigation.legIndex)) {
+    // Legs flown from a fix start there: no distance, and their fix is behind.
+    if (leg.pathTerminator.startsWith('F')) continue;
+    if (!leg.position) break;
+    distance += distanceNm(from, leg.position);
+    from = leg.position;
+    const restriction = leg.altitudeRestriction;
+    if (
+      restriction &&
+      leg.fix &&
+      (restriction.minFt !== undefined || restriction.maxFt !== undefined)
+    )
+      ahead.push({
+        fix: leg.fix,
+        ...(restriction.minFt !== undefined ? { minFt: restriction.minFt } : {}),
+        ...(restriction.maxFt !== undefined ? { maxFt: restriction.maxFt } : {}),
+        distanceNm: distance,
+      });
+  }
+  return ahead;
+}
+
+/**
+ * Where a descent via the procedure ends: the lowest altitude its remaining
+ * restrictions lead down to, or undefined if there are none ahead.
+ */
+export function descendViaBottomFt(aircraft: Readonly<AircraftState>): number | undefined {
+  const levels = restrictionsAhead(aircraft).map((r) => r.minFt ?? r.maxFt!);
+  return levels.length > 0 ? Math.min(...levels) : undefined;
+}
+
+/** Descents via a procedure are planned at this gradient (about 3°, a normal idle descent). */
+export const DESCENT_PLAN_FT_PER_NM = 300;
+/** ...aimed this far ahead of each restriction, so the aircraft is down in time. */
+const DESCENT_PLAN_LEAD_NM = 2;
+
+/**
+ * Descending via a procedure: the altitude to descend to or hold now so every
+ * restriction ahead is met, like an FMS's vertical path. The aircraft stays
+ * up until it reaches the planned descent path (top of descent) to the next
+ * "at or below" restriction, then descends to that restriction's altitude
+ * and levels there; it never goes below an "at or above" restriction before
+ * its fix, and never climbs. Sets `vnavAltitudeFt`, which the flight model
+ * follows instead of the cleared (bottom) altitude.
+ */
+function planDescentVia(aircraft: AircraftState): void {
+  const navigation = aircraft.navigation;
+  if (navigation.mode !== 'procedure') return;
+  const ahead = navigation.descendVia ? restrictionsAhead(aircraft) : [];
+  if (ahead.length === 0) {
+    delete navigation.vnavAltitudeFt;
+    return;
+  }
+  const altitude = aircraft.altitudeFt;
+  const floor = Math.min(
+    altitude,
+    Math.max(aircraft.targets.altitudeFt, ...ahead.map((r) => r.minFt ?? -Infinity)),
+  );
+  // The restriction whose descent path is lowest here decides when to go down, and to what.
+  let path = Infinity;
+  let pathTo: number | undefined;
+  for (const r of ahead) {
+    if (r.maxFt === undefined) continue;
+    const onPath =
+      r.maxFt + Math.max(0, r.distanceNm - DESCENT_PLAN_LEAD_NM) * DESCENT_PLAN_FT_PER_NM;
+    if (onPath < path) {
+      path = onPath;
+      pathTo = r.maxFt;
+    }
+  }
+  let target = navigation.vnavAltitudeFt;
+  if (pathTo !== undefined && altitude >= path) target = pathTo;
+  // Level (or no descent under way): hold where it is.
+  else if (target === undefined || target >= altitude) target = altitude;
+  navigation.vnavAltitudeFt = Math.max(target, floor);
 }
 
 function finishProcedure(aircraft: AircraftState, events: NavigationEvents): NavigationEvents {

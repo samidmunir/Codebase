@@ -65,6 +65,10 @@ export const resolvedLegSchema = z.object({
   distanceNm: z.number().optional(),
   /** Speed limit (at or below) while flying toward this leg's fix. */
   speedLimitKts: z.number().positive().optional(),
+  /** Published altitude restriction at this leg's fix: cross at or above min, at or below max. */
+  altitudeRestriction: z
+    .object({ minFt: z.number().optional(), maxFt: z.number().optional() })
+    .optional(),
 });
 
 export type ResolvedLeg = z.infer<typeof resolvedLegSchema>;
@@ -95,6 +99,12 @@ export const navigationSchema = z.discriminatedUnion('mode', [
     inbound: z.boolean().optional(),
     /** Flying on to get room to turn back to a fix too close to turn onto. */
     extending: z.boolean().optional(),
+    /** Cleared to descend via the procedure: its altitude restrictions are flown. */
+    descendVia: z.boolean().optional(),
+    /** Descending via: the altitude to be at now, on the planned descent (set each tick). */
+    vnavAltitudeFt: z.number().optional(),
+    /** Published speed limit in force now (set each tick); an assigned speed overrides it. */
+    speedLimitKts: z.number().positive().optional(),
   }),
   /** Fly the target heading until intercepting the localizer, then fly the ILS. */
   z.object({

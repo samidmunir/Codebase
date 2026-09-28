@@ -57,7 +57,7 @@ describe('route preview', () => {
     expect(preview.label).toBe('TNNIS six departure');
     expect(preview.path).toEqual([base.position, jutes, tnnis]);
     expect(preview.fixes.map((f) => [f.ident, f.note])).toEqual([
-      ['JUTES', '≤220'],
+      ['JUTES', '≤220K'],
       ['TNNIS', undefined],
       ['MERIT', 'gate'],
     ]);

@@ -6,6 +6,7 @@ import {
   type AirspacePack,
   type LatLon,
 } from '@vector/sim-core';
+import { restrictionLabel } from '../commands/command-options';
 
 /** The route an aircraft is flying, for drawing on the scope when it is selected. */
 export interface RoutePreview {
@@ -57,10 +58,17 @@ export function routePreview(aircraft: Readonly<AircraftState>, pack: AirspacePa
       if (leg.position) {
         preview.path.push(leg.position);
         if (leg.fix) {
+          // Published restrictions, chart style: '100', '240+', '190–220', with any speed limit.
+          const note = [
+            leg.altitudeRestriction ? restrictionLabel(leg.altitudeRestriction) : undefined,
+            leg.speedLimitKts ? `≤${leg.speedLimitKts}K` : undefined,
+          ]
+            .filter(Boolean)
+            .join(' ');
           preview.fixes.push({
             ident: leg.fix,
             position: leg.position,
-            ...(leg.speedLimitKts ? { note: `≤${leg.speedLimitKts}` } : {}),
+            ...(note ? { note } : {}),
           });
         }
       } else if (

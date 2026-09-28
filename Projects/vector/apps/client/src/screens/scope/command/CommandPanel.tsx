@@ -10,6 +10,7 @@ import {
 import {
   altitudeOptions,
   centerHandoff,
+  descendViaOption,
   planningNotes,
   directToGroups,
   ilsClearance,
@@ -129,6 +130,9 @@ export function CommandPanel(props: CommandPanelProps) {
               <span className="command-panel__target">
                 {' '}
                 → {altitudeLabel(aircraft.targets.altitudeFt)}
+                {aircraft.navigation.mode === 'procedure' && aircraft.navigation.descendVia
+                  ? ' via'
+                  : ''}
               </span>
             )}
           </dd>
@@ -139,7 +143,10 @@ export function CommandPanel(props: CommandPanelProps) {
             {Math.round(aircraft.iasKts)}
             <span className="command-panel__target">
               {aircraft.targets.speedMode === 'normal'
-                ? ' normal'
+                ? aircraft.navigation.mode === 'procedure' &&
+                  aircraft.navigation.speedLimitKts !== undefined
+                  ? ` ≤${aircraft.navigation.speedLimitKts} published`
+                  : ' normal'
                 : ` → ${aircraft.targets.iasKts}`}
             </span>
           </dd>
@@ -223,6 +230,11 @@ export function CommandPanel(props: CommandPanelProps) {
 
             {activeTab === 'altitude' && (
               <AltitudeTab
+                descendVia={descendViaOption(aircraft)}
+                descendViaSelected={draft.descendVia === true}
+                onDescendVia={() =>
+                  update({ descendVia: draft.descendVia ? undefined : true, altitudeFt: undefined })
+                }
                 label={altitudeLabel}
                 requested={aircraft.flightPlan.requestedAltitudeFt}
                 options={altitudeOptions(pack, performance)}
@@ -230,7 +242,10 @@ export function CommandPanel(props: CommandPanelProps) {
                 current={aircraft.targets.altitudeFt}
                 selected={draft.altitudeFt}
                 onSelect={(altitudeFt) =>
-                  update({ altitudeFt: draft.altitudeFt === altitudeFt ? undefined : altitudeFt })
+                  update({
+                    altitudeFt: draft.altitudeFt === altitudeFt ? undefined : altitudeFt,
+                    descendVia: undefined,
+                  })
                 }
               />
             )}
@@ -437,6 +452,9 @@ function HeadingTab({
 }
 
 function AltitudeTab(props: {
+  descendVia: ReturnType<typeof descendViaOption>;
+  descendViaSelected: boolean;
+  onDescendVia: () => void;
   label: (altitudeFt: number) => string;
   requested: number | undefined;
   options: number[];
@@ -445,8 +463,26 @@ function AltitudeTab(props: {
   selected: number | undefined;
   onSelect: (altitudeFt: number) => void;
 }) {
+  const via = props.descendVia;
   return (
     <div className="altitude-tab">
+      {via && (
+        <button
+          type="button"
+          className="descend-via"
+          aria-pressed={props.descendViaSelected}
+          disabled={via.active}
+          onClick={props.onDescendVia}
+          title="Fly the arrival's published altitude restrictions. Assigning an altitude cancels them."
+        >
+          <span className="descend-via__title">
+            {via.active ? 'Descending via' : 'Descend via'} {via.procedure}
+          </span>
+          <span className="descend-via__detail">
+            next {via.next.fix} {via.next.label} · bottom {props.label(via.bottomFt)}
+          </span>
+        </button>
+      )}
       <div className="option-grid option-grid--altitudes">
         {[...props.options].reverse().map((altitude) => (
           <button

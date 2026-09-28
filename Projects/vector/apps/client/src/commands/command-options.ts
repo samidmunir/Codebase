@@ -2,6 +2,8 @@ import type { SessionSettings } from '@vector/shared';
 import {
   assessHandoff,
   bearingTrue,
+  descendViaBottomFt,
+  restrictionsAhead,
   distanceNm,
   trueToMagnetic,
   type AircraftPerformance,
@@ -263,7 +265,15 @@ export function planningNotes(
     const notes: PlanningNote[] = [
       { label: shortName, value: `${Math.round(distance)} NM`, tone: 'normal' },
     ];
-    if (toLose > 0 && aircraft.phase === 'arrival') {
+    const via = descendViaOption(aircraft);
+    if (via) {
+      notes.push({
+        label: via.active ? 'Descend via' : 'STAR',
+        value: `${via.next.fix} ${via.next.label} · ${Math.round(via.next.distanceNm)} NM`,
+        tone: via.active ? 'good' : 'normal',
+      });
+    }
+    if (toLose > 0 && aircraft.phase === 'arrival' && !via?.active) {
       notes.push(
         descending
           ? { label: 'Descent', value: 'descending', tone: 'good' }
@@ -308,4 +318,40 @@ export function planningNotes(
     }
   }
   return notes;
+}
+
+/** A published altitude restriction the way charts abbreviate it, in hundreds: '100', '240+', '170-', '190–220'. */
+export function restrictionLabel(restriction: {
+  minFt?: number | undefined;
+  maxFt?: number | undefined;
+}): string {
+  const hundreds = (ft: number) => String(Math.round(ft / 100)).padStart(3, '0');
+  const { minFt, maxFt } = restriction;
+  if (minFt !== undefined && maxFt !== undefined)
+    return minFt === maxFt ? hundreds(minFt) : `${hundreds(minFt)}–${hundreds(maxFt)}`;
+  if (minFt !== undefined) return `${hundreds(minFt)}+`;
+  return `${hundreds(maxFt!)}-`;
+}
+
+/** What "descend via" would do for an arrival on a STAR that publishes altitudes, if anything. */
+export function descendViaOption(aircraft: Readonly<AircraftState>):
+  | {
+      procedure: string;
+      bottomFt: number;
+      /** Already descending via it. */
+      active: boolean;
+      next: { fix: string; label: string; distanceNm: number };
+    }
+  | undefined {
+  const navigation = aircraft.navigation;
+  if (navigation.mode !== 'procedure') return undefined;
+  const bottomFt = descendViaBottomFt(aircraft);
+  const [next] = restrictionsAhead(aircraft);
+  if (bottomFt === undefined || !next) return undefined;
+  return {
+    procedure: navigation.name,
+    bottomFt,
+    active: navigation.descendVia === true,
+    next: { fix: next.fix, label: restrictionLabel(next), distanceNm: next.distanceNm },
+  };
 }

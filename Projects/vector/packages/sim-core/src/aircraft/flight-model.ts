@@ -55,9 +55,15 @@ export function effectiveTargetSpeed(
   performance: AircraftPerformance,
   config: FlightModelConfig,
 ): number {
+  const navigation = aircraft.navigation;
+  // A published speed limit on the procedure applies unless ATC has assigned a speed.
+  const published =
+    aircraft.targets.speedMode === 'normal' && navigation.mode === 'procedure'
+      ? navigation.speedLimitKts
+      : undefined;
   let target = clamp(
     aircraft.targets.speedMode === 'normal'
-      ? normalSpeed(aircraft, performance)
+      ? Math.min(normalSpeed(aircraft, performance), published ?? Infinity)
       : aircraft.targets.iasKts,
     performance.speeds.final,
     performance.speeds.max,
@@ -151,7 +157,13 @@ function stepAltitude(
   dtSec: number,
   config: FlightModelConfig,
 ): boolean {
-  const target = clamp(aircraft.targets.altitudeFt, 0, performance.ceilingFt);
+  // Descending via a procedure, the planned descent sets the altitude to be at now.
+  const navigation = aircraft.navigation;
+  const cleared =
+    navigation.mode === 'procedure' && navigation.vnavAltitudeFt !== undefined
+      ? navigation.vnavAltitudeFt
+      : aircraft.targets.altitudeFt;
+  const target = clamp(cleared, 0, performance.ceilingFt);
   const remaining = target - aircraft.altitudeFt;
   if (remaining === 0) {
     aircraft.verticalSpeedFpm = 0;

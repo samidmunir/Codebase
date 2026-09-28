@@ -15,6 +15,8 @@ export interface InstructionDraft {
   heading?: { headingDeg: number; turn: 'left' | 'right' | 'shortest' } | undefined;
   directTo?: string | undefined;
   altitudeFt?: number | undefined;
+  /** "Descend via" the arrival being flown (instead of an altitude). */
+  descendVia?: boolean | undefined;
   speed?: number | 'normal' | undefined;
   ilsRunway?: string | undefined;
   handoff?: boolean | undefined;
@@ -40,6 +42,8 @@ export function draftCommands(
   }
   if (draft.altitudeFt !== undefined)
     commands.push({ type: 'altitude', altitudeFt: draft.altitudeFt });
+  else if (draft.descendVia && aircraft.navigation.mode === 'procedure')
+    commands.push({ type: 'descendVia', procedure: aircraft.navigation.name });
   if (draft.speed === 'normal') commands.push({ type: 'resumeNormalSpeed' });
   else if (draft.speed !== undefined) commands.push({ type: 'speed', iasKts: draft.speed });
   if (draft.ilsRunway) {

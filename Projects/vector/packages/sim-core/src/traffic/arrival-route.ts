@@ -124,6 +124,31 @@ export function arrivalRoutes(
   return routes;
 }
 
+/** Center hands arrivals over on a descent path this steep toward the STAR's restrictions. */
+const HANDOVER_DESCENT_FT_PER_NM = 300;
+
+/**
+ * The highest an arrival can enter on a route and still meet the STAR's "at
+ * or below" restrictions on a normal descent (as if Center had started it
+ * down), or undefined if the route publishes none.
+ */
+export function entryAltitudeLimitFt(route: ArrivalRoute): number | undefined {
+  let limit: number | undefined;
+  let from = route.entry;
+  let distance = 0;
+  for (const leg of route.legs) {
+    if (leg.pathTerminator.startsWith('F')) continue;
+    if (!leg.position) break;
+    distance += distanceNm(from, leg.position);
+    from = leg.position;
+    const max = leg.altitudeRestriction?.maxFt;
+    if (max === undefined) continue;
+    const reachable = max + distance * HANDOVER_DESCENT_FT_PER_NM;
+    limit = limit === undefined ? reachable : Math.min(limit, reachable);
+  }
+  return limit;
+}
+
 /** The arrival route that enters closest to the direction the flight comes from. */
 export function arrivalRouteFrom(
   pack: AirspacePack,

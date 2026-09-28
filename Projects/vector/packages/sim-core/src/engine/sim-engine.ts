@@ -18,7 +18,12 @@ import {
   type NewAircraft,
 } from '../aircraft/aircraft';
 import { stepAircraft } from '../aircraft/flight-model';
-import { finalApproachGeometry, followGlideslope, updateNavigation } from '../aircraft/navigation';
+import {
+  descendViaBottomFt,
+  finalApproachGeometry,
+  followGlideslope,
+  updateNavigation,
+} from '../aircraft/navigation';
 import {
   distanceForHeightNm,
   ilsEligibility,
@@ -40,7 +45,11 @@ import {
   type CenterSeparation,
 } from '../atc/center';
 import { machToIas } from '../atmosphere/isa';
-import { arrivalRouteFrom, type ArrivalRoute } from '../traffic/arrival-route';
+import {
+  arrivalRouteFrom,
+  entryAltitudeLimitFt,
+  type ArrivalRoute,
+} from '../traffic/arrival-route';
 import { isHemisphericLevel, requestedCruiseAltitude } from '../traffic/cruise-levels';
 import {
   emptySeparationState,
@@ -847,7 +856,18 @@ export class SimEngine {
         break;
       case 'altitude':
         if (navigation.mode === 'approach' && navigation.glideslopeCaptured) cancelApproach();
+        // An assigned altitude cancels the procedure's altitude restrictions (not its speeds).
+        if (navigation.mode === 'procedure') {
+          delete navigation.descendVia;
+          delete navigation.vnavAltitudeFt;
+        }
         aircraft.targets.altitudeFt = command.altitudeFt;
+        break;
+      case 'descendVia':
+        if (navigation.mode === 'procedure') {
+          navigation.descendVia = true;
+          aircraft.targets.altitudeFt = descendViaBottomFt(aircraft) ?? aircraft.targets.altitudeFt;
+        }
         break;
       case 'speed':
         aircraft.targets.speedMode = 'assigned';
@@ -856,7 +876,25 @@ export class SimEngine {
       case 'resumeNormalSpeed':
         aircraft.targets.speedMode = 'normal';
         break;
-      case 'directTo':
+      case 'directTo': {
+        // Direct to a fix further along the procedure: skip ahead on it (keeping its restrictions).
+        if (navigation.mode === 'procedure') {
+          const index = navigation.legs.findIndex(
+            (leg, i) =>
+              i >= navigation.legIndex &&
+              leg.fix === command.fix &&
+              leg.position !== undefined &&
+              !leg.pathTerminator.startsWith('F'),
+          );
+          if (index !== -1) {
+            navigation.legIndex = index;
+            navigation.legStart = { ...aircraft.position };
+            delete navigation.inbound;
+            delete navigation.extending;
+            aircraft.targets.turnDirection = 'shortest';
+            break;
+          }
+        }
         cancelApproach();
         aircraft.navigation = {
           mode: 'direct',
@@ -864,6 +902,7 @@ export class SimEngine {
           position: { ...command.position },
         };
         break;
+      }
       case 'clearedIls':
         aircraft.navigation = {
           mode: 'approach',
@@ -1299,13 +1338,20 @@ export class SimEngine {
           : 250,
       targets: { speedMode: 'normal' },
     });
-    this.mutableAircraft(aircraft.id).navigation = {
+    const arriving = this.mutableAircraft(aircraft.id);
+    arriving.navigation = {
       mode: 'procedure',
       name: route.star,
       legs: route.legs,
       legIndex: 0,
       legStart: { ...route.entry },
     };
+    // Center clears arrivals to descend via a STAR that publishes altitudes.
+    const bottom = descendViaBottomFt(arriving);
+    if (bottom !== undefined && arriving.navigation.mode === 'procedure') {
+      arriving.navigation.descendVia = true;
+      arriving.targets.altitudeFt = Math.min(bottom, altitude);
+    }
 
     const facility = this.checkInFacility(altitude);
     const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
@@ -1313,7 +1359,9 @@ export class SimEngine {
     this.transmit(
       'pilot',
       aircraft.id,
-      `${facility}, ${callsign}, ${altitudeWords(altitude)}, ${star} arrival.`,
+      bottom !== undefined
+        ? `${facility}, ${callsign}, ${altitudeWords(altitude)}, descending via the ${star} arrival.`
+        : `${facility}, ${callsign}, ${altitudeWords(altitude)}, ${star} arrival.`,
     );
     this.emit({ type: 'arrivalEntered', aircraftId: aircraft.id, airport, star: route.star });
     return true;
@@ -1356,7 +1404,9 @@ export class SimEngine {
     const profile =
       field.elevationFt +
       Math.max(0, trackNm - ARRIVAL_PROFILE_LEVEL_NM) * ARRIVAL_PROFILE_FT_PER_NM;
-    const altitude = Math.floor(Math.min(cruise, profile) / 1_000) * 1_000;
+    // And low enough to meet the STAR's published restrictions (Center has started it down).
+    const restrictions = entryAltitudeLimitFt(route) ?? Infinity;
+    const altitude = Math.floor(Math.min(cruise, profile, restrictions) / 1_000) * 1_000;
     return Math.max(
       ARRIVAL_MIN_ENTRY_ALTITUDE_FT,
       Math.min(altitude, pack.airspace.boundary.ceilingFt - 1_000),

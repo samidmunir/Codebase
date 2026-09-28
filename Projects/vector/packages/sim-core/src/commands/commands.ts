@@ -9,10 +9,12 @@ import {
   altitudeWords,
   frequencyWords,
   headingWords,
+  procedureWords,
   runwayWords,
   speedWords,
 } from '../comms/phraseology';
 import type { AircraftPerformance } from '../performance/performance';
+import { descendViaBottomFt } from '../aircraft/navigation';
 
 // ATC instructions. Each is plain data, so instructions waiting on a pilot's
 // response are saved with the session. Every instruction is issued through the
@@ -30,6 +32,8 @@ export const atcCommandSchema = z.discriminatedUnion('type', [
     type: z.literal('altitude'),
     altitudeFt: z.number().int().positive().multipleOf(100),
   }),
+  /** Fly the arrival's published altitude restrictions ("descend via the PROUD2 arrival"). */
+  z.object({ type: z.literal('descendVia'), procedure: z.string().min(1) }),
   z.object({ type: z.literal('speed'), iasKts: z.number().int().positive() }),
   z.object({ type: z.literal('resumeNormalSpeed') }),
   z.object({ type: z.literal('directTo'), fix: z.string().min(2), position: latLonSchema }),
@@ -48,6 +52,8 @@ export type AtcCommandType = AtcCommand['type'];
 
 /** Commands that set the lateral path; an instruction can hold only one. */
 const LATERAL: ReadonlySet<AtcCommandType> = new Set(['heading', 'directTo']);
+/** Commands that set the altitude; an instruction can hold only one. */
+const VERTICAL: ReadonlySet<AtcCommandType> = new Set(['altitude', 'descendVia']);
 /** Commands that set the speed; an instruction can hold only one. */
 const SPEED: ReadonlySet<AtcCommandType> = new Set(['speed', 'resumeNormalSpeed']);
 
@@ -78,6 +84,8 @@ export function validateInstruction(
     return reject('Give either a heading or a direct-to, not both');
   if (types.filter((type) => SPEED.has(type)).length > 1)
     return reject('Give one speed instruction');
+  if (types.filter((type) => VERTICAL.has(type)).length > 1)
+    return reject('Give either an altitude or descend via, not both');
 
   const { speeds, ceilingFt } = context.performance;
   const assignedAltitude = commands.find((c) => c.type === 'altitude')?.altitudeFt;
@@ -106,6 +114,16 @@ export function validateInstruction(
         }
         break;
       }
+      case 'descendVia': {
+        const navigation = aircraft.navigation;
+        if (navigation.mode !== 'procedure' || navigation.name !== command.procedure)
+          return reject(`${aircraft.callsign} is not on the ${command.procedure} arrival`);
+        if (types.includes('heading'))
+          return reject('A heading takes it off the arrival: descend via needs the arrival');
+        if (descendViaBottomFt(aircraft) === undefined)
+          return reject(`No published altitudes left on the ${command.procedure} arrival`);
+        break;
+      }
       case 'clearedIls':
         if (command.clearance.airport !== aircraft.flightPlan.destination) {
           return reject(`${aircraft.callsign} is not landing at ${command.clearance.airport}`);
@@ -123,6 +141,7 @@ const SPOKEN_ORDER: AtcCommandType[] = [
   'heading',
   'directTo',
   'altitude',
+  'descendVia',
   'speed',
   'resumeNormalSpeed',
   'clearedIls',
@@ -157,6 +176,8 @@ export function controllerPhrase(command: AtcCommand, aircraft: Readonly<Aircraf
       return `maintain ${speedWords(command.iasKts)}`;
     case 'resumeNormalSpeed':
       return 'resume normal speed';
+    case 'descendVia':
+      return `descend via the ${procedureWords(command.procedure)} arrival`;
     case 'directTo':
       return `proceed direct ${command.fix}`;
     case 'clearedIls':
@@ -195,6 +216,8 @@ export function pilotReadback(
       return speedWords(command.iasKts);
     case 'resumeNormalSpeed':
       return 'normal speed';
+    case 'descendVia':
+      return `descend via the ${procedureWords(command.procedure)}`;
     case 'directTo':
       return `direct ${command.fix}`;
     case 'clearedIls':

@@ -12,7 +12,13 @@ function makeAircraft(
   overrides: Partial<Omit<AircraftState, 'targets'>> = {},
   targets: Partial<AircraftTargets> = {},
 ): AircraftState {
-  const base = { ...newAircraft(), id: 'AC1', verticalSpeedFpm: 0, ...overrides };
+  const base = {
+    ...newAircraft(),
+    id: 'AC1',
+    verticalSpeedFpm: 0,
+    navigation: { mode: 'heading' as const },
+    ...overrides,
+  };
   return {
     ...base,
     targets: {
