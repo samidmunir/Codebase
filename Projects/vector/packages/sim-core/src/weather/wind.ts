@@ -129,12 +129,19 @@ export function configWithinLimits(
   });
 }
 
+/** Winds this light (or with no direction) are calm: the preferred configuration is used. */
+export const CALM_RUNWAY_WIND_KTS = 2;
+/** Most a configuration can give up in headwind and still win by being preferred. */
+const PREFERENCE_TOLERANCE_KTS = 3;
+
 /**
  * The runway configuration to use for a wind: of the configurations whose
  * runways are all within the tailwind and crosswind limits, the one with the
- * most headwind. In calm wind (or a tie) the earlier, preferred configuration
- * wins. If no configuration is within limits, the one without a tailwind and
- * with the least crosswind.
+ * most headwind. The earlier (preferred) configuration wins when it gives up
+ * only a little headwind: up to a quarter of the wind speed, at most 3 kt, so
+ * even a light wind is landed into. In calm wind the preferred configuration
+ * is used. If no configuration is within limits, the one that goes least over
+ * the tailwind limit, then the crosswind limit.
  */
 export function selectRunwayConfig(
   configs: readonly RunwayConfig[],
@@ -146,35 +153,37 @@ export function selectRunwayConfig(
     const components = [...config.arrivals, ...config.departures].map((runway) =>
       windComponents(wind, runwayHeading(runway)),
     );
+    const tailwind = Math.max(0, ...components.map((c) => -c.headwindKts));
+    const crosswind = Math.max(...components.map((c) => c.crosswindKts));
     return {
       config,
       order,
-      withinLimits: components.every(
-        (c) => -c.headwindKts <= limits.maxTailwindKts && c.crosswindKts <= limits.maxCrosswindKts,
-      ),
+      withinLimits: tailwind <= limits.maxTailwindKts && crosswind <= limits.maxCrosswindKts,
       // Configurations are compared by their primary arrival and departure runways; extra
       // runways in a dual configuration only need to be within limits.
       headwind: Math.min(
         windComponents(wind, runwayHeading(config.arrivals[0]!)).headwindKts,
         windComponents(wind, runwayHeading(config.departures[0]!)).headwindKts,
       ),
-      crosswind: Math.max(...components.map((c) => c.crosswindKts)),
-      tailwindOverLimit: components.some((c) => -c.headwindKts > limits.maxTailwindKts),
+      tailwindExcess: Math.max(0, tailwind - limits.maxTailwindKts),
+      crosswindExcess: Math.max(0, crosswind - limits.maxCrosswindKts),
     };
   });
 
   const usable = scored.filter((s) => s.withinLimits);
   if (usable.length > 0) {
-    if (wind.speedKts <= CALM_WIND_KTS) return usable[0]!.config;
-    // Prefer more headwind; within 3 kt, prefer the earlier configuration.
+    if (wind.directionDeg === 0 || wind.speedKts <= CALM_RUNWAY_WIND_KTS) return usable[0]!.config;
     const best = Math.max(...usable.map((s) => s.headwind));
-    return usable.find((s) => s.headwind >= best - 3)!.config;
+    const tolerance = Math.min(PREFERENCE_TOLERANCE_KTS, wind.speedKts / 4);
+    // Never trade a headwind for a tailwind for the sake of preference.
+    const floor = Math.max(best - tolerance, Math.min(best, 0));
+    return usable.find((s) => s.headwind >= floor)!.config;
   }
-  // Nothing within limits: avoid tailwinds first, then take the least crosswind.
+  // Nothing within limits: go least over the tailwind limit, then the crosswind limit.
   return [...scored].sort(
     (a, b) =>
-      Number(a.tailwindOverLimit) - Number(b.tailwindOverLimit) ||
-      a.crosswind - b.crosswind ||
+      a.tailwindExcess - b.tailwindExcess ||
+      a.crosswindExcess - b.crosswindExcess ||
       a.order - b.order,
   )[0]!.config;
 }

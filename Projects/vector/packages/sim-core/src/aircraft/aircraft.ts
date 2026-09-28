@@ -73,7 +73,15 @@ export const navigationSchema = z.discriminatedUnion('mode', [
   /** Fly the target heading. */
   z.object({ mode: z.literal('heading') }),
   /** Fly direct to a fix, then continue on the heading flown at the fix. */
-  z.object({ mode: z.literal('direct'), fix: z.string(), position: latLonSchema }),
+  z.object({
+    mode: z.literal('direct'),
+    fix: z.string(),
+    position: latLonSchema,
+    /** Has been pointing at the fix (so a fix left abeam or behind counts as passed). */
+    inbound: z.boolean().optional(),
+    /** Flying on to get room to turn back to a fix too close to turn onto. */
+    extending: z.boolean().optional(),
+  }),
   /** Fly a published procedure (e.g. a departure) leg by leg. */
   z.object({
     mode: z.literal('procedure'),
@@ -83,6 +91,10 @@ export const navigationSchema = z.discriminatedUnion('mode', [
     legIndex: z.number().int().min(0),
     /** Where the current leg started (for distance-terminated legs). */
     legStart: latLonSchema,
+    /** Has pointed at the current leg's fix (so a fix left abeam or behind counts as passed). */
+    inbound: z.boolean().optional(),
+    /** Flying on to get room to turn back to a fix too close to turn onto. */
+    extending: z.boolean().optional(),
   }),
   /** Fly the target heading until intercepting the localizer, then fly the ILS. */
   z.object({

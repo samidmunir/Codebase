@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import type { Wind } from '@vector/sim-core';
 import type { SessionStatus } from '../../sim/scope-session';
@@ -41,8 +42,15 @@ function WindReadout({
   magneticVariationDeg: number;
 }) {
   const calm = formatWind(wind) === 'Calm';
-  // The arrow points where the wind blows to.
-  const towardDeg = wind.directionDeg + magneticVariationDeg + 180;
+  // The arrow points where the wind blows to, turning the short way when the wind shifts
+  // (e.g. 350° to 010°): the angle accumulates instead of wrapping.
+  const toward = wind.directionDeg + magneticVariationDeg + 180;
+  const [arrow, setArrow] = useState({ toward, rotation: toward });
+  if (arrow.toward !== toward) {
+    const shortest = ((((toward - arrow.toward) % 360) + 540) % 360) - 180;
+    setArrow({ toward, rotation: arrow.rotation + shortest });
+  }
+  const towardDeg = arrow.rotation;
   const detail = Object.entries(winds)
     .map(([icao, w]) => `${shortAirport(icao)} ${formatWind(w)}`)
     .join('\n');

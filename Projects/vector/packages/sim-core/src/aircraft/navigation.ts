@@ -16,6 +16,10 @@ import { turnRateDegPerSec, type FlightModelConfig } from './flight-model';
 const FEET_PER_NM = 6076.12;
 /** Direct-to: the fix counts as passed within this distance. */
 const FIX_PASSED_NM = 0.5;
+/** Pointing within this of a fix counts as flying toward it. */
+const INBOUND_BEARING_DEG = 45;
+/** Flying on from a fix too close to turn onto, until this much beyond a turn's width. */
+const EXTEND_MARGIN_NM = 1;
 /** Localizer tracking: heading correction per NM off centerline, and its limit. */
 const LOCALIZER_GAIN_DEG_PER_NM = 40;
 const LOCALIZER_MAX_CORRECTION_DEG = 30;
@@ -75,6 +79,41 @@ export function glidepathAltitudeFt(clearance: IlsClearance, alongTrackNm: numbe
   );
 }
 
+/**
+ * Flies toward a fix, updating the navigation's `inbound` and `extending`
+ * state, and says whether the fix is passed: overhead, or (like an FMS
+ * sequencing a fix) left abeam or behind within a turn's reach after flying
+ * toward it. A fix inside the circle the aircraft would turn on can't be
+ * reached by turning, so the pilot flies on until there is room to turn back
+ * (without this, a fast aircraft would circle the fix forever).
+ */
+function flyToFix(
+  aircraft: AircraftState,
+  state: { inbound?: boolean | undefined; extending?: boolean | undefined },
+  fix: LatLon,
+  magneticVariationDeg: number,
+  config: FlightModelConfig,
+): boolean {
+  const distance = distanceNm(aircraft.position, fix);
+  const bearingDeg = trueToMagnetic(bearingTrue(aircraft.position, fix), magneticVariationDeg);
+  const offBearing = Math.abs(headingDifference(aircraft.headingDeg, bearingDeg));
+  const tas = trueAirspeedKts(aircraft);
+  const turnRadiusNm = tas / 3600 / toRadians(turnRateDegPerSec(tas, config));
+  if (distance <= FIX_PASSED_NM) return true;
+  if (state.inbound && offBearing >= 90 && distance <= 2 * turnRadiusNm + FIX_PASSED_NM)
+    return true;
+  if (offBearing <= INBOUND_BEARING_DEG) state.inbound = true;
+
+  // The fix in the aircraft's frame (across toward it, ahead), from the center of the turn.
+  const across = distance * Math.sin(toRadians(offBearing));
+  const ahead = distance * Math.cos(toRadians(offBearing));
+  if (Math.hypot(across - turnRadiusNm, ahead) < turnRadiusNm) state.extending = true;
+  else if (state.extending && distance >= 2 * turnRadiusNm + EXTEND_MARGIN_NM)
+    delete state.extending;
+  aircraft.targets.headingDeg = state.extending ? aircraft.headingDeg : bearingDeg;
+  return false;
+}
+
 /** Sets the aircraft's targets from its navigation mode. Mutates `aircraft`. */
 export function updateNavigation(
   aircraft: AircraftState,
@@ -87,20 +126,15 @@ export function updateNavigation(
   const navigation = aircraft.navigation;
 
   if (navigation.mode === 'direct') {
-    const distance = distanceNm(aircraft.position, navigation.position);
-    if (distance <= FIX_PASSED_NM) {
+    if (flyToFix(aircraft, navigation, navigation.position, magneticVariationDeg, config)) {
       aircraft.navigation = { mode: 'heading' };
       return { fixPassed: navigation.fix };
     }
-    aircraft.targets.headingDeg = trueToMagnetic(
-      bearingTrue(aircraft.position, navigation.position),
-      magneticVariationDeg,
-    );
     aircraft.targets.turnDirection = 'shortest';
     return {};
   }
 
-  if (navigation.mode === 'procedure') return flyProcedure(aircraft, magneticVariationDeg);
+  if (navigation.mode === 'procedure') return flyProcedure(aircraft, magneticVariationDeg, config);
   if (navigation.mode !== 'approach') return {};
 
   const events: NavigationEvents = {};
@@ -256,7 +290,11 @@ function nextSpeedRestriction(
  * Flies the current procedure leg and advances through the legs. Holds and
  * procedure turns end the procedure; the aircraft then keeps its heading.
  */
-function flyProcedure(aircraft: AircraftState, magneticVariationDeg: number): NavigationEvents {
+function flyProcedure(
+  aircraft: AircraftState,
+  magneticVariationDeg: number,
+  config: FlightModelConfig,
+): NavigationEvents {
   const events: NavigationEvents = {};
   for (let guard = 0; guard < 4; guard++) {
     const navigation = aircraft.navigation;
@@ -272,6 +310,8 @@ function flyProcedure(aircraft: AircraftState, magneticVariationDeg: number): Na
       }
       navigation.legIndex++;
       navigation.legStart = { ...aircraft.position };
+      delete navigation.inbound;
+      delete navigation.extending;
       const next = navigation.legs[navigation.legIndex]!;
       aircraft.targets.turnDirection = next.turnDirection ?? 'shortest';
     };
@@ -296,17 +336,13 @@ function flyProcedure(aircraft: AircraftState, magneticVariationDeg: number): Na
     }
 
     if (FIX_LEGS.has(pt) && leg.position) {
-      if (distanceNm(aircraft.position, leg.position) <= FIX_PASSED_NM) {
+      if (flyToFix(aircraft, navigation, leg.position, magneticVariationDeg, config)) {
         if (leg.fix) events.fixPassed = leg.fix;
         // Restrictions end at the fix: resume normal speed unless the next leg has its own.
         if (leg.speedLimitKts !== undefined) aircraft.targets.speedMode = 'normal';
         advance();
         continue;
       }
-      aircraft.targets.headingDeg = trueToMagnetic(
-        bearingTrue(aircraft.position, leg.position),
-        magneticVariationDeg,
-      );
       return events;
     }
 

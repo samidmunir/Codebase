@@ -88,6 +88,7 @@ import {
   withGust,
   configWithinLimits,
   selectRunwayConfig,
+  windComponents,
   WIND_VARIATIONS,
   type Wind,
 } from '../weather/wind';
@@ -169,6 +170,9 @@ const CENTER_UPDATE_SEC = 5;
 const WIND_UPDATE_SEC = 60;
 /** An airport keeps its runways at least this long after a change, so it doesn't swap back and forth. */
 const MIN_RUNWAY_CHANGE_INTERVAL_SEC = 30 * 60;
+/** Runways within limits still change when their tailwind passes this and another configuration gains at least the next value in headwind. */
+const RUNWAY_CHANGE_TAILWIND_KTS = 2;
+const RUNWAY_CHANGE_GAIN_KTS = 5;
 /** Center lifts a resolution once aircraft are this many minima apart and diverging. */
 const CENTER_CLEAR_FACTOR = 1.5;
 /** Center never resolves a conflict below this. */
@@ -400,7 +404,8 @@ export class SimEngine {
         if (outcome === 'landed') landed.push({ aircraft, airport, runway });
       }
 
-      if (result.reachedHeading) {
+      // Only assigned headings: on a direct or a procedure the target moves every tick.
+      if (result.reachedHeading && aircraft.navigation.mode === 'heading') {
         this.emit({
           type: 'headingReached',
           aircraftId: aircraft.id,
@@ -1369,8 +1374,8 @@ export class SimEngine {
 
   /**
    * Announces a runway change at airports whose runways the wind no longer
-   * suits (over the tailwind or crosswind limit), when a better configuration
-   * exists. Runways the player chose, and airports that changed recently, are
+   * suits (over the tailwind or crosswind limit, or a tailwind while the wind
+   * clearly favors other runways), when a better configuration exists. Runways the player chose, and airports that changed recently, are
    * left alone.
    */
   private reviewRunways(): void {
@@ -1393,9 +1398,21 @@ export class SimEngine {
       const config = configs.find((c) => c.id === current.configId);
       if (!wind || !config) continue;
       const heading = (runway: string) => pack.runway(airport, runway).magneticHeadingDeg;
-      if (configWithinLimits(config, heading, wind, limits)) continue;
       const better = selectRunwayConfig(configs, heading, wind, limits);
       if (better.id === config.id || !configWithinLimits(better, heading, wind, limits)) continue;
+      // Change when the runways in use go over a limit, or when they have a tailwind and
+      // the wind now clearly favors others (not for small gains: a change is costly).
+      const primaryHeadwind = (c: typeof config) =>
+        Math.min(
+          ...[c.arrivals[0]!, c.departures[0]!].map(
+            (runway) => windComponents(wind, heading(runway)).headwindKts,
+          ),
+        );
+      const overLimit = !configWithinLimits(config, heading, wind, limits);
+      const windFavorsOthers =
+        primaryHeadwind(config) < -RUNWAY_CHANGE_TAILWIND_KTS &&
+        primaryHeadwind(better) > primaryHeadwind(config) + RUNWAY_CHANGE_GAIN_KTS;
+      if (!overLimit && !windFavorsOthers) continue;
       const change = {
         configId: better.id,
         arrivals: [...better.arrivals],
