@@ -80,12 +80,15 @@ import {
   airlineMix,
   tripBetween,
   type ActiveRunways,
+  liveWinds,
   type DepartureEntry,
 } from '../traffic/operations';
 import {
   regionalWind,
   variedWind,
   withGust,
+  liveWeatherReportSchema,
+  type LiveWeatherReport,
   configWithinLimits,
   selectRunwayConfig,
   windComponents,
@@ -130,6 +133,8 @@ export type CreateSimEngineOptions = {
    * one the wind favors. Unknown airports or ids are ignored.
    */
   runwayConfigs?: Readonly<Record<string, string>>;
+  /** Live wind mode: the current weather reports, so the session starts with the real wind. */
+  liveWeather?: readonly LiveWeatherReport[];
 } & OperationsContext;
 
 /** Static data for airport operations (wind, runways, departures). Not saved in snapshots. */
@@ -247,7 +252,7 @@ export class SimEngine {
       },
       options,
     );
-    engine.startOperations(options.runwayConfigs);
+    engine.startOperations(options.runwayConfigs, options.liveWeather);
     return engine;
   }
 
@@ -1450,9 +1455,76 @@ export class SimEngine {
     return regionalWind(this.winds);
   }
 
+  /** Latest live weather report per airport (live wind mode), if any has arrived. */
+  get liveWeather(): Readonly<Record<string, Readonly<LiveWeatherReport>>> {
+    return this.state.operations?.liveWeather ?? {};
+  }
+
+  /**
+   * Applies new live weather reports (live wind mode): airports with a report
+   * take its wind, and runways are reviewed at once. Reports are external
+   * input, saved with the session like the rest of its state.
+   */
+  applyLiveWeather(reports: readonly LiveWeatherReport[]): ValidationResult {
+    const operations = this.state.operations;
+    const pack = this.airspace;
+    if (!operations || !pack) return { ok: false, reason: 'No airspace' };
+    if (this.state.settings['weather.windMode'] !== 'live')
+      return { ok: false, reason: 'This session does not use live weather' };
+    const parsed = reports.map((report) => liveWeatherReportSchema.parse(report));
+    // The session's first reports (it started on a fallback wind): runways follow at once.
+    const first = Object.keys(operations.liveWeather ?? {}).length === 0;
+    const winds = liveWinds(parsed, pack.airspace.airports, this.state.world.magneticVariationDeg);
+    operations.liveWeather = {
+      ...operations.liveWeather,
+      ...Object.fromEntries(
+        parsed.filter((r) => pack.airspace.airports.includes(r.icao)).map((r) => [r.icao, r]),
+      ),
+    };
+    const changed = Object.entries(winds).some(
+      ([icao, wind]) => JSON.stringify(operations.winds[icao]) !== JSON.stringify(wind),
+    );
+    operations.winds = { ...operations.winds, ...winds };
+    operations.baseWinds = cloneJson(operations.winds);
+    if (changed) this.emit({ type: 'windChanged' });
+    if (first) this.selectRunwaysForWind();
+    this.reviewRunways();
+    return { ok: true };
+  }
+
+  /** Puts airports whose runways follow the wind on the configuration it favors, without notice. */
+  private selectRunwaysForWind(): void {
+    const operations = this.state.operations;
+    const pack = this.airspace;
+    if (!operations || !pack) return;
+    const settings = this.state.settings;
+    const limits = {
+      maxTailwindKts: settings['weather.maxTailwindKts'],
+      maxCrosswindKts: settings['weather.maxCrosswindKts'],
+    };
+    for (const [airport, current] of Object.entries(operations.runways)) {
+      const wind = operations.winds[airport];
+      const configs = pack.traffic.airports[airport]?.runwayConfigs ?? [];
+      if (current.chosenByPlayer || !wind || configs.length === 0) continue;
+      const heading = (runway: string) => pack.runway(airport, runway).magneticHeadingDeg;
+      const best = selectRunwayConfig(configs, heading, wind, limits);
+      if (best.id === current.configId) continue;
+      const runways = {
+        configId: best.id,
+        arrivals: [...best.arrivals],
+        departures: [...best.departures],
+      };
+      operations.runways[airport] = runways;
+      delete operations.pendingRunwayChanges[airport];
+      this.emit({ type: 'runwayChanged', airport, runways: cloneJson(runways) });
+    }
+  }
+
   /** Lets the wind drift around its starting value, as set by the wind variation settings. */
   private updateWinds(): void {
     const operations = this.state.operations;
+    // Live weather comes from the reports, not the variation model.
+    if (this.state.settings['weather.windMode'] === 'live') return;
     if (!operations?.baseWinds || operations.windSeed === undefined) return;
     const settings = this.state.settings;
     const amount = WIND_VARIATIONS[settings['weather.windVariation']];
@@ -1544,7 +1616,10 @@ export class SimEngine {
     return { ok: true };
   }
 
-  private startOperations(runwayConfigs?: Readonly<Record<string, string>>): void {
+  private startOperations(
+    runwayConfigs?: Readonly<Record<string, string>>,
+    liveWeather?: readonly LiveWeatherReport[],
+  ): void {
     if (!this.airspace) return;
     const settings = this.state.settings;
     const operations = initialOperations(
@@ -1564,6 +1639,8 @@ export class SimEngine {
         departureRatePerHour: settings['traffic.departureRatePerHour'],
         maxDepartureQueue: settings['traffic.maxDepartureQueue'],
         ...(runwayConfigs ? { runwayConfigs } : {}),
+        ...(liveWeather ? { liveWeather } : {}),
+        magneticVariationDeg: this.state.world.magneticVariationDeg,
       },
       this.state.tick,
     );

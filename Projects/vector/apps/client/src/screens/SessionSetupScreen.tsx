@@ -14,6 +14,7 @@ import { SettingRow } from '../components/settings/SettingControl';
 import { useGameControls } from '../controls/use-game-controls';
 import { shortAirport } from '../scope/data-block';
 import { formatWind } from './scope/format';
+import { fetchMetars } from '../api/weather-api';
 import { DIFFICULTY_LABELS } from '../settings/difficulty';
 import {
   defaultSetupSettings,
@@ -80,6 +81,34 @@ export function SessionSetupScreen() {
   }, [entry]);
 
   const loadedPack = pack?.id === entry?.id ? pack?.pack : undefined;
+
+  // Live wind: fetch the current reports so the preview (and the session) start from them.
+  const live = setup.settings['weather.windMode'] === 'live';
+  const [liveFetch, setLiveFetch] = useState<
+    { state: 'loading' } | { state: 'ok'; at: Date } | { state: 'failed'; message: string }
+  >({ state: 'loading' });
+  const [liveRequest, setLiveRequest] = useState(0);
+  const stations = loadedPack?.airspace.airports;
+  useEffect(() => {
+    if (!live || !stations) return;
+    let cancelled = false;
+    fetchMetars(stations)
+      .then(({ observations }) => {
+        if (cancelled) return;
+        setSetup((current) => ({ ...current, liveWeather: observations, runwayConfigs: {} }));
+        setLiveFetch({ state: 'ok', at: new Date() });
+      })
+      .catch((caught: unknown) => {
+        if (cancelled) return;
+        setLiveFetch({
+          state: 'failed',
+          message: caught instanceof Error ? caught.message : String(caught),
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [live, stations, liveRequest]);
   const preview = useMemo(
     () => (loadedPack ? previewSetup(loadedPack, setup) : undefined),
     [loadedPack, setup],
@@ -165,7 +194,33 @@ export function SessionSetupScreen() {
             </header>
             <div className="setup-card__rows">
               {row('weather.windMode')}
-              {manualWind ? (
+              {live ? (
+                <div className="setting-row">
+                  <div className="setting-row__text">
+                    <span className="setting-row__label">Live weather</span>
+                    <p className="setting-row__description" role="status">
+                      {liveFetch.state === 'loading'
+                        ? 'Getting the latest reports…'
+                        : liveFetch.state === 'ok'
+                          ? `Latest reports as of ${liveFetch.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Checked every ${settings['weather.livePollMin']} min during the session.`
+                          : `Couldn’t get live weather (${liveFetch.message}). The session starts with a realistic wind and keeps trying.`}
+                    </p>
+                  </div>
+                  <div className="setting-row__control">
+                    <button
+                      type="button"
+                      className="setup-button"
+                      disabled={liveFetch.state === 'loading'}
+                      onClick={() => {
+                        setLiveFetch({ state: 'loading' });
+                        setLiveRequest((n) => n + 1);
+                      }}
+                    >
+                      ↻ Refresh
+                    </button>
+                  </div>
+                </div>
+              ) : manualWind ? (
                 <>
                   {row('weather.manualWindDirectionDeg')}
                   {row('weather.manualWindSpeedKts')}
@@ -192,7 +247,10 @@ export function SessionSetupScreen() {
                   </div>
                 </div>
               )}
-              {WIND_LIMIT_KEYS.map((key) => row(key))}
+              {live && row('weather.livePollMin')}
+              {WIND_LIMIT_KEYS.filter(
+                (key) => !live || !key.startsWith('weather.windVariation'),
+              ).map((key) => row(key))}
             </div>
 
             {preview && (
@@ -208,6 +266,15 @@ export function SessionSetupScreen() {
                         <strong>{shortAirport(airport.icao)}</strong>
                         <span>{formatWind(airport.wind)}</span>
                       </div>
+                      {live &&
+                        (() => {
+                          const report = setup.liveWeather?.find((r) => r.icao === airport.icao);
+                          return report ? (
+                            <p className="setup-airport__metar" title={report.raw}>
+                              {report.raw.replace(/^(METAR|SPECI) /, '')}
+                            </p>
+                          ) : null;
+                        })()}
                       <div className="setup-airport__runways">
                         <span>
                           ARR <b>{airport.runways.arrivals.join(' ')}</b>
@@ -315,7 +382,9 @@ export function SessionSetupScreen() {
                         settings['weather.manualWindGustKts'] || undefined,
                       ),
                     )
-                  : 'Random'}
+                  : live
+                    ? 'Live'
+                    : 'Random'}
               </dd>
             </div>
           </dl>
@@ -328,9 +397,13 @@ export function SessionSetupScreen() {
             type="button"
             className="setup-summary__start"
             onClick={start}
-            disabled={!preview}
+            disabled={!preview || (live && liveFetch.state === 'loading')}
           >
-            {preview ? 'Start session' : 'Loading airspace…'}
+            {!preview
+              ? 'Loading airspace…'
+              : live && liveFetch.state === 'loading'
+                ? 'Getting live weather…'
+                : 'Start session'}
           </button>
           <button
             type="button"

@@ -6,7 +6,9 @@ import type { SeededRandom } from '../random/seeded-random';
 import { requestedCruiseAltitude } from './cruise-levels';
 import {
   generateWinds,
+  liveWeatherReportSchema,
   manualWinds,
+  type LiveWeatherReport,
   selectRunwayConfig,
   windSchema,
   type Wind,
@@ -54,6 +56,8 @@ export const operationsStateSchema = z.object({
   baseWinds: z.record(z.string(), windSchema).optional(),
   /** Seed for how the wind varies, fixed for the session. */
   windSeed: z.number().int().min(0).optional(),
+  /** Latest live weather report per airport (live wind mode). */
+  liveWeather: z.record(z.string(), liveWeatherReportSchema).optional(),
   runways: z.record(z.string(), activeRunwaysSchema),
   /** Runway changes announced for when the wind no longer suits the runways, by airport. */
   pendingRunwayChanges: z
@@ -74,13 +78,43 @@ export const operationsStateSchema = z.object({
 
 export type OperationsState = z.infer<typeof operationsStateSchema>;
 
+/**
+ * Live winds from weather reports: METAR winds are true, the sim's are magnetic
+ * (like an ATIS), to the nearest 10°. Variable or calm wind has no direction.
+ */
+export function liveWinds(
+  reports: readonly LiveWeatherReport[],
+  airports: readonly string[],
+  magneticVariationDeg: number,
+): Record<string, Wind> {
+  const winds: Record<string, Wind> = {};
+  for (const report of reports) {
+    if (!airports.includes(report.icao)) continue;
+    const directionDeg =
+      report.windDirectionTrueDeg === null || report.windSpeedKts <= 0
+        ? 0
+        : Math.round(trueToMagnetic(report.windDirectionTrueDeg, magneticVariationDeg) / 10) * 10 ||
+          360;
+    const speedKts = Math.round(report.windSpeedKts);
+    // Gusts as the report gives them (the station decides when they are worth reporting).
+    winds[report.icao] =
+      report.gustKts !== undefined && report.gustKts > speedKts && directionDeg !== 0
+        ? { directionDeg, speedKts, gustKts: Math.round(report.gustKts) }
+        : { directionDeg, speedKts };
+  }
+  return winds;
+}
+
 /** Initial departures waiting at each airport when a session starts. */
 const INITIAL_QUEUE = 2;
 const MAX_GATE_HOLDS = 99;
 
 export interface OperationsSettings {
-  windMode: 'random' | 'manual';
+  windMode: 'live' | 'random' | 'manual';
   manualWind: Wind;
+  /** Live mode: the latest reports (airports without one get a random wind). */
+  liveWeather?: readonly LiveWeatherReport[];
+  magneticVariationDeg?: number;
   maxTailwindKts: number;
   maxCrosswindKts: number;
   departureRatePerHour: number;
@@ -114,6 +148,11 @@ export function initialOperations(
     settings.windMode === 'manual'
       ? manualWinds(airports, settings.manualWind)
       : generateWinds(random, airports);
+  if (settings.windMode === 'live' && settings.liveWeather)
+    Object.assign(
+      winds,
+      liveWinds(settings.liveWeather, airports, settings.magneticVariationDeg ?? 0),
+    );
   const runways: Record<string, ActiveRunways> = {};
   for (const icao of airports) {
     const configs = pack.traffic.airports[icao]!.runwayConfigs;
@@ -138,6 +177,15 @@ export function initialOperations(
     baseWinds: Object.fromEntries(Object.entries(winds).map(([icao, wind]) => [icao, { ...wind }])),
     // From the generator's state without drawing from it, so traffic is unchanged.
     windSeed: (random.getState() ^ 0x5bd1e995) >>> 0,
+    ...(settings.windMode === 'live' && settings.liveWeather
+      ? {
+          liveWeather: Object.fromEntries(
+            settings.liveWeather
+              .filter((report) => airports.includes(report.icao))
+              .map((report) => [report.icao, { ...report }]),
+          ),
+        }
+      : {}),
     runways,
     pendingRunwayChanges: {},
     lastRunwayChangeTick: {},

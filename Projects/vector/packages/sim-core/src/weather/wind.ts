@@ -13,6 +13,26 @@ export const windSchema = z.object({
 
 export type Wind = z.infer<typeof windSchema>;
 
+/** A live weather report (METAR) for an airport, as the sim keeps it. */
+export const liveWeatherReportSchema = z.object({
+  icao: z.string(),
+  observedAt: z.string(),
+  /** The report as issued. */
+  raw: z.string(),
+  /** Wind direction, TRUE degrees; null when variable or calm. */
+  windDirectionTrueDeg: z.number().min(0).max(360).nullable(),
+  windSpeedKts: z.number().min(0),
+  gustKts: z.number().min(0).optional(),
+  visibilitySm: z.number().min(0).optional(),
+  ceilingFt: z.number().min(0).optional(),
+  altimeterInHg: z.number().positive().optional(),
+  temperatureC: z.number().optional(),
+  dewpointC: z.number().optional(),
+  flightCategory: z.enum(['VFR', 'MVFR', 'IFR', 'LIFR']).optional(),
+});
+
+export type LiveWeatherReport = z.infer<typeof liveWeatherReportSchema>;
+
 /** Winds below this are calm: runways are chosen by preference, not wind. */
 export const CALM_WIND_KTS = 4;
 

@@ -5,6 +5,7 @@ import { InvalidCredentialsError, InvalidSessionError } from '../auth/auth-servi
 import { UnauthorizedError } from '../auth/authenticate';
 import { SavedSessionLimitError, SavedSessionNotFoundError } from '../sessions/sessions-repository';
 import { EmailTakenError } from '../users/users-repository';
+import { WeatherUnavailableError } from '../weather/metar-service';
 import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
 
@@ -49,6 +50,10 @@ export function errorHandler(
       'rejected an invalid session snapshot',
     );
     return reply.code(400).send(body('invalid_snapshot', error.message));
+  }
+  if (error instanceof WeatherUnavailableError) {
+    request.log.warn({ detail: String(error.cause) }, 'live weather fetch failed');
+    return reply.code(503).send(body('weather_unavailable', error.message));
   }
   if ('statusCode' in error && error.statusCode === 413) {
     return reply.code(413).send(body('too_large', 'That session is too large to save'));

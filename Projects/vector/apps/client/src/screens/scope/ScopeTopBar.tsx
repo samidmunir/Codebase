@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import type { Wind } from '@vector/sim-core';
-import type { SessionStatus } from '../../sim/scope-session';
+import type { LiveWeatherReport, Wind } from '@vector/sim-core';
+import type { LiveWeatherStatus, SessionStatus } from '../../sim/scope-session';
 import { shortAirport } from '../../scope/data-block';
 import { formatUtc, formatWind } from './format';
 import { formatRp } from './score-format';
@@ -35,11 +35,15 @@ function WindReadout({
   winds,
   windKey,
   magneticVariationDeg,
+  live,
+  reports,
 }: {
   wind: Wind;
   winds: Readonly<Record<string, Wind>>;
   windKey: string;
   magneticVariationDeg: number;
+  live: LiveWeatherStatus;
+  reports: Readonly<Record<string, Readonly<LiveWeatherReport>>>;
 }) {
   const calm = formatWind(wind) === 'Calm';
   // The arrow points where the wind blows to, turning the short way when the wind shifts
@@ -52,15 +56,32 @@ function WindReadout({
   }
   const towardDeg = arrow.rotation;
   const detail = Object.entries(winds)
-    .map(([icao, w]) => `${shortAirport(icao)} ${formatWind(w)}`)
+    .map(([icao, w]) => {
+      const report = reports[icao];
+      return `${shortAirport(icao)} ${formatWind(w)}${report ? `\n  ${report.raw}` : ''}`;
+    })
     .join('\n');
+  const liveNote =
+    live.state === 'ok'
+      ? `Live weather, checked ${live.updatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      : live.state === 'failed'
+        ? `Live weather unavailable (${live.message}); ${live.updatedAt ? 'showing the last reports' : 'using a realistic wind'}`
+        : live.state === 'waiting'
+          ? 'Getting live weather…'
+          : undefined;
   return (
     <div
       className="scope-wind"
-      title={`Regional wind (magnetic)\n${detail}`}
+      title={`${liveNote ? `${liveNote}\n` : ''}Regional wind (magnetic)\n${detail}`}
+      data-live={live.state}
       aria-label={`Wind ${formatWind(wind)}`}
     >
       <span className="scope-wind__label">Wind</span>
+      {live.state !== 'off' && (
+        <span className="scope-wind__live" aria-label={liveNote}>
+          {live.state === 'failed' ? 'LIVE ⚠' : 'LIVE'}
+        </span>
+      )}
       {!calm && (
         <svg
           className="scope-wind__arrow"
@@ -137,6 +158,8 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
             winds={status.winds}
             windKey={status.windKey}
             magneticVariationDeg={props.magneticVariationDeg}
+            live={status.liveWeather}
+            reports={status.liveReports}
           />
         )}
       </div>

@@ -547,12 +547,25 @@ export const SESSION_SETTINGS = {
   'weather.windMode': setting.select({
     category: 'weather',
     label: 'Wind',
-    description: 'Random generates realistic New York wind. Manual uses the values below.',
+    description:
+      'Live uses the real current weather (METARs from aviationweather.gov), updated during the session. Random generates realistic New York wind. Manual uses the values below.',
     options: [
+      { value: 'live', label: 'Live (real weather)' },
       { value: 'random', label: 'Random (realistic)' },
       { value: 'manual', label: 'Manual' },
     ],
-    default: 'random',
+    default: 'live',
+  }),
+  'weather.livePollMin': setting.number({
+    category: 'weather',
+    label: 'Live weather updates',
+    description:
+      'How often live weather is checked for a new report. Airports issue one about hourly, and special reports when the weather changes.',
+    min: 1,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 5,
   }),
   'weather.manualWindDirectionDeg': setting.number({
     category: 'weather',

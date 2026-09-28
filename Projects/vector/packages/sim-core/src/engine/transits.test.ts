@@ -189,7 +189,10 @@ describe('flying the route', () => {
 
 describe('wind over a session', () => {
   it('drifts slightly around the starting wind, and resumes exactly from a save', () => {
-    const engine = createEngine({ 'weather.windVariation': 'slight' }, 11);
+    const engine = createEngine(
+      { 'weather.windMode': 'random', 'weather.windVariation': 'slight' },
+      11,
+    );
     const start = { ...engine.winds };
     const seen = new Set<string>();
     let changes = 0;
@@ -227,6 +230,7 @@ describe('wind over a session', () => {
 describe('runway changes', () => {
   // Tight limits and a changeable wind, so the runways stop suiting it within a few hours.
   const changeable = {
+    'weather.windMode': 'random',
     'weather.windVariation': 'moderate',
     'weather.windVariationPeriodMin': 10,
     'weather.maxTailwindKts': 0,

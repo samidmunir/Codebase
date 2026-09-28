@@ -31,6 +31,7 @@ import { ScorePanel } from './scope/ScorePanel';
 import { ScoreToasts } from './scope/ScoreToasts';
 import { SettingsDialog } from './scope/SettingsDialog';
 import { ScopeTopBar } from './scope/ScopeTopBar';
+import { useLiveWeather } from './scope/use-live-weather';
 import { TrafficPanel } from './scope/TrafficPanel';
 import { formatPosition } from './scope/format';
 import './scope-screen.css';
@@ -181,6 +182,7 @@ function Scope({ session }: { session: ScopeSession }) {
 
   useConflictSounds(session);
   useInterfaceSounds(session);
+  useLiveWeather(session);
 
   // Runway changes: announced ahead, then made.
   useEffect(

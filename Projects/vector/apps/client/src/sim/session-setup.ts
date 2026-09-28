@@ -1,7 +1,9 @@
 import {
   applyDifficulty,
   defaultSettings,
+  metarObservationSchema,
   resolveSettings,
+  type MetarObservation,
   type SessionSettings,
 } from '@vector/shared';
 import {
@@ -24,6 +26,8 @@ export interface SessionSetup {
   seed: number;
   /** Runway configuration chosen per airport; airports left out use the wind's choice. */
   runwayConfigs: Record<string, string>;
+  /** Live wind mode: the latest weather reports, so the preview and the session start from them. */
+  liveWeather?: MetarObservation[];
 }
 
 const STORAGE_KEY = 'vector.sessionSetup';
@@ -57,7 +61,8 @@ export function parseSetup(state: unknown): SessionSetup | undefined {
   if (typeof state !== 'object' || state === null || !('setup' in state)) return undefined;
   const setup = (state as { setup: unknown }).setup;
   if (typeof setup !== 'object' || setup === null) return undefined;
-  const { settings, seed, runwayConfigs } = setup as Record<string, unknown>;
+  const { settings, seed, runwayConfigs, liveWeather } = setup as Record<string, unknown>;
+  const reports = metarObservationSchema.array().safeParse(liveWeather);
   if (typeof seed !== 'number' || !Number.isInteger(seed) || seed < 0) return undefined;
   const configs =
     typeof runwayConfigs === 'object' && runwayConfigs !== null
@@ -67,7 +72,12 @@ export function parseSetup(state: unknown): SessionSetup | undefined {
           ),
         )
       : {};
-  return { settings: resolveSettings('session', settings).values, seed, runwayConfigs: configs };
+  return {
+    settings: resolveSettings('session', settings).values,
+    seed,
+    runwayConfigs: configs,
+    ...(reports.success ? { liveWeather: reports.data } : {}),
+  };
 }
 
 export interface AirportPreview {
@@ -97,6 +107,7 @@ export function previewSetup(pack: AirspacePack, setup: SessionSetup): AirportPr
     airspace: pack,
     airlines,
     runwayConfigs: setup.runwayConfigs,
+    ...(setup.liveWeather ? { liveWeather: setup.liveWeather } : {}),
   });
   const limits = {
     tailwind: setup.settings['weather.maxTailwindKts'],

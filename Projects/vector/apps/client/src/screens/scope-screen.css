@@ -156,6 +156,22 @@
   text-transform: uppercase;
 }
 
+.scope-wind__live {
+  padding: 1px 5px;
+  color: var(--color-target);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(76, 242, 160, 0.4);
+  border-radius: 3px;
+}
+
+.scope-wind[data-live='failed'] .scope-wind__live,
+.scope-wind[data-live='waiting'] .scope-wind__live {
+  color: #f5c451;
+  border-color: rgba(245, 196, 81, 0.45);
+}
+
 .scope-wind__arrow {
   color: var(--color-target);
   transition: rotate 1.2s var(--ease-out);
