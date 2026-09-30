@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { flightKindSchema, flightTimerSchema, timingStatsSchema } from './timing';
 
 // RP (reputation points): earned for moving traffic well, lost for unsafe or
 // sloppy control. Every value comes from the session's scoring settings.
@@ -12,6 +13,8 @@ export const scoreKindSchema = z.enum([
   'nearMidAir',
   'goAround',
   'leftWithoutHandoff',
+  'onTime',
+  'late',
 ]);
 export type ScoreKind = z.infer<typeof scoreKindSchema>;
 
@@ -38,6 +41,10 @@ export const scoreStateSchema = z.object({
   nextEventNumber: z.number().int().positive(),
   /** Violations already scored as near midair collisions (not also as losses of separation). */
   nearMidAirViolations: z.array(z.string()),
+  /** Target times of the flights the player is working, by aircraft id. */
+  timers: z.record(z.string(), flightTimerSchema).default({}),
+  /** Handling times of finished flights, by kind. */
+  timing: z.partialRecord(flightKindSchema, timingStatsSchema).default({}),
 });
 export type ScoreState = z.infer<typeof scoreStateSchema>;
 
@@ -47,6 +54,8 @@ export const emptyScoreState = (): ScoreState => ({
   events: [],
   nextEventNumber: 1,
   nearMidAirViolations: [],
+  timers: {},
+  timing: {},
 });
 
 /** Adds an event to the score. Returns the recorded event. */

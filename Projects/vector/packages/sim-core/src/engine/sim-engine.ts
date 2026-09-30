@@ -22,6 +22,7 @@ import {
   descendViaBottomFt,
   finalApproachGeometry,
   followGlideslope,
+  routeAhead,
   updateNavigation,
 } from '../aircraft/navigation';
 import {
@@ -37,7 +38,18 @@ import {
   type ScoreKind,
   type ScoreState,
 } from '../scoring/score';
-import { assessHandoff, routeExitFix } from '../atc/handoff';
+import {
+  arrivalFlightTimeSec,
+  climbingFlightTimeSec,
+  emptyTimingStats,
+  formatDuration,
+  levelFlightTimeSec,
+  timingRp,
+  type FlightKind,
+  type FlightTimer,
+  type TimingStats,
+} from '../scoring/timing';
+import { assessHandoff, boundaryCrossing, routeExitFix } from '../atc/handoff';
 import {
   centerRouteTarget,
   predictedConflict,
@@ -180,6 +192,8 @@ const flightLevelLabel = (altitudeFt: number, transitionAltitudeFt: number) =>
 
 /** Center re-plans its traffic this often. */
 const CENTER_UPDATE_SEC = 5;
+/** Arrivals' target times plan on joining the final this far from the runway. */
+const ARRIVAL_FINAL_JOIN_NM = 12;
 /** How often the reported wind is updated when it varies. */
 const WIND_UPDATE_SEC = 60;
 /** An airport keeps its runways at least this long after a change, so it doesn't swap back and forth. */
@@ -1988,6 +2002,150 @@ export class SimEngine {
     this.emit({ type: 'scored', event });
   }
 
+  // ---- Target times ---------------------------------------------------------------
+
+  /** The target time of a flight the player is working, if it has one. */
+  flightTimer(aircraftId: string): Readonly<FlightTimer> | undefined {
+    return this.state.score.timers[aircraftId];
+  }
+
+  /** Handling times of finished flights, by kind. */
+  get timingStats(): Readonly<Partial<Record<FlightKind, Readonly<TimingStats>>>> {
+    return this.state.score.timing;
+  }
+
+  /** Gives a flight the player now works its target time. */
+  private startTimer(aircraft: Readonly<AircraftState>, kind: FlightKind): void {
+    const settings = this.state.settings;
+    if (!settings['scoring.timing'] || !this.airspace) return;
+    const estimateSec = this.unimpededTimeSec(aircraft, kind);
+    if (estimateSec === undefined) return;
+    const allowanceMin =
+      kind === 'arrival'
+        ? settings['scoring.arrivalAllowanceMin']
+        : kind === 'departure'
+          ? settings['scoring.departureAllowanceMin']
+          : settings['scoring.transitAllowanceMin'];
+    const targetSec =
+      estimateSec * (1 + settings['scoring.timingAllowancePct'] / 100) + allowanceMin * 60;
+    const { tickSeconds } = this.state.config;
+    this.state.score.timers[aircraft.id] = {
+      kind,
+      startTick: this.state.tick,
+      targetTick: this.state.tick + Math.round(targetSec / tickSeconds),
+    };
+  }
+
+  /**
+   * How long a flight would take, unimpeded, from now to landing (arrivals)
+   * or to the handoff (departures, overflights), along its route.
+   */
+  private unimpededTimeSec(
+    aircraft: Readonly<AircraftState>,
+    kind: FlightKind,
+  ): number | undefined {
+    const pack = this.airspace!;
+    const performance = this.performance.get(aircraft.aircraftType);
+    const route = routeAhead(aircraft);
+    if (kind === 'arrival') {
+      // Along the STAR, then to join the final of a runway in use (the nearest join point), then down the final.
+      const field = pack.airport(aircraft.flightPlan.destination);
+      const variation = this.state.world.magneticVariationDeg;
+      const runways = this.activeRunways[field.icao]?.arrivals ?? [];
+      const joins = runways
+        .map((id) => field.runways.find((r) => r.id === id))
+        .filter((runway) => runway?.ils)
+        .map((runway) =>
+          destinationPoint(
+            runway!.threshold,
+            magneticToTrue(runway!.ils!.courseDeg, variation) + 180,
+            ARRIVAL_FINAL_JOIN_NM,
+          ),
+        );
+      const toFinal =
+        joins.length > 0
+          ? Math.min(...joins.map((join) => distanceNm(route.end, join))) + ARRIVAL_FINAL_JOIN_NM
+          : distanceNm(route.end, field.position);
+      return arrivalFlightTimeSec(
+        route.distanceNm + toFinal,
+        aircraft.altitudeFt,
+        field.elevationFt,
+        performance,
+      );
+    }
+    const window = this.state.settings['center.handoffWindowNm'];
+    if (kind === 'transit') {
+      const toBoundary = boundaryCrossing(pack, aircraft)?.distanceNm ?? 0;
+      return levelFlightTimeSec(
+        Math.max(0, toBoundary - window),
+        aircraft.altitudeFt,
+        aircraft.iasKts,
+      );
+    }
+    // Departures: along the SID to the gate fix, then on toward the destination to the handoff.
+    const gate = [...aircraft.flightPlan.route]
+      .reverse()
+      .map((id) => pack.fix(id))
+      .find(Boolean);
+    const city = pack.traffic.cityPositions[aircraft.flightPlan.destination];
+    const toGate = route.distanceNm + (gate ? distanceNm(route.end, gate.position) : 0);
+    const cruiseFt = aircraft.flightPlan.requestedAltitudeFt ?? aircraft.targets.altitudeFt;
+    let beyondGate = 0;
+    let mustReachFt = 0;
+    if (gate && city) {
+      const onward = {
+        ...aircraft,
+        position: gate.position,
+        altitudeFt: cruiseFt,
+        headingDeg: trueToMagnetic(
+          bearingTrue(gate.position, city),
+          this.state.world.magneticVariationDeg,
+        ),
+      };
+      beyondGate = Math.max(0, (boundaryCrossing(pack, onward)?.distanceNm ?? 0) - window);
+      mustReachFt = Math.min(
+        cruiseFt,
+        assessHandoff(pack, onward, this.state.settings).minimumAltitudeFt,
+      );
+    }
+    return climbingFlightTimeSec(
+      toGate + beyondGate,
+      aircraft.altitudeFt,
+      cruiseFt,
+      mustReachFt,
+      performance,
+    );
+  }
+
+  /** Scores a flight's time when it lands or is handed off. */
+  private finishTimer(aircraft: Readonly<AircraftState>, finished: string): void {
+    const timer = this.state.score.timers[aircraft.id];
+    if (!timer) return;
+    delete this.state.score.timers[aircraft.id];
+    const settings = this.state.settings;
+    const { tickSeconds } = this.state.config;
+    const elapsedSec = (this.state.tick - timer.startTick) * tickSeconds;
+    const targetSec = (timer.targetTick - timer.startTick) * tickSeconds;
+    const result = timingRp(elapsedSec, targetSec, {
+      onTimeRp: settings['scoring.onTimeRp'],
+      lateRpPerMin: settings['scoring.lateRpPerMin'],
+      lateMaxRp: settings['scoring.lateMaxRp'],
+    });
+    const stats = (this.state.score.timing[timer.kind] ??= emptyTimingStats());
+    stats.count++;
+    if (result.onTime) stats.onTime++;
+    stats.totalSec += elapsedSec;
+    stats.totalTargetSec += targetSec;
+    this.award(
+      result.onTime ? 'onTime' : 'late',
+      result.rp,
+      [aircraft.callsign],
+      result.onTime
+        ? `${finished} in ${formatDuration(elapsedSec)}, ${formatDuration(targetSec - elapsedSec)} ahead of target`
+        : `${finished} ${formatDuration(result.lateSec)} late (${formatDuration(elapsedSec)}, target ${formatDuration(targetSec)})`,
+    );
+  }
+
   /** Scores the events that earn or cost RP. */
   private scoreFor(event: SimEvent): void {
     const pack = this.airspace;
@@ -1995,6 +2153,16 @@ export class SimEngine {
     const settings = this.state.settings;
     const aircraftOf = (id: string) => this.getAircraft(id);
     switch (event.type) {
+      case 'arrivalEntered':
+      case 'transitEntered': {
+        const aircraft = aircraftOf(event.aircraftId);
+        if (aircraft)
+          this.startTimer(aircraft, event.type === 'arrivalEntered' ? 'arrival' : 'transit');
+        return;
+      }
+      case 'aircraftRemoved':
+        delete this.state.score.timers[event.aircraftId];
+        return;
       case 'landed': {
         const aircraft = aircraftOf(event.aircraftId);
         if (!aircraft) return;
@@ -2004,10 +2172,20 @@ export class SimEngine {
           [aircraft.callsign],
           `landed ${shortIcao(event.airport)} ${event.runway}`,
         );
+        this.finishTimer(aircraft, `landed ${shortIcao(event.airport)}`);
         return;
       }
       case 'ownerChanged': {
         const aircraft = aircraftOf(event.aircraftId);
+        // Radar contact: the departure is the player's from here to the handoff.
+        if (
+          aircraft &&
+          event.to === this.state.playerId &&
+          event.from === towerId(aircraft.flightPlan.origin)
+        ) {
+          this.startTimer(aircraft, 'departure');
+          return;
+        }
         if (!aircraft || event.from !== this.state.playerId || !pack.isCenter(event.to)) return;
         const airports = pack.airspace.airports;
         if (airports.includes(aircraft.flightPlan.destination)) return; // arrivals aren't handed to Center
@@ -2038,6 +2216,7 @@ export class SimEngine {
           [aircraft.callsign],
           `handed to ${center.callsign}${notes.length ? `, ${notes.join(', ')}` : ''}`,
         );
+        this.finishTimer(aircraft, 'handed off');
         return;
       }
       case 'goAround': {

@@ -440,6 +440,30 @@ export function restrictionsAhead(aircraft: Readonly<AircraftState>): Restrictio
 }
 
 /**
+ * The distance still to fly along the procedure (or direct-to) an aircraft is
+ * on, and where that path ends. Stops at a heading leg, where the path's
+ * length is no longer known.
+ */
+export function routeAhead(aircraft: Readonly<AircraftState>): { distanceNm: number; end: LatLon } {
+  const navigation = aircraft.navigation;
+  if (navigation.mode === 'direct')
+    return {
+      distanceNm: distanceNm(aircraft.position, navigation.position),
+      end: navigation.position,
+    };
+  let end = aircraft.position;
+  let distance = 0;
+  if (navigation.mode !== 'procedure') return { distanceNm: 0, end };
+  for (const leg of navigation.legs.slice(navigation.legIndex)) {
+    if (leg.pathTerminator.startsWith('F')) continue;
+    if (!leg.position) break;
+    distance += distanceNm(end, leg.position);
+    end = leg.position;
+  }
+  return { distanceNm: distance, end };
+}
+
+/**
  * Where a descent via the procedure ends: the lowest altitude its remaining
  * restrictions lead down to, or undefined if there are none ahead.
  */

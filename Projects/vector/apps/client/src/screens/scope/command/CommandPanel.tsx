@@ -30,6 +30,7 @@ import type { LeaderDirection } from '../../../scope/render/traffic-layer';
 import { useUserSettings } from '../../../settings/user-settings-store';
 import type { ScopeSession } from '../../../sim/scope-session';
 import { formatAltitudeLabel } from '../format';
+import { flightTiming } from '../timing-format';
 import { HeadingDial } from './HeadingDial';
 
 type Tab = 'heading' | 'altitude' | 'speed' | 'direct' | 'approach' | 'handoff';
@@ -60,6 +61,7 @@ export function CommandPanel(props: CommandPanelProps) {
   const performance = session.engine.performance.get(aircraft.aircraftType);
   const owned = aircraft.owner === session.engine.playerId;
   const pending = session.engine.pendingInstructions(aircraft.id).length > 0;
+  const timing = flightTiming(session.engine, aircraft.id, (tick) => session.utcAtTick(tick));
 
   const departing = isDeparting(pack, aircraft);
   const runways = useMemo(() => ilsRunways(pack, aircraft), [pack, aircraft]);
@@ -167,6 +169,15 @@ export function CommandPanel(props: CommandPanelProps) {
       </dl>
 
       <ul className="command-panel__plan" aria-label="Planning">
+        {timing && (
+          <li
+            key="target"
+            data-tone={timing.tone === 'late' ? 'late' : timing.tone}
+            title="Target time: land (arrivals) or hand off (departures, overflights) by then for the on-time bonus; later costs RP"
+          >
+            <span>{timing.label}</span> {timing.status}
+          </li>
+        )}
         {planningNotes(pack, aircraft, altitudeLabel, session.engine.settings).map((note) => (
           <li key={note.label} data-tone={note.tone}>
             <span>{note.label}</span> {note.value}

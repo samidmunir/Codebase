@@ -290,3 +290,106 @@ describe('runway changes', () => {
     expect(chosen.activeRunways.KJFK!.configId).toBe(jfk);
   });
 });
+
+describe('target times', () => {
+  /** Runs until a transit enters, returning its id. */
+  function withTransit(overrides: Partial<SessionSettings> = {}) {
+    const engine = createEngine({ 'traffic.transitRatePerHour': 20, ...overrides }, 3);
+    let id: string | undefined;
+    engine.subscribe((event) => {
+      if (event.type === 'transitEntered' && !id) id = event.aircraftId;
+    });
+    for (let t = 0; t < 3_600 && !id; t++) engine.step();
+    return { engine, id: id! };
+  }
+  const handOff = (engine: SimEngine, id: string) => {
+    const aircraft = engine.getAircraft(id)!;
+    const center = newYork.centers.find((c) => c.id === 'ZNY')!;
+    return engine.issueInstruction(id, [
+      {
+        type: 'handoff',
+        to: center.id,
+        facility: center.callsign,
+        frequencyMhz: center.sites[0]!.frequencies[0]!.frequencyMhz,
+      },
+    ]).ok
+      ? true
+      : aircraft;
+  };
+  const runUntilHandedOff = (engine: SimEngine, id: string, fromTick: number) => {
+    for (let t = 0; t < 3_600; t++) {
+      if (engine.tick >= fromTick && engine.getAircraft(id)?.owner === 'N90') handOff(engine, id);
+      engine.step();
+      if (engine.getAircraft(id)?.owner !== 'N90') return;
+    }
+  };
+
+  it('gives each flight a target time when it becomes yours, and rewards finishing on time', () => {
+    const { engine, id } = withTransit();
+    const timer = engine.flightTimer(id)!;
+    expect(timer).toMatchObject({ kind: 'transit' });
+    expect(timer.targetTick).toBeGreaterThan(timer.startTick + 3 * 60);
+    runUntilHandedOff(engine, id, 0);
+    const event = engine.score.events.find((e) => e.kind === 'onTime')!;
+    expect(event).toMatchObject({ rp: 20 });
+    expect(event.detail).toMatch(/^handed off in \d+:\d\d, \d+:\d\d ahead of target$/);
+    expect(engine.flightTimer(id)).toBeUndefined();
+    expect(engine.timingStats.transit).toMatchObject({ count: 1, onTime: 1 });
+  });
+
+  it('takes RP for each minute late, and averages the time taken', () => {
+    const { engine, id } = withTransit({
+      'scoring.transitAllowanceMin': 0,
+      'scoring.timingAllowancePct': 0,
+      'pilots.responseDelaySec': [1, 1],
+    });
+    const timer = engine.flightTimer(id)!;
+    // Hold on to it until 2½ minutes past its target.
+    runUntilHandedOff(engine, id, timer.targetTick + 150);
+    const event = engine.score.events.find((e) => e.kind === 'late')!;
+    const [, minutes, seconds] = /^handed off (\d+):(\d\d) late/.exec(event.detail)!;
+    const lateSec = Number(minutes) * 60 + Number(seconds);
+    expect(lateSec).toBeGreaterThanOrEqual(150);
+    expect(event.rp).toBe(-5 * Math.ceil(lateSec / 60));
+    const stats = engine.timingStats.transit!;
+    expect(stats).toMatchObject({ count: 1, onTime: 0 });
+    expect(stats.totalSec).toBeGreaterThan(stats.totalTargetSec);
+  });
+
+  it('times departures from radar contact and arrivals from when they enter', () => {
+    const engine = createEngine(
+      { 'traffic.arrivalRatePerHour': 10, 'traffic.departureRatePerHour': 10 },
+      8,
+    );
+    for (let t = 0; t < 1_800; t++) {
+      for (const entry of engine.departureQueue)
+        if (entry.status === 'waiting' && engine.tick >= entry.readyAtTick)
+          engine.releaseDeparture(entry.id, engine.activeRunways[entry.airport]!.departures[0]!);
+      engine.step();
+    }
+    const timed = engine.listAircraft().filter((a) => engine.flightTimer(a.id));
+    const kinds = new Set(timed.map((a) => engine.flightTimer(a.id)!.kind));
+    expect(kinds).toContain('arrival');
+    expect(kinds).toContain('departure');
+    // Departures still with Tower have no target time yet.
+    for (const aircraft of engine.listAircraft())
+      if (aircraft.owner.endsWith('_TWR') && aircraft.phase === 'departure')
+        expect(engine.flightTimer(aircraft.id)).toBeUndefined();
+    // A departure's target allows at least its climb to the handoff altitude.
+    const departure = timed.find((a) => engine.flightTimer(a.id)!.kind === 'departure')!;
+    const timer = engine.flightTimer(departure.id)!;
+    expect((timer.targetTick - timer.startTick) / 60).toBeGreaterThan(6);
+  });
+
+  it('gives no target times with the setting off, and keeps them in saved sessions', () => {
+    const off = withTransit({ 'scoring.timing': false });
+    expect(off.engine.flightTimer(off.id)).toBeUndefined();
+    const { engine, id } = withTransit();
+    const restored = SimEngine.fromSnapshot(
+      JSON.parse(JSON.stringify(engine.toSnapshot())),
+      performance,
+      { airspace: newYork, airlines },
+    );
+    expect(restored.flightTimer(id)).toEqual(engine.flightTimer(id));
+  });
+});
