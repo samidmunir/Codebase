@@ -194,9 +194,30 @@ export const fixSchema = z.object({
 
 export type Fix = z.infer<typeof fixSchema>;
 
+/** A published holding pattern (FAA NASR), as charted on a STAR, enroute chart or approach. */
+export const holdSchema = z.object({
+  fix: z.string().min(2).max(5),
+  /** Magnetic course flown inbound to the fix. */
+  inboundCourseDeg: z.number().min(0).max(360),
+  turn: z.enum(['left', 'right']),
+  /** Leg length for distance-based (RNAV or DME) holds; others are timed. */
+  legNm: z.number().positive().optional(),
+  /** Published maximum holding speed, where one is given. */
+  maxSpeedKts: z.number().positive().optional(),
+  /** Altitudes the hold is published for. */
+  minAltitudeFt: z.number().min(0).optional(),
+  maxAltitudeFt: z.number().min(0).optional(),
+  /** Where it is charted: 'STAR', 'ENROUTE HIGH', 'ENROUTE LOW', 'IAP', ... */
+  chart: z.string(),
+});
+
+export type Hold = z.infer<typeof holdSchema>;
+
 export const navdataFileSchema = z.object({
   schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
   fixes: z.array(fixSchema),
+  /** Published holds, at most one per fix. */
+  holds: z.array(holdSchema).default([]),
 });
 
 // ---- Video map -----------------------------------------------------------------

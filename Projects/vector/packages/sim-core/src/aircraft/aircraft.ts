@@ -73,6 +73,62 @@ export const resolvedLegSchema = z.object({
 
 export type ResolvedLeg = z.infer<typeof resolvedLegSchema>;
 
+/** Fly a published procedure (a SID or STAR) leg by leg. */
+const procedureNavigationSchema = z.object({
+  mode: z.literal('procedure'),
+  /** Procedure name as spoken, e.g. 'TNNIS6'. */
+  name: z.string(),
+  legs: z.array(resolvedLegSchema).min(1),
+  legIndex: z.number().int().min(0),
+  /** Where the current leg started (for distance-terminated legs). */
+  legStart: latLonSchema,
+  /** Has pointed at the current leg's fix (so a fix left abeam or behind counts as passed). */
+  inbound: z.boolean().optional(),
+  /** Flying on to get room to turn back to a fix too close to turn onto. */
+  extending: z.boolean().optional(),
+  /** Cleared to descend via the procedure (a STAR): its altitude restrictions are flown. */
+  descendVia: z.boolean().optional(),
+  /** Cleared to climb via the procedure (a SID): its altitude restrictions are flown. */
+  climbVia: z.boolean().optional(),
+  /** Descending or climbing via: the altitude to be at now, on the planned path (set each tick). */
+  vnavAltitudeFt: z.number().optional(),
+  /** Published speed limit in force now (set each tick); an assigned speed overrides it. */
+  speedLimitKts: z.number().positive().optional(),
+});
+
+/** Fly a holding pattern at a fix (racetrack: outbound leg, then inbound to the fix). */
+const holdNavigationSchema = z.object({
+  mode: z.literal('hold'),
+  fix: z.string(),
+  position: latLonSchema,
+  /** Magnetic course flown inbound to the fix. */
+  inboundCourseDeg: z.number().min(0).max(360),
+  turn: z.enum(['left', 'right']),
+  /** Distance legs (RNAV and DME holds); otherwise the outbound leg is timed. */
+  legNm: z.number().positive().optional(),
+  /** The published hold (or one the controller described). */
+  published: z.boolean(),
+  /** The published maximum holding speed, if any (the standard limits apply anyway). */
+  maxSpeedKts: z.number().positive().optional(),
+  /** Where in the pattern the aircraft is. */
+  phase: z.enum(['toFix', 'outboundTurn', 'outbound', 'inboundTurn', 'inbound']),
+  /** Outbound leg: where it began and how long it is. */
+  outboundStart: latLonSchema.optional(),
+  outboundNm: z.number().positive().optional(),
+  /** Flying to the fix (see the direct-to fields). */
+  inbound: z.boolean().optional(),
+  extending: z.boolean().optional(),
+  /** Holding speed limit in force now (set each tick). */
+  speedLimitKts: z.number().positive().optional(),
+  /** Expect further clearance: when, and whether the pilot has asked. */
+  efcTick: z.number().int().min(0).optional(),
+  efcCalled: z.boolean().optional(),
+  /** Patterns flown so far. */
+  laps: z.number().int().min(0).default(0),
+  /** Held at a fix on its procedure: the procedure from that fix on, to resume. */
+  resume: procedureNavigationSchema.optional(),
+});
+
 export const navigationSchema = z.discriminatedUnion('mode', [
   /** Fly the target heading. */
   z.object({ mode: z.literal('heading') }),
@@ -86,28 +142,8 @@ export const navigationSchema = z.discriminatedUnion('mode', [
     /** Flying on to get room to turn back to a fix too close to turn onto. */
     extending: z.boolean().optional(),
   }),
-  /** Fly a published procedure (e.g. a departure) leg by leg. */
-  z.object({
-    mode: z.literal('procedure'),
-    /** Procedure name as spoken, e.g. 'TNNIS6'. */
-    name: z.string(),
-    legs: z.array(resolvedLegSchema).min(1),
-    legIndex: z.number().int().min(0),
-    /** Where the current leg started (for distance-terminated legs). */
-    legStart: latLonSchema,
-    /** Has pointed at the current leg's fix (so a fix left abeam or behind counts as passed). */
-    inbound: z.boolean().optional(),
-    /** Flying on to get room to turn back to a fix too close to turn onto. */
-    extending: z.boolean().optional(),
-    /** Cleared to descend via the procedure (a STAR): its altitude restrictions are flown. */
-    descendVia: z.boolean().optional(),
-    /** Cleared to climb via the procedure (a SID): its altitude restrictions are flown. */
-    climbVia: z.boolean().optional(),
-    /** Descending or climbing via: the altitude to be at now, on the planned path (set each tick). */
-    vnavAltitudeFt: z.number().optional(),
-    /** Published speed limit in force now (set each tick); an assigned speed overrides it. */
-    speedLimitKts: z.number().positive().optional(),
-  }),
+  procedureNavigationSchema,
+  holdNavigationSchema,
   /** Fly the target heading until intercepting the localizer, then fly the ILS. */
   z.object({
     mode: z.literal('approach'),

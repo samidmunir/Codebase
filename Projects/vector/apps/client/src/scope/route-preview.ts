@@ -21,6 +21,36 @@ export interface RoutePreview {
   label: string | undefined;
 }
 
+/** The racetrack of a hold: inbound leg to the fix, turn, outbound leg, turn back. */
+export function holdingPattern(
+  aircraft: Readonly<AircraftState>,
+  hold: Extract<AircraftState['navigation'], { mode: 'hold' }>,
+  variation: number,
+): LatLon[] {
+  // Standard-rate turns at holding speed: radius = TAS / (60 × π) NM per minute of turn.
+  const tas = Math.min(aircraft.iasKts, 230) * (1 + (aircraft.altitudeFt / 1_000) * 0.02);
+  const radius = tas / 188.5;
+  const leg = hold.legNm ?? (tas * (aircraft.altitudeFt <= 14_000 ? 60 : 90)) / 3600;
+  const inbound = magneticToTrue(hold.inboundCourseDeg, variation);
+  const side = hold.turn === 'right' ? 90 : -90;
+  const points: LatLon[] = [];
+  // From the fix: the turn to outbound (a half circle to the holding side).
+  const turnCenter = destinationPoint(hold.position, inbound + side, radius);
+  for (let a = 0; a <= 180; a += 15)
+    points.push(destinationPoint(turnCenter, inbound - side + (side > 0 ? a : -a), radius));
+  const outboundEnd = destinationPoint(points.at(-1)!, inbound + 180, leg);
+  const backCenter = destinationPoint(
+    destinationPoint(hold.position, inbound + 180, leg),
+    inbound + side,
+    radius,
+  );
+  points.push(outboundEnd);
+  for (let a = 0; a <= 180; a += 15)
+    points.push(destinationPoint(backCenter, inbound + side + (side > 0 ? a : -a), radius));
+  points.push(hold.position);
+  return points;
+}
+
 /** Length of a heading line when the route ends on a heading. */
 const HEADING_TAIL_NM = 10;
 /** ILS final approach course drawn out to this distance. */
@@ -83,6 +113,11 @@ export function routePreview(aircraft: Readonly<AircraftState>, pack: AirspacePa
   } else if (navigation.mode === 'direct') {
     preview.path.push(navigation.position);
     preview.fixes.push({ ident: navigation.fix, position: navigation.position });
+  } else if (navigation.mode === 'hold') {
+    preview.label = `Holding at ${navigation.fix}`;
+    if (navigation.phase === 'toFix') preview.path.push(navigation.position);
+    preview.onward = holdingPattern(aircraft, navigation, variation);
+    preview.fixes.push({ ident: navigation.fix, position: navigation.position, note: 'HOLD' });
   } else if (navigation.mode === 'approach') {
     const { clearance } = navigation;
     const outbound = magneticToTrue(clearance.courseDeg, variation) + 180;

@@ -26,7 +26,13 @@ import { cachedDownload, onlyFile, text, unzipMatching } from './lib/download';
 import { boxAround, coverageOutline, inBox, simplify } from './lib/geometry';
 import { parseMva } from './lib/mva';
 import { findRadarSites } from './lib/radar-sites';
-import { parseArtccBoundaries, parseCenterSites, parseFrequencies, parseRadars } from './lib/nasr';
+import {
+  parseArtccBoundaries,
+  parseCenterSites,
+  parseFrequencies,
+  parseRadars,
+  parseHolds,
+} from './lib/nasr';
 import { buildShoreline } from './lib/shoreline';
 
 // ---- Configuration -------------------------------------------------------------
@@ -586,6 +592,19 @@ async function main() {
       /FRQ\.csv$/,
     ),
   );
+  // Published holding patterns.
+  const holdCsv = unzipMatching(
+    await cachedDownload(
+      `https://nfdc.faa.gov/webContent/28DaySub/extra/${NASR_CSV_EDITION}_HPF_CSV.zip`,
+      `nasr/${NASR_CSV_EDITION}_HPF_CSV.zip`,
+    ),
+    /HPF_(BASE|SPD_ALT|CHRT)\.csv$/,
+  );
+  const allHolds = parseHolds(
+    text(onlyFile(holdCsv, /HPF_BASE\.csv$/)),
+    text(onlyFile(holdCsv, /HPF_SPD_ALT\.csv$/)),
+    text(onlyFile(holdCsv, /HPF_CHRT\.csv$/)),
+  );
   const artccText = text(
     onlyFile(
       unzipMatching(
@@ -618,6 +637,12 @@ async function main() {
     (p) => p.kind !== 'F' || approaches.some((a) => a.airport === p.airport && a.id === p.id),
   );
   const fixes = buildNavdata(cifp, includedProcedureRecords);
+  // Holds at the airspace's fixes (in a given fix's name, the published one).
+  const fixIdents = new Set(fixes.map((fix) => fix.ident));
+  const holds = allHolds
+    .filter((hold) => fixIdents.has(hold.fix))
+    .sort((a, b) => a.fix.localeCompare(b.fix));
+  console.log(`  ${holds.length} published holds at the airspace's fixes`);
 
   const round = ([lon, lat]: number[]): [number, number] => [
     Math.round(lon! * 1e5) / 1e5,
@@ -841,7 +866,7 @@ async function main() {
     ],
   });
   write('airports.json', { schemaVersion: AIRSPACE_SCHEMA_VERSION, airports });
-  write('navdata.json', { schemaVersion: AIRSPACE_SCHEMA_VERSION, fixes });
+  write('navdata.json', { schemaVersion: AIRSPACE_SCHEMA_VERSION, fixes, holds });
   write('procedures.json', {
     schemaVersion: AIRSPACE_SCHEMA_VERSION,
     arrivals,

@@ -44,6 +44,7 @@ interface TrackedTarget extends RadarTarget {
 export function navigatingTo(aircraft: Readonly<AircraftState>): string | undefined {
   const navigation = aircraft.navigation;
   if (navigation.mode === 'direct') return navigation.fix;
+  if (navigation.mode === 'hold') return `HOLD ${navigation.fix}`;
   if (navigation.mode === 'approach') return `ILS${navigation.clearance.runway}`;
   if (navigation.mode === 'procedure') {
     // The next leg that ends at a fix (heading legs in between are flown on the way).

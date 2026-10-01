@@ -13,6 +13,7 @@ import {
   type AirspacePack,
   type AtcCommand,
   type Fix,
+  type Hold,
   type IlsClearance,
 } from '@vector/sim-core';
 
@@ -389,4 +390,66 @@ export function climbViaOption(aircraft: Readonly<AircraftState>):
       ? { fix: next.fix, label: restrictionLabel(next), distanceNm: next.distanceNm }
       : undefined,
   };
+}
+
+export interface HoldFixOption {
+  fix: Fix;
+  distanceNm: number;
+  /** Magnetic bearing from the aircraft. */
+  bearingDeg: number;
+  onRoute: boolean;
+  published: Hold | undefined;
+}
+
+/** Fixes farther than this aren't offered for holding (unless on the route). */
+const HOLD_RANGE_NM = 60;
+
+/**
+ * Fixes to hold at: those still ahead on the aircraft's route first (in
+ * flying order), then nearby fixes with a published hold, nearest first.
+ */
+export function holdFixOptions(
+  pack: AirspacePack,
+  aircraft: Readonly<AircraftState>,
+): HoldFixOption[] {
+  const variation = pack.airspace.magneticVariationDeg;
+  const option = (fix: Fix, onRoute: boolean): HoldFixOption => ({
+    fix,
+    distanceNm: distanceNm(aircraft.position, fix.position),
+    bearingDeg:
+      Math.round(trueToMagnetic(bearingTrue(aircraft.position, fix.position), variation)) % 360 ||
+      360,
+    onRoute,
+    published: pack.holdAt(fix.ident),
+  });
+  const route = routeFixesAhead(pack, aircraft)
+    .map((ident) => pack.fix(ident))
+    .filter((fix): fix is Fix => fix !== undefined)
+    .map((fix) => option(fix, true));
+  const onRoute = new Set(route.map((o) => o.fix.ident));
+  const nearby = pack.holds
+    .filter((hold) => !onRoute.has(hold.fix))
+    .map((hold) => pack.fix(hold.fix))
+    .filter((fix): fix is Fix => fix !== undefined)
+    .map((fix) => option(fix, false))
+    .filter((o) => o.distanceNm <= HOLD_RANGE_NM)
+    .sort((a, b) => a.distanceNm - b.distanceNm);
+  return [...route, ...nearby];
+}
+
+/** A hold as charts summarize it: '041° inbound, left turns, 210 kt'. */
+export function holdSummary(
+  hold: Pick<Hold, 'inboundCourseDeg' | 'turn'> & {
+    legNm?: number | undefined;
+    maxSpeedKts?: number | undefined;
+  },
+): string {
+  return [
+    `${String(Math.round(hold.inboundCourseDeg) % 360 || 360).padStart(3, '0')}° inbound`,
+    `${hold.turn} turns`,
+    hold.legNm !== undefined ? `${hold.legNm} NM legs` : undefined,
+    hold.maxSpeedKts !== undefined ? `${hold.maxSpeedKts} kt` : undefined,
+  ]
+    .filter(Boolean)
+    .join(', ');
 }

@@ -428,6 +428,7 @@ export class SimEngine {
       if (navigation.glideslopeCaptured)
         this.emit({ type: 'glideslopeCaptured', aircraftId: aircraft.id });
 
+      this.checkHoldClearance(aircraft);
       const result = stepAircraft(aircraft, performance, tickSeconds, variation, flightModel);
       this.checkRadarContact(aircraft);
       const atThreshold = followGlideslope(aircraft, variation, tickSeconds);
@@ -860,11 +861,12 @@ export class SimEngine {
 
     switch (command.type) {
       case 'heading':
-        // A heading ends a direct-to or procedure (radar vectors). Before the localizer is captured
+        // A heading ends a direct-to, procedure or hold (radar vectors). Before the localizer is captured
         // it is the intercept heading; after, it breaks off the approach.
         if (
           navigation.mode === 'direct' ||
           navigation.mode === 'procedure' ||
+          navigation.mode === 'hold' ||
           (navigation.mode === 'approach' && navigation.localizerCaptured)
         ) {
           cancelApproach();
@@ -930,6 +932,57 @@ export class SimEngine {
         };
         break;
       }
+      case 'hold': {
+        // Held at a fix further along its procedure: it can resume the procedure from there.
+        let resume: Extract<AircraftState['navigation'], { mode: 'procedure' }> | undefined;
+        if (navigation.mode === 'procedure' && (isOnStar(aircraft) || isOnSid(aircraft))) {
+          const index = navigation.legs.findIndex(
+            (leg, i) =>
+              i >= navigation.legIndex &&
+              leg.fix === command.fix &&
+              !leg.pathTerminator.startsWith('F'),
+          );
+          if (index !== -1 && index + 1 < navigation.legs.length) {
+            resume = {
+              ...cloneJson(navigation),
+              legIndex: index + 1,
+              legStart: { ...command.position },
+            };
+            delete resume.inbound;
+            delete resume.extending;
+            delete resume.vnavAltitudeFt;
+          }
+          // Holding stops a descent or climb via the procedure where it is.
+          if (navigation.descendVia || navigation.climbVia)
+            aircraft.targets.altitudeFt =
+              Math.round((navigation.vnavAltitudeFt ?? aircraft.altitudeFt) / 100) * 100;
+        }
+        cancelApproach();
+        aircraft.navigation = {
+          mode: 'hold',
+          fix: command.fix,
+          position: { ...command.position },
+          inboundCourseDeg: command.inboundCourseDeg,
+          turn: command.turn,
+          ...(command.legNm !== undefined ? { legNm: command.legNm } : {}),
+          ...(command.maxSpeedKts !== undefined ? { maxSpeedKts: command.maxSpeedKts } : {}),
+          published: command.published,
+          phase: 'toFix',
+          efcTick: command.efcTick,
+          laps: 0,
+          ...(resume ? { resume } : {}),
+        };
+        break;
+      }
+      case 'resumeProcedure':
+        if (navigation.mode === 'hold' && navigation.resume) {
+          aircraft.navigation = cloneJson(navigation.resume);
+          aircraft.targets.turnDirection = 'shortest';
+          if (aircraft.navigation.mode === 'procedure' && aircraft.navigation.descendVia)
+            aircraft.targets.altitudeFt =
+              descendViaBottomFt(aircraft) ?? aircraft.targets.altitudeFt;
+        }
+        break;
       case 'clearedIls':
         aircraft.navigation = {
           mode: 'approach',
@@ -1929,6 +1982,20 @@ export class SimEngine {
       runway: runway.id,
       procedure: procedure.name,
     });
+  }
+
+  /** A holding pilot asks for further clearance once the expected time comes. */
+  private checkHoldClearance(aircraft: AircraftState): void {
+    const hold = aircraft.navigation;
+    if (hold.mode !== 'hold' || hold.efcCalled || hold.efcTick === undefined) return;
+    if (this.state.tick < hold.efcTick || aircraft.owner !== this.state.playerId) return;
+    hold.efcCalled = true;
+    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    this.transmit(
+      'pilot',
+      aircraft.id,
+      `${capitalize(callsign)}, holding at ${hold.fix}, we're at our expect further clearance time, request further clearance.`,
+    );
   }
 
   /** Tower hands departures to the player once they climb through the radar contact altitude. */

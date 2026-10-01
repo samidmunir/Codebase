@@ -135,6 +135,7 @@ export function updateNavigation(
   }
 
   if (navigation.mode === 'procedure') return flyProcedure(aircraft, magneticVariationDeg, config);
+  if (navigation.mode === 'hold') return flyHold(aircraft, magneticVariationDeg, config);
   if (navigation.mode !== 'approach') return {};
 
   const events: NavigationEvents = {};
@@ -565,6 +566,107 @@ export function isOnSid(aircraft: Readonly<AircraftState>): boolean {
     (aircraft.phase === 'departure' || aircraft.phase === 'enroute') &&
     aircraft.flightPlan.route.includes(navigation.name)
   );
+}
+
+// ---- Holding -----------------------------------------------------------------------
+
+/** Standard maximum holding speeds by altitude (FAA AIM 5-3-8). */
+export function maxHoldingSpeedKts(altitudeFt: number): number {
+  return altitudeFt <= 6_000 ? 200 : altitudeFt <= 14_000 ? 230 : 265;
+}
+
+/** Outbound leg time for timed holds: 1 minute at or below 14,000 ft, 1½ above. */
+export function holdLegSec(altitudeFt: number): number {
+  return altitudeFt <= 14_000 ? 60 : 90;
+}
+
+/** Pilots slow to holding speed this long before reaching the holding fix. */
+const HOLD_SLOW_DOWN_SEC = 180;
+/** Tracking the inbound course: degrees of correction per NM off it, at most this many. */
+const HOLD_INBOUND_GAIN_DEG_PER_NM = 40;
+const HOLD_MAX_INTERCEPT_DEG = 30;
+
+/**
+ * Flies a holding pattern: to the fix, a turn in the hold's direction to the
+ * outbound heading, the outbound leg (timed, or the published distance), a
+ * turn back to the inbound course, tracked to the fix, and round again. Every
+ * entry is flown as a direct entry. Holding speed applies from shortly
+ * before the fix.
+ */
+function flyHold(
+  aircraft: AircraftState,
+  magneticVariationDeg: number,
+  config: FlightModelConfig,
+): NavigationEvents {
+  const hold = aircraft.navigation;
+  if (hold.mode !== 'hold') return {};
+  const events: NavigationEvents = {};
+  const inbound = normalizeHeading(hold.inboundCourseDeg) || 360;
+  const outbound = normalizeHeading(inbound + 180) || 360;
+  const tas = trueAirspeedKts(aircraft);
+  const maxSpeed = Math.min(maxHoldingSpeedKts(aircraft.altitudeFt), hold.maxSpeedKts ?? Infinity);
+
+  if (hold.phase === 'toFix') {
+    const toGoSec = (distanceNm(aircraft.position, hold.position) / Math.max(100, tas)) * 3600;
+    if (toGoSec <= HOLD_SLOW_DOWN_SEC) hold.speedLimitKts = maxSpeed;
+    if (!flyToFix(aircraft, hold, hold.position, magneticVariationDeg, config)) return events;
+    events.fixPassed = hold.fix;
+    delete hold.inbound;
+    delete hold.extending;
+    hold.phase = 'outboundTurn';
+  }
+  hold.speedLimitKts = maxSpeed;
+
+  if (hold.phase === 'outboundTurn') {
+    aircraft.targets.headingDeg = outbound;
+    aircraft.targets.turnDirection = hold.turn;
+    if (Math.abs(headingDifference(aircraft.headingDeg, outbound)) > 3) return events;
+    hold.phase = 'outbound';
+    hold.outboundStart = { ...aircraft.position };
+    hold.outboundNm = hold.legNm ?? (tas * holdLegSec(aircraft.altitudeFt)) / 3600;
+  }
+
+  if (hold.phase === 'outbound') {
+    aircraft.targets.headingDeg = outbound;
+    aircraft.targets.turnDirection = 'shortest';
+    if (
+      distanceNm(hold.outboundStart ?? aircraft.position, aircraft.position) <
+      (hold.outboundNm ?? 0)
+    )
+      return events;
+    hold.phase = 'inboundTurn';
+  }
+
+  if (hold.phase === 'inboundTurn') {
+    aircraft.targets.headingDeg = inbound;
+    aircraft.targets.turnDirection = hold.turn;
+    if (Math.abs(headingDifference(aircraft.headingDeg, inbound)) > 45) return events;
+    hold.phase = 'inbound';
+  }
+
+  // Inbound: track the inbound course to the fix, then round again.
+  const courseTrue = toRadians(magneticToTrue(inbound, magneticVariationDeg));
+  const bearing = toRadians(bearingTrue(hold.position, aircraft.position));
+  const distance = distanceNm(hold.position, aircraft.position);
+  // Position relative to the fix, along the inbound course (negative before the fix) and to its right.
+  const along = distance * Math.cos(bearing - courseTrue);
+  const right = distance * Math.sin(bearing - courseTrue);
+  if (along >= -0.1) {
+    events.fixPassed = hold.fix;
+    hold.laps++;
+    hold.phase = 'outboundTurn';
+    aircraft.targets.headingDeg = outbound;
+    aircraft.targets.turnDirection = hold.turn;
+    return events;
+  }
+  const correction = clamp(
+    right * HOLD_INBOUND_GAIN_DEG_PER_NM,
+    -HOLD_MAX_INTERCEPT_DEG,
+    HOLD_MAX_INTERCEPT_DEG,
+  );
+  aircraft.targets.headingDeg = normalizeHeading(inbound - correction) || 360;
+  aircraft.targets.turnDirection = 'shortest';
+  return events;
 }
 
 function finishProcedure(aircraft: AircraftState, events: NavigationEvents): NavigationEvents {

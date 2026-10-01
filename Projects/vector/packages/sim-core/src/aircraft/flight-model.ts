@@ -61,6 +61,8 @@ export function effectiveTargetSpeed(
     aircraft.targets.speedMode === 'normal' && navigation.mode === 'procedure'
       ? navigation.speedLimitKts
       : undefined;
+  // Holding speed is a maximum whatever the speed mode.
+  const holding = navigation.mode === 'hold' ? navigation.speedLimitKts : undefined;
   let target = clamp(
     aircraft.targets.speedMode === 'normal'
       ? Math.min(normalSpeed(aircraft, performance), published ?? Infinity)
@@ -69,6 +71,7 @@ export function effectiveTargetSpeed(
     performance.speeds.max,
   );
   const limit = config.speedLimitKts;
+  if (holding !== undefined) target = Math.min(target, Math.max(performance.speeds.final, holding));
   if (aircraft.altitudeFt < config.speedLimitBelowFt) target = Math.min(target, limit);
   else if (target > limit && aircraft.targets.altitudeFt < config.speedLimitBelowFt) {
     // Cleared below the limit altitude: slow down in time to cross it at the limit, at the

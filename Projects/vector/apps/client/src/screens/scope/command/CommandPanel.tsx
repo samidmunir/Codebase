@@ -33,8 +33,9 @@ import type { ScopeSession } from '../../../sim/scope-session';
 import { formatAltitudeLabel } from '../format';
 import { flightTiming } from '../timing-format';
 import { HeadingDial } from './HeadingDial';
+import { HoldTab } from './HoldTab';
 
-type Tab = 'heading' | 'altitude' | 'speed' | 'direct' | 'approach' | 'handoff';
+type Tab = 'heading' | 'altitude' | 'speed' | 'direct' | 'hold' | 'approach' | 'handoff';
 
 interface CommandPanelProps {
   session: ScopeSession;
@@ -71,15 +72,31 @@ export function CommandPanel(props: CommandPanelProps) {
     { id: 'altitude', label: 'Altitude' },
     { id: 'speed', label: 'Speed' },
     { id: 'direct', label: 'Direct' },
+    { id: 'hold', label: 'Hold' },
     ...(runways.length > 0 ? [{ id: 'approach' as const, label: 'Approach' }] : []),
     ...(departing ? [{ id: 'handoff' as const, label: 'Handoff' }] : []),
   ];
   const [tab, setTab] = useState<Tab>('heading');
   const activeTab = tabs.some((t) => t.id === tab) ? tab : 'heading';
 
-  const commands = draftCommands(draft, pack, aircraft);
+  const commands = draftCommands(draft, pack, aircraft, {
+    tick: session.engine.tick,
+    tickSeconds: session.engine.config.tickSeconds,
+    utcAtTick: (tick) => session.utcAtTick(tick),
+  });
   const check = commands.length > 0 ? session.checkInstruction(aircraft.id, commands) : undefined;
-  const update = (patch: Partial<InstructionDraft>) => onDraftChange({ ...draft, ...patch });
+  // One lateral instruction at a time: a heading, a direct-to, a hold or resuming.
+  const update = (patch: Partial<InstructionDraft>) => {
+    const lateral =
+      (patch.heading ? 'heading' : undefined) ??
+      (patch.directTo ? 'directTo' : undefined) ??
+      (patch.hold ? 'hold' : undefined) ??
+      (patch.resume ? 'resume' : undefined);
+    const cleared: Partial<InstructionDraft> = lateral
+      ? { heading: undefined, directTo: undefined, hold: undefined, resume: undefined }
+      : {};
+    onDraftChange({ ...draft, ...cleared, ...patch });
+  };
 
   const transmit = () => {
     const result = session.issueInstruction(aircraft.id, commands);
@@ -178,6 +195,13 @@ export function CommandPanel(props: CommandPanelProps) {
             title="Target time: land (arrivals) or hand off (departures, overflights) by then for the on-time bonus; later costs RP"
           >
             <span>{timing.label}</span> {timing.status}
+          </li>
+        )}
+        {aircraft.navigation.mode === 'hold' && (
+          <li key="hold" data-tone="caution">
+            <span>Holding</span> {aircraft.navigation.fix}
+            {aircraft.navigation.efcTick !== undefined &&
+              ` · EFC ${session.utcAtTick(aircraft.navigation.efcTick).toISOString().slice(11, 16)}Z`}
           </li>
         )}
         {planningNotes(pack, aircraft, altitudeLabel, session.engine.settings).map((note) => (
@@ -338,6 +362,17 @@ export function CommandPanel(props: CommandPanelProps) {
               </div>
             )}
 
+            {activeTab === 'hold' && (
+              <HoldTab
+                pack={pack}
+                aircraft={aircraft}
+                draft={draft}
+                update={update}
+                utcAtTick={(tick) => session.utcAtTick(tick)}
+                onFixHover={props.onFixHover}
+              />
+            )}
+
             {activeTab === 'approach' && (
               <ApproachTab
                 session={session}
@@ -397,6 +432,8 @@ function isTabSet(tab: Tab, draft: InstructionDraft): boolean {
       return draft.speed !== undefined;
     case 'direct':
       return draft.directTo !== undefined;
+    case 'hold':
+      return draft.hold !== undefined || draft.resume === true;
     case 'approach':
       return draft.ilsRunway !== undefined;
     case 'handoff':

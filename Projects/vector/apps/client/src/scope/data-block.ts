@@ -57,7 +57,9 @@ export type DataBlockSpeed = 'indicated' | 'ground';
 /** '→CAMRN' for a fix; approaches ('ILS22L') as they are. */
 export function navigationLabel(navigatingTo: string | undefined): string | undefined {
   if (!navigatingTo) return undefined;
-  return navigatingTo.startsWith('ILS') ? navigatingTo : `→${navigatingTo}`;
+  return navigatingTo.startsWith('ILS') || navigatingTo.startsWith('HOLD ')
+    ? navigatingTo
+    : `→${navigatingTo}`;
 }
 
 /**

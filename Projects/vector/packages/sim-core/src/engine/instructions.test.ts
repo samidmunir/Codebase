@@ -100,7 +100,7 @@ describe('issuing instructions', () => {
         { type: 'heading', headingDeg: 90, turn: 'shortest' },
         { type: 'directTo', fix: 'CAMRN', position: { lat: 40.02, lon: -73.86 } },
       ],
-      /heading or a direct-to/,
+      /a heading, a direct-to, a hold or resume/,
     ],
     [
       'an ILS at another airport',

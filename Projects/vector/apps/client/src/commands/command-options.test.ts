@@ -7,6 +7,8 @@ import {
   altitudeOptions,
   centerHandoff,
   climbViaOption,
+  holdFixOptions,
+  holdSummary,
   descendViaOption,
   directToGroups,
   ilsClearance,
@@ -285,6 +287,88 @@ describe('climb via', () => {
     ]);
     expect(draftCommands({ altitudeFt: 17_000 }, pack, onSid())).toEqual([
       { type: 'altitude', altitudeFt: 17_000 },
+    ]);
+  });
+});
+
+describe('holding', () => {
+  const clock = {
+    tick: 600,
+    tickSeconds: 1,
+    utcAtTick: (tick: number) => new Date(Date.UTC(2026, 8, 30, 14, 0, tick)),
+  };
+  const camrn = pack.fix('CAMRN')!;
+
+  it('offers route fixes first, then nearby fixes with published holds', () => {
+    const onCamrn = aircraft({
+      position: destinationPoint(camrn.position, 200, 20),
+      flightPlan: { origin: 'KATL', destination: 'KJFK', route: ['CAMRN'] },
+    });
+    const options = holdFixOptions(pack, onCamrn);
+    expect(options[0]).toMatchObject({
+      fix: { ident: 'CAMRN' },
+      onRoute: true,
+      published: { turn: 'left' },
+    });
+    expect(options.slice(1).every((o) => !o.onRoute && o.published && o.distanceNm <= 60)).toBe(
+      true,
+    );
+    expect(holdSummary(options[0]!.published!)).toBe('041° inbound, left turns, 210 kt');
+  });
+
+  it('builds the published hold with an EFC time from the sim clock', () => {
+    const commands = draftCommands(
+      {
+        hold: {
+          fix: 'CAMRN',
+          published: true,
+          inboundCourseDeg: 200,
+          turn: 'right',
+          efcMinutes: 15,
+        },
+      },
+      pack,
+      aircraft(),
+      clock,
+    );
+    expect(commands).toEqual([
+      {
+        type: 'hold',
+        fix: 'CAMRN',
+        position: camrn.position,
+        inboundCourseDeg: 41,
+        turn: 'left',
+        maxSpeedKts: 210,
+        published: true,
+        efcTick: 1_500,
+        efcTimeZ: '1425',
+      },
+    ]);
+  });
+
+  it('builds a described hold, and resume', () => {
+    const [hold] = draftCommands(
+      {
+        hold: {
+          fix: 'CAMRN',
+          published: false,
+          inboundCourseDeg: 200,
+          turn: 'right',
+          efcMinutes: 5,
+        },
+      },
+      pack,
+      aircraft(),
+      clock,
+    );
+    expect(hold).toMatchObject({
+      inboundCourseDeg: 200,
+      turn: 'right',
+      published: false,
+      efcTimeZ: '1415',
+    });
+    expect(draftCommands({ resume: true }, pack, aircraft(), clock)).toEqual([
+      { type: 'resumeProcedure' },
     ]);
   });
 });
