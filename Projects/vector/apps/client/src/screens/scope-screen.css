@@ -1122,3 +1122,261 @@
 .timing-due li[data-tone='late'] .timing-due__left {
   color: var(--color-alert);
 }
+
+/* ---- Session debrief ------------------------------------------------------------------- */
+
+.scope-dialog--debrief {
+  align-self: center;
+  width: min(880px, 100%);
+  max-height: calc(100% - 48px);
+  overflow-y: auto;
+}
+
+.debrief__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.debrief__header h2 {
+  margin: 0 0 4px;
+}
+
+.debrief__header .scope-dialog__detail {
+  margin: 0;
+}
+
+.scope-dialog--debrief .scope-dialog__actions {
+  position: sticky;
+  bottom: calc(-1 * var(--space-6));
+  margin: 0 calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
+  padding: var(--space-3) var(--space-6) var(--space-6);
+  background: rgba(8, 14, 18, 0.97);
+  border-top: 1px solid var(--color-surface-border);
+}
+
+.debrief__eyebrow {
+  margin: 0 0 4px;
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.debrief__total {
+  margin: 0;
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 2rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.debrief__total[data-sign='minus'] {
+  color: var(--color-alert);
+}
+
+.debrief__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.debrief__stats div {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 6px;
+}
+
+.debrief__stats dt {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.debrief__stats dd {
+  margin: 2px 0 0;
+  font-family: var(--font-data);
+  font-size: 1.15rem;
+}
+
+.debrief__stats dd[data-sign='minus'] {
+  color: var(--color-alert);
+}
+
+.debrief__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.debrief__section h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.debrief__section--wide {
+  grid-column: 1 / -1;
+}
+
+.debrief__flights,
+.debrief__losses {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.debrief__flights li {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr auto;
+  column-gap: var(--space-2);
+  font-family: var(--font-data);
+}
+
+.debrief__kind,
+.debrief__detail,
+.debrief__when {
+  color: var(--color-text-muted);
+}
+
+.debrief__detail {
+  grid-column: 2 / -1;
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+}
+
+.debrief__rp[data-sign='plus'] {
+  color: var(--color-target);
+}
+
+.debrief__rp[data-sign='minus'] {
+  color: var(--color-alert);
+}
+
+.debrief__losses li {
+  display: grid;
+  grid-template-columns: 11rem 1fr auto;
+  gap: var(--space-2);
+}
+
+/* RP over time: one 2px line, recessive grid, crosshair readout. */
+.rp-chart {
+  margin: 0;
+}
+
+.rp-chart__plot {
+  position: relative;
+  border-radius: 6px;
+}
+
+.rp-chart__plot:focus-visible {
+  outline: 2px solid var(--color-target);
+  outline-offset: 2px;
+}
+
+.rp-chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.rp-chart__grid {
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 1;
+}
+
+.rp-chart__zero {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1;
+}
+
+.rp-chart__axis {
+  fill: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 10px;
+}
+
+.rp-chart__line {
+  fill: none;
+  stroke: var(--color-chart-line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.rp-chart__end {
+  fill: var(--color-text);
+  font-family: var(--font-data);
+  font-size: 11px;
+}
+
+.rp-chart__focus line {
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 1;
+}
+
+.rp-chart__focus circle {
+  fill: var(--color-chart-line);
+  stroke: #0a1016;
+  stroke-width: 2;
+}
+
+.rp-chart__hit {
+  fill: transparent;
+  cursor: crosshair;
+}
+
+.rp-chart__tooltip {
+  position: absolute;
+  display: grid;
+  gap: 1px;
+  padding: 5px 8px;
+  font-size: 0.74rem;
+  white-space: nowrap;
+  pointer-events: none;
+  background: rgba(8, 14, 18, 0.95);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 5px;
+  transform: translate(10px, -110%);
+}
+
+.rp-chart__tooltip b {
+  color: var(--color-text);
+  font-family: var(--font-data);
+}
+
+.rp-chart__tooltip span {
+  color: var(--color-text-muted);
+}
+
+.rp-chart__table {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+}
+
+.rp-chart__table summary {
+  cursor: pointer;
+}
+
+.rp-chart__table table {
+  max-height: 200px;
+  margin-top: 6px;
+  font-family: var(--font-data);
+  border-collapse: collapse;
+}
+
+.rp-chart__table td,
+.rp-chart__table th {
+  padding: 2px 16px 2px 0;
+  text-align: left;
+}

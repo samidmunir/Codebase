@@ -1,14 +1,13 @@
-import { formatDuration, type FlightKind } from '@vector/sim-core';
 import type { ScopeSession } from '../../sim/scope-session';
 import { formatUtc } from './format';
-import { FLIGHT_KIND_LABELS, flightTiming, formatVsTarget } from './timing-format';
+import { flightTiming } from './timing-format';
+import { TimingTable } from './TimingTable';
 import { formatRp, SCORE_KIND_LABELS, SCORE_KIND_ORDER } from './score-format';
 
 /** Recent RP events listed in the panel. */
 const RECENT_EVENTS = 30;
 /** Flights listed under "Due next". */
 const DUE_NEXT = 6;
-const KINDS: FlightKind[] = ['arrival', 'departure', 'transit'];
 
 interface ScorePanelProps {
   session: ScopeSession;
@@ -74,43 +73,7 @@ export function ScorePanel({ session, onClose }: ScorePanelProps) {
       {engine.settings['scoring.timing'] && (
         <section className="scope-panel__section">
           <h3>Timing</h3>
-          <table className="timing-table">
-            <thead>
-              <tr>
-                <th scope="col">Flights</th>
-                <th scope="col" title="Landed or handed off">
-                  Done
-                </th>
-                <th scope="col" title="Average time from when it became yours">
-                  Avg time
-                </th>
-                <th scope="col" title="Average against the target time (− is ahead)">
-                  vs target
-                </th>
-                <th scope="col">On time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {KINDS.map((kind) => {
-                const s = stats[kind];
-                return (
-                  <tr key={kind}>
-                    <th scope="row">{FLIGHT_KIND_LABELS[kind]}</th>
-                    <td>{s?.count ?? 0}</td>
-                    <td>{s?.count ? formatDuration(s.totalSec / s.count) : '–'}</td>
-                    <td
-                      data-sign={
-                        s?.count ? (s.totalSec > s.totalTargetSec ? 'minus' : 'plus') : undefined
-                      }
-                    >
-                      {s?.count ? formatVsTarget((s.totalSec - s.totalTargetSec) / s.count) : '–'}
-                    </td>
-                    <td>{s?.count ? `${Math.round((s.onTime / s.count) * 100)}%` : '–'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <TimingTable stats={stats} />
           {due.length > 0 && (
             <>
               <h4 className="timing-due__title">Due next</h4>

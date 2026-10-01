@@ -1,4 +1,9 @@
-import type { SavedSession, SavedSessionSummary, SessionDifficulty } from '@vector/shared';
+import type {
+  SavedSession,
+  SavedSessionSummary,
+  SessionDifficulty,
+  SessionStats,
+} from '@vector/shared';
 import type { Database } from '../platform/database';
 
 /** Thrown for a session that doesn't exist or belongs to someone else. */
@@ -23,6 +28,7 @@ export interface SnapshotRecord {
   simTimeSec: number;
   aircraftCount: number;
   rp: number;
+  stats: SessionStats;
   difficulty: SessionDifficulty | null;
 }
 
@@ -34,12 +40,13 @@ interface SummaryRow {
   sim_time_sec: number;
   aircraft_count: number;
   rp: number;
+  stats: SessionStats | null;
   created_at: Date;
   updated_at: Date;
 }
 
 const SUMMARY_COLUMNS =
-  'id, name, airspace_id, difficulty, sim_time_sec, aircraft_count, rp, created_at, updated_at';
+  'id, name, airspace_id, difficulty, sim_time_sec, aircraft_count, rp, stats, created_at, updated_at';
 
 const toSummary = (row: SummaryRow): SavedSessionSummary => ({
   id: row.id,
@@ -49,6 +56,7 @@ const toSummary = (row: SummaryRow): SavedSessionSummary => ({
   simTimeSec: row.sim_time_sec,
   aircraftCount: row.aircraft_count,
   rp: row.rp,
+  stats: row.stats,
   createdAt: row.created_at.toISOString(),
   updatedAt: row.updated_at.toISOString(),
 });
@@ -81,8 +89,8 @@ export function savedSessionsRepository(db: Database) {
     ): Promise<SavedSessionSummary> {
       const { rows } = await db.query<SummaryRow>(
         `INSERT INTO saved_sessions
-           (user_id, name, airspace_id, snapshot, snapshot_version, sim_time_sec, aircraft_count, difficulty, rp)
-         SELECT $1, $2, $3, $4, $5, $6, $7, $8, $10
+           (user_id, name, airspace_id, snapshot, snapshot_version, sim_time_sec, aircraft_count, difficulty, rp, stats)
+         SELECT $1, $2, $3, $4, $5, $6, $7, $8, $10, $11
          WHERE (SELECT count(*) FROM saved_sessions WHERE user_id = $1) < $9
          RETURNING ${SUMMARY_COLUMNS}`,
         [
@@ -96,6 +104,7 @@ export function savedSessionsRepository(db: Database) {
           input.difficulty,
           limit,
           input.rp,
+          JSON.stringify(input.stats),
         ],
       );
       const row = rows[0];
@@ -106,7 +115,7 @@ export function savedSessionsRepository(db: Database) {
     async replace(userId: string, id: string, input: SnapshotRecord): Promise<SavedSessionSummary> {
       const { rows } = await db.query<SummaryRow>(
         `UPDATE saved_sessions SET snapshot = $3, snapshot_version = $4, sim_time_sec = $5,
-           aircraft_count = $6, difficulty = $7, rp = $8, updated_at = now()
+           aircraft_count = $6, difficulty = $7, rp = $8, stats = $9, updated_at = now()
          WHERE user_id = $1 AND id = $2
          RETURNING ${SUMMARY_COLUMNS}`,
         [
@@ -118,6 +127,7 @@ export function savedSessionsRepository(db: Database) {
           input.aircraftCount,
           input.difficulty,
           input.rp,
+          JSON.stringify(input.stats),
         ],
       );
       const row = rows[0];

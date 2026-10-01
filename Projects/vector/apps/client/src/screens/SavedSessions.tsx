@@ -1,6 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
-import { SESSION_NAME_MAX_LENGTH, type SavedSessionSummary } from '@vector/shared';
+import {
+  SESSION_NAME_MAX_LENGTH,
+  type SavedSessionSummary,
+  addSessionStats,
+  emptySessionStats,
+  type SessionStats,
+} from '@vector/shared';
 import { findAirspace } from '../airspaces/registry';
 import { ApiRequestError } from '../api/api-client';
 import { deleteSavedSession, listSavedSessions, renameSavedSession } from '../api/sessions-api';
@@ -11,7 +17,13 @@ import { formatRp } from './scope/score-format';
 type ListState =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
-  | { kind: 'ready'; sessions: SavedSessionSummary[]; limit: number; careerRp: number };
+  | {
+      kind: 'ready';
+      sessions: SavedSessionSummary[];
+      limit: number;
+      careerRp: number;
+      careerStats: SessionStats;
+    };
 
 const errorMessage = (error: unknown) =>
   error instanceof ApiRequestError ? error.message : "Couldn't reach the server.";
@@ -27,8 +39,8 @@ export function SavedSessions() {
     let cancelled = false;
     listSavedSessions()
       .then(
-        ({ sessions, limit, careerRp }) =>
-          !cancelled && setState({ kind: 'ready', sessions, limit, careerRp }),
+        ({ sessions, limit, careerRp, careerStats }) =>
+          !cancelled && setState({ kind: 'ready', sessions, limit, careerRp, careerStats }),
       )
       .catch(
         (error: unknown) => !cancelled && setState({ kind: 'error', message: errorMessage(error) }),
@@ -70,7 +82,15 @@ export function SavedSessions() {
     try {
       await deleteSavedSession(id);
       const sessions = state.sessions.filter((s) => s.id !== id);
-      setState({ ...state, sessions, careerRp: sessions.reduce((sum, s) => sum + s.rp, 0) });
+      setState({
+        ...state,
+        sessions,
+        careerRp: sessions.reduce((sum, s) => sum + s.rp, 0),
+        careerStats: sessions.reduce(
+          (total, s) => (s.stats ? addSessionStats(total, s.stats) : total),
+          emptySessionStats(),
+        ),
+      });
       setConfirmDelete(undefined);
       setActionError(undefined);
     } catch (error) {
@@ -87,6 +107,7 @@ export function SavedSessions() {
           {state.sessions.length} of {state.limit}
         </span>
       </div>
+      <CareerStats stats={state.careerStats} />
       {actionError && (
         <p className="saved-sessions__error" role="alert">
           {actionError}
@@ -173,5 +194,41 @@ export function SavedSessions() {
         })}
       </ul>
     </section>
+  );
+}
+
+/** Flight and safety numbers across the saved sessions. */
+function CareerStats({ stats }: { stats: SessionStats }) {
+  const flights = stats.arrivals + stats.departures + stats.overflights;
+  if (flights === 0) return null;
+  const losses = stats.separationLosses + stats.nearMidAirs;
+  const items: { label: string; value: string; tone?: 'minus' }[] = [
+    { label: 'Landed', value: stats.arrivals.toLocaleString('en-US') },
+    { label: 'Handed off', value: (stats.departures + stats.overflights).toLocaleString('en-US') },
+    {
+      label: 'On time',
+      value: stats.timed > 0 ? `${Math.round((stats.onTime / stats.timed) * 100)}%` : '–',
+    },
+    {
+      label: 'Losses of separation',
+      value: losses.toLocaleString('en-US'),
+      ...(losses > 0 ? { tone: 'minus' as const } : {}),
+    },
+    {
+      label: 'Wake spacing lost',
+      value: stats.wakeLosses.toLocaleString('en-US'),
+      ...(stats.wakeLosses > 0 ? { tone: 'minus' as const } : {}),
+    },
+    { label: 'Go-arounds', value: stats.goArounds.toLocaleString('en-US') },
+  ];
+  return (
+    <dl className="career-stats" aria-label="Career">
+      {items.map((item) => (
+        <div key={item.label}>
+          <dt>{item.label}</dt>
+          <dd data-sign={item.tone}>{item.value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

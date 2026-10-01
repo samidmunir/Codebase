@@ -1,7 +1,7 @@
 import { letterWords } from '@vector/sim-core';
 import { shortAirport } from '../scope/data-block';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router';
+import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { applyDifficulty, defaultSettings } from '@vector/shared';
 import type { LatLon } from '@vector/sim-core';
 import { findAirspace } from '../airspaces/registry';
@@ -27,6 +27,7 @@ import {
   useInterfaceSounds,
 } from './scope/use-conflict-sounds';
 import { SaveSessionDialog } from './scope/SaveSessionDialog';
+import { DebriefDialog, type DebriefReason } from './scope/DebriefDialog';
 import { HelpDialog } from '../components/help/HelpDialog';
 import { ScorePanel } from './scope/ScorePanel';
 import { ScoreToasts } from './scope/ScoreToasts';
@@ -148,6 +149,20 @@ function Scope({ session }: { session: ScopeSession }) {
   const [trafficOpen, setTrafficOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  // The debrief: after a save, or before leaving the scope. The sim pauses while it's open.
+  const [debrief, setDebrief] = useState<DebriefReason | undefined>(undefined);
+  const [leaveAfterSave, setLeaveAfterSave] = useState(false);
+  const wasPausedRef = useRef(true);
+  const navigate = useNavigate();
+  const openDebrief = (reason: DebriefReason) => {
+    if (!debrief) wasPausedRef.current = session.engine.paused;
+    session.pause();
+    setDebrief(reason);
+  };
+  const closeDebrief = () => {
+    setDebrief(undefined);
+    if (!wasPausedRef.current) session.togglePause();
+  };
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [toast, setToast] = useState<string | undefined>(undefined);
@@ -259,7 +274,8 @@ function Scope({ session }: { session: ScopeSession }) {
     toggleDepartureQueue: () => setDeparturesOpen((open) => !open),
     // Closes the topmost panel: the save dialog, then side panels, then the selected aircraft.
     closeMenu: () => {
-      if (helpOpen) setHelpOpen(false);
+      if (debrief) closeDebrief();
+      else if (helpOpen) setHelpOpen(false);
       else if (settingsOpen) setSettingsOpen(false);
       else if (saveOpen) setSaveOpen(false);
       else if (layersOpen || trafficOpen || scoreOpen) {
@@ -325,6 +341,7 @@ function Scope({ session }: { session: ScopeSession }) {
         onSave={openSave}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenHelp={() => setHelpOpen(true)}
+        onLeave={() => openDebrief({ kind: 'leaving' })}
         scoreOpen={scoreOpen}
         onToggleScore={toggleScore}
         commsOpen={commsOpen}
@@ -390,11 +407,30 @@ function Scope({ session }: { session: ScopeSession }) {
       {saveOpen && (
         <SaveSessionDialog
           session={session}
-          onClose={() => setSaveOpen(false)}
+          onClose={() => {
+            setSaveOpen(false);
+            setLeaveAfterSave(false);
+          }}
           onSaved={(name) => {
             setSaveOpen(false);
             setToast(`Saved “${name}”`);
+            if (leaveAfterSave) void navigate('/');
+            else openDebrief({ kind: 'saved', name });
           }}
+        />
+      )}
+
+      {debrief && (
+        <DebriefDialog
+          session={session}
+          reason={debrief}
+          onKeepWorking={closeDebrief}
+          onSave={() => {
+            setDebrief(undefined);
+            setLeaveAfterSave(true);
+            setSaveOpen(true);
+          }}
+          onLeave={() => void navigate('/')}
         />
       )}
 

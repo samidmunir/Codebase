@@ -28,6 +28,8 @@ interface ScopeTopBarProps {
   onToggleScore: () => void;
   /** For pointing the wind arrow on a true-north display. */
   magneticVariationDeg: number;
+  /** Leaving the scope (the Vector link): shows the debrief first. */
+  onLeave: () => void;
 }
 
 function WindReadout({
@@ -113,7 +115,15 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
   return (
     <header className="scope-topbar">
       <div className="scope-topbar__identity">
-        <Link to="/" className="scope-brand" aria-label="Vector home">
+        <Link
+          to="/"
+          className="scope-brand"
+          aria-label="Vector home"
+          onClick={(event) => {
+            event.preventDefault();
+            props.onLeave();
+          }}
+        >
           <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
             <circle
               cx="16"

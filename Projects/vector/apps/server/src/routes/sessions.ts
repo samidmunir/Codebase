@@ -6,8 +6,10 @@ import {
   type SavedSession,
   type SavedSessionList,
   type SavedSessionSummary,
+  addSessionStats,
+  emptySessionStats,
 } from '@vector/shared';
-import { parseSnapshot } from '@vector/sim-core';
+import { parseSnapshot, scoreStats } from '@vector/sim-core';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { authenticate } from '../auth/authenticate';
@@ -54,6 +56,7 @@ function snapshotRecord(
     simTimeSec: parsed.state.tick * parsed.state.config.tickSeconds,
     aircraftCount: parsed.state.aircraft.length,
     rp: parsed.state.score.total,
+    stats: scoreStats(parsed.state.score),
     difficulty,
   };
 }
@@ -74,6 +77,10 @@ export async function sessionsRoutes(app: FastifyInstance, options: SessionsRout
       sessions: list,
       limit,
       careerRp: list.reduce((total, session) => total + session.rp, 0),
+      careerStats: list.reduce(
+        (total, session) => (session.stats ? addSessionStats(total, session.stats) : total),
+        emptySessionStats(),
+      ),
     };
   });
 

@@ -62,7 +62,12 @@ test('sets up a session, controls traffic, saves it and resumes exactly', async 
   const saved = await scopeState(page);
   expect(saved.paused).toBe(true);
 
-  await page.goto('/');
+  // The debrief follows the save; back to the start screen from it.
+  const debrief = page.getByRole('dialog', { name: 'Session debrief' });
+  await expect(debrief).toContainText('Saved “E2E evening rush”');
+  await expect(debrief).toContainText('Timing');
+  await debrief.getByRole('button', { name: 'Back to start' }).click();
+  await expect(page).toHaveURL(/\/$/);
   const card = page.locator('.saved-session', { hasText: 'E2E evening rush' });
   await expect(card).toContainText('Normal');
   await card.getByRole('link', { name: 'Resume' }).click();

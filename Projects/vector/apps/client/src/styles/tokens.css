@@ -16,6 +16,8 @@
   --color-scope-sweep: rgba(76, 242, 160, 0.22);
   --color-target: #4cf2a0;
   --color-target-dim: #3a6b5a;
+  /* Chart line: the target green stepped into the dark chart band (validated vs #0a1016). */
+  --color-chart-line: #28a86c;
 
   /* Text */
   --color-text: #e3efe9;

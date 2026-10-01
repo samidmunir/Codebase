@@ -96,6 +96,10 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
                 <code>#</code> and <code>CST</code> coasting: no radar covers it right now
               </li>
               <li>Heat trail: the path since it became yours (hot = recent)</li>
+              <li>
+                <code>HOLD CAMRN</code> in a data block: holding there (its racetrack shows when
+                selected)
+              </li>
               <li>Dots behind a target: its last few radar returns</li>
             </ul>
           </section>
@@ -106,6 +110,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
               <li>Click an aircraft (or a callsign in the radio log) to instruct it</li>
               <li>Drag to pan · scroll or pinch to zoom · double-click to zoom in</li>
               <li>Right-drag to measure bearing and distance</li>
+              <li>Click the Vector logo for the session debrief before you leave</li>
               <li>Hover a fix in the Direct list to find it on the scope</li>
               <li>
                 <kbd>Ctrl</kbd>-click a fix (<kbd>⌘</kbd>-click on a Mac) to send the selected

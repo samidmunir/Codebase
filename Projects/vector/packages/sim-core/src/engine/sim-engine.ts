@@ -2147,13 +2147,11 @@ export class SimEngine {
 
   private award(kind: ScoreKind, rp: number, callsigns: string[], detail: string): void {
     if (rp === 0) return;
-    const event = recordScore(this.state.score, {
-      tick: this.state.tick,
-      kind,
-      rp: Math.round(rp),
-      callsigns,
-      detail,
-    });
+    const event = recordScore(
+      this.state.score,
+      { tick: this.state.tick, kind, rp: Math.round(rp), callsigns, detail },
+      (callsign) => this.flightKindOf(callsign),
+    );
     this.emit({ type: 'scored', event });
   }
 
@@ -2299,6 +2297,15 @@ export class SimEngine {
         ? `${finished} in ${formatDuration(elapsedSec)}, ${formatDuration(targetSec - elapsedSec)} ahead of target`
         : `${finished} ${formatDuration(result.lateSec)} late (${formatDuration(elapsedSec)}, target ${formatDuration(targetSec)})`,
     );
+  }
+
+  /** Whether a flight on the scope is an arrival, a departure or an overflight. */
+  private flightKindOf(callsign: string): FlightKind | undefined {
+    const aircraft = this.state.aircraft.find((a) => a.callsign === callsign);
+    const airports = this.airspace?.airspace.airports;
+    if (!aircraft || !airports) return undefined;
+    if (airports.includes(aircraft.flightPlan.destination)) return 'arrival';
+    return airports.includes(aircraft.flightPlan.origin) ? 'departure' : 'transit';
   }
 
   /** Scores the events that earn or cost RP. */
