@@ -1,3 +1,4 @@
+import { letterWords } from '@vector/sim-core';
 import { shortAirport } from '../scope/data-block';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router';
@@ -199,6 +200,10 @@ function Scope({ session }: { session: ScopeSession }) {
           );
         } else if (event.type === 'runwayChanged') {
           setToast(`${shortAirport(event.airport)} now ${runways(event.runways)}`);
+        } else if (event.type === 'atisChanged') {
+          setToast(
+            `${shortAirport(event.airport)} information ${letterWords(event.letter)} is current`,
+          );
         }
       }),
     [session],
@@ -335,46 +340,49 @@ function Scope({ session }: { session: ScopeSession }) {
         </div>
       )}
 
-      {selection && selected && (
-        <CommandPanel
-          key={selected.id}
-          session={session}
-          aircraft={selected}
-          draft={selection.draft}
-          onDraftChange={(draft) => setSelection({ id: selected.id, draft })}
-          leaderDirection={leaderDirections.get(selected.id)}
-          onLeaderDirectionChange={(direction) =>
-            setLeaderDirections((current) => {
-              const next = new Map(current);
-              if (direction === undefined) next.delete(selected.id);
-              else next.set(selected.id, direction);
-              return next;
-            })
-          }
-          onFixHover={setHoveredFix}
-          onClose={() => select(undefined)}
-        />
-      )}
+      {/* The right side: the open side panel, then the selected aircraft's command panel. */}
+      <div className="scope-dock">
+        {layersOpen && <MapLayersPanel settings={settings} onClose={() => setLayersOpen(false)} />}
 
-      {layersOpen && <MapLayersPanel settings={settings} onClose={() => setLayersOpen(false)} />}
+        {scoreOpen && (
+          <ScorePanel
+            session={session}
+            scoreEventCount={status.scoreEventCount}
+            onClose={() => setScoreOpen(false)}
+          />
+        )}
+
+        {trafficOpen && (
+          <TrafficPanel
+            session={session}
+            trafficKey={status.trafficKey}
+            onClose={() => setTrafficOpen(false)}
+          />
+        )}
+
+        {selection && selected && (
+          <CommandPanel
+            key={selected.id}
+            session={session}
+            aircraft={selected}
+            draft={selection.draft}
+            onDraftChange={(draft) => setSelection({ id: selected.id, draft })}
+            leaderDirection={leaderDirections.get(selected.id)}
+            onLeaderDirectionChange={(direction) =>
+              setLeaderDirections((current) => {
+                const next = new Map(current);
+                if (direction === undefined) next.delete(selected.id);
+                else next.set(selected.id, direction);
+                return next;
+              })
+            }
+            onFixHover={setHoveredFix}
+            onClose={() => select(undefined)}
+          />
+        )}
+      </div>
 
       <ScoreToasts session={session} />
-
-      {scoreOpen && (
-        <ScorePanel
-          session={session}
-          scoreEventCount={status.scoreEventCount}
-          onClose={() => setScoreOpen(false)}
-        />
-      )}
-
-      {trafficOpen && (
-        <TrafficPanel
-          session={session}
-          trafficKey={status.trafficKey}
-          onClose={() => setTrafficOpen(false)}
-        />
-      )}
 
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
       {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}

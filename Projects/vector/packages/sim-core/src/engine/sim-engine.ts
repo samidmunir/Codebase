@@ -83,6 +83,7 @@ import {
 } from '../commands/commands';
 import {
   altitudeWords,
+  letterWords,
   capitalize,
   frequencyWords,
   procedureWords,
@@ -118,6 +119,7 @@ import {
   WIND_VARIATIONS,
   type Wind,
 } from '../weather/wind';
+import { atisOutdated, atisText, nextAtisLetter, type Atis } from '../weather/atis';
 import { headingDifference, normalizeHeading } from '../math/angles';
 import {
   bearingTrue,
@@ -392,6 +394,7 @@ export class SimEngine {
     if (this.state.tick % Math.max(1, Math.round(WIND_UPDATE_SEC / tickSeconds)) === 0) {
       this.updateWinds();
       this.reviewRunways();
+      this.updateAtis();
     }
     this.applyDueRunwayChanges();
     this.updateDepartures();
@@ -1377,6 +1380,9 @@ export class SimEngine {
       arriving.targets.altitudeFt = Math.min(bottom, altitude);
     }
 
+    // Arrivals have the destination's ATIS and say which one.
+    const atis = this.state.operations?.atis?.[airport];
+    const information = atis ? `, information ${letterWords(atis.letter)}` : '';
     const facility = this.checkInFacility(altitude);
     const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
     const star = procedureWords(route.star);
@@ -1384,8 +1390,8 @@ export class SimEngine {
       'pilot',
       aircraft.id,
       bottom !== undefined
-        ? `${facility}, ${callsign}, ${altitudeWords(altitude)}, descending via the ${star} arrival.`
-        : `${facility}, ${callsign}, ${altitudeWords(altitude)}, ${star} arrival.`,
+        ? `${facility}, ${callsign}, ${altitudeWords(altitude)}, descending via the ${star} arrival${information}.`
+        : `${facility}, ${callsign}, ${altitudeWords(altitude)}, ${star} arrival${information}.`,
     );
     this.emit({ type: 'arrivalEntered', aircraftId: aircraft.id, airport, star: route.star });
     return true;
@@ -1510,6 +1516,7 @@ export class SimEngine {
   private applyDueRunwayChanges(): void {
     const operations = this.state.operations;
     if (!operations) return;
+    let changed = false;
     for (const [airport, change] of Object.entries(operations.pendingRunwayChanges)) {
       if (this.state.tick < change.atTick) continue;
       const runways: ActiveRunways = {
@@ -1521,7 +1528,9 @@ export class SimEngine {
       operations.lastRunwayChangeTick[airport] = this.state.tick;
       delete operations.pendingRunwayChanges[airport];
       this.emit({ type: 'runwayChanged', airport, runways: cloneJson(runways) });
+      changed = true;
     }
+    if (changed) this.updateAtis();
   }
 
   /** One wind for the whole region (the average of the airports'), if there is an airspace. */
@@ -1563,7 +1572,70 @@ export class SimEngine {
     if (changed) this.emit({ type: 'windChanged' });
     if (first) this.selectRunwaysForWind();
     this.reviewRunways();
+    this.updateAtis();
     return { ok: true };
+  }
+
+  // ---- ATIS ---------------------------------------------------------------------
+
+  /** Each airport's current ATIS broadcast. */
+  get atis(): Readonly<Record<string, Readonly<Atis>>> {
+    return this.state.operations?.atis ?? {};
+  }
+
+  /**
+   * Issues a new ATIS (the next letter) at airports whose broadcast no longer
+   * matches: a new weather report, new runways, a large wind change, or an
+   * hour since the last one.
+   */
+  private updateAtis(): void {
+    const operations = this.state.operations;
+    const pack = this.airspace;
+    if (!operations || !pack) return;
+    const { tickSeconds } = this.state.config;
+    const atis = (operations.atis ??= {});
+    pack.airspace.airports.forEach((icao, index) => {
+      const wind = operations.winds[icao];
+      const runways = operations.runways[icao];
+      if (!wind || !runways) return;
+      const report = operations.liveWeather?.[icao];
+      const current = atis[icao];
+      if (
+        !atisOutdated(
+          current,
+          { wind, configId: runways.configId, report },
+          this.state.tick,
+          tickSeconds,
+        )
+      )
+        return;
+      // The first letter of the session comes from its seed, so airports don't all start at Alfa.
+      const letter = current
+        ? nextAtisLetter(current.letter)
+        : String.fromCharCode(65 + (((operations.windSeed ?? 0) >>> (index * 5)) % 26));
+      const issuedAt = report ? new Date(report.observedAt) : this.utcTime;
+      const field = pack.airport(icao);
+      atis[icao] = {
+        letter,
+        issuedTick: this.state.tick,
+        wind: { ...wind },
+        configId: runways.configId,
+        ...(report ? { reportObservedAt: report.observedAt } : {}),
+        text: atisText({
+          airport: shortIcao(icao),
+          letter,
+          timeZ: issuedAt.toISOString().slice(11, 16).replace(':', ''),
+          wind,
+          report,
+          arrivals: runways.arrivals,
+          departures: runways.departures,
+          ilsRunways: runways.arrivals.filter(
+            (id) => field.runways.find((r) => r.id === id)?.ils !== undefined,
+          ),
+        }),
+      };
+      if (current) this.emit({ type: 'atisChanged', airport: icao, letter });
+    });
   }
 
   /** Puts airports whose runways follow the wind on the configuration it favors, without notice. */
@@ -1719,6 +1791,7 @@ export class SimEngine {
       this.state.tick,
     );
     this.state.operations = operations;
+    this.updateAtis();
 
     const rate = settings['traffic.departureRatePerHour'];
     for (const airport of this.airspace.airspace.airports) {

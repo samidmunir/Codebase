@@ -34,6 +34,8 @@ export type SimEvent =
   /** An airport will change runways at `atTick` (the wind no longer suits the ones in use). */
   | { type: 'runwayChangePlanned'; airport: string; runways: ActiveRunways; atTick: number }
   | { type: 'runwayChanged'; airport: string; runways: ActiveRunways }
+  /** A new ATIS (the next letter) was issued at an airport. */
+  | { type: 'atisChanged'; airport: string; letter: string }
   /** The pilot could not accept an ILS clearance. */
   | { type: 'ilsUnable'; aircraftId: string; reason: string }
   | { type: 'goAround'; aircraftId: string; airport: string; runway: string; reason: string }

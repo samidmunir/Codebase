@@ -54,6 +54,11 @@ const PHONETIC: Record<string, string> = {
   Z: 'Zulu',
 };
 
+/** 'B' -> 'Bravo'. */
+export function letterWords(letter: string): string {
+  return PHONETIC[letter.toUpperCase()] ?? letter;
+}
+
 /** '270' -> 'two seven zero' (9 is 'niner'). */
 export function spellDigits(value: string): string {
   return [...value].map((c) => DIGITS[Number(c)] ?? c).join(' ');

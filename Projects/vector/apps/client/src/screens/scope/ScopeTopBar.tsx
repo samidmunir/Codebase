@@ -141,8 +141,31 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
         <div className="scope-chip">
           <span className="scope-chip__facility">{props.facility}</span>
           <span className="scope-chip__name">{props.name}</span>
-          <span className="scope-chip__airports">
-            {props.airports.map(shortAirport).join(' · ')}
+          {/* Each airport with its current ATIS letter; hover for the broadcasts. */}
+          <span
+            className="scope-chip__airports"
+            title={
+              props.airports
+                .map((icao) => status.atis[icao]?.text)
+                .filter(Boolean)
+                .join('\n\n') || undefined
+            }
+          >
+            {props.airports.map((icao, i) => (
+              <span key={icao}>
+                {i > 0 && ' · '}
+                {shortAirport(icao)}
+                {status.atis[icao] && (
+                  <b
+                    key={status.atis[icao].letter}
+                    className="scope-chip__atis"
+                    aria-label={`information ${status.atis[icao].letter}`}
+                  >
+                    {status.atis[icao].letter}
+                  </b>
+                )}
+              </span>
+            ))}
           </span>
         </div>
       </div>

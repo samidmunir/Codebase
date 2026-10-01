@@ -74,6 +74,8 @@
   align-items: center;
   gap: var(--space-4);
   min-width: 0;
+  /* Gives way to the clock: clipped, never overlapping it. */
+  overflow: hidden;
 }
 
 .scope-brand {
@@ -91,7 +93,12 @@
   align-items: baseline;
   gap: var(--space-2);
   min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
+}
+
+.scope-chip__name {
+  flex: none;
 }
 
 .scope-chip__facility {
@@ -109,7 +116,9 @@
 }
 
 .scope-chip__airports {
+  min-width: 0;
   overflow: hidden;
+  white-space: nowrap;
   color: var(--color-text-muted);
   font-family: var(--font-data);
   font-size: 0.78rem;
@@ -154,6 +163,14 @@
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.scope-chip__atis {
+  display: inline-block;
+  margin-left: 3px;
+  color: var(--color-target);
+  font-weight: 600;
+  animation: wind-change 1.4s var(--ease-out);
 }
 
 .scope-wind__live {
@@ -286,6 +303,42 @@
 @keyframes pulse {
   50% {
     opacity: 0.55;
+  }
+}
+
+/* ---- Right-side dock: side panel and command panel side by side ------------------------ */
+
+@media (min-width: 761px) {
+  .scope-dock {
+    position: absolute;
+    top: 72px;
+    right: var(--space-3);
+    bottom: 128px;
+    z-index: 3;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    /* The dock itself never takes clicks meant for the scope. */
+    pointer-events: none;
+  }
+
+  .scope-dock > * {
+    pointer-events: auto;
+  }
+
+  .scope-dock .scope-panel,
+  .scope-dock .command-panel {
+    position: relative;
+    top: auto;
+    right: auto;
+    flex: none;
+    max-height: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .scope-dock {
+    display: contents;
   }
 }
 
@@ -964,8 +1017,8 @@
   font-weight: 600;
 }
 
-/* Narrower screens: panel buttons show icons only (with tooltips), and the airport list hides. */
-@media (max-width: 1500px) {
+/* Narrower screens: the airport list (with each ATIS letter) hides. */
+@media (max-width: 1100px) {
   .scope-chip__airports {
     display: none;
   }
@@ -987,15 +1040,19 @@
   font-weight: 700;
 }
 
+.score-panel {
+  width: 304px;
+}
+
 .timing-table {
   width: 100%;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   border-collapse: collapse;
 }
 
 .timing-table th,
 .timing-table td {
-  padding: 4px 0;
+  padding: 4px 0 4px 6px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

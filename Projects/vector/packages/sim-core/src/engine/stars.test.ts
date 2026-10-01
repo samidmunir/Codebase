@@ -51,7 +51,7 @@ describe('arrivals on STARs', () => {
     expect(aircraft.navigation).toMatchObject({ mode: 'procedure', descendVia: true });
     expect(aircraft.targets.altitudeFt).toBe(descendViaBottomFt(aircraft));
     const checkIn = engine.comms.filter((c) => c.aircraftId === id).at(-1)!;
-    expect(checkIn.text).toMatch(/descending via the .* arrival\.$/);
+    expect(checkIn.text).toMatch(/descending via the .* arrival, information [A-Z][a-z-]+\.$/);
   });
 
   it('drop the restrictions for an assigned altitude, and take them again on "descend via"', () => {

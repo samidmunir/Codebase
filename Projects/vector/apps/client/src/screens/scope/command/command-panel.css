@@ -777,6 +777,17 @@
   font-size: 0.72rem;
 }
 
+.departure-airport__atis {
+  color: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  cursor: help;
+}
+
+.departure-airport__atis b {
+  color: var(--color-target);
+}
+
 .departure-airport__change {
   margin-top: 6px;
   padding: 4px 8px;

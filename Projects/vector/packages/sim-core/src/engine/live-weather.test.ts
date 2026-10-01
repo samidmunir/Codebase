@@ -108,4 +108,37 @@ describe('live weather', () => {
     const random = createEngine({ 'weather.windMode': 'random' });
     expect(random.applyLiveWeather(NORTHEAST)).toMatchObject({ ok: false });
   });
+
+  it('issues an ATIS per airport, a new letter for each new report, and arrivals report it', () => {
+    const engine = createEngine({ 'traffic.arrivalRatePerHour': 10 });
+    const first = engine.atis.KJFK!;
+    expect(first.letter).toMatch(/^[A-Z]$/);
+    expect(first.text.startsWith(`JFK ATIS INFO ${first.letter} 0151Z.`)).toBe(true);
+    expect(first.text).toContain('LANDING RUNWAYS 4R, 4L');
+    const changed: string[] = [];
+    engine.subscribe((event) => event.type === 'atisChanged' && changed.push(event.airport));
+    // The same report again: no new letter.
+    engine.applyLiveWeather(NORTHEAST.map((r) => ({ ...r })));
+    expect(engine.atis.KJFK!.letter).toBe(first.letter);
+    engine.applyLiveWeather([
+      report('KJFK', 30, 17, {
+        observedAt: '2026-09-28T02:51:00.000Z',
+        raw: 'METAR KJFK 280251Z 03017KT 10SM OVC014 17/15 A2976',
+      }),
+    ]);
+    const next = String.fromCharCode(((first.letter.charCodeAt(0) - 65 + 1) % 26) + 65);
+    expect(engine.atis.KJFK!.letter).toBe(next);
+    expect(changed).toEqual(['KJFK']);
+    // Arrivals into JFK now check in with the new letter.
+    let checkIn: string | undefined;
+    engine.subscribe((event) => {
+      if (event.type === 'arrivalEntered' && event.airport === 'KJFK' && !checkIn)
+        checkIn = engine.comms.at(-1)!.text;
+    });
+    for (let t = 0; t < 3_600 && !checkIn; t++) engine.step();
+    expect(checkIn).toMatch(/, information [A-Z][a-z-]+\.$/);
+    expect(checkIn).toContain(
+      `information ${({ A: 'Alfa', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', G: 'Golf', H: 'Hotel', I: 'India', J: 'Juliett', K: 'Kilo', L: 'Lima', M: 'Mike', N: 'November', O: 'Oscar', P: 'Papa', Q: 'Quebec', R: 'Romeo', S: 'Sierra', T: 'Tango', U: 'Uniform', V: 'Victor', W: 'Whiskey', X: 'X-ray', Y: 'Yankee', Z: 'Zulu' } as Record<string, string>)[engine.atis.KJFK!.letter]}`,
+    );
+  });
 });

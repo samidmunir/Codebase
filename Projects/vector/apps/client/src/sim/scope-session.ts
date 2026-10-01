@@ -10,6 +10,7 @@ import {
   SimEngine,
   type AirspacePack,
   type AtcCommand,
+  type Atis,
   type LiveWeatherReport,
   type SimSnapshot,
   type ValidationResult,
@@ -52,6 +53,9 @@ export interface SessionStatus {
   liveWeather: LiveWeatherStatus;
   /** The latest live weather report per airport. */
   liveReports: Readonly<Record<string, Readonly<LiveWeatherReport>>>;
+  /** Each airport's ATIS, and a key that changes when any is reissued. */
+  atis: Readonly<Record<string, Readonly<Atis>>>;
+  atisKey: string;
 }
 
 export type LiveWeatherStatus =
@@ -258,6 +262,10 @@ export class ScopeSession {
         .join(','),
       liveWeather: this.liveWeatherStatus,
       liveReports: this.engine.liveWeather,
+      atis: this.engine.atis,
+      atisKey: Object.entries(this.engine.atis)
+        .map(([icao, a]) => `${icao}:${a.letter}`)
+        .join(','),
     };
   }
 
@@ -311,7 +319,8 @@ export class ScopeSession {
       next.trafficKey !== this.status.trafficKey ||
       next.scoreEventCount !== this.status.scoreEventCount ||
       next.windKey !== this.status.windKey ||
-      next.liveWeather !== this.status.liveWeather;
+      next.liveWeather !== this.status.liveWeather ||
+      next.atisKey !== this.status.atisKey;
     if (!changed) return;
     this.status = next;
     for (const listener of this.listeners) listener();

@@ -3,6 +3,7 @@ import type { AirspacePack } from '../airspace/airspace-pack';
 import type { Airline } from '../airspace/schema';
 import { bearingTrue, distanceNm, trueToMagnetic, type LatLon } from '../math/geo';
 import type { SeededRandom } from '../random/seeded-random';
+import { atisSchema } from '../weather/atis';
 import { requestedCruiseAltitude } from './cruise-levels';
 import {
   generateWinds,
@@ -58,6 +59,8 @@ export const operationsStateSchema = z.object({
   windSeed: z.number().int().min(0).optional(),
   /** Latest live weather report per airport (live wind mode). */
   liveWeather: z.record(z.string(), liveWeatherReportSchema).optional(),
+  /** Each airport's current ATIS broadcast. */
+  atis: z.record(z.string(), atisSchema).optional(),
   runways: z.record(z.string(), activeRunwaysSchema),
   /** Runway changes announced for when the wind no longer suits the runways, by airport. */
   pendingRunwayChanges: z

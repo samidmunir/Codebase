@@ -53,6 +53,7 @@ export function DeparturesPanel({ session, onClose }: DeparturesPanelProps) {
           const entries = engine.departureQueue.filter((entry) => entry.airport === icao);
           const held = engine.gateHolds(icao);
           const change = engine.pendingRunwayChanges[icao];
+          const atis = engine.atis[icao];
 
           return (
             <section
@@ -63,6 +64,11 @@ export function DeparturesPanel({ session, onClose }: DeparturesPanelProps) {
               <div className="departure-airport__header">
                 <span className="departure-airport__code">{shortAirport(icao)}</span>
                 {wind && <span className="departure-airport__wind">{formatWind(wind)}</span>}
+                {atis && (
+                  <span className="departure-airport__atis" title={atis.text}>
+                    ATIS <b>{atis.letter}</b>
+                  </span>
+                )}
                 <span className="departure-airport__count">
                   {entries.length}/{maxQueue}
                   {held > 0 && <span className="departure-airport__held"> · {held} at gate</span>}

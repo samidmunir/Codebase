@@ -317,7 +317,7 @@ describe('arrivals', () => {
     const checkIns = engine.comms.filter((c) => /^New York (Center|Approach),/.test(c.text));
     expect(checkIns.length).toBe(entered.length);
     expect(checkIns[0]!.text).toMatch(
-      /, [A-Z]+ (one|two|three|four|five|six|seven|eight|niner) arrival\.$/,
+      /, [A-Z]+ (one|two|three|four|five|six|seven|eight|niner) arrival, information [A-Z][a-z-]+\.$/,
     );
   });
 
