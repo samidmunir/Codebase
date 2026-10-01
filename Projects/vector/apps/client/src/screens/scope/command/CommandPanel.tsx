@@ -10,6 +10,7 @@ import {
 import {
   altitudeOptions,
   centerHandoff,
+  climbViaOption,
   descendViaOption,
   planningNotes,
   directToGroups,
@@ -128,11 +129,12 @@ export function CommandPanel(props: CommandPanelProps) {
           <dt>Alt</dt>
           <dd>
             {altitudeLabel(aircraft.altitudeFt)}
-            {aircraft.targets.altitudeFt !== Math.round(aircraft.altitudeFt) && (
+            {Math.abs(aircraft.targets.altitudeFt - aircraft.altitudeFt) >= 50 && (
               <span className="command-panel__target">
                 {' '}
                 → {altitudeLabel(aircraft.targets.altitudeFt)}
-                {aircraft.navigation.mode === 'procedure' && aircraft.navigation.descendVia
+                {aircraft.navigation.mode === 'procedure' &&
+                (aircraft.navigation.descendVia || aircraft.navigation.climbVia)
                   ? ' via'
                   : ''}
               </span>
@@ -246,6 +248,9 @@ export function CommandPanel(props: CommandPanelProps) {
                 onDescendVia={() =>
                   update({ descendVia: draft.descendVia ? undefined : true, altitudeFt: undefined })
                 }
+                climbVia={climbViaOption(aircraft)}
+                climbViaSelected={draft.climbVia === true}
+                onClimbVia={() => update({ climbVia: draft.climbVia ? undefined : true })}
                 label={altitudeLabel}
                 requested={aircraft.flightPlan.requestedAltitudeFt}
                 options={altitudeOptions(pack, performance)}
@@ -253,6 +258,7 @@ export function CommandPanel(props: CommandPanelProps) {
                 current={aircraft.targets.altitudeFt}
                 selected={draft.altitudeFt}
                 onSelect={(altitudeFt) =>
+                  // With climb via chosen, the altitude is its "except maintain".
                   update({
                     altitudeFt: draft.altitudeFt === altitudeFt ? undefined : altitudeFt,
                     descendVia: undefined,
@@ -466,6 +472,9 @@ function AltitudeTab(props: {
   descendVia: ReturnType<typeof descendViaOption>;
   descendViaSelected: boolean;
   onDescendVia: () => void;
+  climbVia: ReturnType<typeof climbViaOption>;
+  climbViaSelected: boolean;
+  onClimbVia: () => void;
   label: (altitudeFt: number) => string;
   requested: number | undefined;
   options: number[];
@@ -475,8 +484,35 @@ function AltitudeTab(props: {
   onSelect: (altitudeFt: number) => void;
 }) {
   const via = props.descendVia;
+  const climb = props.climbVia;
   return (
     <div className="altitude-tab">
+      {climb && (
+        <button
+          type="button"
+          className="descend-via"
+          aria-pressed={props.climbViaSelected}
+          onClick={props.onClimbVia}
+          title="Fly the departure's published altitude restrictions up to its cleared altitude. Pick an altitude too to climb via, except maintain it. Assigning an altitude alone cancels the restrictions."
+        >
+          <span className="descend-via__title">
+            {climb.active && !props.climbViaSelected ? 'Climbing via' : 'Climb via'}{' '}
+            {climb.procedure}
+            {props.climbViaSelected && props.selected !== undefined
+              ? `, except maintain ${props.label(props.selected)}`
+              : ''}
+          </span>
+          <span className="descend-via__detail">
+            {climb.next
+              ? `next ${climb.next.fix} ${climb.next.label} · `
+              : 'no restrictions left · '}
+            top{' '}
+            {props.label(
+              props.climbViaSelected && props.selected !== undefined ? props.selected : climb.topFt,
+            )}
+          </span>
+        </button>
+      )}
       {via && (
         <button
           type="button"

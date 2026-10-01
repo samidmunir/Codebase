@@ -94,3 +94,42 @@ describe('SID speed restrictions', () => {
     expect(crossed.get(fix!)).toBeGreaterThan(240);
   });
 });
+
+describe('climb via a SID', () => {
+  it('stops at an "at or below" restriction until its fix, then climbs on to the top', () => {
+    const { aircraft } = departing('KLGA', 'GLDMN8', '13');
+    const navigation = aircraft.navigation;
+    if (navigation.mode !== 'procedure') throw new Error('not on the SID');
+    // A synthetic restriction (the New York SIDs publish only "at or above" ones): VOBOZ at or below 3,000.
+    const vobozIndex = navigation.legs.findIndex((leg) => leg.fix === 'VOBOZ');
+    navigation.legs[vobozIndex] = {
+      ...navigation.legs[vobozIndex]!,
+      altitudeRestriction: { maxFt: 3_000 },
+    };
+    navigation.climbVia = true;
+    const a320 = performance.get('A320');
+    let highestBefore = 0;
+    let passed = false;
+    for (let t = 0; t < 1_800 && aircraft.navigation.mode === 'procedure'; t++) {
+      const result = updateNavigation(aircraft, a320, variation, config);
+      if (result.fixPassed === 'VOBOZ') passed = true;
+      stepAircraft(aircraft, a320, 1, variation, config);
+      if (!passed) highestBefore = Math.max(highestBefore, aircraft.altitudeFt);
+    }
+    expect(passed).toBe(true);
+    expect(highestBefore).toBeLessThanOrEqual(3_000);
+    expect(aircraft.altitudeFt).toBe(7_000); // its cleared (top) altitude
+  });
+
+  it('climbs normally through "at or above" restrictions', () => {
+    const { aircraft, limits } = departing('KLGA', 'GLDMN8', '13');
+    expect(limits.size).toBeGreaterThan(0);
+    if (aircraft.navigation.mode === 'procedure') aircraft.navigation.climbVia = true;
+    const a320 = performance.get('A320');
+    for (let t = 0; t < 600; t++) {
+      updateNavigation(aircraft, a320, variation, config);
+      stepAircraft(aircraft, a320, 1, variation, config);
+    }
+    expect(aircraft.altitudeFt).toBe(7_000);
+  });
+});

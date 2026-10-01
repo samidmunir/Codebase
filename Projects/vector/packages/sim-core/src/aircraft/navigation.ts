@@ -329,7 +329,7 @@ function flyProcedure(
       if (applies) navigation.speedLimitKts = restriction.kts;
       else delete navigation.speedLimitKts;
     } else delete navigation.speedLimitKts;
-    planDescentVia(aircraft);
+    planVerticalPath(aircraft);
 
     if (FIX_LEGS.has(pt) && leg.position) {
       if (flyToFix(aircraft, navigation, leg.position, magneticVariationDeg, config)) {
@@ -499,9 +499,10 @@ const DESCENT_PLAN_LEAD_NM = 2;
  * its fix, and never climbs. Sets `vnavAltitudeFt`, which the flight model
  * follows instead of the cleared (bottom) altitude.
  */
-function planDescentVia(aircraft: AircraftState): void {
+function planVerticalPath(aircraft: AircraftState): void {
   const navigation = aircraft.navigation;
   if (navigation.mode !== 'procedure') return;
+  if (navigation.climbVia) return planClimbVia(aircraft);
   const ahead = navigation.descendVia ? restrictionsAhead(aircraft) : [];
   if (ahead.length === 0) {
     delete navigation.vnavAltitudeFt;
@@ -529,6 +530,41 @@ function planDescentVia(aircraft: AircraftState): void {
   // Level (or no descent under way): hold where it is.
   else if (target === undefined || target >= altitude) target = altitude;
   navigation.vnavAltitudeFt = Math.max(target, floor);
+}
+
+/**
+ * Climbing via a procedure (a SID): climb toward the cleared (top) altitude,
+ * but not above an "at or below" restriction until its fix is passed, and
+ * never descend. "At or above" restrictions are met by climbing normally.
+ */
+function planClimbVia(aircraft: AircraftState): void {
+  const navigation = aircraft.navigation;
+  if (navigation.mode !== 'procedure') return;
+  const ceilings = restrictionsAhead(aircraft)
+    .map((r) => r.maxFt)
+    .filter((max): max is number => max !== undefined);
+  if (ceilings.length === 0) {
+    delete navigation.vnavAltitudeFt;
+    return;
+  }
+  const ceiling = Math.min(aircraft.targets.altitudeFt, ...ceilings);
+  navigation.vnavAltitudeFt = Math.max(
+    ceiling,
+    Math.min(aircraft.altitudeFt, aircraft.targets.altitudeFt),
+  );
+}
+
+/**
+ * Whether an aircraft is flying its departure's SID (the only procedure that
+ * can be flown "climbing via"): not runway heading, nor a missed approach.
+ */
+export function isOnSid(aircraft: Readonly<AircraftState>): boolean {
+  const navigation = aircraft.navigation;
+  return (
+    navigation.mode === 'procedure' &&
+    (aircraft.phase === 'departure' || aircraft.phase === 'enroute') &&
+    aircraft.flightPlan.route.includes(navigation.name)
+  );
 }
 
 function finishProcedure(aircraft: AircraftState, events: NavigationEvents): NavigationEvents {

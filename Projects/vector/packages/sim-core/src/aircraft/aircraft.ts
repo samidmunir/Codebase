@@ -99,9 +99,11 @@ export const navigationSchema = z.discriminatedUnion('mode', [
     inbound: z.boolean().optional(),
     /** Flying on to get room to turn back to a fix too close to turn onto. */
     extending: z.boolean().optional(),
-    /** Cleared to descend via the procedure: its altitude restrictions are flown. */
+    /** Cleared to descend via the procedure (a STAR): its altitude restrictions are flown. */
     descendVia: z.boolean().optional(),
-    /** Descending via: the altitude to be at now, on the planned descent (set each tick). */
+    /** Cleared to climb via the procedure (a SID): its altitude restrictions are flown. */
+    climbVia: z.boolean().optional(),
+    /** Descending or climbing via: the altitude to be at now, on the planned path (set each tick). */
     vnavAltitudeFt: z.number().optional(),
     /** Published speed limit in force now (set each tick); an assigned speed overrides it. */
     speedLimitKts: z.number().positive().optional(),

@@ -21,6 +21,7 @@ import { stepAircraft } from '../aircraft/flight-model';
 import {
   descendViaBottomFt,
   finalApproachGeometry,
+  isOnSid,
   isOnStar,
   followGlideslope,
   routeAhead,
@@ -874,9 +875,17 @@ export class SimEngine {
         // An assigned altitude cancels the procedure's altitude restrictions (not its speeds).
         if (navigation.mode === 'procedure') {
           delete navigation.descendVia;
+          delete navigation.climbVia;
           delete navigation.vnavAltitudeFt;
         }
         aircraft.targets.altitudeFt = command.altitudeFt;
+        break;
+      case 'climbVia':
+        if (navigation.mode === 'procedure' && isOnSid(aircraft)) {
+          navigation.climbVia = true;
+          if (command.exceptMaintainFt !== undefined)
+            aircraft.targets.altitudeFt = command.exceptMaintainFt;
+        }
         break;
       case 'descendVia':
         if (navigation.mode === 'procedure' && isOnStar(aircraft)) {
@@ -1837,6 +1846,8 @@ export class SimEngine {
       legs: procedure.legs,
       legIndex: 0,
       legStart: { ...liftoff },
+      // Departures on a SID are cleared to climb via it, to the airport's initial altitude.
+      ...(procedure.sid ? { climbVia: true } : {}),
     };
     this.emit({
       type: 'tookOff',
@@ -1864,10 +1875,13 @@ export class SimEngine {
         : '';
     const facility = this.airspace.airspace.controllers.approach.departureCallsign;
     const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    const climbingVia = navigation.mode === 'procedure' && navigation.climbVia && isOnSid(aircraft);
     this.transmit(
       'pilot',
       aircraft.id,
-      `${facility}, ${callsign}, ${altitude} climbing ${climbing}${procedure}.`,
+      climbingVia
+        ? `${facility}, ${callsign}, ${altitude}, climbing via the ${procedureWords(navigation.name)} departure.`
+        : `${facility}, ${callsign}, ${altitude} climbing ${climbing}${procedure}.`,
     );
   }
 

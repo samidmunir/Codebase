@@ -17,6 +17,8 @@ export interface InstructionDraft {
   altitudeFt?: number | undefined;
   /** "Descend via" the arrival being flown (instead of an altitude). */
   descendVia?: boolean | undefined;
+  /** "Climb via" the departure being flown; with an altitude, "except maintain" it. */
+  climbVia?: boolean | undefined;
   speed?: number | 'normal' | undefined;
   ilsRunway?: string | undefined;
   handoff?: boolean | undefined;
@@ -40,7 +42,13 @@ export function draftCommands(
     const fix = pack.fix(draft.directTo);
     if (fix) commands.push({ type: 'directTo', fix: fix.ident, position: fix.position });
   }
-  if (draft.altitudeFt !== undefined)
+  if (draft.climbVia && aircraft.navigation.mode === 'procedure')
+    commands.push({
+      type: 'climbVia',
+      procedure: aircraft.navigation.name,
+      ...(draft.altitudeFt !== undefined ? { exceptMaintainFt: draft.altitudeFt } : {}),
+    });
+  else if (draft.altitudeFt !== undefined)
     commands.push({ type: 'altitude', altitudeFt: draft.altitudeFt });
   else if (draft.descendVia && aircraft.navigation.mode === 'procedure')
     commands.push({ type: 'descendVia', procedure: aircraft.navigation.name });

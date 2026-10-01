@@ -2,9 +2,11 @@ import { destinationPoint, type AircraftState } from '@vector/sim-core';
 import { describe, expect, it } from 'vitest';
 import { performanceCatalog } from '../airspaces/registry';
 import { newYorkPack as pack } from '../testing/new-york-pack';
+import { draftCommands } from './draft';
 import {
   altitudeOptions,
   centerHandoff,
+  climbViaOption,
   descendViaOption,
   directToGroups,
   ilsClearance,
@@ -238,5 +240,51 @@ describe('descend via', () => {
       navigation: procedure('Missed approach'),
     });
     expect(descendViaOption(wentAround)).toBeUndefined();
+  });
+});
+
+describe('climb via', () => {
+  const onSid = (phase: AircraftState['phase'] = 'enroute') =>
+    aircraft({
+      flightPlan: { origin: 'KLGA', destination: 'KATL', route: ['GLDMN8', 'NEWEL'] },
+      phase,
+      targets: { ...aircraft().targets, altitudeFt: 5_000 },
+      navigation: {
+        mode: 'procedure',
+        name: 'GLDMN8',
+        legs: [
+          {
+            pathTerminator: 'TF',
+            fix: 'VOBOZ',
+            position: destinationPoint({ lat: 40.3, lon: -73.8 }, 90, 6),
+            altitudeRestriction: { minFt: 4_500 },
+          },
+        ],
+        legIndex: 0,
+        legStart: { lat: 40.3, lon: -73.8 },
+        climbVia: true,
+      },
+    });
+
+  it('is offered for a departure on its SID, with its top altitude and next restriction', () => {
+    expect(climbViaOption(onSid())).toMatchObject({
+      procedure: 'GLDMN8',
+      topFt: 5_000,
+      active: true,
+      next: { fix: 'VOBOZ', label: '045+' },
+    });
+    expect(climbViaOption(aircraft())).toBeUndefined(); // an arrival
+  });
+
+  it('turns climb via plus an altitude into "climb via, except maintain"', () => {
+    expect(draftCommands({ climbVia: true, altitudeFt: 17_000 }, pack, onSid())).toEqual([
+      { type: 'climbVia', procedure: 'GLDMN8', exceptMaintainFt: 17_000 },
+    ]);
+    expect(draftCommands({ climbVia: true }, pack, onSid())).toEqual([
+      { type: 'climbVia', procedure: 'GLDMN8' },
+    ]);
+    expect(draftCommands({ altitudeFt: 17_000 }, pack, onSid())).toEqual([
+      { type: 'altitude', altitudeFt: 17_000 },
+    ]);
   });
 });

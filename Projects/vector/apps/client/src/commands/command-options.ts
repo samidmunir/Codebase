@@ -3,6 +3,7 @@ import {
   assessHandoff,
   bearingTrue,
   descendViaBottomFt,
+  isOnSid,
   isOnStar,
   restrictionsAhead,
   distanceNm,
@@ -291,6 +292,14 @@ export function planningNotes(
   }
 
   const notes: PlanningNote[] = [];
+  const climbVia = climbViaOption(aircraft);
+  if (climbVia?.active && climbVia.next) {
+    notes.push({
+      label: 'Climb via',
+      value: `${climbVia.next.fix} ${climbVia.next.label} · ${Math.round(climbVia.next.distanceNm)} NM`,
+      tone: 'good',
+    });
+  }
   const requested = aircraft.flightPlan.requestedAltitudeFt;
   if (requested !== undefined) {
     const cleared = aircraft.targets.altitudeFt === requested;
@@ -355,5 +364,29 @@ export function descendViaOption(aircraft: Readonly<AircraftState>):
     bottomFt,
     active: navigation.descendVia === true,
     next: { fix: next.fix, label: restrictionLabel(next), distanceNm: next.distanceNm },
+  };
+}
+
+/** What "climb via" would do for a departure on its SID, if it is on one. */
+export function climbViaOption(aircraft: Readonly<AircraftState>):
+  | {
+      procedure: string;
+      /** The altitude it climbs to: what it is cleared to, unless "except maintain" changes it. */
+      topFt: number;
+      /** Already climbing via it. */
+      active: boolean;
+      next: { fix: string; label: string; distanceNm: number } | undefined;
+    }
+  | undefined {
+  const navigation = aircraft.navigation;
+  if (navigation.mode !== 'procedure' || !isOnSid(aircraft)) return undefined;
+  const [next] = restrictionsAhead(aircraft);
+  return {
+    procedure: navigation.name,
+    topFt: aircraft.targets.altitudeFt,
+    active: navigation.climbVia === true,
+    next: next
+      ? { fix: next.fix, label: restrictionLabel(next), distanceNm: next.distanceNm }
+      : undefined,
   };
 }
