@@ -14,7 +14,7 @@ import {
   speedWords,
 } from '../comms/phraseology';
 import type { AircraftPerformance } from '../performance/performance';
-import { descendViaBottomFt } from '../aircraft/navigation';
+import { descendViaBottomFt, isOnStar } from '../aircraft/navigation';
 
 // ATC instructions. Each is plain data, so instructions waiting on a pilot's
 // response are saved with the session. Every instruction is issued through the
@@ -116,7 +116,11 @@ export function validateInstruction(
       }
       case 'descendVia': {
         const navigation = aircraft.navigation;
-        if (navigation.mode !== 'procedure' || navigation.name !== command.procedure)
+        if (
+          !isOnStar(aircraft) ||
+          navigation.mode !== 'procedure' ||
+          navigation.name !== command.procedure
+        )
           return reject(`${aircraft.callsign} is not on the ${command.procedure} arrival`);
         if (types.includes('heading'))
           return reject('A heading takes it off the arrival: descend via needs the arrival');

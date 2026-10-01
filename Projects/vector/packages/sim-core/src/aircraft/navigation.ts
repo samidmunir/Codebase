@@ -440,6 +440,19 @@ export function restrictionsAhead(aircraft: Readonly<AircraftState>): Restrictio
 }
 
 /**
+ * Whether an aircraft is flying its arrival's STAR (the only procedure that
+ * can be flown "descending via"): not a departure's SID, nor a missed approach.
+ */
+export function isOnStar(aircraft: Readonly<AircraftState>): boolean {
+  const navigation = aircraft.navigation;
+  return (
+    navigation.mode === 'procedure' &&
+    aircraft.phase === 'arrival' &&
+    aircraft.flightPlan.route.includes(navigation.name)
+  );
+}
+
+/**
  * The distance still to fly along the procedure (or direct-to) an aircraft is
  * on, and where that path ends. Stops at a heading leg, where the path's
  * length is no longer known.

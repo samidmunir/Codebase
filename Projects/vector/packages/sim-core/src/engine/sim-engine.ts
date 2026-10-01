@@ -21,6 +21,7 @@ import { stepAircraft } from '../aircraft/flight-model';
 import {
   descendViaBottomFt,
   finalApproachGeometry,
+  isOnStar,
   followGlideslope,
   routeAhead,
   updateNavigation,
@@ -878,7 +879,7 @@ export class SimEngine {
         aircraft.targets.altitudeFt = command.altitudeFt;
         break;
       case 'descendVia':
-        if (navigation.mode === 'procedure') {
+        if (navigation.mode === 'procedure' && isOnStar(aircraft)) {
           navigation.descendVia = true;
           aircraft.targets.altitudeFt = descendViaBottomFt(aircraft) ?? aircraft.targets.altitudeFt;
         }

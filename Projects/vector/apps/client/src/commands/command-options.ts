@@ -3,6 +3,7 @@ import {
   assessHandoff,
   bearingTrue,
   descendViaBottomFt,
+  isOnStar,
   restrictionsAhead,
   distanceNm,
   trueToMagnetic,
@@ -344,7 +345,8 @@ export function descendViaOption(aircraft: Readonly<AircraftState>):
     }
   | undefined {
   const navigation = aircraft.navigation;
-  if (navigation.mode !== 'procedure') return undefined;
+  // Only arrivals on their STAR: a departure's SID or a missed approach is never "descend via".
+  if (navigation.mode !== 'procedure' || !isOnStar(aircraft)) return undefined;
   const bottomFt = descendViaBottomFt(aircraft);
   const [next] = restrictionsAhead(aircraft);
   if (bottomFt === undefined || !next) return undefined;

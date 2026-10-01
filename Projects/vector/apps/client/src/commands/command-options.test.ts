@@ -5,6 +5,7 @@ import { newYorkPack as pack } from '../testing/new-york-pack';
 import {
   altitudeOptions,
   centerHandoff,
+  descendViaOption,
   directToGroups,
   ilsClearance,
   ilsRunways,
@@ -196,5 +197,46 @@ describe('planning notes', () => {
       label: 'Handoff',
       value: expect.stringMatching(/^Boston · in \d+ NM$/),
     });
+  });
+});
+
+describe('descend via', () => {
+  // A procedure with a published altitude: a STAR for an arrival, a SID for a departure.
+  const procedure = (name: string): AircraftState['navigation'] => ({
+    mode: 'procedure',
+    name,
+    legs: [
+      {
+        pathTerminator: 'TF',
+        fix: 'KORRY',
+        position: destinationPoint({ lat: 40.3, lon: -73.8 }, 0, 20),
+        altitudeRestriction: { minFt: 10_000, maxFt: 10_000 },
+      },
+    ],
+    legIndex: 0,
+    legStart: { lat: 40.3, lon: -73.8 },
+  });
+
+  it('is offered for an arrival on its STAR', () => {
+    const arrival = aircraft({
+      flightPlan: { origin: 'KATL', destination: 'KLGA', route: ['PROUD2'] },
+      navigation: procedure('PROUD2'),
+    });
+    expect(descendViaOption(arrival)).toMatchObject({ procedure: 'PROUD2', bottomFt: 10_000 });
+  });
+
+  it('is never offered on a departure’s SID or a missed approach', () => {
+    const departure = aircraft({
+      flightPlan: { origin: 'KLGA', destination: 'KATL', route: ['GLDMN8', 'NEWEL'] },
+      phase: 'enroute',
+      navigation: procedure('GLDMN8'),
+    });
+    expect(descendViaOption(departure)).toBeUndefined();
+    expect(descendViaOption({ ...departure, phase: 'departure' })).toBeUndefined();
+    const wentAround = aircraft({
+      flightPlan: { origin: 'KATL', destination: 'KLGA', route: ['PROUD2'] },
+      navigation: procedure('Missed approach'),
+    });
+    expect(descendViaOption(wentAround)).toBeUndefined();
   });
 });

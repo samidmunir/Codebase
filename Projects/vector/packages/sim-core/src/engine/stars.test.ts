@@ -108,4 +108,43 @@ describe('arrivals on STARs', () => {
       descendVia: true,
     });
   });
+
+  it('refuse "descend via" for a departure on its SID', () => {
+    const engine = SimEngine.create({
+      performance,
+      world: { magneticVariationDeg: newYork.airspace.magneticVariationDeg },
+      seed: 2,
+      startTimeUtc: '2026-09-28T14:00:00Z',
+      settings: {
+        ...defaultSettings('session'),
+        'weather.windMode': 'random',
+        'traffic.arrivalRatePerHour': 0,
+        'traffic.departureRatePerHour': 20,
+        'traffic.transitRatePerHour': 0,
+      },
+      airspace: newYork,
+      airlines,
+    });
+    let departure: string | undefined;
+    for (let t = 0; t < 1_800 && !departure; t++) {
+      for (const entry of engine.departureQueue)
+        if (entry.status === 'waiting' && engine.tick >= entry.readyAtTick)
+          engine.releaseDeparture(entry.id, engine.activeRunways[entry.airport]!.departures[0]!);
+      engine.step();
+      departure = engine
+        .listAircraft()
+        .find(
+          (a) =>
+            a.owner === 'N90' &&
+            a.navigation.mode === 'procedure' &&
+            a.navigation.name !== 'Runway heading',
+        )?.id;
+    }
+    const aircraft = engine.getAircraft(departure!)!;
+    const sid = (aircraft.navigation as { name: string }).name;
+    expect(engine.checkInstruction(aircraft.id, [{ type: 'descendVia', procedure: sid }])).toEqual({
+      ok: false,
+      reason: `${aircraft.callsign} is not on the ${sid} arrival`,
+    });
+  });
 });
