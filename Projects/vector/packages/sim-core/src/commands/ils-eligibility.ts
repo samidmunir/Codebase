@@ -1,8 +1,9 @@
 import type { SessionSettings } from '@vector/shared';
 import { trueAirspeedKts, type AircraftState, type IlsClearance } from '../aircraft/aircraft';
 import { finalApproachGeometry, glidepathAltitudeFt } from '../aircraft/navigation';
-import { headingDifference, toDegrees, toRadians } from '../math/angles';
-import type { AircraftPerformance } from '../performance/performance';
+import { DEFAULT_FLIGHT_MODEL_CONFIG, turnRateDegPerSec } from '../aircraft/flight-model';
+import { clamp, headingDifference, toDegrees, toRadians } from '../math/angles';
+import { rateAtAltitude, type AircraftPerformance } from '../performance/performance';
 
 // Whether a pilot can accept an ILS clearance from where the aircraft is. A
 // pilot who can't replies "unable" with the reason.
@@ -41,11 +42,11 @@ const ON_COURSE_DEG = 10;
 /** Height above the glidepath a pilot always accepts at the localizer join point. */
 const ABOVE_GLIDEPATH_FT = 300;
 /**
- * Height a pilot can lose relative to the glidepath per NM when capturing it from
- * above (a normal descent rate against the glidepath's), and the distance they want
- * to be established before the stabilized-approach gate.
+ * The most height a pilot gains on the glidepath per NM when capturing it from above
+ * (the actual figure comes from the type's descent rate and speed), and the distance
+ * they want to be established before the stabilized-approach gate.
  */
-const FROM_ABOVE_FT_PER_NM = 200;
+const MAX_FROM_ABOVE_FT_PER_NM = 300;
 const ESTABLISHED_BEFORE_GATE_NM = 1;
 /** Intercepts shallower than this are treated as flying along the localizer. */
 const MIN_INTERCEPT_DEG = 3;
@@ -105,11 +106,19 @@ export function ilsEligibility(
 
   // Where the aircraft will join the localizer on its heading: pilots judge the
   // approach from there, not from where they are now.
-  const joinNm = onCourse
-    ? geometry.alongTrackNm
-    : geometry.alongTrackNm -
-      Math.abs(geometry.crossTrackNm) /
-        Math.tan(toRadians(Math.max(MIN_INTERCEPT_DEG, Math.abs(interceptAngle))));
+  // Still turning to that heading: the turn itself carries it on toward the runway first.
+  const tas = Math.max(1, trueAirspeedKts(aircraft));
+  const turnNm =
+    ((Math.abs(headingDifference(aircraft.headingDeg, heading)) /
+      turnRateDegPerSec(tas, DEFAULT_FLIGHT_MODEL_CONFIG)) *
+      tas) /
+    3600;
+  const joinNm =
+    (onCourse
+      ? geometry.alongTrackNm
+      : geometry.alongTrackNm -
+        Math.abs(geometry.crossTrackNm) /
+          Math.tan(toRadians(Math.max(MIN_INTERCEPT_DEG, Math.abs(interceptAngle))))) - turnNm;
   if (joinNm < minDistance) {
     return reject('distance', 'would join the localizer too close to the runway');
   }
@@ -117,9 +126,14 @@ export function ilsEligibility(
   // Above the glidepath at the join point, it must be able to get down to it before the gate.
   const gateNm = distanceForHeightNm(clearance, settings['approaches.stabilizedGateFt']);
   const excessFt = aircraft.altitudeFt - glidepathAltitudeFt(clearance, joinNm);
+  // How much faster than the glidepath it can come down: its descent rate over its ground
+  // speed, less the glidepath's own gradient (little at high speed, more when slow).
+  const descentFtPerNm = (rateAtAltitude(performance.descentRate, aircraft.altitudeFt) * 60) / tas;
+  const glidepathFtPerNm = FEET_PER_NM * Math.tan(toRadians(clearance.glideslopeDeg));
+  const spareFtPerNm = clamp(descentFtPerNm - glidepathFtPerNm, 0, MAX_FROM_ABOVE_FT_PER_NM);
   const allowedFt = Math.max(
     ABOVE_GLIDEPATH_FT,
-    (joinNm - gateNm - ESTABLISHED_BEFORE_GATE_NM) * FROM_ABOVE_FT_PER_NM,
+    (joinNm - gateNm - ESTABLISHED_BEFORE_GATE_NM) * spareFtPerNm,
   );
   if (excessFt > allowedFt) return reject('tooHigh', 'too high for the approach');
   const mva = context.minimumVectoringAltitudeFt;

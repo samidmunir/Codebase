@@ -144,6 +144,7 @@ describe('departure queue', () => {
         callsignsInUse: new Set<string>(),
         hasPerformance: (type: string) => performance.has(type),
         ceilingFt: (type: string) => performance.get(type).ceilingFt,
+        rangeNm: (type: string) => performance.get(type).rangeNm,
         fleetMix,
       };
       const entries = Array.from({ length: 1_000 }, () =>
@@ -173,6 +174,7 @@ describe('departure queue', () => {
       callsignsInUse: new Set<string>(),
       hasPerformance: (type: string) => performance.has(type),
       ceilingFt: (type: string) => performance.get(type).ceilingFt,
+      rangeNm: (type: string) => performance.get(type).rangeNm,
       fleetMix: 'realistic' as const,
     };
     const entries = Array.from({ length: 500 }, () =>

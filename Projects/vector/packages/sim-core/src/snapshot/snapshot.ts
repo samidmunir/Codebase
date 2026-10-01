@@ -52,6 +52,11 @@ export const simStateSchema = z.object({
         aircraftId: z.string(),
         commands: z.array(atcCommandSchema).min(1),
         executeAtTick: z.number().int().min(0),
+        /**
+         * The pilot's judgment of an approach clearance in the instruction, made when it
+         * was transmitted (with the rest of the instruction applied).
+         */
+        ilsVerdict: z.object({ ok: z.boolean(), reason: z.string().optional() }).optional(),
       }),
     )
     .default([]),

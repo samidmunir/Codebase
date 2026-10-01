@@ -779,11 +779,18 @@ export class SimEngine {
       1,
       Math.ceil(this.rng.range(minDelay, maxDelay) / this.state.config.tickSeconds),
     );
+    // The pilot judges an approach clearance as it was given, with the rest of the
+    // instruction (an intercept heading, say) applied: what the controller saw is what they get.
+    const ils = ordered.find((c) => c.type === 'clearedIls');
+    const verdict = ils ? this.ilsEligibilityWith(aircraft, ils.clearance, ordered) : undefined;
     this.state.pendingInstructions.push({
       id: `I${this.state.nextMessageNumber}`,
       aircraftId,
       commands: cloneJson(ordered),
       executeAtTick: this.state.tick + delayTicks,
+      ...(verdict
+        ? { ilsVerdict: verdict.ok ? { ok: true } : { ok: false, reason: verdict.reason } }
+        : {}),
     });
     this.emit({ type: 'instructionIssued', aircraftId, commands: cloneJson(ordered) });
     return { ok: true };
@@ -831,7 +838,11 @@ export class SimEngine {
       // Commands are in spoken order, so a heading given with an approach clearance applies first.
       for (const command of pending.commands) {
         if (command.type === 'clearedIls') {
-          const eligibility = this.ilsEligibilityFor(aircraft, command.clearance);
+          const eligibility = pending.ilsVerdict
+            ? pending.ilsVerdict.ok
+              ? ({ ok: true } as const)
+              : { ok: false as const, reason: pending.ilsVerdict.reason ?? 'unable' }
+            : this.ilsEligibilityFor(aircraft, command.clearance);
           if (!eligibility.ok) {
             readback.push(
               `unable ILS runway ${runwayWords(command.clearance.runway)}, ${eligibility.reason}`,
@@ -1002,10 +1013,30 @@ export class SimEngine {
   // ---- Approaches -----------------------------------------------------------------
 
   /** Whether an aircraft could accept an ILS clearance right now. */
-  ilsEligibility(aircraftId: string, clearance: IlsClearance): IlsEligibility {
+  ilsEligibility(
+    aircraftId: string,
+    clearance: IlsClearance,
+    /** The rest of the instruction it would be given with (e.g. an intercept heading). */
+    withCommands: readonly AtcCommand[] = [],
+  ): IlsEligibility {
     const aircraft = this.getAircraft(aircraftId);
     if (!aircraft) return { ok: false, problem: 'position', reason: 'no longer on the scope' };
-    return this.ilsEligibilityFor(aircraft, clearance);
+    return this.ilsEligibilityWith(aircraft, clearance, withCommands);
+  }
+
+  /** Eligibility with the instruction's other lateral, vertical and speed commands applied first. */
+  private ilsEligibilityWith(
+    aircraft: Readonly<AircraftState>,
+    clearance: IlsClearance,
+    commands: readonly AtcCommand[],
+  ): IlsEligibility {
+    const others = commands.filter((c) =>
+      ['heading', 'directTo', 'altitude', 'speed', 'resumeNormalSpeed'].includes(c.type),
+    );
+    if (others.length === 0) return this.ilsEligibilityFor(aircraft, clearance);
+    const preview = cloneJson(aircraft) as AircraftState;
+    for (const command of others) this.applyCommand(preview, command);
+    return this.ilsEligibilityFor(preview, clearance);
   }
 
   private ilsEligibilityFor(
@@ -1243,14 +1274,21 @@ export class SimEngine {
     const origin = weightedPick(random, fromCities).icao;
     const destination = weightedPick(random, toCities).icao;
 
-    const airline = weightedPick(
-      random,
-      airlineMix(
-        allTraffic.flatMap((t) => t.airlines),
-        this.state.settings['traffic.fleetMix'],
-      ),
+    // An airline with a type that can fly the whole trip, and that type.
+    const fromCity = pack.traffic.cityPositions[origin];
+    const toCity = pack.traffic.cityPositions[destination];
+    const tripNm = fromCity && toCity ? distanceNm(fromCity, toCity) : 600;
+    const capable = (types: readonly string[]) =>
+      types.filter(
+        (type) => this.performance.has(type) && this.performance.get(type).rangeNm >= tripNm,
+      );
+    const airlines = airlineMix(
+      allTraffic.flatMap((t) => t.airlines).filter((a) => capable(a.types).length > 0),
+      this.state.settings['traffic.fleetMix'],
     );
-    const types = airline.types.filter((type) => this.performance.has(type));
+    if (airlines.length === 0) return false;
+    const airline = weightedPick(random, airlines);
+    const types = capable(airline.types);
     if (types.length === 0) return false;
     const info = this.airlines.get(airline.icao);
     const [low, high] = info?.flightNumbers ?? [100, 2999];
@@ -1357,6 +1395,7 @@ export class SimEngine {
         callsignsInUse: inUse,
         hasPerformance: (type) => this.performance.has(type),
         ceilingFt: (type) => this.performance.get(type).ceilingFt,
+        rangeNm: (type) => this.performance.get(type).rangeNm,
         fleetMix: this.state.settings['traffic.fleetMix'],
       },
       { ...operations, nextDepartureNumber: 1 },
@@ -1871,6 +1910,7 @@ export class SimEngine {
         callsignsInUse: inUse,
         hasPerformance: (type) => this.performance.has(type),
         ceilingFt: (type) => this.performance.get(type).ceilingFt,
+        rangeNm: (type) => this.performance.get(type).rangeNm,
         fleetMix: this.state.settings['traffic.fleetMix'],
       },
       operations,

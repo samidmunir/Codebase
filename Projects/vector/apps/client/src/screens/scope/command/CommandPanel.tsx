@@ -6,6 +6,7 @@ import {
   headingDifference,
   routeExitFix,
   type AircraftState,
+  type AtcCommand,
 } from '@vector/sim-core';
 import {
   altitudeOptions,
@@ -380,6 +381,7 @@ export function CommandPanel(props: CommandPanelProps) {
                 runways={runways}
                 draft={draft}
                 update={update}
+                otherCommands={commands.filter((c) => c.type !== 'clearedIls')}
               />
             )}
 
@@ -700,12 +702,15 @@ function ApproachTab({
   runways,
   draft,
   update,
+  otherCommands,
 }: {
   session: ScopeSession;
   aircraft: Readonly<AircraftState>;
   runways: string[];
   draft: InstructionDraft;
   update: (patch: Partial<InstructionDraft>) => void;
+  /** The rest of the instruction being built (an intercept heading, say): judged with it. */
+  otherCommands: readonly AtcCommand[];
 }) {
   const destination = aircraft.flightPlan.destination;
   const inUse = session.engine.activeRunways[destination]?.arrivals ?? [];
@@ -722,7 +727,7 @@ function ApproachTab({
           const clearance = ilsClearance(session.pack, destination, runway);
           const eligibility =
             showEligibility && clearance
-              ? session.engine.ilsEligibility(aircraft.id, clearance)
+              ? session.engine.ilsEligibility(aircraft.id, clearance, otherCommands)
               : undefined;
           return (
             <button

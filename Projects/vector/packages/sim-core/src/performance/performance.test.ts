@@ -8,6 +8,7 @@ describe('performance data', () => {
     const catalog = parsePerformanceCatalog(performanceData);
     expect(catalog.types().sort()).toEqual(
       [
+        'A21N',
         'A320',
         'A321',
         'A333',

@@ -25,6 +25,8 @@ const LOCALIZER_GAIN_DEG_PER_NM = 40;
 const LOCALIZER_MAX_CORRECTION_DEG = 30;
 /** Localizer capture is possible within this distance of the threshold. */
 const LOCALIZER_RANGE_NM = 30;
+/** The localizer is captured within this of the centerline (about half full-scale at 10 NM). */
+const LOCALIZER_CAPTURE_WINDOW_NM = 0.5;
 /**
  * Glideslope capture window around the glidepath. From below, the glidepath
  * comes down to meet the aircraft; from above, the pilot descends to meet it
@@ -93,6 +95,12 @@ function flyToFix(
   fix: LatLon,
   magneticVariationDeg: number,
   config: FlightModelConfig,
+  /**
+   * A fix inside the turn circle: 'extend' flies on and turns back to it (a
+   * direct-to the controller gave); 'flyBy' counts it as flown by, as an FMS
+   * does with a procedure's fixes (so it never loops back to one).
+   */
+  insideTurn: 'extend' | 'flyBy' = 'extend',
 ): boolean {
   const distance = distanceNm(aircraft.position, fix);
   const bearingDeg = trueToMagnetic(bearingTrue(aircraft.position, fix), magneticVariationDeg);
@@ -107,11 +115,36 @@ function flyToFix(
   // The fix in the aircraft's frame (across toward it, ahead), from the center of the turn.
   const across = distance * Math.sin(toRadians(offBearing));
   const ahead = distance * Math.cos(toRadians(offBearing));
-  if (Math.hypot(across - turnRadiusNm, ahead) < turnRadiusNm) state.extending = true;
-  else if (state.extending && distance >= 2 * turnRadiusNm + EXTEND_MARGIN_NM)
+  if (Math.hypot(across - turnRadiusNm, ahead) < turnRadiusNm) {
+    if (insideTurn === 'flyBy') return true;
+    state.extending = true;
+  } else if (state.extending && distance >= 2 * turnRadiusNm + EXTEND_MARGIN_NM)
     delete state.extending;
   aircraft.targets.headingDeg = state.extending ? aircraft.headingDeg : bearingDeg;
   return false;
+}
+
+/** Turns sharper than this are flown over the fix rather than anticipated. */
+const MAX_ANTICIPATED_TURN_DEG = 135;
+
+/**
+ * How far before a fly-by fix an FMS starts the turn onto the next leg: the
+ * turn radius times the tangent of half the track change, so the aircraft
+ * rolls out on the next leg instead of overshooting it.
+ */
+export function turnAnticipationNm(
+  aircraft: Readonly<AircraftState>,
+  fix: LatLon,
+  nextFix: LatLon,
+  config: FlightModelConfig,
+): number {
+  const inbound = bearingTrue(aircraft.position, fix);
+  const outbound = bearingTrue(fix, nextFix);
+  const change = Math.abs(headingDifference(inbound, outbound));
+  if (change < 5 || change > MAX_ANTICIPATED_TURN_DEG) return 0;
+  const tas = trueAirspeedKts(aircraft);
+  const radius = tas / 3600 / toRadians(turnRateDegPerSec(tas, config));
+  return Math.min(radius * Math.tan(toRadians(change / 2)), 2 * radius);
 }
 
 /** Sets the aircraft's targets from its navigation mode. Mutates `aircraft`. */
@@ -156,11 +189,13 @@ export function updateNavigation(
       3600 /
       toRadians(turnRateDegPerSec(trueAirspeedKts(aircraft), config));
     const lead = turnRadiusNm * (1 - Math.cos(toRadians(interceptAngle))) + 0.05;
+    // Like an autopilot, it also captures near the centerline when it has just crossed it
+    // (cleared while still turning to its intercept heading, say), then corrects back.
+    const window = closing ? lead : LOCALIZER_CAPTURE_WINDOW_NM;
     if (
       onApproachSide &&
       Math.abs(interceptAngle) < 90 &&
-      closing &&
-      Math.abs(geometry.crossTrackNm) <= lead
+      Math.abs(geometry.crossTrackNm) <= window
     ) {
       navigation.localizerCaptured = true;
       events.localizerCaptured = true;
@@ -333,7 +368,18 @@ function flyProcedure(
     planVerticalPath(aircraft);
 
     if (FIX_LEGS.has(pt) && leg.position) {
-      if (flyToFix(aircraft, navigation, leg.position, magneticVariationDeg, config)) {
+      // Fly-by: start the turn onto the next leg early enough to roll out on it.
+      const next = navigation.legs
+        .slice(navigation.legIndex + 1)
+        .find((l) => l.position && !l.pathTerminator.startsWith('F'));
+      const turnEarly =
+        next?.position !== undefined &&
+        distanceNm(aircraft.position, leg.position) <=
+          turnAnticipationNm(aircraft, leg.position, next.position, config);
+      if (
+        turnEarly ||
+        flyToFix(aircraft, navigation, leg.position, magneticVariationDeg, config, 'flyBy')
+      ) {
         if (leg.fix) events.fixPassed = leg.fix;
         advance();
         continue;

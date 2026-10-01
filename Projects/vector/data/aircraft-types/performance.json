@@ -6,6 +6,7 @@
       "name": "Airbus A320",
       "wakeCategory": "large",
       "ceilingFt": 39000,
+      "rangeNm": 2700,
       "cruiseMach": 0.78,
       "speeds": {
         "initialClimb": 165,
@@ -63,6 +64,65 @@
       "name": "Airbus A321",
       "wakeCategory": "large",
       "ceilingFt": 39000,
+      "rangeNm": 2800,
+      "cruiseMach": 0.78,
+      "speeds": {
+        "initialClimb": 170,
+        "climb": 300,
+        "descent": 290,
+        "approach": 180,
+        "final": 142,
+        "max": 350
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1300
+        },
+        {
+          "altitudeFt": 37000,
+          "fpm": 700
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.5,
+      "decelerationKtPerSec": 1.0
+    },
+    {
+      "icao": "A21N",
+      "name": "Airbus A321neo (LR)",
+      "wakeCategory": "large",
+      "ceilingFt": 39000,
+      "rangeNm": 4000,
       "cruiseMach": 0.78,
       "speeds": {
         "initialClimb": 170,
@@ -120,6 +180,7 @@
       "name": "Airbus A330-300",
       "wakeCategory": "heavy",
       "ceilingFt": 41000,
+      "rangeNm": 6300,
       "cruiseMach": 0.82,
       "speeds": {
         "initialClimb": 170,
@@ -177,6 +238,7 @@
       "name": "Boeing 737-800",
       "wakeCategory": "large",
       "ceilingFt": 41000,
+      "rangeNm": 2700,
       "cruiseMach": 0.785,
       "speeds": {
         "initialClimb": 165,
@@ -234,6 +296,7 @@
       "name": "Boeing 737-900",
       "wakeCategory": "large",
       "ceilingFt": 41000,
+      "rangeNm": 2700,
       "cruiseMach": 0.785,
       "speeds": {
         "initialClimb": 170,
@@ -291,6 +354,7 @@
       "name": "Boeing 757-200",
       "wakeCategory": "b757",
       "ceilingFt": 42000,
+      "rangeNm": 3900,
       "cruiseMach": 0.8,
       "speeds": {
         "initialClimb": 165,
@@ -348,6 +412,7 @@
       "name": "Boeing 767-300",
       "wakeCategory": "heavy",
       "ceilingFt": 43000,
+      "rangeNm": 5900,
       "cruiseMach": 0.8,
       "speeds": {
         "initialClimb": 170,
@@ -405,6 +470,7 @@
       "name": "Boeing 777-300ER",
       "wakeCategory": "heavy",
       "ceilingFt": 43000,
+      "rangeNm": 7300,
       "cruiseMach": 0.84,
       "speeds": {
         "initialClimb": 180,
@@ -462,6 +528,7 @@
       "name": "Boeing 787-9",
       "wakeCategory": "heavy",
       "ceilingFt": 43000,
+      "rangeNm": 7500,
       "cruiseMach": 0.85,
       "speeds": {
         "initialClimb": 175,
@@ -519,6 +586,7 @@
       "name": "Bombardier CRJ900",
       "wakeCategory": "large",
       "ceilingFt": 41000,
+      "rangeNm": 1500,
       "cruiseMach": 0.78,
       "speeds": {
         "initialClimb": 160,
@@ -576,6 +644,7 @@
       "name": "Embraer E175",
       "wakeCategory": "large",
       "ceilingFt": 41000,
+      "rangeNm": 1800,
       "cruiseMach": 0.78,
       "speeds": {
         "initialClimb": 150,

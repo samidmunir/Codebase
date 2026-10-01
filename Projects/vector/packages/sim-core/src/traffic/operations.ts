@@ -227,6 +227,8 @@ export interface NewDepartureContext {
   hasPerformance: (aircraftType: string) => boolean;
   /** Certified ceiling of an aircraft type. */
   ceilingFt: (aircraftType: string) => number;
+  /** Typical range of an aircraft type, in NM: it is never given a longer trip. */
+  rangeNm: (aircraftType: string) => number;
   /** 'varied' evens out the airline mix so smaller carriers show up more often. */
   fleetMix: FleetMix;
 }
@@ -269,11 +271,20 @@ export function newDepartureEntry(
   const served = airline.destinations
     ? traffic.destinations.filter((d) => airline.destinations!.includes(d.icao))
     : traffic.destinations;
-  const destination = weightedPick(random, served.length > 0 ? served : traffic.destinations);
+  // Only destinations one of the airline's types can reach, and then a type that can.
+  const origin = pack.airport(airport).position;
+  const fleet = types.length > 0 ? types : airline.types;
+  const tripNm = (city: string) => tripBetween(pack, origin, city).distanceNm;
+  const candidates = served.length > 0 ? served : traffic.destinations;
+  const reachable = candidates.filter((d) =>
+    fleet.some((type) => context.rangeNm(type) >= tripNm(d.icao)),
+  );
+  const destination = weightedPick(random, reachable.length > 0 ? reachable : candidates);
   const gateFix = random.pick(pack.traffic.departureGates[destination.gate]!);
 
-  const aircraftType = random.pick(types.length > 0 ? types : airline.types);
-  const trip = tripBetween(pack, pack.airport(airport).position, destination.icao);
+  const able = fleet.filter((type) => context.rangeNm(type) >= tripNm(destination.icao));
+  const aircraftType = random.pick(able.length > 0 ? able : fleet);
+  const trip = tripBetween(pack, origin, destination.icao);
   return {
     id: `D${operations.nextDepartureNumber++}`,
     callsign,
