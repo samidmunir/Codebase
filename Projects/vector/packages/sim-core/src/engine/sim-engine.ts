@@ -21,6 +21,7 @@ import { stepAircraft } from '../aircraft/flight-model';
 import {
   descendViaBottomFt,
   finalApproachGeometry,
+  glidepathAltitudeFt,
   isOnSid,
   isOnStar,
   followGlideslope,
@@ -200,6 +201,8 @@ const CENTER_UPDATE_SEC = 5;
 const ARRIVAL_FINAL_JOIN_NM = 12;
 /** How often the reported wind is updated when it varies. */
 const WIND_UPDATE_SEC = 60;
+/** An aircraft cleared for an approach this far off the localizer and not closing on it can't join it. */
+const LOCALIZER_LOST_NM = 1;
 /** An airport keeps its runways at least this long after a change, so it doesn't swap back and forth. */
 const MIN_RUNWAY_CHANGE_INTERVAL_SEC = 30 * 60;
 /** Runways within limits still change when their tailwind passes this and another configuration gains at least the next value in headwind. */
@@ -835,6 +838,9 @@ export class SimEngine {
       const detail = this.state.settings['pilots.readbackDetail'];
       const readback: string[] = [];
       const executed: AtcCommand[] = [];
+      // Cleared for an approach but not yet on the localizer: would this instruction (a new
+      // heading, altitude or speed) stop the approach working? Judged before it is applied.
+      const approachBefore = this.approachEffect(aircraft, pending.commands);
       // Commands are in spoken order, so a heading given with an approach clearance applies first.
       for (const command of pending.commands) {
         if (command.type === 'clearedIls') {
@@ -854,6 +860,16 @@ export class SimEngine {
         readback.push(pilotReadback(command, aircraft, detail));
         this.applyCommand(aircraft, command);
         executed.push(command);
+      }
+      if (approachBefore && !approachBefore.ok && aircraft.navigation.mode === 'approach') {
+        // It would no longer work: the pilot says so and the approach clearance is cancelled.
+        const runway = aircraft.navigation.clearance.runway;
+        aircraft.navigation = { mode: 'heading' };
+        if (aircraft.phase === 'approach') aircraft.phase = 'arrival';
+        readback.push(
+          `unable ILS runway ${runwayWords(runway)} from there, ${approachBefore.reason}`,
+        );
+        this.emit({ type: 'ilsUnable', aircraftId: aircraft.id, reason: approachBefore.reason });
       }
       const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
       this.transmit('pilot', aircraft.id, `${capitalize(readback.join(', '))}, ${callsign}.`);
@@ -1024,6 +1040,36 @@ export class SimEngine {
     return this.ilsEligibilityWith(aircraft, clearance, withCommands);
   }
 
+  /**
+   * For an aircraft cleared for an approach but not yet on the localizer: whether
+   * an instruction that doesn't clear it again (a heading, altitude or speed)
+   * would stop the approach working. Undefined when that doesn't apply or the
+   * approach was already failing without it; otherwise the verdict with it.
+   */
+  approachEffect(
+    aircraft: Readonly<AircraftState>,
+    commands: readonly AtcCommand[],
+  ): IlsEligibility | undefined {
+    const navigation = aircraft.navigation;
+    if (navigation.mode !== 'approach' || navigation.localizerCaptured) return undefined;
+    if (commands.some((c) => c.type === 'clearedIls')) return undefined;
+    if (
+      !commands.some((c) => ['heading', 'altitude', 'speed', 'resumeNormalSpeed'].includes(c.type))
+    )
+      return undefined;
+    if (!this.ilsEligibilityFor(aircraft, navigation.clearance).ok) return undefined;
+    return this.ilsEligibilityWith(aircraft, navigation.clearance, commands);
+  }
+
+  /** As `approachEffect`, for the command panel: by aircraft id. */
+  approachEffectOf(
+    aircraftId: string,
+    commands: readonly AtcCommand[],
+  ): IlsEligibility | undefined {
+    const aircraft = this.getAircraft(aircraftId);
+    return aircraft ? this.approachEffect(aircraft, commands) : undefined;
+  }
+
   /** Eligibility with the instruction's other lateral, vertical and speed commands applied first. */
   private ilsEligibilityWith(
     aircraft: Readonly<AircraftState>,
@@ -1067,6 +1113,39 @@ export class SimEngine {
     const settings = this.state.settings;
     const established = navigation.localizerCaptured && navigation.glideslopeCaptured;
 
+    // Cleared but heading somewhere it can no longer join the localizer (turned away, or
+    // past the runway): the pilot says so and the clearance lapses, rather than flying on.
+    if (!navigation.localizerCaptured) {
+      const geometry = finalApproachGeometry(
+        aircraft.position,
+        clearance,
+        this.state.world.magneticVariationDeg,
+      );
+      const courseTrue = geometry.courseTrueDeg;
+      const headingTrue = magneticToTrue(
+        aircraft.targets.headingDeg,
+        this.state.world.magneticVariationDeg,
+      );
+      const angle = headingDifference(headingTrue, courseTrue);
+      const diverging =
+        Math.abs(geometry.crossTrackNm) > LOCALIZER_LOST_NM &&
+        (Math.abs(angle) >= 90 || Math.sign(angle) !== Math.sign(geometry.crossTrackNm)) &&
+        Math.abs(headingDifference(aircraft.headingDeg, aircraft.targets.headingDeg)) < 5;
+      if (geometry.alongTrackNm <= 0 || diverging) {
+        aircraft.navigation = { mode: 'heading' };
+        if (aircraft.phase === 'approach') aircraft.phase = 'arrival';
+        const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+        const reason = 'unable to intercept the localizer on this heading';
+        this.transmit(
+          'pilot',
+          aircraft.id,
+          `${capitalize(callsign)}, ${reason}, request vectors for ILS runway ${runwayWords(clearance.runway)}.`,
+        );
+        this.emit({ type: 'ilsUnable', aircraftId: aircraft.id, reason });
+        return 'flying';
+      }
+    }
+
     // Established on the ILS: the player hands the aircraft to Tower.
     if (established && aircraft.owner === this.state.playerId && this.airspace) {
       const runway = this.airspace.runway(clearance.airport, clearance.runway);
@@ -1099,11 +1178,19 @@ export class SimEngine {
         Math.abs(geometry.crossTrackNm) <= STABILIZED_CROSS_TRACK_NM &&
         aircraft.iasKts <= performance.speeds.final + STABILIZED_SPEED_MARGIN_KTS;
       if (!stable && settings['approaches.goArounds']) {
-        const reason = !established
-          ? 'not established on the ILS'
-          : aircraft.iasKts > performance.speeds.final + STABILIZED_SPEED_MARGIN_KTS
-            ? 'too fast'
-            : 'not aligned with the runway';
+        const offGlidepathFt =
+          Math.round(
+            (aircraft.altitudeFt - glidepathAltitudeFt(clearance, geometry.alongTrackNm)) / 100,
+          ) * 100;
+        const reason = !navigation.localizerCaptured
+          ? 'not established on the localizer'
+          : !navigation.glideslopeCaptured
+            ? offGlidepathFt > 0
+              ? `not established on the glideslope, ${offGlidepathFt} ft high`
+              : `not established on the glideslope, ${-offGlidepathFt} ft low`
+            : aircraft.iasKts > performance.speeds.final + STABILIZED_SPEED_MARGIN_KTS
+              ? 'too fast'
+              : 'not aligned with the runway';
         this.goAround(aircraft, reason);
         return 'flying';
       }

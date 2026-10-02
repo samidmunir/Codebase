@@ -130,4 +130,97 @@ describe('approach acceptance', () => {
     expect(outcomes.accepted).toBeGreaterThan(150);
     expect(failures).toEqual([]);
   });
+
+  it('never goes around because of a heading or altitude given after the clearance: the pilot says unable first', () => {
+    const failures: string[] = [];
+    let cancelled = 0;
+    for (const [airport, runwayId] of [
+      ['KLGA', '22'],
+      ['KJFK', '22L'],
+    ] as const) {
+      const { runway, clearance } = clearanceFor(airport, runwayId);
+      const outbound = magneticToTrue(clearance.courseDeg, variation) + 180;
+      for (const along of [8, 12, 16])
+        for (const offset of [2, 3.5])
+          for (const angle of [20, 30, 45])
+            for (const altitudeFt of [2_000, 3_000, 4_000])
+              for (const after of ['heading+25', 'heading-25', 'altitude+2000'] as const) {
+                const engine = SimEngine.create({
+                  performance,
+                  world: { magneticVariationDeg: variation },
+                  seed: 1,
+                  startTimeUtc: '2026-10-02T14:00:00Z',
+                  settings: {
+                    ...defaultSettings('session'),
+                    'weather.windMode': 'random',
+                    'traffic.arrivalRatePerHour': 0,
+                    'traffic.departureRatePerHour': 0,
+                    'traffic.transitRatePerHour': 0,
+                    'pilots.responseDelaySec': [3, 3],
+                  },
+                  airspace: newYork,
+                  airlines,
+                });
+                const position = destinationPoint(
+                  destinationPoint(runway.threshold, outbound, along),
+                  outbound - 90,
+                  offset,
+                );
+                const heading = Math.round(clearance.courseDeg - angle + 360) % 360 || 360;
+                const aircraft = engine.addAircraft({
+                  callsign: 'TST1',
+                  aircraftType: 'A320',
+                  squawk: '1234',
+                  flightPlan: { origin: 'KBOS', destination: airport, route: [] },
+                  phase: 'arrival',
+                  owner: 'N90',
+                  position,
+                  altitudeFt,
+                  headingDeg: heading,
+                  iasKts: 190,
+                  targets: { altitudeFt, headingDeg: heading, iasKts: 190, speedMode: 'assigned' },
+                });
+                if (!engine.ilsEligibility(aircraft.id, clearance).ok) continue;
+                let outcome = 'flying';
+                engine.subscribe((event) => {
+                  if (event.type === 'landed') outcome = 'landed';
+                  if (event.type === 'goAround') outcome = `go-around: ${event.reason}`;
+                  if (event.type === 'ilsUnable') outcome = 'unable';
+                });
+                engine.issueInstruction(aircraft.id, [{ type: 'clearedIls', clearance }]);
+                for (let t = 0; t < 1_200 && outcome === 'flying'; t++) {
+                  engine.step();
+                  const now = engine.getAircraft(aircraft.id);
+                  if (
+                    t !== 8 ||
+                    now?.navigation.mode !== 'approach' ||
+                    now.navigation.localizerCaptured
+                  )
+                    continue;
+                  engine.issueInstruction(
+                    aircraft.id,
+                    after === 'altitude+2000'
+                      ? [{ type: 'altitude', altitudeFt: altitudeFt + 2_000 }]
+                      : [
+                          {
+                            type: 'heading',
+                            headingDeg:
+                              Math.round(heading + (after === 'heading+25' ? 25 : -25) + 360) %
+                                360 || 360,
+                            turn: 'shortest',
+                          },
+                        ],
+                  );
+                }
+                if (outcome === 'unable') cancelled++;
+                const still = engine.getAircraft(aircraft.id)?.navigation.mode === 'approach';
+                if (outcome.startsWith('go-around') || (outcome === 'flying' && still))
+                  failures.push(
+                    `${airport} ${runwayId} ${along} NM, ${offset} NM off, ${angle}°, ${altitudeFt} ft, ${after}: ${outcome}`,
+                  );
+              }
+    }
+    expect(cancelled).toBeGreaterThan(20);
+    expect(failures).toEqual([]);
+  });
 });

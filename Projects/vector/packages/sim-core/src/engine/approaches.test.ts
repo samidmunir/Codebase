@@ -239,7 +239,7 @@ describe('approaches with the New York airspace', () => {
     );
   });
 
-  it('goes around when not established at the stabilized-approach gate, and comes back to the player', () => {
+  it('cancels the approach, with the pilot saying why, when a later heading means it can no longer work', () => {
     const engine = createEngine();
     const events: SimEvent[] = [];
     engine.subscribe((event) => events.push(event));
@@ -253,14 +253,45 @@ describe('approaches with the New York airspace', () => {
     engine.issueInstruction(aircraft.id, [{ type: 'clearedIls', clearance: ILS_22L }]);
     run(engine, 5);
     // ...then turned onto a 6° intercept, which can't reach the localizer before the gate.
+    const check = engine.approachEffectOf(aircraft.id, [
+      { type: 'heading', headingDeg: 230, turn: 'left' },
+    ]);
+    expect(check).toMatchObject({ ok: false });
     engine.issueInstruction(aircraft.id, [{ type: 'heading', headingDeg: 230, turn: 'left' }]);
+    run(engine, 240);
+
+    expect(events.some((e) => e.type === 'goAround')).toBe(false);
+    expect(events).toContainEqual(expect.objectContaining({ type: 'ilsUnable' }));
+    expect(engine.getAircraft(aircraft.id)!.navigation.mode).toBe('heading');
+    expect(
+      engine.comms.some((c) =>
+        /two three zero, unable ILS runway two two left from there, /.test(c.text),
+      ),
+    ).toBe(true);
+    expect(engine.score.tally.goAround).toBeUndefined();
+  });
+
+  it('goes around when not established at the stabilized-approach gate, says why, and comes back to the player', () => {
+    const engine = createEngine();
+    const events: SimEvent[] = [];
+    engine.subscribe((event) => events.push(event));
+    const aircraft = engine.addAircraft({
+      ...newAircraft({ position: onFinal(12, 3), headingDeg: 250, altitudeFt: 2_000, iasKts: 160 }),
+      flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
+      telephony: 'JetBlue',
+    });
+    engine.setTargets(aircraft.id, { headingDeg: 250, altitudeFt: 2_000, iasKts: 160 });
+    engine.issueInstruction(aircraft.id, [{ type: 'clearedIls', clearance: ILS_22L }]);
+    run(engine, 5);
+    // Set straight onto a 6° intercept (bypassing the radio, so no one re-checks it).
+    engine.setTargets(aircraft.id, { headingDeg: 230, turnDirection: 'left' });
     run(engine, 240);
 
     const goAround = events.find((e) => e.type === 'goAround');
     expect(goAround).toMatchObject({
       airport: 'KJFK',
       runway: '22L',
-      reason: 'not established on the ILS',
+      reason: 'not established on the localizer',
     });
     expect(engine.score.tally.goAround).toEqual({ count: 1, rp: -25 });
     const plane = engine.getAircraft(aircraft.id)!;
@@ -269,7 +300,7 @@ describe('approaches with the New York airspace', () => {
     expect(plane.navigation.mode === 'procedure' || plane.navigation.mode === 'heading').toBe(true);
     expect(
       engine.comms.some((c) =>
-        /going around, not established on the ILS, climbing three thousand/.test(c.text),
+        /going around, not established on the localizer, climbing three thousand/.test(c.text),
       ),
     ).toBe(true);
   });

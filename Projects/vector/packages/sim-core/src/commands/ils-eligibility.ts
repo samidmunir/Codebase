@@ -88,9 +88,10 @@ export function ilsEligibility(
   const coverage = geometry.alongTrackNm <= COVERAGE_NEAR_NM ? COVERAGE_NEAR_DEG : COVERAGE_FAR_DEG;
   if (offsetDeg > coverage) return reject('position', 'not in position for the localizer');
 
-  // The heading the pilot will fly to intercept: the assigned heading when on vectors.
-  const heading =
-    aircraft.navigation.mode === 'heading' ? aircraft.targets.headingDeg : aircraft.headingDeg;
+  // The heading the pilot will fly to intercept: the one being steered to (the assigned
+  // heading on vectors, or where the procedure, direct-to or hold was turning), which is
+  // what the aircraft keeps flying once cleared.
+  const heading = aircraft.targets.headingDeg;
   const interceptAngle = headingDifference(heading, clearance.courseDeg);
   const onCourse =
     Math.abs(geometry.crossTrackNm) <= ON_COURSE_NM && Math.abs(interceptAngle) <= ON_COURSE_DEG;
@@ -125,7 +126,9 @@ export function ilsEligibility(
 
   // Above the glidepath at the join point, it must be able to get down to it before the gate.
   const gateNm = distanceForHeightNm(clearance, settings['approaches.stabilizedGateFt']);
-  const excessFt = aircraft.altitudeFt - glidepathAltitudeFt(clearance, joinNm);
+  // Told to climb, it will be higher by the join: judge from the higher of the two.
+  const altitudeFt = Math.max(aircraft.altitudeFt, aircraft.targets.altitudeFt);
+  const excessFt = altitudeFt - glidepathAltitudeFt(clearance, joinNm);
   // How much faster than the glidepath it can come down: its descent rate over its ground
   // speed, less the glidepath's own gradient (little at high speed, more when slow).
   const descentFtPerNm = (rateAtAltitude(performance.descentRate, aircraft.altitudeFt) * 60) / tas;

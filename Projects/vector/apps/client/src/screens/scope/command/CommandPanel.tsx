@@ -86,6 +86,9 @@ export function CommandPanel(props: CommandPanelProps) {
     utcAtTick: (tick) => session.utcAtTick(tick),
   });
   const check = commands.length > 0 ? session.checkInstruction(aircraft.id, commands) : undefined;
+  // Cleared but not yet on the localizer: would this instruction make the approach unworkable?
+  const approachEffect =
+    commands.length > 0 ? session.engine.approachEffectOf(aircraft.id, commands) : undefined;
   // One lateral instruction at a time: a heading, a direct-to, a hold or resuming.
   const update = (patch: Partial<InstructionDraft>) => {
     const lateral =
@@ -399,6 +402,12 @@ export function CommandPanel(props: CommandPanelProps) {
                 : transmissionText(commands, aircraft)}
             </p>
             {check && !check.ok && <p className="transmission__error">{check.reason}</p>}
+            {check?.ok && approachEffect && !approachEffect.ok && (
+              <p className="transmission__warning" role="status">
+                The ILS would no longer work ({approachEffect.reason}): the pilot will say unable
+                and the approach clearance will be cancelled.
+              </p>
+            )}
             <div className="command-panel__actions">
               <button
                 type="button"

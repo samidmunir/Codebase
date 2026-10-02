@@ -1285,3 +1285,9 @@
 .hold-tab__efc span {
   color: var(--color-text-muted);
 }
+
+.transmission__warning {
+  margin: 0;
+  color: var(--color-caution);
+  font-size: 0.78rem;
+}
