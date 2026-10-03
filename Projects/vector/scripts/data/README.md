@@ -6,6 +6,7 @@ Raw downloads are cached in `data/.cache/` (git-ignored), so rebuilds are fast a
 ```sh
 npm run data:airspace -- new-york              # build data/airspaces/new-york/
 npm run data:new-york                          # the same
+npm run data:chicago                           # build data/airspaces/chicago/
 npm run data:preview -- new-york               # render data/.cache/preview-new-york.svg
 npm run data:preview -- new-york 40.64 -73.78 10   # zoomed preview (lat, lon, radius NM)
 ```

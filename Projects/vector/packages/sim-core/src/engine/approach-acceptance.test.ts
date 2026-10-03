@@ -2,20 +2,19 @@ import { defaultSettings } from '@vector/shared';
 import { describe, expect, it } from 'vitest';
 import type { AtcCommand } from '../commands/commands';
 import { destinationPoint, magneticToTrue } from '../math/geo';
-import { airlines, newYork, performance } from '../testing/fixtures';
+import type { AirspacePack } from '../airspace/airspace-pack';
+import { airlines, chicago, newYork, performance } from '../testing/fixtures';
 import { SimEngine } from './sim-engine';
 
-const variation = newYork.airspace.magneticVariationDeg;
-
-function clearanceFor(airport: string, runwayId: string) {
-  const runway = newYork.airport(airport).runways.find((r) => r.id === runwayId)!;
+function clearanceFor(pack: AirspacePack, airport: string, runwayId: string) {
+  const runway = pack.airport(airport).runways.find((r) => r.id === runwayId)!;
   const ils = runway.ils!;
   return {
     runway,
     clearance: {
       airport,
       runway: runwayId,
-      approachId: newYork.ilsApproaches(airport, runwayId)[0]!.id,
+      approachId: pack.ilsApproaches(airport, runwayId)[0]!.id,
       threshold: runway.threshold,
       thresholdElevationFt: runway.thresholdElevationFt,
       courseDeg: ils.courseDeg,
@@ -31,16 +30,43 @@ function clearanceFor(airport: string, runwayId: string) {
  * transmission or not). The pilot's answer when cleared is what the scope
  * showed, and every approach the pilot accepts must end in a landing.
  */
-describe('approach acceptance', () => {
-  it('lands every approach the pilot accepts, and answers as the eligibility showed', () => {
-    const outcomes: Record<string, number> = {};
-    const failures: string[] = [];
-    for (const [airport, runwayId] of [
+/** Each airspace, with runways to clear approaches to (for each test). */
+const AIRSPACES: [AirspacePack, [string, string][], [string, string][]][] = [
+  [
+    newYork,
+    [
       ['KJFK', '22L'],
       ['KLGA', '04'],
       ['KEWR', '04R'],
-    ] as const) {
-      const { runway, clearance } = clearanceFor(airport, runwayId);
+    ],
+    [
+      ['KLGA', '22'],
+      ['KJFK', '22L'],
+    ],
+  ],
+  [
+    chicago,
+    [
+      ['KORD', '27L'],
+      ['KORD', '10C'],
+      ['KMDW', '31R'],
+    ],
+    [
+      ['KORD', '28C'],
+      ['KMDW', '13L'],
+    ],
+  ],
+];
+
+describe.each(AIRSPACES)('approach acceptance in %s', (pack, acceptanceRunways, afterRunways) => {
+  const variation = pack.airspace.magneticVariationDeg;
+  const facility = pack.airspace.controllers.approach.id;
+
+  it('lands every approach the pilot accepts, and answers as the eligibility showed', () => {
+    const outcomes: Record<string, number> = {};
+    const failures: string[] = [];
+    for (const [airport, runwayId] of acceptanceRunways) {
+      const { runway, clearance } = clearanceFor(pack, airport, runwayId);
       const outbound = magneticToTrue(clearance.courseDeg, variation) + 180;
       for (const along of [8, 14, 22])
         for (const side of [-1, 1])
@@ -62,7 +88,7 @@ describe('approach acceptance', () => {
                         'traffic.transitRatePerHour': 0,
                         'pilots.responseDelaySec': [3, 3],
                       },
-                      airspace: newYork,
+                      airspace: pack,
                       airlines,
                     });
                     const position = destinationPoint(
@@ -81,7 +107,7 @@ describe('approach acceptance', () => {
                       squawk: '1234',
                       flightPlan: { origin: 'KBOS', destination: airport, route: [] },
                       phase: 'arrival',
-                      owner: 'N90',
+                      owner: facility,
                       position,
                       altitudeFt,
                       headingDeg: flying,
@@ -134,11 +160,8 @@ describe('approach acceptance', () => {
   it('never goes around because of a heading or altitude given after the clearance: the pilot says unable first', () => {
     const failures: string[] = [];
     let cancelled = 0;
-    for (const [airport, runwayId] of [
-      ['KLGA', '22'],
-      ['KJFK', '22L'],
-    ] as const) {
-      const { runway, clearance } = clearanceFor(airport, runwayId);
+    for (const [airport, runwayId] of afterRunways) {
+      const { runway, clearance } = clearanceFor(pack, airport, runwayId);
       const outbound = magneticToTrue(clearance.courseDeg, variation) + 180;
       for (const along of [8, 12, 16])
         for (const offset of [2, 3.5])
@@ -158,7 +181,7 @@ describe('approach acceptance', () => {
                     'traffic.transitRatePerHour': 0,
                     'pilots.responseDelaySec': [3, 3],
                   },
-                  airspace: newYork,
+                  airspace: pack,
                   airlines,
                 });
                 const position = destinationPoint(
@@ -173,7 +196,7 @@ describe('approach acceptance', () => {
                   squawk: '1234',
                   flightPlan: { origin: 'KBOS', destination: airport, route: [] },
                   phase: 'arrival',
-                  owner: 'N90',
+                  owner: facility,
                   position,
                   altitudeFt,
                   headingDeg: heading,

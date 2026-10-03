@@ -44,4 +44,24 @@ export const newYork = AirspacePack.parse({
   traffic: nyTraffic,
 });
 
+// ---- Chicago airspace -----------------------------------------------------------
+import chiAirports from '../../../../data/airspaces/chicago/airports.json';
+import chiAirspace from '../../../../data/airspaces/chicago/airspace.json';
+import chiNavdata from '../../../../data/airspaces/chicago/navdata.json';
+import chiProcedures from '../../../../data/airspaces/chicago/procedures.json';
+import chiTraffic from '../../../../data/airspaces/chicago/traffic.json';
+import chiVideoMap from '../../../../data/airspaces/chicago/video-map.json';
+
+export const chicago = AirspacePack.parse({
+  airspace: chiAirspace,
+  airports: chiAirports,
+  navdata: chiNavdata,
+  procedures: chiProcedures,
+  videoMap: chiVideoMap,
+  traffic: chiTraffic,
+});
+
+/** Every airspace pack, for tests that hold for all of them. */
+export const allAirspaces = [newYork, chicago] as const;
+
 export const airlines = airlinesFileSchema.parse(airlineData).airlines;

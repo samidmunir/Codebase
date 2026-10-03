@@ -640,6 +640,64 @@
       "decelerationKtPerSec": 1.0
     },
     {
+      "icao": "B737",
+      "name": "Boeing 737-700",
+      "wakeCategory": "large",
+      "ceilingFt": 41000,
+      "rangeNm": 2700,
+      "cruiseMach": 0.785,
+      "speeds": {
+        "initialClimb": 165,
+        "climb": 290,
+        "descent": 280,
+        "approach": 180,
+        "final": 135,
+        "max": 340
+      },
+      "climbRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 2800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 20000,
+          "fpm": 2000
+        },
+        {
+          "altitudeFt": 30000,
+          "fpm": 1300
+        },
+        {
+          "altitudeFt": 37000,
+          "fpm": 700
+        }
+      ],
+      "descentRate": [
+        {
+          "altitudeFt": 0,
+          "fpm": 1200
+        },
+        {
+          "altitudeFt": 5000,
+          "fpm": 1800
+        },
+        {
+          "altitudeFt": 10000,
+          "fpm": 2500
+        },
+        {
+          "altitudeFt": 25000,
+          "fpm": 3000
+        }
+      ],
+      "accelerationKtPerSec": 1.6,
+      "decelerationKtPerSec": 1.0
+    },
+    {
       "icao": "B738",
       "name": "Boeing 737-800",
       "wakeCategory": "large",

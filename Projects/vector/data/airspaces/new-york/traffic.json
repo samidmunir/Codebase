@@ -556,6 +556,7 @@
           "icao": "SWA",
           "weight": 6,
           "types": [
+            "B737",
             "B738",
             "B38M"
           ],

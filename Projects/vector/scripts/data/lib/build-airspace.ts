@@ -652,7 +652,21 @@ export async function buildAirspace(airspace: AirspaceBuildConfig): Promise<void
     SID_ROUTE_TYPES,
     runwayIds,
   );
-  const approaches = buildIlsApproaches(cifp.procedures.filter((p) => p.kind === 'F'));
+  // A runway's ILS is one localizer; an approach flown on another one (some runways
+  // have ILS Y and Z approaches on different localizers) is left out.
+  const approaches = buildIlsApproaches(cifp.procedures.filter((p) => p.kind === 'F')).filter(
+    (approach) => {
+      const runway = airports
+        .find((a) => a.icao === approach.airport)
+        ?.runways.find((r) => r.id === approach.runway);
+      const matches = runway?.ils?.ident === approach.localizer;
+      if (!matches)
+        console.log(
+          `  leaving out ${approach.airport} ${approach.id}: localizer ${approach.localizer} isn't runway ${approach.runway}'s ILS (${runway?.ils?.ident ?? 'none'})`,
+        );
+      return matches;
+    },
+  );
   const includedProcedureRecords = cifp.procedures.filter(
     (p) => p.kind !== 'F' || approaches.some((a) => a.airport === p.airport && a.id === p.id),
   );

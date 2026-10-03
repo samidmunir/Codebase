@@ -20,6 +20,24 @@
       "flightNumbers": [1, 99]
     },
     {
+      "icao": "AIC",
+      "name": "Air India",
+      "telephony": "Air India",
+      "flightNumbers": [100, 199]
+    },
+    {
+      "icao": "AMX",
+      "name": "Aeromexico",
+      "telephony": "Aeromexico",
+      "flightNumbers": [400, 799]
+    },
+    {
+      "icao": "ANA",
+      "name": "All Nippon Airways",
+      "telephony": "All Nippon",
+      "flightNumbers": [1, 99]
+    },
+    {
       "icao": "ASA",
       "name": "Alaska Airlines",
       "telephony": "Alaska",
@@ -50,6 +68,12 @@
       "flightNumbers": [4600, 5499]
     },
     {
+      "icao": "EIN",
+      "name": "Aer Lingus",
+      "telephony": "Shamrock",
+      "flightNumbers": [100, 199]
+    },
+    {
       "icao": "ENY",
       "name": "Envoy Air",
       "telephony": "Envoy",
@@ -74,6 +98,12 @@
       "flightNumbers": [6250, 6299]
     },
     {
+      "icao": "JAL",
+      "name": "Japan Airlines",
+      "telephony": "Japan Air",
+      "flightNumbers": [1, 99]
+    },
+    {
       "icao": "JBU",
       "name": "JetBlue Airways",
       "telephony": "JetBlue",
@@ -90,6 +120,12 @@
       "name": "KLM Royal Dutch Airlines",
       "telephony": "KLM",
       "flightNumbers": [600, 699]
+    },
+    {
+      "icao": "LOT",
+      "name": "LOT Polish Airlines",
+      "telephony": "Pollot",
+      "flightNumbers": [1, 99]
     },
     {
       "icao": "QTR",
@@ -116,10 +152,22 @@
       "flightNumbers": [100, 3999]
     },
     {
+      "icao": "SWR",
+      "name": "Swiss International Air Lines",
+      "telephony": "Swiss",
+      "flightNumbers": [1, 99]
+    },
+    {
       "icao": "TAP",
       "name": "TAP Air Portugal",
       "telephony": "Air Portugal",
       "flightNumbers": [200, 299]
+    },
+    {
+      "icao": "THY",
+      "name": "Turkish Airlines",
+      "telephony": "Turkish",
+      "flightNumbers": [1, 99]
     },
     {
       "icao": "UAE",
