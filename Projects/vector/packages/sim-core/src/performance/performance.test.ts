@@ -17,6 +17,7 @@ describe('performance data', () => {
         'A359',
         'A35K',
         'A388',
+        'B737',
         'B38M',
         'B39M',
         'B738',

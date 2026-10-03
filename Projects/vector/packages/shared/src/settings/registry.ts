@@ -251,7 +251,7 @@ export const USER_SETTINGS = {
   'map.classB': setting.boolean({
     category: 'map',
     label: 'Class B airspace',
-    description: 'Show Class B airspace boundaries (New York, Philadelphia and nearby).',
+    description: 'Show Class B airspace boundaries in the region.',
     default: true,
   }),
   'map.classC': setting.boolean({
@@ -280,23 +280,22 @@ export const USER_SETTINGS = {
   }),
   'map.traconBoundary': setting.boolean({
     category: 'map',
-    label: 'N90 TRACON boundary',
+    label: 'TRACON boundary',
     description:
-      'Show the New York TRACON’s own airspace (the approach/departure area), traced from its MVA chart. Beyond it is Center airspace, which you also work here.',
+      'Show the TRACON’s own airspace (the approach/departure area, such as N90 in New York), traced from its MVA chart. Beyond it is Center airspace, which you also work here.',
     default: true,
   }),
   'map.artccBoundaries': setting.boolean({
     category: 'map',
     label: 'Center boundaries',
-    description:
-      'Show where New York Center meets Boston, Washington and Cleveland Centers (high altitude).',
+    description: 'Show where the region’s Center meets its neighboring Centers (high altitude).',
     default: true,
   }),
   'map.sectorBoundary': setting.boolean({
     category: 'map',
     label: 'Your airspace boundary',
     description:
-      'Show the edge of the airspace you control in this session (the dashed circle, 150 NM around New York). Aircraft enter and leave across it.',
+      'Show the edge of the airspace you control in this session (the dashed circle, 150 NM around the airports). Aircraft enter and leave across it.',
     default: true,
   }),
   'map.geography': setting.boolean({
@@ -548,7 +547,7 @@ export const SESSION_SETTINGS = {
     category: 'weather',
     label: 'Wind',
     description:
-      'Live uses the real current weather (METARs from aviationweather.gov), updated during the session. Random generates realistic New York wind. Manual uses the values below.',
+      'Live uses the real current weather (METARs from aviationweather.gov), updated during the session. Random generates realistic wind for the region. Manual uses the values below.',
     options: [
       { value: 'live', label: 'Live (real weather)' },
       { value: 'random', label: 'Random (realistic)' },
@@ -1074,7 +1073,7 @@ export const SESSION_SETTINGS = {
     category: 'center',
     label: 'Handoff window',
     description:
-      'Center accepts a departure or overflight only within this distance of where it will leave the N90 TRACON’s airspace.',
+      'Center accepts a departure or overflight only within this distance of where it will leave the TRACON’s airspace.',
     min: 5,
     max: 60,
     step: 5,

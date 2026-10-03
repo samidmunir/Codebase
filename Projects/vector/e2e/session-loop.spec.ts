@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { registerPilot, scopeState } from './helpers';
+import { newSession, registerPilot, scopeState } from './helpers';
 
 test('sets up a session, controls traffic, saves it and resumes exactly', async ({ page }) => {
   await registerPilot(page);
 
   // Session setup: Normal traffic and a manual wind from the southwest.
-  await page.getByRole('link', { name: /New session/ }).click();
+  await newSession(page, 'New York');
   await page.getByRole('radio', { name: 'Normal' }).click();
   await page.getByRole('radio', { name: 'Manual' }).click();
   await page.locator('#setting-weather-manualWindDirectionDeg').fill('220');
@@ -86,7 +86,7 @@ test('sets up a session, controls traffic, saves it and resumes exactly', async 
 
 test('tunes traffic during a session', async ({ page }) => {
   await registerPilot(page);
-  await page.getByRole('link', { name: /New session/ }).click();
+  await newSession(page, 'New York');
   await page.getByRole('button', { name: 'Start session' }).click();
   await scopeState(page);
 
@@ -98,4 +98,67 @@ test('tunes traffic during a session', async ({ page }) => {
 
   await panel.getByRole('radio', { name: 'Hard' }).click();
   await expect(page.locator('.scope-notice')).toContainText('Hard');
+});
+
+test('works Chicago the same way: O’Hare and Midway on their wind, saved and resumed as C90', async ({
+  page,
+}) => {
+  await registerPilot(page);
+  await newSession(page, 'Chicago');
+  await page.getByRole('radio', { name: 'Normal' }).click();
+  await page.getByRole('radio', { name: 'Manual' }).click();
+  await page.locator('#setting-weather-manualWindDirectionDeg').fill('270');
+  await page.locator('#setting-weather-manualWindSpeedKts').fill('14');
+  await expect(page.locator('.setup-airport', { hasText: 'ORD' })).toContainText('ARR 27L');
+  await page.getByRole('button', { name: 'Start session' }).click();
+
+  const started = await scopeState(page);
+  // West flow: triple arrivals at O'Hare; Midway lands 31R and departs 22L.
+  expect(started.runways.KORD).toMatchObject({
+    arrivals: ['27L', '28C', '27R'],
+    departures: ['28R', '22L'],
+  });
+  expect(started.runways.KMDW).toMatchObject({ arrivals: ['31R'], departures: ['22L'] });
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as unknown as { __vector: { engine: { playerId: string } } }).__vector.engine
+          .playerId,
+    ),
+  ).toBe('C90');
+
+  await page.locator('.comms-log__entry button:not([disabled])').first().click();
+  const panel = page.locator('.command-panel');
+  await panel.getByRole('button', { name: 'Speed' }).click();
+  const transmit = panel.getByRole('button', { name: 'Transmit' });
+  for (const option of await panel.locator('.option-grid--speeds button').all()) {
+    await option.click();
+    if (await transmit.isEnabled()) break;
+    await option.click();
+  }
+  await transmit.click();
+  await expect(page.locator('.comms-log__entry--controller').last()).toContainText(
+    /(reduce|increase|maintain) speed/i,
+  );
+
+  await page.keyboard.press('Shift+KeyS');
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Name').fill('E2E Chicago');
+  await dialog.getByRole('button', { name: 'Save session' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Saved' })).toBeVisible();
+  const saved = await scopeState(page);
+  await page
+    .getByRole('dialog', { name: 'Session debrief' })
+    .getByRole('button', { name: 'Back to start' })
+    .click();
+  const card = page.locator('.saved-session', { hasText: 'E2E Chicago' });
+  await expect(card).toContainText('C90');
+  await card.getByRole('link', { name: 'Resume' }).click();
+  const resumed = await scopeState(page);
+  expect(resumed).toMatchObject({
+    tick: saved.tick,
+    aircraft: saved.aircraft,
+    savedName: 'E2E Chicago',
+  });
+  expect(resumed.runways).toEqual(saved.runways);
 });

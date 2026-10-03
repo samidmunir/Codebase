@@ -1,0 +1,1747 @@
+{
+  "schemaVersion": 1,
+  "id": "chicago",
+  "name": "Chicago",
+  "facility": "C90",
+  "description": "Chicago TRACON and the surrounding Center airspace: arrivals, departures and overflights for O’Hare and Midway.",
+  "center": {
+    "lat": 41.88,
+    "lon": -87.83
+  },
+  "magneticVariationDeg": -3,
+  "radar": {
+    "name": "ORD ASR",
+    "position": {
+      "lat": 41.98431,
+      "lon": -87.93955
+    },
+    "rangeNm": 59
+  },
+  "radars": [
+    {
+      "id": "ORD",
+      "name": "ORD ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.98501,
+        "lon": -87.92593
+      },
+      "antennaElevationFt": 730,
+      "rangeNm": 60
+    },
+    {
+      "id": "DPA",
+      "name": "DPA ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.90705,
+        "lon": -88.24799
+      },
+      "antennaElevationFt": 809,
+      "rangeNm": 60
+    },
+    {
+      "id": "RFD",
+      "name": "RFD ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 42.19077,
+        "lon": -89.112
+      },
+      "antennaElevationFt": 792,
+      "rangeNm": 60
+    },
+    {
+      "id": "MKE",
+      "name": "MKE ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 42.95586,
+        "lon": -87.92507
+      },
+      "antennaElevationFt": 778,
+      "rangeNm": 60
+    },
+    {
+      "id": "SBN",
+      "name": "SBN ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.71112,
+        "lon": -86.32412
+      },
+      "antennaElevationFt": 848,
+      "rangeNm": 60
+    }
+  ],
+  "boundary": {
+    "ring": [
+      [
+        -87.83,
+        44.37832
+      ],
+      [
+        -87.5255,
+        44.36842
+      ],
+      [
+        -87.22361,
+        44.3388
+      ],
+      [
+        -86.92693,
+        44.28973
+      ],
+      [
+        -86.63797,
+        44.22162
+      ],
+      [
+        -86.35917,
+        44.13506
+      ],
+      [
+        -86.09285,
+        44.03079
+      ],
+      [
+        -85.84119,
+        43.90968
+      ],
+      [
+        -85.6062,
+        43.77276
+      ],
+      [
+        -85.38973,
+        43.62117
+      ],
+      [
+        -85.19343,
+        43.45618
+      ],
+      [
+        -85.01872,
+        43.27915
+      ],
+      [
+        -84.86685,
+        43.09151
+      ],
+      [
+        -84.73881,
+        42.89478
+      ],
+      [
+        -84.63539,
+        42.69054
+      ],
+      [
+        -84.55718,
+        42.48041
+      ],
+      [
+        -84.50451,
+        42.26603
+      ],
+      [
+        -84.47754,
+        42.04907
+      ],
+      [
+        -84.47621,
+        41.83119
+      ],
+      [
+        -84.50027,
+        41.61405
+      ],
+      [
+        -84.54929,
+        41.39928
+      ],
+      [
+        -84.62265,
+        41.18849
+      ],
+      [
+        -84.71958,
+        40.98322
+      ],
+      [
+        -84.83917,
+        40.78499
+      ],
+      [
+        -84.98035,
+        40.59522
+      ],
+      [
+        -85.14193,
+        40.41528
+      ],
+      [
+        -85.32261,
+        40.24645
+      ],
+      [
+        -85.52096,
+        40.08993
+      ],
+      [
+        -85.73549,
+        39.94683
+      ],
+      [
+        -85.96461,
+        39.81813
+      ],
+      [
+        -86.20664,
+        39.70475
+      ],
+      [
+        -86.45986,
+        39.60745
+      ],
+      [
+        -86.72248,
+        39.52692
+      ],
+      [
+        -86.99269,
+        39.46371
+      ],
+      [
+        -87.2686,
+        39.41824
+      ],
+      [
+        -87.54834,
+        39.39084
+      ],
+      [
+        -87.83,
+        39.38168
+      ],
+      [
+        -88.11166,
+        39.39084
+      ],
+      [
+        -88.3914,
+        39.41824
+      ],
+      [
+        -88.66731,
+        39.46371
+      ],
+      [
+        -88.93752,
+        39.52692
+      ],
+      [
+        -89.20014,
+        39.60745
+      ],
+      [
+        -89.45336,
+        39.70475
+      ],
+      [
+        -89.69539,
+        39.81813
+      ],
+      [
+        -89.92451,
+        39.94683
+      ],
+      [
+        -90.13904,
+        40.08993
+      ],
+      [
+        -90.33739,
+        40.24645
+      ],
+      [
+        -90.51807,
+        40.41528
+      ],
+      [
+        -90.67965,
+        40.59522
+      ],
+      [
+        -90.82083,
+        40.78499
+      ],
+      [
+        -90.94042,
+        40.98322
+      ],
+      [
+        -91.03735,
+        41.18849
+      ],
+      [
+        -91.11071,
+        41.39928
+      ],
+      [
+        -91.15973,
+        41.61405
+      ],
+      [
+        -91.18379,
+        41.83119
+      ],
+      [
+        -91.18246,
+        42.04907
+      ],
+      [
+        -91.15549,
+        42.26603
+      ],
+      [
+        -91.10282,
+        42.48041
+      ],
+      [
+        -91.02461,
+        42.69054
+      ],
+      [
+        -90.92119,
+        42.89478
+      ],
+      [
+        -90.79315,
+        43.09151
+      ],
+      [
+        -90.64128,
+        43.27915
+      ],
+      [
+        -90.46657,
+        43.45618
+      ],
+      [
+        -90.27027,
+        43.62117
+      ],
+      [
+        -90.0538,
+        43.77276
+      ],
+      [
+        -89.81881,
+        43.90968
+      ],
+      [
+        -89.56715,
+        44.03079
+      ],
+      [
+        -89.30083,
+        44.13506
+      ],
+      [
+        -89.02203,
+        44.22162
+      ],
+      [
+        -88.73307,
+        44.28973
+      ],
+      [
+        -88.43639,
+        44.3388
+      ],
+      [
+        -88.1345,
+        44.36842
+      ],
+      [
+        -87.83,
+        44.37832
+      ]
+    ],
+    "ceilingFt": 45000
+  },
+  "transitionAltitudeFt": 18000,
+  "airports": [
+    "KORD",
+    "KMDW"
+  ],
+  "controllers": {
+    "approach": {
+      "id": "C90",
+      "approachCallsign": "Chicago Approach",
+      "departureCallsign": "Chicago Departure"
+    },
+    "center": {
+      "id": "ZAU",
+      "callsign": "Chicago Center",
+      "sites": [
+        {
+          "name": "Bradford",
+          "position": {
+            "lat": 41.23420277777778,
+            "lon": -89.62009444444443
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 124.55,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 125.625,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 132.225,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Burlington",
+          "position": {
+            "lat": 40.777499999999996,
+            "lon": -91.12055555555555
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 135.6,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Camp Douglas",
+          "position": {
+            "lat": 43.939229999999995,
+            "lon": -90.25315972222222
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 125.05,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Cedar Rapids",
+          "position": {
+            "lat": 41.887502777777776,
+            "lon": -91.78573333333333
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 132.8,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Chicago Heights",
+          "position": {
+            "lat": 41.51003333333333,
+            "lon": -87.57143055555555
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 132.95,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Crown Point",
+          "position": {
+            "lat": 41.404202777777776,
+            "lon": -87.23781111111111
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 134.875,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Danville",
+          "position": {
+            "lat": 40.293925,
+            "lon": -87.55723888888889
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 135.75,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Des Moines",
+          "position": {
+            "lat": 41.46276666666667,
+            "lon": -93.56660277777777
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 127.05,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Des Plaines",
+          "position": {
+            "lat": 42.00530555555556,
+            "lon": -87.91311944444445
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 120.35,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 128.65,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 133.625,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Dubuque",
+          "position": {
+            "lat": 42.40000555555555,
+            "lon": -90.6662388888889
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 125.225,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 127.775,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 133.95,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Fort Wayne",
+          "position": {
+            "lat": 41.00338055555556,
+            "lon": -85.22080277777778
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 119.85,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 126.325,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Goshen",
+          "position": {
+            "lat": 41.553380555555556,
+            "lon": -85.83749166666666
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 127.55,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 135.9,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Grand Rapids",
+          "position": {
+            "lat": 42.796416666666666,
+            "lon": -85.65419166666668
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 126.125,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 128.4,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Hampshire",
+          "position": {
+            "lat": 42.10724444444445,
+            "lon": -88.47675
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 134.2,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Horicon",
+          "position": {
+            "lat": 43.44443888888888,
+            "lon": -88.49454444444444
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 126.875,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 135.55,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Joliet",
+          "position": {
+            "lat": 41.546388888888885,
+            "lon": -88.31830555555555
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 135.15,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Jones",
+          "position": {
+            "lat": 41.9456,
+            "lon": -85.83166666666666
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 120.225,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 125.975,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 126.475,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 127.625,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Kankakee",
+          "position": {
+            "lat": 41.066697222222224,
+            "lon": -87.85003888888889
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 118.225,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 120.125,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 132.5,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Lafayette",
+          "position": {
+            "lat": 40.41522222222222,
+            "lon": -86.93336111111111
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 123.85,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Leroy",
+          "position": {
+            "lat": 40.409444444444446,
+            "lon": -88.76722222222222
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 119.225,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Lone Rock",
+          "position": {
+            "lat": 43.294333333333334,
+            "lon": -90.13316666666665
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 133.3,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Maple Park",
+          "position": {
+            "lat": 41.879444444444445,
+            "lon": -88.63
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 134.825,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Marengo",
+          "position": {
+            "lat": 42.299388888888885,
+            "lon": -88.59219444444444
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 133.35,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Mazon",
+          "position": {
+            "lat": 41.15471972222222,
+            "lon": -88.46277972222222
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 123.75,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Milford",
+          "position": {
+            "lat": 40.64503611111111,
+            "lon": -87.66752777777778
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 121.275,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Milwaukee",
+          "position": {
+            "lat": 42.86862777777778,
+            "lon": -87.909525
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 123.825,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 125.1,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Moline",
+          "position": {
+            "lat": 41.45281111111112,
+            "lon": -90.50568888888888
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 118.75,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Muskegon",
+          "position": {
+            "lat": 43.16945833333333,
+            "lon": -86.23811111111111
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 132.275,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Oshkosh",
+          "position": {
+            "lat": 43.99442777777778,
+            "lon": -88.56205555555556
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 132.1,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Ottumwa",
+          "position": {
+            "lat": 41.029125,
+            "lon": -92.32590277777777
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 118.15,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Pontiac",
+          "position": {
+            "lat": 40.82119444444445,
+            "lon": -88.7335
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 119.95,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Pullman",
+          "position": {
+            "lat": 42.52919722222222,
+            "lon": -85.81668888888889
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 128.5,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 133.2,
+              "altitude": "low"
+            }
+          ]
+        },
+        {
+          "name": "Rockford",
+          "position": {
+            "lat": 42.36585,
+            "lon": -89.14649722222222
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 124.725,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Rossville",
+          "position": {
+            "lat": 40.404199999999996,
+            "lon": -86.60888888888888
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 120.975,
+              "altitude": "low"
+            },
+            {
+              "frequencyMhz": 125.375,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Washington",
+          "position": {
+            "lat": 41.33835277777778,
+            "lon": -91.59182777777777
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 125.575,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 128.525,
+              "altitude": "high"
+            },
+            {
+              "frequencyMhz": 134.325,
+              "altitude": "high"
+            }
+          ]
+        },
+        {
+          "name": "Waukegan",
+          "position": {
+            "lat": 42.41711111111111,
+            "lon": -87.8685
+          },
+          "frequencies": [
+            {
+              "frequencyMhz": 126.425,
+              "altitude": "low"
+            }
+          ]
+        }
+      ]
+    },
+    "adjacentCenters": [
+      {
+        "id": "ZMP",
+        "callsign": "Minneapolis Center",
+        "sites": [
+          {
+            "name": "Appleton",
+            "position": {
+              "lat": 44.25921388888889,
+              "lon": -88.51144444444445
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 126.3,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Des Moines",
+            "position": {
+              "lat": 41.46276666666667,
+              "lon": -93.56660277777777
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 118.825,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 125.65,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 135.775,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Eau Claire",
+            "position": {
+              "lat": 44.863569444444444,
+              "lon": -91.48126944444445
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 125.3,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 127.425,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 133.75,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 134.3,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Escanaba",
+            "position": {
+              "lat": 45.722744444444444,
+              "lon": -87.08957777777778
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 127.65,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Freeland",
+            "position": {
+              "lat": 43.524166666666666,
+              "lon": -84.08361111111111
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 125.825,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Green Bay",
+            "position": {
+              "lat": 44.34054722222223,
+              "lon": -87.9467638888889
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 133.175,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Iron Mountain",
+            "position": {
+              "lat": 45.816063888888884,
+              "lon": -88.11206944444444
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 121.25,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 133.45,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "La Crosse",
+            "position": {
+              "lat": 43.82579722222223,
+              "lon": -91.20458055555555
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 118.85,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 128.6,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Mason City",
+            "position": {
+              "lat": 43.16218055555555,
+              "lon": -93.334925
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 127.3,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 134.25,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Mosinee",
+            "position": {
+              "lat": 44.779133333333334,
+              "lon": -89.65928611111111
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 124.4,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Oscoda",
+            "position": {
+              "lat": 44.01708333333333,
+              "lon": -82.97185
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 125.475,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Pellston",
+            "position": {
+              "lat": 45.33139722222223,
+              "lon": -84.88837777777779
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 132.425,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 134.6,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Rhinelander",
+            "position": {
+              "lat": 45.63384444444444,
+              "lon": -89.45790833333334
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 123.725,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 133.65,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Rochester",
+            "position": {
+              "lat": 43.782849999999996,
+              "lon": -92.596925
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 132.35,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Swinns Valley",
+            "position": {
+              "lat": 44.32194444444445,
+              "lon": -91.59833333333333
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 134.85,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 135.7,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Traverse City",
+            "position": {
+              "lat": 44.712500000000006,
+              "lon": -85.54506944444444
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 125.825,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 132.9,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Waterloo",
+            "position": {
+              "lat": 42.54527777777778,
+              "lon": -92.39691666666667
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 118.9,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "White Cloud",
+            "position": {
+              "lat": 43.57474166666667,
+              "lon": -85.71616111111112
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 120.85,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 132.425,
+                "altitude": "high"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ZKC",
+        "callsign": "Kansas City Center",
+        "sites": [
+          {
+            "name": "Decatur",
+            "position": {
+              "lat": 39.826147222222225,
+              "lon": -88.88479722222223
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 124.3,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Effingham",
+            "position": {
+              "lat": 39.17253888888889,
+              "lon": -88.54393888888889
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 124.3,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 135.05,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Jacksonville",
+            "position": {
+              "lat": 39.77643611111111,
+              "lon": -90.23845277777778
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 127.275,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Kirksville",
+            "position": {
+              "lat": 40.143363888888885,
+              "lon": -92.57935833333333
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 132.6,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 134.625,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Marion",
+            "position": {
+              "lat": 37.75421388888889,
+              "lon": -89.01173888888889
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 127.475,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Mount Vernon",
+            "position": {
+              "lat": 38.291713888888886,
+              "lon": -88.78700277777777
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 127.7,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Quincy",
+            "position": {
+              "lat": 39.94421111111111,
+              "lon": -91.14902777777779
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 126.225,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Saint Charles",
+            "position": {
+              "lat": 38.76088333333333,
+              "lon": -90.52039722222221
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 125.9,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Saint Louis",
+            "position": {
+              "lat": 38.81449444444444,
+              "lon": -90.38594722222223
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 128.35,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 133.15,
+                "altitude": "high"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ZID",
+        "callsign": "Indianapolis Center",
+        "sites": [
+          {
+            "name": "Brookville",
+            "position": {
+              "lat": 39.883941666666665,
+              "lon": -84.40744722222223
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 120.575,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Catawba",
+            "position": {
+              "lat": 39.97188888888889,
+              "lon": -83.61780555555555
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 120.475,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 123.925,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 128.775,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Evansville",
+            "position": {
+              "lat": 38.12726388888889,
+              "lon": -87.53362777777778
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 128.3,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 132.525,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Henryville",
+            "position": {
+              "lat": 38.568113888888895,
+              "lon": -85.82913333333333
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 124.775,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 128.375,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 133.05,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 134.275,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Huntingburg",
+            "position": {
+              "lat": 38.264,
+              "lon": -87.07088888888889
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 127.025,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Indianapolis",
+            "position": {
+              "lat": 39.70388888888889,
+              "lon": -86.28711111111112
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 119.55,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 124.525,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 125.125,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 132.775,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 133.425,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Merwyn",
+            "position": {
+              "lat": 39.03561666666666,
+              "lon": -84.263825
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 120.875,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 134.7,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 135.575,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Rosewood",
+            "position": {
+              "lat": 40.287794444444444,
+              "lon": -84.04314166666667
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 128.075,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 135.8,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Terre Haute",
+            "position": {
+              "lat": 39.488925,
+              "lon": -87.24890555555555
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 132.2,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 134.175,
+                "altitude": "high"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ZOB",
+        "callsign": "Cleveland Center",
+        "sites": [
+          {
+            "name": "Algonac",
+            "position": {
+              "lat": 42.6667,
+              "lon": -82.53324166666667
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 126.525,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 132.25,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 134.775,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Carleton",
+            "position": {
+              "lat": 42.00337777777778,
+              "lon": -83.36215277777777
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 135.375,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Findlay",
+            "position": {
+              "lat": 41.01671944444444,
+              "lon": -83.66659722222222
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 127.675,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 135.1,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Flint",
+            "position": {
+              "lat": 42.96613611111111,
+              "lon": -83.74106666666667
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 126.75,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Freeland",
+            "position": {
+              "lat": 43.524166666666666,
+              "lon": -84.08361111111111
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 127.7,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 133.875,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Litchfield",
+            "position": {
+              "lat": 42.04226666666666,
+              "lon": -84.70496111111112
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 120.45,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 133.525,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 134.65,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 135.725,
+                "altitude": "high"
+              }
+            ]
+          },
+          {
+            "name": "Mansfield",
+            "position": {
+              "lat": 40.827000000000005,
+              "lon": -82.50405555555555
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 133.375,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 134.9,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Sandusky",
+            "position": {
+              "lat": 41.34421666666667,
+              "lon": -82.70879166666667
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 119.325,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 119.875,
+                "altitude": "high"
+              },
+              {
+                "frequencyMhz": 127.9,
+                "altitude": "low"
+              },
+              {
+                "frequencyMhz": 132.45,
+                "altitude": "low"
+              }
+            ]
+          },
+          {
+            "name": "Waterville",
+            "position": {
+              "lat": 41.45146666666667,
+              "lon": -83.63865555555556
+            },
+            "frequencies": [
+              {
+                "frequencyMhz": 128.625,
+                "altitude": "low"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "sources": [
+    {
+      "name": "FAA Coded Instrument Flight Procedures (CIFP)",
+      "url": "https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/cifp/",
+      "edition": "Cycle 260903",
+      "usedFor": "Airports, runways, ILS, fixes, arrival, departure and approach procedures"
+    },
+    {
+      "name": "FAA National Airspace System Resources (NASR)",
+      "url": "https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/",
+      "edition": "2026-09-03",
+      "usedFor": "Tower frequencies, Center radio sites, ARTCC boundaries and ASR radar sites"
+    },
+    {
+      "name": "FAA Class Airspace",
+      "url": "https://adds-faa.opendata.arcgis.com/",
+      "edition": "Retrieved with this build",
+      "usedFor": "Class B and C airspace"
+    },
+    {
+      "name": "FAA Minimum Vectoring Altitude charts",
+      "url": "https://aeronav.faa.gov/MVA_Charts/",
+      "edition": "C90_MVA_FUS3, MKE_MVA_FUS3, RFD_MVA_FUS3, SBN_MVA_FUS3, CMI_MVA_FUS3, ZAU_TAV, ZMP_TAV, ZKC_TAV, ZID_TAV, ZOB_TAV",
+      "usedFor": "Minimum vectoring and minimum IFR altitudes, and the ORD radar antenna position (center of its range arcs)"
+    },
+    {
+      "name": "US Census Bureau TIGER/Line and cartographic boundary files",
+      "url": "https://www.census.gov/geographies/mapping-files.html",
+      "edition": "2024",
+      "usedFor": "Shoreline"
+    }
+  ]
+}

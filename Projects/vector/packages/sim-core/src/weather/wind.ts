@@ -36,12 +36,19 @@ export type LiveWeatherReport = z.infer<typeof liveWeatherReportSchema>;
 /** Winds below this are calm: runways are chosen by preference, not wind. */
 export const CALM_WIND_KTS = 4;
 
+/** A wind direction range and the fraction of time the wind blows from it (magnetic). */
+export interface WindRegime {
+  weight: number;
+  fromDeg: number;
+  toDeg: number;
+}
+
 /**
  * Typical New York surface winds: southwest flow (most common in summer),
- * northwest flow (winter), and less often northeast or southeast.
- * Weights are fractions of time; directions are magnetic.
+ * northwest flow (winter), and less often northeast or southeast. Used when an
+ * airspace's traffic profile doesn't give its own.
  */
-const WIND_REGIMES = [
+export const DEFAULT_WIND_REGIMES: readonly WindRegime[] = [
   { weight: 0.3, fromDeg: 190, toDeg: 240 }, // southwest
   { weight: 0.28, fromDeg: 280, toDeg: 330 }, // northwest
   { weight: 0.14, fromDeg: 20, toDeg: 70 }, // northeast
@@ -68,10 +75,11 @@ export function withGust(wind: Wind, gustKts: number | undefined): Wind {
 const roundDirection = (deg: number) => Math.round((((deg % 360) + 360) % 360) / 10) * 10 || 360;
 
 /** A realistic random wind for the region. */
-function randomRegionalWind(random: SeededRandom): Wind {
+function randomRegionalWind(random: SeededRandom, regimes: readonly WindRegime[]): Wind {
   if (random.chance(CALM_CHANCE)) return { directionDeg: 0, speedKts: random.int(0, 3) };
-  let pick = random.next();
-  const regime = WIND_REGIMES.find((r) => (pick -= r.weight) < 0) ?? WIND_REGIMES[0]!;
+  const total = regimes.reduce((sum, r) => sum + r.weight, 0);
+  let pick = random.next() * total;
+  const regime = regimes.find((r) => (pick -= r.weight) < 0) ?? regimes[0]!;
   // Gusty days are windier on average, with peaks 10–18 kt above the steady wind.
   const gusty = random.chance(0.2) ? random.range(0, 8) : 0;
   const wind = {
@@ -90,8 +98,9 @@ function randomRegionalWind(random: SeededRandom): Wind {
 export function generateWinds(
   random: SeededRandom,
   airports: readonly string[],
+  regimes: readonly WindRegime[] = DEFAULT_WIND_REGIMES,
 ): Record<string, Wind> {
-  const regional = randomRegionalWind(random);
+  const regional = randomRegionalWind(random, regimes);
   const winds: Record<string, Wind> = {};
   for (const airport of airports) {
     if (regional.speedKts <= CALM_WIND_KTS) {

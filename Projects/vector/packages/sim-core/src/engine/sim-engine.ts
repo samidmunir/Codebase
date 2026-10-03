@@ -152,7 +152,7 @@ export type CreateSimEngineOptions = {
   config?: SimConfig;
   /** Gameplay and realism settings for this session. Defaults if omitted. */
   settings?: SessionSettings;
-  /** Controller the player works as. Defaults to 'N90'. */
+  /** Controller the player works as. Defaults to the airspace's approach facility (e.g. 'N90'). */
   playerId?: string;
   /**
    * Runway configuration to use at an airport (by config id) instead of the
@@ -181,6 +181,11 @@ const ARRIVAL_PROFILE_FT_PER_NM = 300;
 const ARRIVAL_PROFILE_LEVEL_NM = 25;
 /** Departures waiting for vectors at the end of their procedure resume the route above this. */
 const ROUTE_RESUME_MIN_HEIGHT_FT = 3_000;
+/** Judging an approach the aircraft is already cleared for (not accepting a new clearance). */
+interface EligibilityOptions {
+  cleared?: boolean;
+}
+
 /** A departure's gate or an overflight's exit fix counts as passed within this distance. */
 const ROUTE_FIX_PASSED_NM = 2;
 /** A handoff within this of the requested level earns the requested level bonus. */
@@ -273,7 +278,7 @@ export class SimEngine {
         config: cloneJson(options.config ?? DEFAULT_SIM_CONFIG),
         settings: cloneJson(options.settings ?? defaultSettings('session')),
         aircraft: [],
-        playerId: options.playerId ?? 'N90',
+        playerId: options.playerId ?? options.airspace?.airspace.controllers.approach.id ?? 'N90',
         pendingInstructions: [],
         comms: [],
         nextMessageNumber: 1,
@@ -1060,6 +1065,8 @@ export class SimEngine {
    * an instruction that doesn't clear it again (a heading, altitude or speed)
    * would stop the approach working. Undefined when that doesn't apply or the
    * approach was already failing without it; otherwise the verdict with it.
+   * The minimum vectoring altitude doesn't apply: once cleared, the aircraft
+   * descends on the approach, below it where the approach does.
    */
   approachEffect(
     aircraft: Readonly<AircraftState>,
@@ -1072,8 +1079,9 @@ export class SimEngine {
       !commands.some((c) => ['heading', 'altitude', 'speed', 'resumeNormalSpeed'].includes(c.type))
     )
       return undefined;
-    if (!this.ilsEligibilityFor(aircraft, navigation.clearance).ok) return undefined;
-    return this.ilsEligibilityWith(aircraft, navigation.clearance, commands);
+    const cleared = { cleared: true };
+    if (!this.ilsEligibilityFor(aircraft, navigation.clearance, cleared).ok) return undefined;
+    return this.ilsEligibilityWith(aircraft, navigation.clearance, commands, cleared);
   }
 
   /** As `approachEffect`, for the command panel: by aircraft id. */
@@ -1090,25 +1098,29 @@ export class SimEngine {
     aircraft: Readonly<AircraftState>,
     clearance: IlsClearance,
     commands: readonly AtcCommand[],
+    options: EligibilityOptions = {},
   ): IlsEligibility {
     const others = commands.filter((c) =>
       ['heading', 'directTo', 'altitude', 'speed', 'resumeNormalSpeed'].includes(c.type),
     );
-    if (others.length === 0) return this.ilsEligibilityFor(aircraft, clearance);
+    if (others.length === 0) return this.ilsEligibilityFor(aircraft, clearance, options);
     const preview = cloneJson(aircraft) as AircraftState;
     for (const command of others) this.applyCommand(preview, command);
-    return this.ilsEligibilityFor(preview, clearance);
+    return this.ilsEligibilityFor(preview, clearance, options);
   }
 
   private ilsEligibilityFor(
     aircraft: Readonly<AircraftState>,
     clearance: IlsClearance,
+    { cleared = false }: EligibilityOptions = {},
   ): IlsEligibility {
     return ilsEligibility(aircraft, clearance, {
       performance: this.performance.get(aircraft.aircraftType),
       settings: this.state.settings,
       magneticVariationDeg: this.state.world.magneticVariationDeg,
-      minimumVectoringAltitudeFt: this.airspace?.minimumVectoringAltitude(aircraft.position),
+      minimumVectoringAltitudeFt: cleared
+        ? undefined
+        : this.airspace?.minimumVectoringAltitude(aircraft.position),
     });
   }
 

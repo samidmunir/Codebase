@@ -4,10 +4,18 @@ Builds the airspace packs in `data/airspaces/` from public-domain US government 
 Raw downloads are cached in `data/.cache/` (git-ignored), so rebuilds are fast and reproducible.
 
 ```sh
-npm run data:new-york                          # build data/airspaces/new-york/
+npm run data:airspace -- new-york              # build data/airspaces/new-york/
+npm run data:new-york                          # the same
+npm run data:chicago                           # build data/airspaces/chicago/
 npm run data:preview -- new-york               # render data/.cache/preview-new-york.svg
 npm run data:preview -- new-york 40.64 -73.78 10   # zoomed preview (lat, lon, radius NM)
 ```
+
+Each airspace is a small config in `scripts/data/airspaces/` (its airports, center,
+TRACON and Center ids, MVA and MIA charts, radars and radio names). Everything else is
+built the same way for every airspace, by `scripts/data/lib/build-airspace.ts`. To add
+one, write its config, list it in `scripts/data/build-airspace.ts`, and hand-author its
+`traffic.json` (below).
 
 ## Sources
 
@@ -34,9 +42,9 @@ tests cross-check it (runways exist, arrival runways have an ILS, gate fixes exi
 
 ## Updating to a new FAA cycle
 
-The FAA publishes new CIFP and NASR data every 28 days. In `build-new-york.ts`, update
+The FAA publishes new CIFP and NASR data every 28 days. In `lib/build-airspace.ts`, update
 `CIFP_CYCLE`, `NASR_EDITION` and `NASR_CSV_EDITION` together (current editions are
-listed on the CIFP and NASR pages above), run `npm run data:new-york`, then
+listed on the CIFP and NASR pages above), rebuild each airspace with `npm run data:airspace`, then
 `npm test` — the airspace pack tests cross-check the result.
 
 ## How the shoreline is built
@@ -67,3 +75,16 @@ extend 3 NM out to sea. The builder:
   can use the nearest site on the right altitude band.
 - **Airport reference fixes.** Some STARs end with a heading leg that names the airport
   as a reference only; those legs keep their heading and drop the fix.
+
+### Chicago
+
+- **Departure procedures.** O'Hare's and Midway's SIDs are radar-vector procedures
+  published as text only, so CIFP codes none. All Chicago departures fly runway heading
+  to their initial altitude and expect radar vectors.
+- **Departure gates.** C90's departure gates aren't published. `traffic.json` uses
+  current navaids in each direction on routes Chicago traffic commonly flies (several
+  it once used, such as Pontiac, Bradford and Pullman, have been decommissioned).
+- **Midway 22L.** It has no ILS (real arrivals use RNAV or visual approaches), so in a
+  southwest wind Midway lands 31R and departs 22L.
+- **O'Hare 10R.** Its ILS Z is flown on a different localizer from the runway's ILS, so
+  the builder leaves it out; the ILS Y is kept.

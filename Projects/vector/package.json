@@ -25,7 +25,9 @@
     "migrate:down": "npm run migrate -- down",
     "migrate:create": "npm run migrate -- create",
     "sim:demo": "tsx scripts/sim-demo.ts",
-    "data:new-york": "tsx scripts/data/build-new-york.ts",
+    "data:airspace": "tsx scripts/data/build-airspace.ts",
+    "data:new-york": "tsx scripts/data/build-airspace.ts new-york",
+    "data:chicago": "tsx scripts/data/build-airspace.ts chicago",
     "data:preview": "tsx scripts/data/preview.ts"
   },
   "devDependencies": {

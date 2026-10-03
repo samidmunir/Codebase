@@ -1,7 +1,6 @@
-// Builds the New York (N90) airspace pack in data/airspaces/new-york/ from
-// public FAA and US Census data. Downloads are cached in data/.cache/.
-//
-//   npm run data:new-york
+// Builds an airspace pack in data/airspaces/<id>/ from public FAA and US Census
+// data, for the airspace described by an AirspaceBuildConfig (scripts/data/airspaces/).
+// Downloads are cached in data/.cache/.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
@@ -11,6 +10,7 @@ import {
   distanceNm,
   type Airport,
   type IlsApproach,
+  type LatLon,
   type ProcedureLeg,
   type RouteSegment,
   type TerminalProcedure,
@@ -21,19 +21,19 @@ import {
   type CifpFix,
   type CifpLeg,
   type CifpProcedureRecord,
-} from './lib/cifp';
-import { cachedDownload, onlyFile, text, unzipMatching } from './lib/download';
-import { boxAround, coverageOutline, inBox, simplify } from './lib/geometry';
-import { parseMva } from './lib/mva';
-import { findRadarSites } from './lib/radar-sites';
+} from './cifp';
+import { cachedDownload, onlyFile, text, unzipMatching } from './download';
+import { boxAround, coverageOutline, inBox, simplify } from './geometry';
+import { parseMva } from './mva';
+import { findRadarSites } from './radar-sites';
 import {
   parseArtccBoundaries,
   parseCenterSites,
   parseFrequencies,
   parseRadars,
   parseHolds,
-} from './lib/nasr';
-import { buildShoreline } from './lib/shoreline';
+} from './nasr';
+import { buildShoreline } from './shoreline';
 
 // ---- Configuration -------------------------------------------------------------
 
@@ -42,19 +42,47 @@ const CIFP_CYCLE = '260903';
 const NASR_EDITION = '2026-09-03';
 const NASR_CSV_EDITION = '03_Sep_2026';
 
-const AIRPORTS = ['KJFK', 'KLGA', 'KEWR'] as const;
-const CENTER = { lat: 40.72, lon: -73.95 };
-/**
- * Radius of the playable area: the New York TRACON plus the surrounding
- * Center airspace, far enough out that arrivals enter on their STARs at
- * cruise levels (see printBoundaryDiagnostics).
- */
-const BOUNDARY_RADIUS_NM = 150;
-const BOUNDARY_CEILING_FT = 45_000;
-/** Radius of video map geography (a little beyond the boundary). */
-const MAP_RADIUS_NM = 165;
-/** Detailed shoreline this close to the center; coarser beyond. */
-const DETAILED_SHORELINE_RADIUS_NM = 60;
+/** What makes one airspace different from another; everything else is shared. */
+export interface AirspaceBuildConfig {
+  /** Pack id and output folder: data/airspaces/<id>/. */
+  id: string;
+  name: string;
+  /** The TRACON the player works, e.g. 'N90'. Its MVA chart's name starts with this. */
+  facility: string;
+  description: string;
+  approachCallsign: string;
+  departureCallsign: string;
+  airports: readonly string[];
+  center: LatLon;
+  /**
+   * Radius of the playable area: the TRACON plus the surrounding Center
+   * airspace, far enough out that arrivals enter on their STARs at cruise
+   * levels (see printBoundaryDiagnostics).
+   */
+  boundaryRadiusNm: number;
+  boundaryCeilingFt: number;
+  /** Radius of video map geography (a little beyond the boundary). */
+  mapRadiusNm: number;
+  /** Detailed shoreline this close to the center; coarser beyond. */
+  detailedShorelineRadiusNm: number;
+  /** The owning Center and its neighbors in the region, with their radio names. */
+  homeCenter: string;
+  adjacentCenters: readonly string[];
+  centerNames: Record<string, string>;
+  /** TRACON MVA charts (FUS3) and Center MIA charts in the region. */
+  mvaCharts: readonly string[];
+  miaCharts: readonly string[];
+  /**
+   * The terminal radars that feed the scope (FAA ids of their airports). NASR
+   * lists many more ASRs; beyond these, the modeled long-range coverage fills in.
+   */
+  mainRadars: readonly string[];
+  /** The airport whose ASR the facility's MVA chart range arcs are centered on. */
+  primaryRadarAirport: string;
+  /** Radio names that don't title-case cleanly. */
+  towerNames?: Record<string, string>;
+}
+
 /** Grid spacing for tracing the TRACON outline from its MVA chart (degrees, about 0.4 NM). */
 const TRACON_OUTLINE_STEP_DEG = 0.007;
 /** Smallest piece of outline kept (drops specks from gaps between chart sectors). */
@@ -63,29 +91,9 @@ const TRACON_OUTLINE_MIN_POINTS = 40;
 const CLASS_AIRSPACE_TOLERANCE_M = 40;
 /** Other airports shown on the map need a runway at least this long. */
 const MIN_MAP_AIRPORT_RUNWAY_FT = 5_000;
-/** The owning Center and its neighbors in the region. */
-const HOME_CENTER = 'ZNY';
-const ADJACENT_CENTERS = ['ZBW', 'ZDC', 'ZOB'] as const;
-const CENTER_NAMES: Record<string, string> = {
-  ZNY: 'New York Center',
-  ZBW: 'Boston Center',
-  ZDC: 'Washington Center',
-  ZOB: 'Cleveland Center',
-};
-/** TRACON MVA charts (FUS3) and Center MIA charts in the region. */
-const MVA_CHARTS = ['N90_MVA_FUS3', 'PHL_MVA_FUS3'] as const;
-const MIA_CHARTS = ['ZNY_TAV', 'ZBW_TAV', 'ZDC_TAV', 'ZOB_TAV'] as const;
-/**
- * The terminal radars that feed the scope: the New York TRACON's own sites plus
- * Philadelphia. (NASR lists many more ASRs in the region; beyond these, the
- * modeled long-range coverage fills in above its floor.)
- */
-const MAIN_RADARS = ['JFK', 'EWR', 'ISP', 'HPN', 'PHL'] as const;
 /** Standard ASR-9/ASR-11 instrumented range, and its antenna height above the field. */
 const ASR_RANGE_NM = 60;
 const ASR_ANTENNA_HEIGHT_FT = 50;
-/** ASR sites farther than this from the center are left out (their coverage doesn't reach). */
-const RADAR_SITE_RADIUS_NM = BOUNDARY_RADIUS_NM + ASR_RANGE_NM;
 /** A chart arc center this close to an airport is that airport's ASR antenna. */
 const RADAR_AIRPORT_MATCH_NM = 4;
 /** MVA arcs at least this large are radar range arcs, not obstacle clearance circles. */
@@ -93,15 +101,14 @@ const RADAR_MIN_ARC_NM = 20;
 /** Center radio sites farther than this are left out. */
 const CENTER_SITE_RADIUS_NM = 260;
 
-/** Radio names that don't title-case cleanly. */
-const TOWER_NAMES: Record<string, string> = { LAGUARDIA: 'LaGuardia' };
-
-const OUTPUT_DIR = fileURLToPath(new URL('../../data/airspaces/new-york/', import.meta.url));
+/** The airspace being built (set by buildAirspace). */
+let config: AirspaceBuildConfig;
+let OUTPUT_DIR: string;
 
 // ---- Helpers -------------------------------------------------------------------
 
 const titleCase = (value: string) =>
-  TOWER_NAMES[value] ?? value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  config.towerNames?.[value] ?? value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
 /** Drops undefined properties so JSON output stays clean. */
 function compact<T extends object>(value: T): T {
@@ -131,7 +138,7 @@ function runwaysFor(transition: string, runwayIds: readonly string[]): string[] 
 function buildAirports(cifp: CifpData, frequencyCsv: string): Airport[] {
   const frequencies = parseFrequencies(frequencyCsv);
 
-  return AIRPORTS.map((icao) => {
+  return config.airports.map((icao) => {
     const airport = cifp.airports.find((a) => a.icao === icao);
     if (!airport) throw new Error(`${icao} not found in CIFP`);
     const faaId = icao.slice(1);
@@ -357,7 +364,11 @@ function buildNavdata(cifp: CifpData, procedures: readonly CifpProcedureRecord[]
   for (const key of airwayFixes) {
     const [ident, section] = key.split('|') as [string, string];
     const fix = index.get(fixKey(ident, section));
-    if (fix && !selected.has(fix.ident) && distanceNm(CENTER, fix.position) <= MAP_RADIUS_NM) {
+    if (
+      fix &&
+      !selected.has(fix.ident) &&
+      distanceNm(config.center, fix.position) <= config.mapRadiusNm
+    ) {
       selected.set(fix.ident, fix);
     }
   }
@@ -372,7 +383,7 @@ function buildNavdata(cifp: CifpData, procedures: readonly CifpProcedureRecord[]
         fix.kind === kind &&
         isVorOrNdb &&
         !selected.has(fix.ident) &&
-        distanceNm(CENTER, fix.position) <= MAP_RADIUS_NM
+        distanceNm(config.center, fix.position) <= config.mapRadiusNm
       ) {
         selected.set(fix.ident, fix);
       }
@@ -422,7 +433,7 @@ function buildAirways(cifp: CifpData) {
     };
     for (const point of points.sort((a, b) => a.sequence - b.sequence)) {
       const fix = index.get(`${point.fix}|${point.fixSection}`);
-      const near = fix && distanceNm(CENTER, fix.position) <= MAP_RADIUS_NM + 40;
+      const near = fix && distanceNm(config.center, fix.position) <= config.mapRadiusNm + 40;
       if (near) stretch.push(toPoint(fix.position));
       else flush();
       if (point.endsSegment) flush();
@@ -434,14 +445,14 @@ function buildAirways(cifp: CifpData) {
 
 /** Airports in the region with a runway long enough for jets, drawn for orientation. */
 function buildMapAirports(cifp: CifpData) {
-  const controlled = new Set<string>(AIRPORTS);
+  const controlled = new Set<string>(config.airports);
   return cifp.allAirports
     .filter(
       (airport) =>
         !controlled.has(airport.icao) &&
         // Public airports with ICAO identifiers (not private strips like '3NY8').
         /^K[A-Z]{3}$/.test(airport.icao) &&
-        distanceNm(CENTER, airport.position) <= BOUNDARY_RADIUS_NM &&
+        distanceNm(config.center, airport.position) <= config.boundaryRadiusNm &&
         cifp.allRunways.some(
           (r) => r.airport === airport.icao && r.lengthFt >= MIN_MAP_AIRPORT_RUNWAY_FT,
         ),
@@ -496,9 +507,13 @@ function buildRadarSites(cifp: CifpData, arcSites: readonly ArcSite[], rdrCsv: s
         .map((r) => r.facility),
     ),
   ];
-  for (const faaId of asrAirports.filter((id) => (MAIN_RADARS as readonly string[]).includes(id))) {
+  for (const faaId of asrAirports.filter((id) => config.mainRadars.includes(id))) {
     const airport = airportOf(faaId);
-    if (!airport || distanceNm(CENTER, airport.position) > RADAR_SITE_RADIUS_NM) continue;
+    if (
+      !airport ||
+      distanceNm(config.center, airport.position) > config.boundaryRadiusNm + ASR_RANGE_NM
+    )
+      continue;
     // Arc centers near this airport: average them (several arcs can fit slightly apart).
     const arcs = arcSites.filter(
       (site) =>
@@ -525,7 +540,9 @@ function buildRadarSites(cifp: CifpData, arcSites: readonly ArcSite[], rdrCsv: s
       source: arcs.length > 0 ? 'chart' : 'airport',
     });
   }
-  return sites.sort((a, b) => distanceNm(CENTER, a.position) - distanceNm(CENTER, b.position));
+  return sites.sort(
+    (a, b) => distanceNm(config.center, a.position) - distanceNm(config.center, b.position),
+  );
 }
 
 // ---- Boundary ------------------------------------------------------------------
@@ -554,8 +571,8 @@ function printBoundaryDiagnostics(
     const p = first ? position(first) : undefined;
     const entries = star.enrouteTransitions.map((t) => t.legs[0]?.fix).filter(Boolean);
     console.log(
-      `    ${star.airport} ${star.id.padEnd(7)} common starts ${first ?? '-'} @ ${p ? distanceNm(CENTER, p).toFixed(0) : '?'} NM; ` +
-        `enroute entries: ${entries.map((e) => `${e}@${distanceNm(CENTER, position(e!)!).toFixed(0)}`).join(' ')}`,
+      `    ${star.airport} ${star.id.padEnd(7)} common starts ${first ?? '-'} @ ${p ? distanceNm(config.center, p).toFixed(0) : '?'} NM; ` +
+        `enroute entries: ${entries.map((e) => `${e}@${distanceNm(config.center, position(e!)!).toFixed(0)}`).join(' ')}`,
     );
   }
 }
@@ -566,8 +583,11 @@ function write(name: string, data: unknown, pretty = true) {
   writeFileSync(`${OUTPUT_DIR}${name}`, `${JSON.stringify(data, null, pretty ? 2 : undefined)}\n`);
 }
 
-async function main() {
-  console.log('Building New York airspace pack');
+/** Builds the pack for an airspace and writes it to data/airspaces/<id>/. */
+export async function buildAirspace(airspace: AirspaceBuildConfig): Promise<void> {
+  config = airspace;
+  OUTPUT_DIR = fileURLToPath(new URL(`../../../data/airspaces/${config.id}/`, import.meta.url));
+  console.log(`Building ${config.name} airspace pack`);
 
   console.log('- FAA CIFP', CIFP_CYCLE);
   const cifpZip = await cachedDownload(
@@ -576,7 +596,7 @@ async function main() {
   );
   const cifp = parseCifp(
     text(onlyFile(unzipMatching(cifpZip, /FAACIFP18$/), /FAACIFP18$/)),
-    AIRPORTS,
+    config.airports,
   );
 
   console.log('- FAA NASR', NASR_EDITION);
@@ -632,7 +652,21 @@ async function main() {
     SID_ROUTE_TYPES,
     runwayIds,
   );
-  const approaches = buildIlsApproaches(cifp.procedures.filter((p) => p.kind === 'F'));
+  // A runway's ILS is one localizer; an approach flown on another one (some runways
+  // have ILS Y and Z approaches on different localizers) is left out.
+  const approaches = buildIlsApproaches(cifp.procedures.filter((p) => p.kind === 'F')).filter(
+    (approach) => {
+      const runway = airports
+        .find((a) => a.icao === approach.airport)
+        ?.runways.find((r) => r.id === approach.runway);
+      const matches = runway?.ils?.ident === approach.localizer;
+      if (!matches)
+        console.log(
+          `  leaving out ${approach.airport} ${approach.id}: localizer ${approach.localizer} isn't runway ${approach.runway}'s ILS (${runway?.ils?.ident ?? 'none'})`,
+        );
+      return matches;
+    },
+  );
   const includedProcedureRecords = cifp.procedures.filter(
     (p) => p.kind !== 'F' || approaches.some((a) => a.airport === p.airport && a.id === p.id),
   );
@@ -648,7 +682,7 @@ async function main() {
     Math.round(lon! * 1e5) / 1e5,
     Math.round(lat! * 1e5) / 1e5,
   ];
-  const box = boxAround(CENTER, MAP_RADIUS_NM);
+  const box = boxAround(config.center, config.mapRadiusNm);
 
   console.log('- FAA Class B and C airspace');
   type ClassFeature = {
@@ -663,7 +697,7 @@ async function main() {
           `&geometry=${box.minLon},${box.minLat},${box.maxLon},${box.maxLat}` +
           '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects' +
           '&outFields=NAME,CLASS,LOWER_VAL,UPPER_VAL&outSR=4326&f=geojson',
-        `faa/class-bc-${BOUNDARY_RADIUS_NM}nm.geojson`,
+        `faa/${config.id}-class-bc-${config.boundaryRadiusNm}nm.geojson`,
       ),
     ),
   ) as { features: ClassFeature[] };
@@ -701,16 +735,16 @@ async function main() {
         ),
       )
     ).flat();
-  const mvaSectors = await altitudeCharts(MVA_CHARTS, 'mva');
-  const miaSectors = await altitudeCharts(MIA_CHARTS, 'mia');
-  const mva = mvaSectors.filter((sector) => sector.chart.startsWith('N90'));
+  const mvaSectors = await altitudeCharts(config.mvaCharts, 'mva');
+  const miaSectors = await altitudeCharts(config.miaCharts, 'mia');
+  const mva = mvaSectors.filter((sector) => sector.chart.startsWith(config.facility));
   // Keep only sectors that reach into the map area.
   const nearMap = (sector: { exterior: number[][] }) =>
     sector.exterior.some(
-      ([lon, lat]) => distanceNm(CENTER, { lat: lat!, lon: lon! }) <= MAP_RADIUS_NM,
+      ([lon, lat]) => distanceNm(config.center, { lat: lat!, lon: lon! }) <= config.mapRadiusNm,
     );
   const altitudeSectors = [...mvaSectors, ...miaSectors].filter(nearMap);
-  // The New York TRACON's own airspace: the area its MVA chart covers.
+  // The TRACON's own airspace: the area its MVA chart covers.
   const traconOutline = coverageOutline(mva, TRACON_OUTLINE_STEP_DEG)
     .filter((line) => line.length >= TRACON_OUTLINE_MIN_POINTS)
     .map((line) => simplify(line.map(round), 120));
@@ -729,12 +763,12 @@ async function main() {
         /ARB\.txt$/,
       ),
     ),
-    [HOME_CENTER, ...ADJACENT_CENTERS],
+    [config.homeCenter, ...config.adjacentCenters],
   );
 
   console.log('- US Census TIGER shoreline');
   // Full detail near the airports; farther out, only larger water bodies at a coarser tolerance.
-  const detailedBox = boxAround(CENTER, DETAILED_SHORELINE_RADIUS_NM);
+  const detailedBox = boxAround(config.center, config.detailedShorelineRadiusNm);
   const detailed = await buildShoreline({
     box: detailedBox,
     minWaterAreaM2: 150_000,
@@ -756,21 +790,23 @@ async function main() {
 
   const centerController = (id: string) => ({
     id,
-    callsign: CENTER_NAMES[id]!,
+    callsign: config.centerNames[id]!,
     sites: parseCenterSites(artccText, id)
-      .filter((site) => distanceNm(CENTER, site.position) <= CENTER_SITE_RADIUS_NM)
+      .filter((site) => distanceNm(config.center, site.position) <= CENTER_SITE_RADIUS_NM)
       .map((site) => ({
         name: titleCase(site.site),
         position: site.position,
         frequencies: site.frequencies,
       })),
   });
-  const homeCenter = centerController(HOME_CENTER);
-  const adjacentCenters = ADJACENT_CENTERS.map(centerController).filter((c) => c.sites.length > 0);
+  const homeCenter = centerController(config.homeCenter);
+  const adjacentCenters = config.adjacentCenters
+    .map(centerController)
+    .filter((c) => c.sites.length > 0);
   const airways = buildAirways(cifp);
   const mapAirports = buildMapAirports(cifp);
 
-  const jfk = airports.find((a) => a.icao === 'KJFK')!;
+  const primaryAirport = airports.find((a) => a.icao === `K${config.primaryRadarAirport}`)!;
 
   console.log('- FAA NASR radars');
   const rdrCsv = text(
@@ -788,30 +824,30 @@ async function main() {
   const arcSites = findRadarSites(
     mvaSectors.flatMap((sector) => [sector.exterior, ...sector.holes]),
     RADAR_MIN_ARC_NM,
-    CENTER.lat,
+    config.center.lat,
   );
   const radars = buildRadarSites(cifp, arcSites, rdrCsv);
 
-  // The JFK airport surveillance radar: the MVA chart's long range arcs are centered on it.
+  // The primary airport surveillance radar: the MVA chart's long range arcs are centered on it.
   const radarSite = findRadarSites(
     mva.flatMap((sector) => [sector.exterior, ...sector.holes]),
     RADAR_MIN_ARC_NM,
-    CENTER.lat,
-  ).find((site) => distanceNm(site, jfk.position) < 2);
-  if (!radarSite) throw new Error('JFK radar site not found in the MVA chart');
+    config.center.lat,
+  ).find((site) => distanceNm(site, primaryAirport.position) < 2);
+  if (!radarSite)
+    throw new Error(`${config.primaryRadarAirport} radar site not found in the MVA chart`);
 
   mkdirSync(OUTPUT_DIR, { recursive: true });
   write('airspace.json', {
     schemaVersion: AIRSPACE_SCHEMA_VERSION,
-    id: 'new-york',
-    name: 'New York',
-    facility: 'N90',
-    description:
-      'New York TRACON and the surrounding Center airspace: arrivals, departures and overflights for Kennedy, LaGuardia and Newark.',
-    center: CENTER,
-    magneticVariationDeg: jfk.magneticVariationDeg,
+    id: config.id,
+    name: config.name,
+    facility: config.facility,
+    description: config.description,
+    center: config.center,
+    magneticVariationDeg: primaryAirport.magneticVariationDeg,
     radar: {
-      name: 'JFK ASR',
+      name: `${config.primaryRadarAirport} ASR`,
       position: {
         lat: Math.round(radarSite.lat * 1e5) / 1e5,
         lon: Math.round(radarSite.lon * 1e5) / 1e5,
@@ -819,14 +855,17 @@ async function main() {
       rangeNm: Math.max(...radarSite.arcRadiiNm),
     },
     radars: radars.map(({ source: _source, ...site }) => site),
-    boundary: { ring: circleRing(CENTER, BOUNDARY_RADIUS_NM), ceilingFt: BOUNDARY_CEILING_FT },
+    boundary: {
+      ring: circleRing(config.center, config.boundaryRadiusNm),
+      ceilingFt: config.boundaryCeilingFt,
+    },
     transitionAltitudeFt: 18_000,
-    airports: [...AIRPORTS],
+    airports: [...config.airports],
     controllers: {
       approach: {
-        id: 'N90',
-        approachCallsign: 'New York Approach',
-        departureCallsign: 'New York Departure',
+        id: config.facility,
+        approachCallsign: config.approachCallsign,
+        departureCallsign: config.departureCallsign,
       },
       center: homeCenter,
       adjacentCenters,
@@ -853,9 +892,8 @@ async function main() {
       {
         name: 'FAA Minimum Vectoring Altitude charts',
         url: 'https://aeronav.faa.gov/MVA_Charts/',
-        edition: [...MVA_CHARTS, ...MIA_CHARTS].join(', '),
-        usedFor:
-          'Minimum vectoring and minimum IFR altitudes, and the JFK radar antenna position (center of its range arcs)',
+        edition: [...config.mvaCharts, ...config.miaCharts].join(', '),
+        usedFor: `Minimum vectoring and minimum IFR altitudes, and the ${config.primaryRadarAirport} radar antenna position (center of its range arcs)`,
       },
       {
         name: 'US Census Bureau TIGER/Line and cartographic boundary files',
@@ -890,7 +928,7 @@ async function main() {
       airways,
       airports: mapAirports,
       artccBoundaries: artccBoundaries.map(({ artcc, level, ring }) => ({ artcc, level, ring })),
-      traconBoundary: { name: 'N90', lines: traconOutline },
+      traconBoundary: { name: config.facility, lines: traconOutline },
     },
     false,
   );
@@ -905,5 +943,3 @@ async function main() {
   );
   printBoundaryDiagnostics(arrivals, fixes);
 }
-
-await main();

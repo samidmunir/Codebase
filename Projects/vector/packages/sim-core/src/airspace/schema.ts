@@ -324,6 +324,17 @@ export const trafficFileSchema = z.object({
   airports: z.record(z.string(), airportTrafficSchema),
   /** Where origin and destination cities are, for trip lengths and cruise levels. */
   cityPositions: z.record(z.string(), latLonSchema).default({}),
+  /** The region's typical surface winds, for random weather (magnetic directions). */
+  windRegimes: z
+    .array(
+      z.object({
+        weight: z.number().positive(),
+        fromDeg: z.number().min(0).max(360),
+        toDeg: z.number().min(0).max(360),
+      }),
+    )
+    .min(1)
+    .optional(),
 });
 
 export type TrafficProfile = z.infer<typeof trafficFileSchema>;

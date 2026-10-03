@@ -7,6 +7,7 @@ import traffic from '../../../../data/airspaces/new-york/traffic.json';
 import videoMap from '../../../../data/airspaces/new-york/video-map.json';
 import airlineData from '../../../../data/airlines/airlines.json';
 import performanceData from '../../../../data/aircraft-types/performance.json';
+import { chicago } from '../testing/fixtures';
 import { cloneJson } from '../snapshot/clone';
 import { distanceNm } from '../math/geo';
 import { AirspaceDataError, AirspacePack, type AirspacePackFiles } from './airspace-pack';
@@ -111,6 +112,95 @@ describe('New York airspace pack', () => {
     expect(pack.centerAt({ lat: 38.9, lon: -77.0 }, 30_000).id).toBe('ZDC');
     expect(pack.isCenter('ZOB')).toBe(true);
     expect(pack.isCenter('N90')).toBe(false);
+  });
+});
+
+describe('Chicago airspace pack', () => {
+  const pack = chicago;
+
+  it('validates, with C90 working O’Hare and Midway', () => {
+    expect(pack.airspace).toMatchObject({ id: 'chicago', facility: 'C90' });
+    expect(pack.airspace.airports).toEqual(['KORD', 'KMDW']);
+    expect(pack.airspace.controllers.approach.approachCallsign).toBe('Chicago Approach');
+    expect(pack.airspace.controllers.center.id).toBe('ZAU');
+  });
+
+  it.each([
+    // Airport reference points, from the FAA Chart Supplement.
+    ['KORD', { lat: 41.9786, lon: -87.9048 }],
+    ['KMDW', { lat: 41.786, lon: -87.7524 }],
+  ])('places %s at its real position', (icao, position) => {
+    expect(distanceNm(pack.airport(icao).position, position)).toBeLessThan(0.2);
+  });
+
+  it('has O’Hare’s six parallel east–west runways and two diagonals', () => {
+    expect(pack.airport('KORD').runways.map((r) => r.id)).toEqual([
+      '04L',
+      '04R',
+      '09C',
+      '09L',
+      '09R',
+      '10C',
+      '10L',
+      '10R',
+      '22L',
+      '22R',
+      '27C',
+      '27L',
+      '27R',
+      '28C',
+      '28L',
+      '28R',
+    ]);
+    expect(pack.runway('KORD', '10L').lengthFt).toBe(13_000);
+    expect(pack.runway('KORD', '10L').oppositeId).toBe('28R');
+  });
+
+  it('assigns O’Hare’s tower frequencies by runway, and names the towers', () => {
+    expect(pack.runway('KORD', '28R').towerFrequencyMhz).toBe(132.7);
+    expect(pack.runway('KORD', '27L').towerFrequencyMhz).toBe(126.9);
+    expect(pack.airport('KORD').towerCallsign).toBe('O’Hare Tower');
+    expect(pack.airport('KMDW').towerCallsign).toBe('Midway Tower');
+  });
+
+  it('has an ILS on every runway the traffic profile lands on', () => {
+    for (const icao of pack.airspace.airports)
+      for (const config of pack.traffic.airports[icao]!.runwayConfigs)
+        for (const runway of config.arrivals) expect(pack.runway(icao, runway).ils).toBeDefined();
+    const [ils27l] = pack.ilsApproaches('KORD', '27L');
+    expect(ils27l!.missedApproach.length).toBeGreaterThan(0);
+  });
+
+  it('includes real arrival procedures with resolvable fixes', () => {
+    const wynde = pack.arrivals.find((a) => a.id === 'WYNDE3');
+    expect(wynde?.airport).toBe('KORD');
+    const fixes = wynde!.commonRoutes[0]!.legs.map((leg) => leg.fix);
+    expect(fixes[0]).toBe('WYNDE');
+    expect(fixes.every((ident) => pack.fix(ident!))).toBe(true);
+    expect(pack.arrivals.filter((a) => a.airport === 'KMDW').length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('includes the video map layers, with Lake Michigan’s shore', () => {
+    expect(pack.videoMap.shoreline.length).toBeGreaterThan(100);
+    // A shoreline point along the Chicago lakefront (about 41.9 N, 87.62 W).
+    const lakefront = pack.videoMap.shoreline.some((line) =>
+      line.some(([lon, lat]) => Math.abs(lat - 41.9) < 0.05 && Math.abs(lon + 87.62) < 0.05),
+    );
+    expect(lakefront).toBe(true);
+    expect(pack.videoMap.classB.map((area) => area.name)).toContain('Chicago');
+    expect(pack.videoMap.traconBoundary?.name).toBe('C90');
+    expect(new Set(pack.videoMap.artccBoundaries.map((b) => b.artcc))).toContain('ZAU');
+  });
+
+  it('uses TRACON MVAs near the airports and Center MIAs beyond', () => {
+    expect(pack.minimumVectoringAltitude({ lat: 41.98, lon: -87.7 })).toBeLessThanOrEqual(4_000);
+    expect(pack.minimumVectoringAltitude({ lat: 43.5, lon: -89.5 })).toBeDefined();
+  });
+
+  it('knows which Center owns the airspace around the region', () => {
+    expect(pack.centerAt({ lat: 41.9, lon: -87.9 }, 30_000).id).toBe('ZAU');
+    expect(pack.isCenter('ZMP')).toBe(true);
+    expect(pack.isCenter('C90')).toBe(false);
   });
 });
 

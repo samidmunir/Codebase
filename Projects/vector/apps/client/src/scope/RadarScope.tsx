@@ -46,7 +46,6 @@ interface RadarScopeProps {
   ref?: Ref<RadarScopeHandle>;
 }
 
-const PLAYER_ID = 'N90';
 const FIT_MARGIN_NM = 3;
 /** Real milliseconds per data block time-share phase. */
 const TIME_SHARE_MS = 2_000;
@@ -228,7 +227,7 @@ export function RadarScope({
         settings: currentSettings,
         palette,
         targets: session.radar.list(),
-        playerId: PLAYER_ID,
+        playerId: session.engine.playerId,
         airports: controlledAirports,
         trackOf: (id: string) => session.engine.track(id),
         tickSeconds: session.engine.config.tickSeconds,

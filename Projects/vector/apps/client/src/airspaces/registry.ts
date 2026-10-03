@@ -7,6 +7,12 @@ import {
 } from '@vector/sim-core';
 import airlineData from '../../../../data/airlines/airlines.json';
 import performanceData from '../../../../data/aircraft-types/performance.json';
+import chicagoAirports from '../../../../data/airspaces/chicago/airports.json?url';
+import chicagoAirspace from '../../../../data/airspaces/chicago/airspace.json?url';
+import chicagoNavdata from '../../../../data/airspaces/chicago/navdata.json?url';
+import chicagoProcedures from '../../../../data/airspaces/chicago/procedures.json?url';
+import chicagoTraffic from '../../../../data/airspaces/chicago/traffic.json?url';
+import chicagoVideoMap from '../../../../data/airspaces/chicago/video-map.json?url';
 import newYorkAirports from '../../../../data/airspaces/new-york/airports.json?url';
 import newYorkAirspace from '../../../../data/airspaces/new-york/airspace.json?url';
 import newYorkNavdata from '../../../../data/airspaces/new-york/navdata.json?url';
@@ -29,10 +35,34 @@ async function fetchJson(url: string): Promise<unknown> {
   return response.json();
 }
 
-/**
- * Airspaces the player can choose from. Each pack's data files are served as
- * static assets and validated when loaded.
- */
+/** URLs of a pack's data files (served as static assets). */
+interface PackUrls {
+  airspace: string;
+  airports: string;
+  navdata: string;
+  procedures: string;
+  videoMap: string;
+  traffic: string;
+}
+
+/** Loads a pack's data files and validates them. */
+function packLoader(urls: PackUrls): () => Promise<AirspacePack> {
+  return async () => {
+    const [airspace, airports, navdata, procedures, videoMap, traffic] = await Promise.all(
+      [
+        urls.airspace,
+        urls.airports,
+        urls.navdata,
+        urls.procedures,
+        urls.videoMap,
+        urls.traffic,
+      ].map(fetchJson),
+    );
+    return AirspacePack.parse({ airspace, airports, navdata, procedures, videoMap, traffic });
+  };
+}
+
+/** Airspaces the player can choose from. */
 export const AIRSPACES: AirspaceEntry[] = [
   {
     id: 'new-york',
@@ -40,19 +70,29 @@ export const AIRSPACES: AirspaceEntry[] = [
     facility: 'N90',
     airports: ['KJFK', 'KLGA', 'KEWR'],
     available: true,
-    load: async () => {
-      const [airspace, airports, navdata, procedures, videoMap, traffic] = await Promise.all(
-        [
-          newYorkAirspace,
-          newYorkAirports,
-          newYorkNavdata,
-          newYorkProcedures,
-          newYorkVideoMap,
-          newYorkTraffic,
-        ].map(fetchJson),
-      );
-      return AirspacePack.parse({ airspace, airports, navdata, procedures, videoMap, traffic });
-    },
+    load: packLoader({
+      airspace: newYorkAirspace,
+      airports: newYorkAirports,
+      navdata: newYorkNavdata,
+      procedures: newYorkProcedures,
+      videoMap: newYorkVideoMap,
+      traffic: newYorkTraffic,
+    }),
+  },
+  {
+    id: 'chicago',
+    name: 'Chicago',
+    facility: 'C90',
+    airports: ['KORD', 'KMDW'],
+    available: true,
+    load: packLoader({
+      airspace: chicagoAirspace,
+      airports: chicagoAirports,
+      navdata: chicagoNavdata,
+      procedures: chicagoProcedures,
+      videoMap: chicagoVideoMap,
+      traffic: chicagoTraffic,
+    }),
   },
 ];
 
