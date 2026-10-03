@@ -302,7 +302,15 @@ export const airportTrafficSchema = z.object({
     )
     .min(1),
   destinations: z
-    .array(z.object({ icao: z.string(), weight: z.number().positive(), gate: z.string() }))
+    .array(
+      z.object({
+        icao: z.string(),
+        weight: z.number().positive(),
+        gate: z.string(),
+        /** Airlines that fly there from the airport; any airline if omitted. */
+        airlines: z.array(z.string()).min(1).optional(),
+      }),
+    )
     .min(1),
 });
 

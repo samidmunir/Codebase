@@ -216,6 +216,9 @@ const CENTER_MIN_RESOLUTION_FT = 6_000;
 const ARRIVAL_MIN_ENTRY_ALTITUDE_FT = 6_000;
 /** Transits enter and leave at least this far apart around the airspace (degrees). */
 const MIN_TRANSIT_TURN_DEG = 110;
+/** A transit's cities are ones whose route via the area is at most this much longer than direct. */
+const MAX_TRANSIT_DETOUR_NM = 60;
+const TRANSIT_PAIR_ATTEMPTS = 20;
 /** New arrivals wait if another aircraft is this close to the entry point at a similar altitude. */
 const ARRIVAL_ENTRY_SPACING_NM = 6;
 /** Line-up and takeoff roll after a takeoff clearance. */
@@ -1358,8 +1361,20 @@ export class SimEngine {
     const fromCities = citiesToward(entryGate.name);
     const toCities = citiesToward(exitGate.name);
     if (fromCities.length === 0 || toCities.length === 0) return false;
-    const origin = weightedPick(random, fromCities).icao;
-    const destination = weightedPick(random, toCities).icao;
+    // Only a pair whose route really crosses the area: flying via it is barely longer than direct.
+    const detourNm = (from: string, to: string) => {
+      const a = pack.traffic.cityPositions[from];
+      const b = pack.traffic.cityPositions[to];
+      return a && b ? distanceNm(a, center) + distanceNm(center, b) - distanceNm(a, b) : 0;
+    };
+    let origin = '';
+    let destination = '';
+    for (let attempt = 0; attempt < TRANSIT_PAIR_ATTEMPTS && !origin; attempt++) {
+      const from = weightedPick(random, fromCities).icao;
+      const to = weightedPick(random, toCities).icao;
+      if (detourNm(from, to) <= MAX_TRANSIT_DETOUR_NM) [origin, destination] = [from, to];
+    }
+    if (!origin) return false;
 
     // An airline with a type that can fly the whole trip, and that type.
     const fromCity = pack.traffic.cityPositions[origin];
@@ -1369,8 +1384,20 @@ export class SimEngine {
       types.filter(
         (type) => this.performance.has(type) && this.performance.get(type).rangeNm >= tripNm,
       );
+    // An airline that flies to both cities (some only serve a few, like a foreign
+    // carrier's hub), and that serves at least one of them if it has a list of its own.
+    const endpoints = [origin, destination];
+    const operators = (city: string) => {
+      const entries = allTraffic.flatMap((t) => t.destinations).filter((d) => d.icao === city);
+      return entries.every((d) => d.airlines)
+        ? new Set(entries.flatMap((d) => d.airlines!))
+        : undefined;
+    };
+    const flies = (airline: { icao: string; destinations?: readonly string[] | undefined }) =>
+      endpoints.every((city) => operators(city)?.has(airline.icao) ?? true) &&
+      (airline.destinations?.some((city) => endpoints.includes(city)) ?? true);
     const airlines = airlineMix(
-      allTraffic.flatMap((t) => t.airlines).filter((a) => capable(a.types).length > 0),
+      allTraffic.flatMap((t) => t.airlines).filter((a) => flies(a) && capable(a.types).length > 0),
       this.state.settings['traffic.fleetMix'],
     );
     if (airlines.length === 0) return false;

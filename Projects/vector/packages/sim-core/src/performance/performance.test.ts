@@ -4,20 +4,33 @@ import { cloneJson } from '../snapshot/clone';
 import { parsePerformanceCatalog, rateAtAltitude } from './performance';
 
 describe('performance data', () => {
-  it('validates and includes the full v1 fleet', () => {
+  it('validates and includes the full fleet', () => {
     const catalog = parsePerformanceCatalog(performanceData);
     expect(catalog.types().sort()).toEqual(
       [
+        'A20N',
         'A21N',
         'A320',
         'A321',
         'A333',
+        'A339',
+        'A359',
+        'A35K',
+        'A388',
+        'B38M',
+        'B39M',
         'B738',
         'B739',
+        'B748',
         'B752',
         'B763',
+        'B772',
+        'B77L',
         'B77W',
         'B789',
+        'B78X',
+        'BCS1',
+        'BCS3',
         'CRJ9',
         'E175',
       ].sort(),

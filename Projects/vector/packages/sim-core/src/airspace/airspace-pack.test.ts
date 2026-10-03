@@ -5,6 +5,8 @@ import navdata from '../../../../data/airspaces/new-york/navdata.json';
 import procedures from '../../../../data/airspaces/new-york/procedures.json';
 import traffic from '../../../../data/airspaces/new-york/traffic.json';
 import videoMap from '../../../../data/airspaces/new-york/video-map.json';
+import airlineData from '../../../../data/airlines/airlines.json';
+import performanceData from '../../../../data/aircraft-types/performance.json';
 import { cloneJson } from '../snapshot/clone';
 import { distanceNm } from '../math/geo';
 import { AirspaceDataError, AirspacePack, type AirspacePackFiles } from './airspace-pack';
@@ -122,6 +124,28 @@ describe('traffic profile', () => {
   it('keeps widebodies out of LaGuardia', () => {
     const types = pack.traffic.airports.KLGA!.airlines.flatMap((airline) => airline.types);
     expect(types.some((type) => ['B77W', 'B789', 'B763', 'A333'].includes(type))).toBe(false);
+  });
+
+  it('has a radio name, performance and a place to fly for every airline in the profile', () => {
+    const named = new Set(airlineData.airlines.map((a) => a.icao));
+    const types = new Set(performanceData.aircraft.map((a) => a.icao));
+    for (const [airport, traffic] of Object.entries(pack.traffic.airports)) {
+      const cities = new Set(traffic.destinations.map((d) => d.icao));
+      for (const airline of traffic.airlines) {
+        expect(named, `${airport} ${airline.icao}`).toContain(airline.icao);
+        for (const type of airline.types) expect(types, `${airline.icao} ${type}`).toContain(type);
+        for (const city of airline.destinations ?? [])
+          expect(cities, `${airport} ${airline.icao}`).toContain(city);
+      }
+      for (const destination of traffic.destinations) {
+        expect(pack.traffic.cityPositions[destination.icao], destination.icao).toBeDefined();
+        for (const icao of destination.airlines ?? [])
+          expect(
+            traffic.airlines.map((a) => a.icao),
+            `${airport} ${destination.icao}`,
+          ).toContain(icao);
+      }
+    }
   });
 
   it('rejects a configuration landing on a runway without an ILS', () => {

@@ -1,5 +1,6 @@
 import { defaultSettings, type SessionSettings } from '@vector/shared';
 import { describe, expect, it } from 'vitest';
+import { distanceNm } from '../math/geo';
 import { SeededRandom } from '../random/seeded-random';
 import { departureProcedure } from '../traffic/departure-procedure';
 import { initialOperations, newDepartureEntry } from '../traffic/operations';
@@ -372,23 +373,28 @@ describe('departure routes', () => {
     engine.subscribe(
       (event) => event.type === 'procedureCompleted' && completed.add(event.aircraftId),
     );
-    run(engine, 2_400);
-    const departed = engine
-      .listAircraft()
-      .filter(
-        (a) => completed.has(a.id) && newYork.airspace.airports.includes(a.flightPlan.origin),
-      );
+    // Looked at once one has turned on past its gate, before departures are handed off and gone.
+    const departedNow = () =>
+      engine
+        .listAircraft()
+        .filter(
+          (a) => completed.has(a.id) && newYork.airspace.airports.includes(a.flightPlan.origin),
+        );
+    const onToDestination = (a: ReturnType<typeof departedNow>[number]) =>
+      a.navigation.mode === 'direct' && a.navigation.fix === a.flightPlan.destination;
+    for (let t = 0; t < 2_400 && !departedNow().some(onToDestination); t += 10) run(engine, 10);
+    const departed = departedNow();
     expect(departed.length).toBeGreaterThan(0);
     for (const aircraft of departed) {
-      const gate = aircraft.flightPlan.route.at(-1)!;
-      // Either still on its way to the gate, or past it and heading for the destination.
-      if (engine.routeFlown(aircraft.id)) {
-        expect(aircraft.navigation).toMatchObject({
-          mode: 'direct',
-          fix: aircraft.flightPlan.destination,
-        });
+      const gate = newYork.fix(aircraft.flightPlan.route.at(-1)!)!;
+      // On its way to the gate (which counts as passed from 2 NM short of it, while it
+      // turns), or past it and heading for the destination.
+      if (onToDestination(aircraft)) {
+        expect(engine.routeFlown(aircraft.id)).toBe(true);
       } else {
-        expect(aircraft.navigation).toMatchObject({ mode: 'direct', fix: gate });
+        expect(aircraft.navigation).toMatchObject({ mode: 'direct', fix: gate.ident });
+        if (engine.routeFlown(aircraft.id))
+          expect(distanceNm(aircraft.position, gate.position)).toBeLessThanOrEqual(2);
       }
     }
     expect(departed.some((a) => engine.routeFlown(a.id))).toBe(true);

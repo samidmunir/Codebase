@@ -248,6 +248,17 @@ export function airlineMix<T extends { weight: number }>(
     : [...airlines];
 }
 
+/** Whether an airline flies to a destination: both the airline's and the destination's lists allow it. */
+export function servesDestination(
+  airline: { icao: string; destinations?: readonly string[] | undefined },
+  destination: { icao: string; airlines?: readonly string[] | undefined },
+): boolean {
+  return (
+    (airline.destinations?.includes(destination.icao) ?? true) &&
+    (destination.airlines?.includes(airline.icao) ?? true)
+  );
+}
+
 /** A new departure for an airport, with a realistic airline, type, destination and exit gate. */
 export function newDepartureEntry(
   context: NewDepartureContext,
@@ -268,9 +279,7 @@ export function newDepartureEntry(
     if (!context.callsignsInUse.has(callsign)) break;
   }
 
-  const served = airline.destinations
-    ? traffic.destinations.filter((d) => airline.destinations!.includes(d.icao))
-    : traffic.destinations;
+  const served = traffic.destinations.filter((d) => servesDestination(airline, d));
   // Only destinations one of the airline's types can reach, and then a type that can.
   const origin = pack.airport(airport).position;
   const fleet = types.length > 0 ? types : airline.types;

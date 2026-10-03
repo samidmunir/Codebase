@@ -1,6 +1,7 @@
 import { defaultSettings } from '@vector/shared';
 import { describe, expect, it } from 'vitest';
 import { distanceNm } from '../math/geo';
+import { servesDestination } from '../traffic/operations';
 import { airlines, newYork, performance } from '../testing/fixtures';
 import { SimEngine } from './sim-engine';
 
@@ -80,7 +81,61 @@ describe('fleet range', () => {
     );
     expect(europe.length).toBeGreaterThan(5);
     for (const flight of europe)
-      expect(['CRJ9', 'E175', 'A320', 'A321', 'B738', 'B739']).not.toContain(flight.type);
+      expect([
+        'CRJ9',
+        'E175',
+        'BCS1',
+        'BCS3',
+        'A320',
+        'A20N',
+        'A321',
+        'B738',
+        'B38M',
+        'B739',
+        'B39M',
+      ]).not.toContain(flight.type);
     expect(new Set(europe.map((f) => f.type)).size).toBeGreaterThan(1);
+  });
+
+  it('flies each airline only where it serves, in a type it flies there', () => {
+    const airports = newYork.traffic.airports;
+    const fliesTo = (airport: string, airline: string, type: string, city: string) => {
+      const entry = airports[airport]!.airlines.find((a) => a.icao === airline);
+      const destination = airports[airport]!.destinations.find((d) => d.icao === city);
+      return (
+        entry !== undefined &&
+        entry.types.includes(type) &&
+        destination !== undefined &&
+        servesDestination(entry, destination)
+      );
+    };
+    const seen = new Set<string>();
+    for (const flight of flights) {
+      const airline = flight.callsign.slice(0, 3);
+      seen.add(airline);
+      const label = `${flight.callsign} ${flight.type} ${flight.from}-${flight.to}`;
+      if (airports[flight.from])
+        expect(fliesTo(flight.from, airline, flight.type, flight.to), label).toBe(true);
+      else if (airports[flight.to])
+        expect(fliesTo(flight.to, airline, flight.type, flight.from), label).toBe(true);
+      else {
+        // An overflight: cities only some airlines serve are flown by those airlines.
+        for (const city of [flight.from, flight.to]) {
+          const entries = Object.values(airports)
+            .flatMap((t) => t.destinations)
+            .filter((d) => d.icao === city);
+          if (entries.every((d) => d.airlines))
+            expect(
+              entries.flatMap((d) => d.airlines!),
+              label,
+            ).toContain(airline);
+        }
+      }
+    }
+    // The carriers that only fly to their hubs still show up.
+    for (const airline of ['BAW', 'UAE', 'FDX', 'SWA']) expect(seen).toContain(airline);
+    expect(
+      flights.filter((f) => f.type === 'A388').every((f) => f.callsign.startsWith('UAE')),
+    ).toBe(true);
   });
 });
