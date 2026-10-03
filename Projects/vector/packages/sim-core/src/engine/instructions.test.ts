@@ -71,6 +71,24 @@ describe('issuing instructions', () => {
     expect(engine.pendingInstructions(aircraft.id)).toHaveLength(0);
   });
 
+  it.each([
+    ['A388', 'Emirates two zero one super'],
+    ['B77W', 'Emirates two zero one heavy'],
+    ['B752', 'Emirates two zero one'],
+  ])('reads back as a %s with "%s"', (aircraftType, spoken) => {
+    const engine = createEngine();
+    const aircraft = engine.addAircraft({
+      ...newAircraft(),
+      callsign: 'UAE201',
+      telephony: 'Emirates',
+      aircraftType,
+    });
+    engine.issueInstruction(aircraft.id, [{ type: 'speed', iasKts: 210 }]);
+    expect(engine.comms.at(-1)!.text).toMatch(new RegExp(`^${spoken}, `));
+    run(engine, 3);
+    expect(engine.comms.at(-1)!.text).toMatch(new RegExp(`, ${spoken}\\.$`));
+  });
+
   it('uses brief readbacks when set', () => {
     const engine = SimEngine.create({
       performance,

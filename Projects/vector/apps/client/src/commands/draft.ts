@@ -113,10 +113,12 @@ export function draftCommands(
 export function transmissionText(
   commands: readonly AtcCommand[],
   aircraft: Readonly<AircraftState>,
+  /** The type's wake category: heavies and supers say so after the callsign. */
+  wakeCategory?: string,
 ): string {
   if (commands.length === 0) return '';
   const phrases = inSpokenOrder(commands).map((command) => controllerPhrase(command, aircraft));
-  return `${capitalize(spokenCallsign(aircraft.callsign, aircraft.telephony))}, ${phrases.join(', ')}.`;
+  return `${capitalize(spokenCallsign(aircraft.callsign, aircraft.telephony, wakeCategory))}, ${phrases.join(', ')}.`;
 }
 
 /** What the scope should draw for the draft. */

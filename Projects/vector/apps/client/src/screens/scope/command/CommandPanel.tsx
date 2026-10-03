@@ -399,7 +399,7 @@ export function CommandPanel(props: CommandPanelProps) {
             >
               {isEmptyDraft(draft)
                 ? 'Choose an instruction to build the transmission.'
-                : transmissionText(commands, aircraft)}
+                : transmissionText(commands, aircraft, performance.wakeCategory)}
             </p>
             {check && !check.ok && <p className="transmission__error">{check.reason}</p>}
             {check?.ok && approachEffect && !approachEffect.ok && (

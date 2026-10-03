@@ -521,6 +521,18 @@ export class SimEngine {
     }
   }
 
+  /** A flight's callsign as spoken on the radio, with "heavy" or "super" for those types. */
+  spokenCallsign(flight: {
+    callsign: string;
+    telephony?: string | undefined;
+    aircraftType: string;
+  }): string {
+    const wake = this.performance.has(flight.aircraftType)
+      ? this.performance.get(flight.aircraftType).wakeCategory
+      : undefined;
+    return spokenCallsign(flight.callsign, flight.telephony, wake);
+  }
+
   /** Whether a departure or overflight has passed its gate or exit fix. */
   routeFlown(aircraftId: string): boolean {
     return this.state.routeFixPassed[aircraftId] === true;
@@ -776,7 +788,7 @@ export class SimEngine {
     const aircraft = this.getAircraft(aircraftId)!;
     const ordered = inSpokenOrder(commands);
 
-    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    const callsign = this.spokenCallsign(aircraft);
     const phrases = ordered.map((command) => controllerPhrase(command, aircraft));
     this.transmit('controller', aircraftId, `${callsign}, ${phrases.join(', ')}.`);
 
@@ -874,7 +886,7 @@ export class SimEngine {
         );
         this.emit({ type: 'ilsUnable', aircraftId: aircraft.id, reason: approachBefore.reason });
       }
-      const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+      const callsign = this.spokenCallsign(aircraft);
       this.transmit('pilot', aircraft.id, `${capitalize(readback.join(', '))}, ${callsign}.`);
       this.emit({ type: 'instructionExecuted', aircraftId: aircraft.id, commands: executed });
     }
@@ -1137,7 +1149,7 @@ export class SimEngine {
       if (geometry.alongTrackNm <= 0 || diverging) {
         aircraft.navigation = { mode: 'heading' };
         if (aircraft.phase === 'approach') aircraft.phase = 'arrival';
-        const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+        const callsign = this.spokenCallsign(aircraft);
         const reason = 'unable to intercept the localizer on this heading';
         this.transmit(
           'pilot',
@@ -1153,7 +1165,7 @@ export class SimEngine {
     if (established && aircraft.owner === this.state.playerId && this.airspace) {
       const runway = this.airspace.runway(clearance.airport, clearance.runway);
       const tower = this.airspace.airport(clearance.airport).towerCallsign;
-      const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+      const callsign = this.spokenCallsign(aircraft);
       this.transmit(
         'controller',
         aircraft.id,
@@ -1245,7 +1257,7 @@ export class SimEngine {
     this.changeOwner(aircraft, this.state.playerId);
 
     const facility = this.airspace?.airspace.controllers.approach.approachCallsign ?? 'Approach';
-    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    const callsign = this.spokenCallsign(aircraft);
     this.transmit(
       'pilot',
       aircraft.id,
@@ -1461,7 +1473,7 @@ export class SimEngine {
       position: { ...exitFix.position },
     };
 
-    const spoken = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    const spoken = this.spokenCallsign(aircraft);
     this.transmit(
       'pilot',
       aircraft.id,
@@ -1590,7 +1602,7 @@ export class SimEngine {
     const atis = this.state.operations?.atis?.[airport];
     const information = atis ? `, information ${letterWords(atis.letter)}` : '';
     const facility = this.checkInFacility(altitude);
-    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    const callsign = this.spokenCallsign(aircraft);
     const star = procedureWords(route.star);
     this.transmit(
       'pilot',
@@ -1939,7 +1951,7 @@ export class SimEngine {
     const operations = this.state.operations!;
     const entry = operations.departureQueue.find((candidate) => candidate.id === entryId)!;
     const tower = this.airspace.airport(entry.airport).towerCallsign;
-    const callsign = spokenCallsign(entry.callsign, entry.telephony);
+    const callsign = this.spokenCallsign(entry);
 
     this.transmit(
       'controller',
@@ -2069,7 +2081,7 @@ export class SimEngine {
     for (const entry of [...operations.departureQueue]) {
       if (entry.status !== 'cleared') continue;
       if (entry.readbackAtTick === tick) {
-        const callsign = spokenCallsign(entry.callsign, entry.telephony);
+        const callsign = this.spokenCallsign(entry);
         this.transmit(
           'pilot',
           undefined,
@@ -2144,7 +2156,7 @@ export class SimEngine {
     if (hold.mode !== 'hold' || hold.efcCalled || hold.efcTick === undefined) return;
     if (this.state.tick < hold.efcTick || aircraft.owner !== this.state.playerId) return;
     hold.efcCalled = true;
-    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    const callsign = this.spokenCallsign(aircraft);
     this.transmit(
       'pilot',
       aircraft.id,
@@ -2168,7 +2180,7 @@ export class SimEngine {
         ? `, ${procedureWords(navigation.name)} departure`
         : '';
     const facility = this.airspace.airspace.controllers.approach.departureCallsign;
-    const callsign = spokenCallsign(aircraft.callsign, aircraft.telephony);
+    const callsign = this.spokenCallsign(aircraft);
     const climbingVia = navigation.mode === 'procedure' && navigation.climbVia && isOnSid(aircraft);
     this.transmit(
       'pilot',
