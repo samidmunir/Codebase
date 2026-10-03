@@ -12,6 +12,11 @@ export async function registerPilot(page: Page): Promise<void> {
   await expect(page.getByText('Signed in as')).toBeVisible();
 }
 
+/** Opens session setup for an airspace from the start screen. */
+export async function newSession(page: Page, airspace: string): Promise<void> {
+  await page.locator('.airspace-card', { hasText: airspace }).click();
+}
+
 interface ScopeState {
   tick: number;
   paused: boolean;

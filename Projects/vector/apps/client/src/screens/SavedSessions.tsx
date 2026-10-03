@@ -107,6 +107,7 @@ export function SavedSessions() {
           {state.sessions.length} of {state.limit}
         </span>
       </div>
+      <AirspaceTotals sessions={state.sessions} />
       <CareerStats stats={state.careerStats} />
       {actionError && (
         <p className="saved-sessions__error" role="alert">
@@ -194,6 +195,21 @@ export function SavedSessions() {
         })}
       </ul>
     </section>
+  );
+}
+
+/** RP by airspace, once sessions in more than one are saved. */
+function AirspaceTotals({ sessions }: { sessions: readonly { airspaceId: string; rp: number }[] }) {
+  const totals = new Map<string, number>();
+  for (const saved of sessions)
+    totals.set(saved.airspaceId, (totals.get(saved.airspaceId) ?? 0) + saved.rp);
+  if (totals.size < 2) return null;
+  return (
+    <p className="saved-sessions__airspaces" aria-label="RP by airspace">
+      {[...totals]
+        .map(([id, rp]) => `${findAirspace(id)?.facility ?? id} ${formatRp(rp)}`)
+        .join(' · ')}
+    </p>
   );
 }
 

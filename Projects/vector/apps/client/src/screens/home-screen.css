@@ -340,6 +340,13 @@
   font-weight: 600;
 }
 
+.saved-sessions__airspaces {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+}
+
 .career-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
