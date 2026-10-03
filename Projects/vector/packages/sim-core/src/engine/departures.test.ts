@@ -41,6 +41,10 @@ const run = (engine: SimEngine, seconds: number) => {
 };
 
 describe('wind and runways', () => {
+  it('makes the player the airspace’s approach facility', () => {
+    expect(createEngine().playerId).toBe(newYork.airspace.controllers.approach.id);
+  });
+
   it('picks runways for each airport that suit its wind', () => {
     for (let seed = 1; seed <= 30; seed++) {
       const engine = createEngine({}, seed);

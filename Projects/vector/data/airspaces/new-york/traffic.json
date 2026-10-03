@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "notes": "Curated operations profile. Runway configurations are common real-world New York flows, and airline and destination weights approximate each airport's real traffic. Not FAA-published data. cityPositions are the airports' reference points, for trip lengths and cruise levels. Runway configurations are in order of preference; dual configurations come first and are used when the wind is within limits on every runway in them.",
+  "notes": "Curated operations profile. Runway configurations are common real-world New York flows, and airline and destination weights approximate each airport's real traffic. Not FAA-published data. cityPositions are the airports' reference points, for trip lengths and cruise levels. Runway configurations are in order of preference; dual configurations come first and are used when the wind is within limits on every runway in them. windRegimes approximate the region's typical surface winds (fractions of time, magnetic), for random weather.",
   "departureGates": {
     "north": [
       "GAYEL",
@@ -1216,5 +1216,37 @@
       "lat": 18.4394,
       "lon": -66.0018
     }
-  }
+  },
+  "windRegimes": [
+    {
+      "weight": 0.3,
+      "fromDeg": 190,
+      "toDeg": 240
+    },
+    {
+      "weight": 0.28,
+      "fromDeg": 280,
+      "toDeg": 330
+    },
+    {
+      "weight": 0.14,
+      "fromDeg": 20,
+      "toDeg": 70
+    },
+    {
+      "weight": 0.1,
+      "fromDeg": 250,
+      "toDeg": 280
+    },
+    {
+      "weight": 0.1,
+      "fromDeg": 110,
+      "toDeg": 170
+    },
+    {
+      "weight": 0.08,
+      "fromDeg": 0,
+      "toDeg": 360
+    }
+  ]
 }

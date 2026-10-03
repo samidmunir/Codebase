@@ -152,7 +152,7 @@ export type CreateSimEngineOptions = {
   config?: SimConfig;
   /** Gameplay and realism settings for this session. Defaults if omitted. */
   settings?: SessionSettings;
-  /** Controller the player works as. Defaults to 'N90'. */
+  /** Controller the player works as. Defaults to the airspace's approach facility (e.g. 'N90'). */
   playerId?: string;
   /**
    * Runway configuration to use at an airport (by config id) instead of the
@@ -273,7 +273,7 @@ export class SimEngine {
         config: cloneJson(options.config ?? DEFAULT_SIM_CONFIG),
         settings: cloneJson(options.settings ?? defaultSettings('session')),
         aircraft: [],
-        playerId: options.playerId ?? 'N90',
+        playerId: options.playerId ?? options.airspace?.airspace.controllers.approach.id ?? 'N90',
         pendingInstructions: [],
         comms: [],
         nextMessageNumber: 1,

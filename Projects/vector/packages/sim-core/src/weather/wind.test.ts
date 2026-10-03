@@ -147,4 +147,22 @@ describe('wind generation', () => {
     expect(share(190, 240)).toBeGreaterThan(0.2);
     expect(share(280, 330)).toBeGreaterThan(0.2);
   });
+
+  it('blows from the regimes it is given, whatever their weights add up to', () => {
+    const regimes = [
+      { weight: 3, fromDeg: 90, toDeg: 110 },
+      { weight: 1, fromDeg: 260, toDeg: 280 },
+    ];
+    const directions = Array.from(
+      { length: 1000 },
+      (_, seed) => generateWinds(new SeededRandom(seed), ['KORD'], regimes).KORD!,
+    )
+      .filter((wind) => wind.speedKts > 3)
+      .map((wind) => wind.directionDeg);
+    // Each airport's wind is within 10° of the regional one.
+    expect(directions.every((d) => (d >= 80 && d <= 120) || (d >= 250 && d <= 290))).toBe(true);
+    const east = directions.filter((d) => d <= 120).length / directions.length;
+    expect(east).toBeGreaterThan(0.65);
+    expect(east).toBeLessThan(0.85);
+  });
 });

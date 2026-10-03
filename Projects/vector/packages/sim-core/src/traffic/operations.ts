@@ -150,7 +150,7 @@ export function initialOperations(
   const winds =
     settings.windMode === 'manual'
       ? manualWinds(airports, settings.manualWind)
-      : generateWinds(random, airports);
+      : generateWinds(random, airports, pack.traffic.windRegimes);
   if (settings.windMode === 'live' && settings.liveWeather)
     Object.assign(
       winds,
