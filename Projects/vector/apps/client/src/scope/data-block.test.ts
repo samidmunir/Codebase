@@ -76,4 +76,16 @@ describe('data block', () => {
     };
     expect(dataBlockLines(level, 0, 'expanded')[1]).toMatch(/^350 {2}\d{3}$/);
   });
+
+  it('shows CST instead of ground speed while coasting', () => {
+    expect(dataBlockLines({ ...target, coasting: true }, 0, 'expanded')[1]).toMatch(/ CST$/);
+    expect(dataBlockLines({ ...target, coasting: true }, 0, 'stars')[1]).toMatch(/CST$/);
+  });
+
+  it('shows indicated airspeed instead of ground speed when chosen', () => {
+    const climbing = { ...target, groundSpeedKts: 312, iasKts: 250 };
+    expect(dataBlockLines(climbing, 0, 'expanded', 'indicated')[1]).toMatch(/ 250$/);
+    expect(dataBlockLines(climbing, 0, 'expanded', 'ground')[1]).toMatch(/ 312$/);
+    expect(dataBlockLines(climbing, 0, 'stars', 'indicated')[1]).toMatch(/25$/);
+  });
 });

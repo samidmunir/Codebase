@@ -140,11 +140,16 @@
   cursor: pointer;
 }
 
-.leader-picker__center {
+.leader-picker .leader-picker__center {
   background: transparent;
-  box-shadow: inset 0 0 0 3px rgba(76, 242, 160, 0.5);
+  box-shadow: inset 0 0 0 2px rgba(76, 242, 160, 0.4);
   border-radius: 50%;
-  cursor: default;
+  cursor: pointer;
+}
+
+.leader-picker .leader-picker__center[aria-pressed='true'] {
+  background: rgba(76, 242, 160, 0.9);
+  box-shadow: none;
 }
 
 .leader-picker button:hover {
@@ -772,6 +777,32 @@
   font-size: 0.72rem;
 }
 
+.departure-airport__atis {
+  color: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  cursor: help;
+}
+
+.departure-airport__atis b {
+  color: var(--color-target);
+}
+
+.departure-airport__change {
+  margin-top: 6px;
+  padding: 4px 8px;
+  color: var(--color-caution, #f5c451);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  background: rgba(245, 196, 81, 0.08);
+  border: 1px solid rgba(245, 196, 81, 0.25);
+  border-radius: 4px;
+}
+
+.departure-airport__change b {
+  color: var(--color-text);
+}
+
 .departure-airport__runways abbr {
   color: var(--color-text-faint);
   text-decoration: none;
@@ -1074,4 +1105,189 @@
   font-family: var(--font-data);
   font-size: 0.55rem;
   letter-spacing: 0.05em;
+}
+
+.command-panel__plan {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: var(--space-2) var(--space-4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.command-panel__plan li {
+  padding: 3px 8px;
+  color: var(--color-text);
+  font-family: var(--font-data);
+  font-size: 0.74rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 999px;
+}
+
+.command-panel__plan li span {
+  color: var(--color-text-muted);
+}
+
+.command-panel__plan li[data-tone='good'] {
+  color: var(--color-target);
+  border-color: rgba(76, 242, 160, 0.35);
+}
+
+.command-panel__plan li[data-tone='late'] {
+  color: var(--color-alert);
+  border-color: rgba(255, 90, 90, 0.45);
+  background: rgba(255, 90, 90, 0.07);
+}
+
+.command-panel__plan li[data-tone='caution'] {
+  color: var(--color-caution);
+  border-color: rgba(255, 181, 71, 0.45);
+  background: rgba(255, 181, 71, 0.06);
+}
+
+.handoff-checks {
+  display: grid;
+  gap: 6px;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.handoff-checks li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: baseline;
+  color: var(--color-text-muted);
+}
+
+.handoff-checks li[data-met='true'] {
+  color: var(--color-text);
+}
+
+.handoff-checks li[data-met='true'] > span {
+  color: var(--color-target);
+}
+
+.handoff-checks small {
+  color: var(--color-text-faint);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+}
+
+.handoff-checks--bonus {
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.handoff-option:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.descend-via {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin-bottom: var(--space-3);
+  padding: 8px 12px;
+  color: var(--color-text);
+  text-align: left;
+  background: rgba(76, 242, 160, 0.06);
+  border: 1px solid rgba(76, 242, 160, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.descend-via[aria-pressed='true'] {
+  background: rgba(76, 242, 160, 0.18);
+  border-color: var(--color-target);
+}
+
+.descend-via:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.descend-via__title {
+  font-weight: 600;
+}
+
+.descend-via__detail {
+  color: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+}
+
+.hold-tab {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.hold-tab__status {
+  display: grid;
+  gap: 4px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  background: rgba(76, 242, 160, 0.06);
+  border: 1px solid rgba(76, 242, 160, 0.25);
+  border-radius: 6px;
+}
+
+.hold-tab__status > span:nth-child(2) {
+  color: var(--color-text-muted);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+}
+
+.hold-tab__status .descend-via {
+  margin: 6px 0 0;
+}
+
+.hold-tab .fix-list {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.hold-tab__options {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.hold-tab__describe,
+.hold-tab__efc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.hold-tab__describe b {
+  min-width: 3.2em;
+  text-align: center;
+  font-family: var(--font-data);
+}
+
+.hold-tab__describe > button {
+  width: 28px;
+  height: 28px;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hold-tab__efc span {
+  color: var(--color-text-muted);
+}
+
+.transmission__warning {
+  margin: 0;
+  color: var(--color-caution);
+  font-size: 0.78rem;
 }

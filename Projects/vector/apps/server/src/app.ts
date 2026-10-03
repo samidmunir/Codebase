@@ -10,9 +10,11 @@ import { errorHandler } from './routes/errors';
 import { healthRoutes } from './routes/health';
 import { sessionsRoutes } from './routes/sessions';
 import { settingsRoutes } from './routes/settings';
+import { weatherRoutes } from './routes/weather';
 import { savedSessionsRepository } from './sessions/sessions-repository';
 import { settingsRepository } from './settings/settings-repository';
 import { usersRepository } from './users/users-repository';
+import { metarService, type MetarService } from './weather/metar-service';
 
 export const API_VERSION = '0.0.0';
 
@@ -28,6 +30,8 @@ export interface AppDependencies {
     signInRateLimit?: number;
     /** Saved sessions allowed per account. Defaults to MAX_SAVED_SESSIONS. */
     savedSessionLimit?: number;
+    /** Live METARs; defaults to fetching from aviationweather.gov. */
+    metars?: MetarService;
   };
 }
 
@@ -61,6 +65,10 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           jwtSecret: authConfig.jwtSecret,
           bodyLimit: MAX_SNAPSHOT_BYTES,
           ...(deps.accounts.savedSessionLimit ? { limit: deps.accounts.savedSessionLimit } : {}),
+        });
+        await api.register(weatherRoutes, {
+          metars: deps.accounts.metars ?? metarService(),
+          jwtSecret: authConfig.jwtSecret,
         });
       }
     },

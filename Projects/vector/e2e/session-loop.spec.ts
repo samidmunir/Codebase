@@ -18,7 +18,8 @@ test('sets up a session, controls traffic, saves it and resumes exactly', async 
   const started = await scopeState(page);
   expect(started.settings['traffic.arrivalRatePerHour']).toBe(10);
   expect(started.settings['weather.windMode']).toBe('manual');
-  expect(started.runways.KJFK!.arrivals).toEqual(['22L']);
+  // A light southwest wind: JFK runs dual arrivals on the 22s.
+  expect(started.runways.KJFK!.arrivals).toEqual(['22L', '22R']);
 
   // Select an aircraft from the radio log and give it a speed through the command menu.
   await page.locator('.comms-log__entry button:not([disabled])').first().click();
@@ -36,6 +37,22 @@ test('sets up a session, controls traffic, saves it and resumes exactly', async 
     /(reduce|increase|maintain) speed/i,
   );
 
+  // Ctrl-click a fix on the scope: the selected aircraft is sent direct to it.
+  const ccc = await page.evaluate(() => {
+    const w = globalThis as unknown as {
+      __vector: { pack: { fix(id: string): { position: { lat: number; lon: number } } } };
+      __vectorProject(p: { lat: number; lon: number }): { x: number; y: number };
+    };
+    return w.__vectorProject(w.__vector.pack.fix('CCC').position);
+  });
+  await page.keyboard.down('Control');
+  await page.mouse.move(ccc.x + 2, ccc.y + 2);
+  await page.mouse.click(ccc.x + 2, ccc.y + 2);
+  await page.keyboard.up('Control');
+  await expect(page.locator('.comms-log__entry--controller').last()).toContainText(
+    'proceed direct CCC',
+  );
+
   // Save (Shift+S pauses first), then leave the scope.
   await page.keyboard.press('Shift+KeyS');
   const dialog = page.getByRole('dialog');
@@ -45,7 +62,12 @@ test('sets up a session, controls traffic, saves it and resumes exactly', async 
   const saved = await scopeState(page);
   expect(saved.paused).toBe(true);
 
-  await page.goto('/');
+  // The debrief follows the save; back to the start screen from it.
+  const debrief = page.getByRole('dialog', { name: 'Session debrief' });
+  await expect(debrief).toContainText('Saved “E2E evening rush”');
+  await expect(debrief).toContainText('Timing');
+  await debrief.getByRole('button', { name: 'Back to start' }).click();
+  await expect(page).toHaveURL(/\/$/);
   const card = page.locator('.saved-session', { hasText: 'E2E evening rush' });
   await expect(card).toContainText('Normal');
   await card.getByRole('link', { name: 'Resume' }).click();

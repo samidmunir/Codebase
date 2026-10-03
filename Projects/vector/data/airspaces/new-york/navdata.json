@@ -4184,5 +4184,809 @@
       },
       "name": "ZUNAR"
     }
+  ],
+  "holds": [
+    {
+      "fix": "ACOVE",
+      "inboundCourseDeg": 211,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 8000,
+      "maxAltitudeFt": 17000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "ATHOS",
+      "inboundCourseDeg": 194,
+      "turn": "left",
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 8000,
+      "maxAltitudeFt": 17500,
+      "chart": "NOT REQUIRED"
+    },
+    {
+      "fix": "BACKY",
+      "inboundCourseDeg": 36,
+      "turn": "right",
+      "legNm": 7,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 10000,
+      "maxAltitudeFt": 12000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BAILZ",
+      "inboundCourseDeg": 71,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 41000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BAYYS",
+      "inboundCourseDeg": 235,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2700,
+      "maxAltitudeFt": 10000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "BESSI",
+      "inboundCourseDeg": 48,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 15000,
+      "maxAltitudeFt": 33000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BILEY",
+      "inboundCourseDeg": 118,
+      "turn": "left",
+      "minAltitudeFt": 13000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BIZEX",
+      "inboundCourseDeg": 186,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 17000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BOTON",
+      "inboundCourseDeg": 49,
+      "turn": "right",
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 19000,
+      "maxAltitudeFt": 24000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BRAND",
+      "inboundCourseDeg": 60,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 7000,
+      "maxAltitudeFt": 8000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "CAMBR",
+      "inboundCourseDeg": 253,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 11000,
+      "maxAltitudeFt": 17000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "CAMRN",
+      "inboundCourseDeg": 41,
+      "turn": "left",
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 17500,
+      "chart": "STAR"
+    },
+    {
+      "fix": "CHANT",
+      "inboundCourseDeg": 10,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "COATE",
+      "inboundCourseDeg": 207,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 45000,
+      "chart": "ENROUTE LOW"
+    },
+    {
+      "fix": "COVIR",
+      "inboundCourseDeg": 29,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 100,
+      "minAltitudeFt": 1800,
+      "maxAltitudeFt": 3000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "CRALY",
+      "inboundCourseDeg": 224,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 8000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "DEEPO",
+      "inboundCourseDeg": 90,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 11000,
+      "maxAltitudeFt": 15000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "DEEZZ",
+      "inboundCourseDeg": 323,
+      "turn": "right",
+      "legNm": 9,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 45000,
+      "chart": "SID"
+    },
+    {
+      "fix": "DEPDY",
+      "inboundCourseDeg": 56,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 8000,
+      "maxAltitudeFt": 10000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "DIXIE",
+      "inboundCourseDeg": 302,
+      "turn": "left",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 6000,
+      "chart": "ENROUTE LOW"
+    },
+    {
+      "fix": "DUFFY",
+      "inboundCourseDeg": 242,
+      "turn": "left",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 7000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "EDJER",
+      "inboundCourseDeg": 44,
+      "turn": "left",
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 28000,
+      "chart": "NOT REQUIRED"
+    },
+    {
+      "fix": "FLYRS",
+      "inboundCourseDeg": 313,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "GREKO",
+      "inboundCourseDeg": 223,
+      "turn": "left",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "GROKK",
+      "inboundCourseDeg": 40,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HAARP",
+      "inboundCourseDeg": 224,
+      "turn": "left",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "HANAA",
+      "inboundCourseDeg": 210,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 17000,
+      "maxAltitudeFt": 38000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HARBO",
+      "inboundCourseDeg": 242,
+      "turn": "left",
+      "legNm": 7,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 8000,
+      "maxAltitudeFt": 14000,
+      "chart": "ENROUTE LOW"
+    },
+    {
+      "fix": "HARLM",
+      "inboundCourseDeg": 123,
+      "turn": "right",
+      "minAltitudeFt": 8000,
+      "maxAltitudeFt": 10000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HARTY",
+      "inboundCourseDeg": 125,
+      "turn": "left",
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 33000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HELON",
+      "inboundCourseDeg": 209,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 17500,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HOLEY",
+      "inboundCourseDeg": 58,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 11000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HOUTN",
+      "inboundCourseDeg": 247,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 17500,
+      "chart": "ENROUTE LOW"
+    },
+    {
+      "fix": "HULKK",
+      "inboundCourseDeg": 68,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 23000,
+      "maxAltitudeFt": 45000,
+      "chart": "ENROUTE HIGH"
+    },
+    {
+      "fix": "HURTS",
+      "inboundCourseDeg": 26,
+      "turn": "left",
+      "legNm": 12,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 27000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HVNNN",
+      "inboundCourseDeg": 50,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 39000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HYPER",
+      "inboundCourseDeg": 245,
+      "turn": "left",
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "JAWZZ",
+      "inboundCourseDeg": 261,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 45000,
+      "chart": "NOT REQUIRED"
+    },
+    {
+      "fix": "JENNO",
+      "inboundCourseDeg": 127,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 41000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "JERZY",
+      "inboundCourseDeg": 57,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 7000,
+      "maxAltitudeFt": 10000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "JEWLR",
+      "inboundCourseDeg": 66,
+      "turn": "left",
+      "legNm": 15,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "JOEPO",
+      "inboundCourseDeg": 47,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 23000,
+      "maxAltitudeFt": 45000,
+      "chart": "ENROUTE HIGH"
+    },
+    {
+      "fix": "KERNO",
+      "inboundCourseDeg": 55,
+      "turn": "right",
+      "legNm": 7,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 10000,
+      "maxAltitudeFt": 13000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "KILMA",
+      "inboundCourseDeg": 69,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "KODEY",
+      "inboundCourseDeg": 133,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 28000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "KONJE",
+      "inboundCourseDeg": 271,
+      "turn": "right",
+      "legNm": 8,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 26000,
+      "chart": "ENROUTE HIGH"
+    },
+    {
+      "fix": "LEEAH",
+      "inboundCourseDeg": 226,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "LIBBE",
+      "inboundCourseDeg": 87,
+      "turn": "right",
+      "legNm": 8,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 18000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "LIZZI",
+      "inboundCourseDeg": 115,
+      "turn": "right",
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 17500,
+      "chart": "STAR"
+    },
+    {
+      "fix": "LOVES",
+      "inboundCourseDeg": 157,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 17500,
+      "chart": "STAR"
+    },
+    {
+      "fix": "MEGSS",
+      "inboundCourseDeg": 240,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "MERSR",
+      "inboundCourseDeg": 57,
+      "turn": "right",
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 8000,
+      "chart": "ENROUTE LOW"
+    },
+    {
+      "fix": "METRO",
+      "inboundCourseDeg": 60,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 8000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "MOVFA",
+      "inboundCourseDeg": 207,
+      "turn": "left",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "NOBBI",
+      "inboundCourseDeg": 176,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 8000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PALEO",
+      "inboundCourseDeg": 55,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 39000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PANZE",
+      "inboundCourseDeg": 49,
+      "turn": "left",
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 11000,
+      "maxAltitudeFt": 24000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PATRN",
+      "inboundCourseDeg": 211,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2500,
+      "maxAltitudeFt": 6000,
+      "chart": "NOT REQUIRED"
+    },
+    {
+      "fix": "PAWLN",
+      "inboundCourseDeg": 354,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3200,
+      "maxAltitudeFt": 6000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PENNS",
+      "inboundCourseDeg": 122,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3100,
+      "maxAltitudeFt": 17500,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PNGWN",
+      "inboundCourseDeg": 62,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 45000,
+      "chart": "ENROUTE HIGH"
+    },
+    {
+      "fix": "PRNCZ",
+      "inboundCourseDeg": 50,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 13000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PROUD",
+      "inboundCourseDeg": 45,
+      "turn": "left",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2900,
+      "maxAltitudeFt": 8000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PUCKY",
+      "inboundCourseDeg": 136,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 19000,
+      "maxAltitudeFt": 22000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PYTHN",
+      "inboundCourseDeg": 55,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 45000,
+      "chart": "ENROUTE HIGH"
+    },
+    {
+      "fix": "QUART",
+      "inboundCourseDeg": 46,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "RAATO",
+      "inboundCourseDeg": 90,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "RAHKS",
+      "inboundCourseDeg": 127,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 8000,
+      "maxAltitudeFt": 18000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "RIDGY",
+      "inboundCourseDeg": 46,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "RUUTH",
+      "inboundCourseDeg": 82,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 12000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "SARDI",
+      "inboundCourseDeg": 56,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 12000,
+      "chart": "ENROUTE LOW"
+    },
+    {
+      "fix": "SHAFF",
+      "inboundCourseDeg": 209,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 12000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "STEFE",
+      "inboundCourseDeg": 56,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "TRAIT",
+      "inboundCourseDeg": 233,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "VAAPE",
+      "inboundCourseDeg": 66,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 11000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "VALRE",
+      "inboundCourseDeg": 203,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "WAALK",
+      "inboundCourseDeg": 39,
+      "turn": "right",
+      "legNm": 7,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 8000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "WATJA",
+      "inboundCourseDeg": 60,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 7000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "WNDYL",
+      "inboundCourseDeg": 60,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 210,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 10000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "YODAA",
+      "inboundCourseDeg": 140,
+      "turn": "right",
+      "legNm": 15,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 25000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "YOMAN",
+      "inboundCourseDeg": 44,
+      "turn": "left",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "ZACHS",
+      "inboundCourseDeg": 134,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2000,
+      "maxAltitudeFt": 4000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "ZIGGI",
+      "inboundCourseDeg": 30,
+      "turn": "right",
+      "legNm": 4,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2000,
+      "maxAltitudeFt": 6000,
+      "chart": "IAP"
+    }
   ]
 }

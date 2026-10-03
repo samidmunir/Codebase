@@ -52,6 +52,11 @@ export const simStateSchema = z.object({
         aircraftId: z.string(),
         commands: z.array(atcCommandSchema).min(1),
         executeAtTick: z.number().int().min(0),
+        /**
+         * The pilot's judgment of an approach clearance in the instruction, made when it
+         * was transmitted (with the rest of the instruction applied).
+         */
+        ilsVerdict: z.object({ ok: z.boolean(), reason: z.string().optional() }).optional(),
       }),
     )
     .default([]),
@@ -66,6 +71,8 @@ export const simStateSchema = z.object({
     violations: [],
     nextViolationNumber: 1,
   }),
+  /** Departures and overflights that have passed their gate or exit fix, by aircraft id. */
+  routeFixPassed: z.record(z.string(), z.boolean()).default({}),
   /** RP earned and lost this session. */
   score: scoreStateSchema.default(emptyScoreState),
   /** Center's level-change resolutions in force, by the aircraft moved. */

@@ -163,6 +163,43 @@ export function drawMapLayer(
     }
   }
 
+  if (settings['map.radarSites']) {
+    const primary = pack.airspace.radar;
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (const site of pack.airspace.radars) {
+      const { x, y } = project(camera, site.position);
+      const isPrimary = site.name === primary.name;
+      ctx.strokeStyle = isPrimary ? palette.radarPrimary : palette.radarSite;
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 6]);
+      ctx.beginPath();
+      ctx.arc(x, y, site.rangeNm * scale, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeRect(x - 3, y - 3, 6, 6);
+      ctx.fillText(site.id, x + 6, y);
+    }
+  }
+
+  if (settings['map.traconBoundary'] && pack.videoMap.traconBoundary.lines.length > 0) {
+    ctx.strokeStyle = palette.tracon;
+    ctx.fillStyle = palette.tracon;
+    ctx.lineWidth = 1.25;
+    for (const line of pack.videoMap.traconBoundary.lines) strokePath(line);
+    // Label it at its northernmost point.
+    const top = pack.videoMap.traconBoundary.lines
+      .flat()
+      .reduce((best, point) => (point[1] > best[1] ? point : best));
+    const { x, y } = toScreen(top);
+    ctx.font = '600 11px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`${pack.videoMap.traconBoundary.name} TRACON`, x, y - 4);
+  }
+
   if (settings['map.sectorBoundary']) {
     ctx.strokeStyle = palette.boundary;
     ctx.lineWidth = 1.5;

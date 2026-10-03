@@ -12,8 +12,10 @@ import {
 import { pixelsPerNm, project, type Camera, type ScreenPoint } from '../camera';
 import { dataBlockLines } from '../data-block';
 import type { RadarTarget } from '../radar-tracker';
+import type { Sweep } from '../radar-tracker';
 import type { RoutePreview } from '../route-preview';
 import { trafficCategory } from '../traffic-category';
+import { placeDataBlocks } from './label-placement';
 import { HEAT_AGE_RANGE_SEC, heatColor, heatFade, heatValue } from './heat-scale';
 import { withAlpha, type ScopePalette } from './palette';
 
@@ -35,17 +37,16 @@ export interface TrafficFrame {
   /** Sim seconds per tick, and the current sim time (for trail ages). */
   tickSeconds: number;
   simTimeSec: number;
-  /** Radar antenna the sweep rotates around, and its range. */
-  scopeCenter: LatLon;
-  sweepRadiusNm: number;
-  /** 0..1 progress of the current radar sweep. */
-  sweepProgress: number;
+  /** Each drawn radar's beam: its antenna, reach and position in its turn. */
+  sweeps: readonly Sweep[];
   /** Alternates data block line 2. */
   timeShare: 0 | 1;
   hoveredId: string | undefined;
   selectedId: string | undefined;
-  /** Data block position per aircraft (0 = north, clockwise in 45° steps). Default northeast. */
+  /** Data block positions the player chose (0 = north, clockwise in 45° steps). Default northeast. */
   leaderDirections: ReadonlyMap<string, LeaderDirection>;
+  /** Automatic data block positions, kept between frames (updated in place). */
+  autoLeaderDirections: Map<string, LeaderDirection>;
   /** Preview of the instruction being composed for the selected aircraft. */
   preview: InstructionPreview | undefined;
   /** Fix highlighted on the map (hovered in the direct-to list). */
@@ -58,6 +59,9 @@ export interface TrafficFrame {
     kind: 'predicted' | 'loss';
     lateralNm: number;
     verticalFt: number;
+    /** Wake turbulence spacing on final, rather than radar separation. */
+    wake?: boolean | undefined;
+    requiredLateralNm?: number | undefined;
   }[];
   /** Real time in ms, for flashing alerts. */
   nowMs: number;
@@ -95,15 +99,19 @@ export function drawTrafficLayer(
   const { camera, settings, palette } = frame;
   ctx.clearRect(0, 0, camera.width, camera.height);
 
-  if (settings['display.sweepEffect']) drawSweep(ctx, frame);
+  if (settings['display.sweepEffect'])
+    for (const sweep of frame.sweeps) drawSweep(ctx, frame, sweep);
   if (settings['display.heatTrail']) drawHeatTrails(ctx, frame);
   if (frame.route) drawRoute(ctx, frame, frame.route);
 
   // Conflict Alert state per aircraft: an actual loss outranks a prediction.
   const alertOf = new Map<string, 'predicted' | 'loss'>();
+  // Aircraft whose only alerts are for wake spacing show 'WK' instead of 'CA'.
+  const radarAlert = new Set<string>();
   for (const conflict of frame.conflicts) {
     for (const id of conflict.aircraftIds) {
       if (alertOf.get(id) !== 'loss') alertOf.set(id, conflict.kind);
+      if (!conflict.wake) radarAlert.add(id);
     }
   }
   const flashOn = Math.floor(frame.nowMs / 400) % 2 === 0;
@@ -123,6 +131,45 @@ export function drawTrafficLayer(
     target.id === frame.selectedId ? 2 : target.owner === frame.playerId ? 1 : 0;
   const ordered = [...frame.targets].sort((a, b) => rank(a) - rank(b));
 
+  // Data block lines and positions, then leader directions that keep blocks apart.
+  const blocks = new Map(
+    ordered.map((target) => {
+      const lines = dataBlockLines(
+        target,
+        frame.timeShare,
+        settings['display.dataBlockStyle'],
+        settings['display.dataBlockSpeed'],
+      );
+      return [
+        target.id,
+        {
+          lines,
+          width: Math.max(...lines.map((text) => ctx.measureText(text).width)),
+          height: lineHeight * lines.length,
+        },
+      ];
+    }),
+  );
+  const directions = settings['display.autoPlaceDataBlocks']
+    ? placeDataBlocks(
+        ordered.map((target) => {
+          const { x, y } = project(camera, target.position);
+          const { width, height } = blocks.get(target.id)!;
+          return {
+            id: target.id,
+            x,
+            y,
+            width,
+            height,
+            priority: rank(target),
+            fixed: frame.leaderDirections.get(target.id),
+          };
+        }),
+        leaderLength,
+        frame.autoLeaderDirections,
+      )
+    : frame.leaderDirections;
+
   for (const target of ordered) {
     const owned = target.owner === frame.playerId;
     const hovered = target.id === frame.hoveredId;
@@ -131,6 +178,16 @@ export function drawTrafficLayer(
     const category = palette.traffic[trafficCategory(target, frame.airports)];
     const color = alert === 'loss' ? palette.alert : owned ? category.target : palette.unowned;
     const position = project(camera, target.position);
+    // Cleared for the ILS: faded, unless it needs attention or is being looked at.
+    const dim =
+      settings['display.dimClearedApproaches'] &&
+      target.approachCleared &&
+      !selected &&
+      !hovered &&
+      !alert
+        ? settings['display.clearedApproachOpacity'] / 100
+        : 1;
+    ctx.globalAlpha = dim;
 
     // History trail, fading with age.
     for (let i = 0; i < Math.min(trailLength, target.history.length); i++) {
@@ -156,9 +213,15 @@ export function drawTrafficLayer(
       ctx.stroke();
     }
 
-    // Position symbol.
+    // Position symbol: '#' while coasting (no radar covers it), as on STARS.
     ctx.save();
-    if (owned) {
+    if (target.coasting) {
+      ctx.fillStyle = withAlpha(color, 0.8);
+      ctx.font = `700 ${fontSize + 1}px "JetBrains Mono", monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('#', position.x, position.y);
+    } else if (owned) {
       ctx.shadowColor = color;
       ctx.shadowBlur = hovered ? 18 : 10;
       ctx.fillStyle = color;
@@ -183,7 +246,7 @@ export function drawTrafficLayer(
     }
 
     // Leader line, then the data block on the chosen side.
-    const direction = frame.leaderDirections.get(target.id) ?? DEFAULT_LEADER_DIRECTION;
+    const direction = directions.get(target.id) ?? DEFAULT_LEADER_DIRECTION;
     const angle = -Math.PI / 2 + (direction * Math.PI) / 4;
     const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
     const lineEnd = {
@@ -199,9 +262,7 @@ export function drawTrafficLayer(
       ctx.stroke();
     }
 
-    const lines = dataBlockLines(target, frame.timeShare, settings['display.dataBlockStyle']);
-    const width = Math.max(...lines.map((text) => ctx.measureText(text).width));
-    const height = lineHeight * lines.length;
+    const { lines, width, height } = blocks.get(target.id)!;
     const blockX =
       cos > 0.3 ? lineEnd.x + 3 : cos < -0.3 ? lineEnd.x - 3 - width : lineEnd.x - width / 2;
     const blockY = sin < -0.3 ? lineEnd.y - height : sin > 0.3 ? lineEnd.y : lineEnd.y - height / 2;
@@ -228,7 +289,7 @@ export function drawTrafficLayer(
     }
     lines.forEach((text, i) => {
       // Type and destination (the expanded style's third line) are secondary: dim them.
-      ctx.globalAlpha = i === 2 ? 0.65 : 1;
+      ctx.globalAlpha = dim * (i === 2 ? 0.65 : 1);
       ctx.fillText(text, blockX, blockY + i * lineHeight);
     });
     ctx.restore();
@@ -240,10 +301,11 @@ export function drawTrafficLayer(
       ctx.shadowColor = ctx.fillStyle;
       ctx.shadowBlur = 8;
       ctx.font = `700 ${fontSize}px "JetBrains Mono", monospace`;
-      ctx.fillText('CA', blockX, blockY - lineHeight);
+      ctx.fillText(radarAlert.has(target.id) ? 'CA' : 'WK', blockX, blockY - lineHeight);
       ctx.restore();
     }
 
+    ctx.globalAlpha = 1;
     hits.push({ id: target.id, center: position, block: { x: blockX, y: blockY, width, height } });
     if (selected && frame.preview) drawPreview(ctx, frame, target.position, frame.preview);
   }
@@ -424,7 +486,10 @@ function drawConflictLines(ctx: CanvasRenderingContext2D, frame: TrafficFrame): 
     ctx.font = '600 11px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const label = `${conflict.lateralNm.toFixed(1)} NM ${String(Math.round(conflict.verticalFt / 100)).padStart(2, '0')}`;
+    // Lateral and vertical distance, e.g. '4.6 NM · 800 ft', or the wake spacing, 'WAKE 3.8/5 NM'.
+    const label = conflict.wake
+      ? `WAKE ${conflict.lateralNm.toFixed(1)}/${conflict.requiredLateralNm ?? '?'} NM`
+      : `${conflict.lateralNm.toFixed(1)} NM · ${(Math.round(conflict.verticalFt / 100) * 100).toLocaleString('en-US')} ft`;
     ctx.fillText(label, (pa.x + pb.x) / 2, (pa.y + pb.y) / 2 - 10);
     ctx.restore();
   }
@@ -469,16 +534,18 @@ function drawPreview(
   ctx.restore();
 }
 
-function drawSweep(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
+function drawSweep(ctx: CanvasRenderingContext2D, frame: TrafficFrame, sweep: Sweep): void {
   const { camera, palette } = frame;
-  const center = project(camera, frame.scopeCenter);
-  const radius = frame.sweepRadiusNm * pixelsPerNm(camera);
-  const angle = -Math.PI / 2 + frame.sweepProgress * Math.PI * 2;
+  const center = project(camera, sweep.antenna);
+  const radius = sweep.radiusNm * pixelsPerNm(camera);
+  const angle = -Math.PI / 2 + sweep.progress * Math.PI * 2;
+  // The primary radar's beam is a little brighter than the others.
+  const strength = sweep.primary ? 1 : 0.6;
 
   const gradient = ctx.createConicGradient(angle - SWEEP_WEDGE_RAD, center.x, center.y);
   const wedge = SWEEP_WEDGE_RAD / (Math.PI * 2);
   gradient.addColorStop(0, `rgba(${palette.sweep}, 0)`);
-  gradient.addColorStop(wedge * 0.999, `rgba(${palette.sweep}, 0.10)`);
+  gradient.addColorStop(wedge * 0.999, `rgba(${palette.sweep}, ${0.1 * strength})`);
   gradient.addColorStop(wedge, `rgba(${palette.sweep}, 0)`);
   gradient.addColorStop(1, `rgba(${palette.sweep}, 0)`);
 
@@ -487,7 +554,7 @@ function drawSweep(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
   ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = `rgba(${palette.sweep}, 0.28)`;
+  ctx.strokeStyle = `rgba(${palette.sweep}, ${0.28 * strength})`;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(center.x, center.y);

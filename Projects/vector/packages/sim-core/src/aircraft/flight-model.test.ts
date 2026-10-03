@@ -12,7 +12,13 @@ function makeAircraft(
   overrides: Partial<Omit<AircraftState, 'targets'>> = {},
   targets: Partial<AircraftTargets> = {},
 ): AircraftState {
-  const base = { ...newAircraft(), id: 'AC1', verticalSpeedFpm: 0, ...overrides };
+  const base = {
+    ...newAircraft(),
+    id: 'AC1',
+    verticalSpeedFpm: 0,
+    navigation: { mode: 'heading' as const },
+    ...overrides,
+  };
   return {
     ...base,
     targets: {
@@ -171,5 +177,27 @@ describe('position', () => {
     }
 
     expect(distanceNm(JFK, high.position)).toBeGreaterThan(distanceNm(JFK, low.position) * 1.3);
+  });
+});
+
+describe('the 250 kt limit below 10,000 ft', () => {
+  it('slows a descending arrival in time to cross 10,000 ft at 250 kt', () => {
+    for (const startFt of [11_000, 12_000, 16_000]) {
+      const aircraft = makeAircraft(
+        { altitudeFt: startFt, iasKts: 300 },
+        { altitudeFt: 4_000, speedMode: 'normal' },
+      );
+      stepUntil(aircraft, () => aircraft.altitudeFt < 10_000);
+      expect(aircraft.iasKts, `from ${startFt} ft`).toBeLessThanOrEqual(252);
+    }
+  });
+
+  it('holds 10,000 ft until slowed when it cannot slow in the descent', () => {
+    const aircraft = makeAircraft(
+      { altitudeFt: 10_050, iasKts: 300 },
+      { altitudeFt: 4_000, speedMode: 'normal' },
+    );
+    stepUntil(aircraft, () => aircraft.altitudeFt < 10_000);
+    expect(aircraft.iasKts).toBeLessThanOrEqual(252);
   });
 });

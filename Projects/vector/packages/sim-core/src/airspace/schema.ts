@@ -194,9 +194,30 @@ export const fixSchema = z.object({
 
 export type Fix = z.infer<typeof fixSchema>;
 
+/** A published holding pattern (FAA NASR), as charted on a STAR, enroute chart or approach. */
+export const holdSchema = z.object({
+  fix: z.string().min(2).max(5),
+  /** Magnetic course flown inbound to the fix. */
+  inboundCourseDeg: z.number().min(0).max(360),
+  turn: z.enum(['left', 'right']),
+  /** Leg length for distance-based (RNAV or DME) holds; others are timed. */
+  legNm: z.number().positive().optional(),
+  /** Published maximum holding speed, where one is given. */
+  maxSpeedKts: z.number().positive().optional(),
+  /** Altitudes the hold is published for. */
+  minAltitudeFt: z.number().min(0).optional(),
+  maxAltitudeFt: z.number().min(0).optional(),
+  /** Where it is charted: 'STAR', 'ENROUTE HIGH', 'ENROUTE LOW', 'IAP', ... */
+  chart: z.string(),
+});
+
+export type Hold = z.infer<typeof holdSchema>;
+
 export const navdataFileSchema = z.object({
   schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
   fixes: z.array(fixSchema),
+  /** Published holds, at most one per fix. */
+  holds: z.array(holdSchema).default([]),
 });
 
 // ---- Video map -----------------------------------------------------------------
@@ -242,6 +263,10 @@ export const videoMapFileSchema = z.object({
       }),
     )
     .default([]),
+  /** The TRACON's own airspace, traced from its minimum vectoring altitude chart. */
+  traconBoundary: z
+    .object({ name: z.string(), lines: z.array(lineSchema) })
+    .default({ name: '', lines: [] }),
   /** Air route traffic control center boundaries. */
   artccBoundaries: z
     .array(z.object({ artcc: z.string(), level: z.enum(['low', 'high']), ring: ringSchema }))
@@ -277,7 +302,15 @@ export const airportTrafficSchema = z.object({
     )
     .min(1),
   destinations: z
-    .array(z.object({ icao: z.string(), weight: z.number().positive(), gate: z.string() }))
+    .array(
+      z.object({
+        icao: z.string(),
+        weight: z.number().positive(),
+        gate: z.string(),
+        /** Airlines that fly there from the airport; any airline if omitted. */
+        airlines: z.array(z.string()).min(1).optional(),
+      }),
+    )
     .min(1),
 });
 
@@ -343,6 +376,23 @@ export const airspaceFileSchema = z.object({
     position: latLonSchema,
     rangeNm: z.number().positive(),
   }),
+  /**
+   * Terminal radars (ASRs) whose coverage feeds the scope, with the primary
+   * one above. Beyond them, long-range radar coverage is modeled by session
+   * settings (an altitude floor and update rate).
+   */
+  radars: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        kind: z.enum(['asr']),
+        position: latLonSchema,
+        antennaElevationFt: z.number(),
+        rangeNm: z.number().positive(),
+      }),
+    )
+    .default([]),
   /** Area the player controls. Arrivals enter and departures leave across it. */
   boundary: z.object({ ring: ringSchema, ceilingFt: z.number().positive() }),
   /** Altitudes at and above this are flight levels (18,000 ft in the United States). */

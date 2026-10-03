@@ -38,6 +38,14 @@ describe('phraseology', () => {
     expect(spokenCallsign('DAL45A', 'Delta')).toBe('Delta forty-five Alfa');
   });
 
+  it('adds heavy or super for those wake categories, but not for a 757', () => {
+    expect(spokenCallsign('BAW117', 'Speedbird', 'heavy')).toBe('Speedbird one seventeen heavy');
+    expect(spokenCallsign('UAE201', 'Emirates', 'super')).toBe('Emirates two zero one super');
+    expect(spokenCallsign('DAL45A', 'Delta', 'heavy')).toBe('Delta forty-five Alfa heavy');
+    expect(spokenCallsign('UAL12', 'United', 'b757')).toBe('United twelve');
+    expect(spokenCallsign('JBU1024', 'JetBlue', 'large')).toBe('JetBlue ten twenty-four');
+  });
+
   it('says headings as three digits with north as 360', () => {
     expect(headingWords(270)).toBe('two seven zero');
     expect(headingWords(5)).toBe('zero zero five');

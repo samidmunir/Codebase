@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SeededRandom } from '../random/seeded-random';
-import { generateWinds, selectRunwayConfig, windComponents } from './wind';
+import { newYork } from '../testing/fixtures';
+import { configWithinLimits, generateWinds, selectRunwayConfig, windComponents } from './wind';
 
 // JFK configurations and magnetic runway headings.
 const JFK_CONFIGS = [
@@ -55,6 +56,56 @@ describe('runway configuration', () => {
       LIMITS,
     );
     expect(config.id).toBe('4s');
+  });
+
+  it('lands into even a light wind (030 at 3–5 kt uses the 4s, not the preferred 22s)', () => {
+    for (const speedKts of [3, 4, 5, 8]) {
+      expect(
+        selectRunwayConfig(JFK_CONFIGS, heading, { directionDeg: 30, speedKts }, LIMITS).id,
+      ).toBe('4s');
+    }
+  });
+
+  it('never picks a tailwind runway at New York airports when one into the wind is usable', () => {
+    for (const icao of newYork.airspace.airports) {
+      const configs = newYork.traffic.airports[icao]!.runwayConfigs;
+      const runwayHeading = (runway: string) => newYork.runway(icao, runway).magneticHeadingDeg;
+      const headwind = (
+        config: (typeof configs)[number],
+        wind: { directionDeg: number; speedKts: number },
+      ) =>
+        Math.min(
+          ...[config.arrivals[0]!, config.departures[0]!].map(
+            (r) => windComponents(wind, runwayHeading(r)).headwindKts,
+          ),
+        );
+      for (let directionDeg = 10; directionDeg <= 360; directionDeg += 10) {
+        for (const speedKts of [3, 5, 8, 12, 18, 25]) {
+          const wind = { directionDeg, speedKts };
+          const chosen = selectRunwayConfig(configs, runwayHeading, wind, LIMITS);
+          const usable = configs.filter((c) => configWithinLimits(c, runwayHeading, wind, LIMITS));
+          if (usable.some((c) => headwind(c, wind) >= 0)) {
+            expect(
+              headwind(chosen, wind),
+              `${icao} ${directionDeg}/${speedKts}: ${chosen.id}`,
+            ).toBeGreaterThanOrEqual(0);
+          }
+          if (usable.length > 0) expect(usable).toContain(chosen);
+        }
+      }
+    }
+  });
+
+  it('goes least over the tailwind limit when nothing is within limits', () => {
+    // LGA's 22/13 has a 10 kt tailwind on 22 in 12 kt from 010; 04/13 only 6.7 kt on 13.
+    const configs = [
+      { id: '22-13', arrivals: ['22'], departures: ['13'] },
+      { id: '04-13', arrivals: ['04'], departures: ['13'] },
+    ];
+    const lga = (runway: string) => ({ '04': 44, '13': 134, '22': 224 })[runway]!;
+    expect(selectRunwayConfig(configs, lga, { directionDeg: 10, speedKts: 12 }, LIMITS).id).toBe(
+      '04-13',
+    );
   });
 
   it('falls back to the least crosswind when nothing is within limits', () => {

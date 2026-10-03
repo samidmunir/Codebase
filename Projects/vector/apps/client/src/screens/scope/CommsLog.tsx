@@ -196,6 +196,7 @@ function AlertsList({
                     {violation.callsigns[0]} · {violation.callsigns[1]}
                   </span>
                   <span className="alert-row__detail">
+                    {violation.wake && 'Wake · '}
                     {violation.closestLateralNm.toFixed(1)}/{violation.requiredLateralNm} NM ·{' '}
                     {Math.round(violation.closestVerticalFt / 100) * 100} ft ·{' '}
                     {violation.endTick === undefined ? 'ongoing' : `${Math.round(seconds)} s`}

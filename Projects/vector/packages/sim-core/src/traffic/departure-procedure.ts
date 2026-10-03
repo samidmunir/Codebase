@@ -40,6 +40,17 @@ export function resolveLegs(
       leg.speed && (leg.speed.type === 'atOrBelow' || leg.speed.type === 'at')
         ? leg.speed.kts
         : undefined;
+    const restriction = leg.altitude;
+    const altitudeRestriction =
+      restriction === undefined
+        ? undefined
+        : restriction.type === 'at'
+          ? { minFt: restriction.ft, maxFt: restriction.ft }
+          : restriction.type === 'atOrAbove'
+            ? { minFt: restriction.ft }
+            : restriction.type === 'atOrBelow'
+              ? { maxFt: restriction.ft }
+              : { minFt: restriction.minFt, maxFt: restriction.maxFt };
     resolved.push({
       pathTerminator: leg.pathTerminator,
       ...(leg.fix ? { fix: leg.fix } : {}),
@@ -49,6 +60,7 @@ export function resolveLegs(
       ...(altitudeFt !== undefined ? { altitudeFt } : {}),
       ...(leg.distanceNm !== undefined ? { distanceNm: leg.distanceNm } : {}),
       ...(speedLimitKts !== undefined ? { speedLimitKts } : {}),
+      ...(altitudeRestriction && leg.fix ? { altitudeRestriction } : {}),
     });
   }
   return resolved;

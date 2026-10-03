@@ -54,6 +54,11 @@ const PHONETIC: Record<string, string> = {
   Z: 'Zulu',
 };
 
+/** 'B' -> 'Bravo'. */
+export function letterWords(letter: string): string {
+  return PHONETIC[letter.toUpperCase()] ?? letter;
+}
+
 /** '270' -> 'two seven zero' (9 is 'niner'). */
 export function spellDigits(value: string): string {
   return [...value].map((c) => DIGITS[Number(c)] ?? c).join(' ');
@@ -92,14 +97,26 @@ export function flightNumberWords(digits: string): string {
   return spellDigits(digits);
 }
 
-/** 'JBU1024' with telephony 'JetBlue' -> 'JetBlue ten twenty-four'. Without telephony, letters are spoken phonetically. */
-export function spokenCallsign(callsign: string, telephony?: string): string {
+/**
+ * 'JBU1024' with telephony 'JetBlue' -> 'JetBlue ten twenty-four'. Without telephony, letters are
+ * spoken phonetically. Heavy and super aircraft add 'heavy' or 'super' (FAA 7110.65 2-4-20); a
+ * B757 doesn't.
+ */
+export function spokenCallsign(
+  callsign: string,
+  telephony?: string,
+  wakeCategory?: string,
+): string {
+  const wake = wakeCategory === 'heavy' || wakeCategory === 'super' ? wakeCategory : undefined;
   const match = /^([A-Z]{3})(\d{1,4})([A-Z]{0,2})$/.exec(callsign);
-  if (!match) return [...callsign].map((c) => PHONETIC[c] ?? DIGITS[Number(c)] ?? c).join(' ');
+  if (!match) {
+    const spelled = [...callsign].map((c) => PHONETIC[c] ?? DIGITS[Number(c)] ?? c).join(' ');
+    return [spelled, wake].filter(Boolean).join(' ');
+  }
   const [, airline, number, suffix] = match;
   const name = telephony ?? [...airline!].map((c) => PHONETIC[c]).join(' ');
   const letters = [...suffix!].map((c) => PHONETIC[c]).join(' ');
-  return [name, flightNumberWords(number!), letters].filter(Boolean).join(' ');
+  return [name, flightNumberWords(number!), letters, wake].filter(Boolean).join(' ');
 }
 
 /** Headings are three digits, with north as 360: 5 -> 'zero zero five', 0 -> 'three six zero'. */

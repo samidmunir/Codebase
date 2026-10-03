@@ -14,12 +14,16 @@ export function useConflictSounds(session: ScopeSession): void {
 
     const unsubscribe = session.engine.subscribe((event) => {
       if (!enabled()) return;
-      if (event.type === 'separationLost') alertSounds.loss(volume());
+      // Wake spacing gets the softer tone once; radar losses the full alarm.
+      if (event.type === 'separationLost')
+        (event.violation.wake ? alertSounds.predicted : alertSounds.loss)(volume());
       else if (event.type === 'conflictStarted' && event.conflict.kind === 'predicted')
         alertSounds.predicted(volume());
     });
     const timer = window.setInterval(() => {
-      const losing = session.engine.conflicts.some((conflict) => conflict.kind === 'loss');
+      const losing = session.engine.conflicts.some(
+        (conflict) => conflict.kind === 'loss' && !conflict.wake,
+      );
       if (losing && enabled() && !session.engine.paused) alertSounds.loss(volume());
     }, REPEAT_MS);
 

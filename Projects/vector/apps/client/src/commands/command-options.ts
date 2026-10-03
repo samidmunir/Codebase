@@ -1,14 +1,19 @@
+import type { SessionSettings } from '@vector/shared';
 import {
+  assessHandoff,
   bearingTrue,
-  destinationPoint,
+  descendViaBottomFt,
+  isOnSid,
+  isOnStar,
+  restrictionsAhead,
   distanceNm,
-  magneticToTrue,
   trueToMagnetic,
   type AircraftPerformance,
   type AircraftState,
   type AirspacePack,
   type AtcCommand,
   type Fix,
+  type Hold,
   type IlsClearance,
 } from '@vector/sim-core';
 
@@ -52,24 +57,6 @@ export function ilsRunways(pack: AirspacePack, aircraft: Readonly<AircraftState>
     .map((runway) => runway.id);
 }
 
-/** How far past the boundary to look when deciding which Center an aircraft is leaving into. */
-const EXIT_LOOKAHEAD_NM = 10;
-const EXIT_SEARCH_STEP_NM = 5;
-const EXIT_SEARCH_LIMIT_NM = 500;
-
-/** Where the aircraft will be just after it leaves the airspace on its current heading. */
-export function exitPoint(pack: AirspacePack, aircraft: Readonly<AircraftState>) {
-  const { center, magneticVariationDeg } = pack.airspace;
-  const course = magneticToTrue(aircraft.headingDeg, magneticVariationDeg);
-  const radius = pack.boundaryRadiusNm + EXIT_LOOKAHEAD_NM;
-  let point = aircraft.position;
-  for (let flown = 0; flown < EXIT_SEARCH_LIMIT_NM; flown += EXIT_SEARCH_STEP_NM) {
-    if (distanceNm(center, point) > radius) break;
-    point = destinationPoint(aircraft.position, course, flown + EXIT_SEARCH_STEP_NM);
-  }
-  return point;
-}
-
 /**
  * Handoff to the Center the aircraft is leaving into (by where its heading
  * takes it across the boundary), on that Center's radio site nearest the
@@ -78,8 +65,18 @@ export function exitPoint(pack: AirspacePack, aircraft: Readonly<AircraftState>)
 export function centerHandoff(
   pack: AirspacePack,
   aircraft: Readonly<AircraftState>,
+  handoffSettings: Pick<
+    SessionSettings,
+    | 'center.handoffWindowNm'
+    | 'center.handoffMinimumEastboundFt'
+    | 'center.handoffMinimumWestboundFt'
+  > = {
+    'center.handoffWindowNm': 20,
+    'center.handoffMinimumEastboundFt': 17_000,
+    'center.handoffMinimumWestboundFt': 18_000,
+  },
 ): AtcCommand | undefined {
-  const center = pack.centerAt(exitPoint(pack, aircraft), aircraft.altitudeFt);
+  const { center } = assessHandoff(pack, aircraft, handoffSettings);
   const band = aircraft.altitudeFt >= pack.airspace.transitionAltitudeFt ? 'high' : 'low';
   const candidates = center.sites
     .map((site) => ({
@@ -229,4 +226,230 @@ export function minimumVectoringAltitude(
   position: { lat: number; lon: number },
 ): number | undefined {
   return pack.minimumVectoringAltitude(position);
+}
+
+/** Track miles needed per 1,000 ft of descent (the 3:1 rule). */
+const DESCENT_NM_PER_1000FT = 3;
+/** Arrivals are planned down to about this height above the field before the approach. */
+const APPROACH_HEIGHT_FT = 3_000;
+/** Warn this many miles before the descent should start. */
+const DESCENT_WARNING_NM = 5;
+
+export interface PlanningNote {
+  label: string;
+  value: string;
+  tone: 'normal' | 'good' | 'caution';
+}
+
+/**
+ * Planning help for the command panel: for arrivals, distance to the airport
+ * and when to start down (3:1); for departures and overflights, the requested
+ * level and where they leave, with how far to go.
+ */
+export function planningNotes(
+  pack: AirspacePack,
+  aircraft: Readonly<AircraftState>,
+  altitudeLabel: (altitudeFt: number) => string,
+  handoffSettings?: Pick<
+    SessionSettings,
+    | 'center.handoffWindowNm'
+    | 'center.handoffMinimumEastboundFt'
+    | 'center.handoffMinimumWestboundFt'
+  >,
+): PlanningNote[] {
+  const { destination } = aircraft.flightPlan;
+  if (pack.airspace.airports.includes(destination)) {
+    const airport = pack.airport(destination);
+    const distance = distanceNm(aircraft.position, airport.position);
+    const toLose = Math.max(0, aircraft.altitudeFt - airport.elevationFt - APPROACH_HEIGHT_FT);
+    const needed = (toLose / 1000) * DESCENT_NM_PER_1000FT;
+    const descending = aircraft.targets.altitudeFt < aircraft.altitudeFt - 100;
+    const shortName = destination.startsWith('K') ? destination.slice(1) : destination;
+    const notes: PlanningNote[] = [
+      { label: shortName, value: `${Math.round(distance)} NM`, tone: 'normal' },
+    ];
+    const via = descendViaOption(aircraft);
+    if (via) {
+      notes.push({
+        label: via.active ? 'Descend via' : 'STAR',
+        value: `${via.next.fix} ${via.next.label} · ${Math.round(via.next.distanceNm)} NM`,
+        tone: via.active ? 'good' : 'normal',
+      });
+    }
+    if (toLose > 0 && aircraft.phase === 'arrival' && !via?.active) {
+      notes.push(
+        descending
+          ? { label: 'Descent', value: 'descending', tone: 'good' }
+          : distance <= needed + DESCENT_WARNING_NM
+            ? { label: 'Descent', value: 'start down now', tone: 'caution' }
+            : {
+                label: 'Descent',
+                value: `start in ${Math.round(distance - needed)} NM`,
+                tone: 'normal',
+              },
+      );
+    }
+    return notes;
+  }
+
+  const notes: PlanningNote[] = [];
+  const climbVia = climbViaOption(aircraft);
+  if (climbVia?.active && climbVia.next) {
+    notes.push({
+      label: 'Climb via',
+      value: `${climbVia.next.fix} ${climbVia.next.label} · ${Math.round(climbVia.next.distanceNm)} NM`,
+      tone: 'good',
+    });
+  }
+  const requested = aircraft.flightPlan.requestedAltitudeFt;
+  if (requested !== undefined) {
+    const cleared = aircraft.targets.altitudeFt === requested;
+    notes.push({
+      label: 'Requested',
+      value: `${altitudeLabel(requested)}${cleared ? ' ✓' : ''}`,
+      tone: cleared ? 'good' : 'normal',
+    });
+  }
+  if (handoffSettings) {
+    const handoff = assessHandoff(pack, aircraft, handoffSettings);
+    const name = handoff.center.callsign.replace(' Center', '');
+    if (handoff.toBoundaryNm === undefined) {
+      notes.push({ label: 'Exit', value: 'not heading out', tone: 'normal' });
+    } else if (handoff.ok) {
+      notes.push({ label: 'Handoff', value: `${name} · now`, tone: 'good' });
+    } else if (!handoff.withinWindow) {
+      const inNm = Math.round(handoff.toBoundaryNm - handoffSettings['center.handoffWindowNm']);
+      notes.push({ label: 'Handoff', value: `${name} · in ${inNm} NM`, tone: 'normal' });
+    } else {
+      notes.push({
+        label: 'Handoff',
+        value: `climb to ${altitudeLabel(handoff.minimumAltitudeFt)}`,
+        tone: 'caution',
+      });
+    }
+  }
+  return notes;
+}
+
+/** A published altitude restriction the way charts abbreviate it, in hundreds: '100', '240+', '170-', '190–220'. */
+export function restrictionLabel(restriction: {
+  minFt?: number | undefined;
+  maxFt?: number | undefined;
+}): string {
+  const hundreds = (ft: number) => String(Math.round(ft / 100)).padStart(3, '0');
+  const { minFt, maxFt } = restriction;
+  if (minFt !== undefined && maxFt !== undefined)
+    return minFt === maxFt ? hundreds(minFt) : `${hundreds(minFt)}–${hundreds(maxFt)}`;
+  if (minFt !== undefined) return `${hundreds(minFt)}+`;
+  return `${hundreds(maxFt!)}-`;
+}
+
+/** What "descend via" would do for an arrival on a STAR that publishes altitudes, if anything. */
+export function descendViaOption(aircraft: Readonly<AircraftState>):
+  | {
+      procedure: string;
+      bottomFt: number;
+      /** Already descending via it. */
+      active: boolean;
+      next: { fix: string; label: string; distanceNm: number };
+    }
+  | undefined {
+  const navigation = aircraft.navigation;
+  // Only arrivals on their STAR: a departure's SID or a missed approach is never "descend via".
+  if (navigation.mode !== 'procedure' || !isOnStar(aircraft)) return undefined;
+  const bottomFt = descendViaBottomFt(aircraft);
+  const [next] = restrictionsAhead(aircraft);
+  if (bottomFt === undefined || !next) return undefined;
+  return {
+    procedure: navigation.name,
+    bottomFt,
+    active: navigation.descendVia === true,
+    next: { fix: next.fix, label: restrictionLabel(next), distanceNm: next.distanceNm },
+  };
+}
+
+/** What "climb via" would do for a departure on its SID, if it is on one. */
+export function climbViaOption(aircraft: Readonly<AircraftState>):
+  | {
+      procedure: string;
+      /** The altitude it climbs to: what it is cleared to, unless "except maintain" changes it. */
+      topFt: number;
+      /** Already climbing via it. */
+      active: boolean;
+      next: { fix: string; label: string; distanceNm: number } | undefined;
+    }
+  | undefined {
+  const navigation = aircraft.navigation;
+  if (navigation.mode !== 'procedure' || !isOnSid(aircraft)) return undefined;
+  const [next] = restrictionsAhead(aircraft);
+  return {
+    procedure: navigation.name,
+    topFt: aircraft.targets.altitudeFt,
+    active: navigation.climbVia === true,
+    next: next
+      ? { fix: next.fix, label: restrictionLabel(next), distanceNm: next.distanceNm }
+      : undefined,
+  };
+}
+
+export interface HoldFixOption {
+  fix: Fix;
+  distanceNm: number;
+  /** Magnetic bearing from the aircraft. */
+  bearingDeg: number;
+  onRoute: boolean;
+  published: Hold | undefined;
+}
+
+/** Fixes farther than this aren't offered for holding (unless on the route). */
+const HOLD_RANGE_NM = 60;
+
+/**
+ * Fixes to hold at: those still ahead on the aircraft's route first (in
+ * flying order), then nearby fixes with a published hold, nearest first.
+ */
+export function holdFixOptions(
+  pack: AirspacePack,
+  aircraft: Readonly<AircraftState>,
+): HoldFixOption[] {
+  const variation = pack.airspace.magneticVariationDeg;
+  const option = (fix: Fix, onRoute: boolean): HoldFixOption => ({
+    fix,
+    distanceNm: distanceNm(aircraft.position, fix.position),
+    bearingDeg:
+      Math.round(trueToMagnetic(bearingTrue(aircraft.position, fix.position), variation)) % 360 ||
+      360,
+    onRoute,
+    published: pack.holdAt(fix.ident),
+  });
+  const route = routeFixesAhead(pack, aircraft)
+    .map((ident) => pack.fix(ident))
+    .filter((fix): fix is Fix => fix !== undefined)
+    .map((fix) => option(fix, true));
+  const onRoute = new Set(route.map((o) => o.fix.ident));
+  const nearby = pack.holds
+    .filter((hold) => !onRoute.has(hold.fix))
+    .map((hold) => pack.fix(hold.fix))
+    .filter((fix): fix is Fix => fix !== undefined)
+    .map((fix) => option(fix, false))
+    .filter((o) => o.distanceNm <= HOLD_RANGE_NM)
+    .sort((a, b) => a.distanceNm - b.distanceNm);
+  return [...route, ...nearby];
+}
+
+/** A hold as charts summarize it: '041° inbound, left turns, 210 kt'. */
+export function holdSummary(
+  hold: Pick<Hold, 'inboundCourseDeg' | 'turn'> & {
+    legNm?: number | undefined;
+    maxSpeedKts?: number | undefined;
+  },
+): string {
+  return [
+    `${String(Math.round(hold.inboundCourseDeg) % 360 || 360).padStart(3, '0')}° inbound`,
+    `${hold.turn} turns`,
+    hold.legNm !== undefined ? `${hold.legNm} NM legs` : undefined,
+    hold.maxSpeedKts !== undefined ? `${hold.maxSpeedKts} kt` : undefined,
+  ]
+    .filter(Boolean)
+    .join(', ');
 }

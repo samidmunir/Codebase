@@ -2,6 +2,7 @@ import {
   defaultSettings,
   detectDifficulty,
   IN_SESSION_TRAFFIC_KEYS,
+  type MetarObservation,
   type SessionDifficulty,
   type SessionSettings,
 } from '@vector/shared';
@@ -9,10 +10,14 @@ import {
   SimEngine,
   type AirspacePack,
   type AtcCommand,
+  type Atis,
+  type LiveWeatherReport,
   type SimSnapshot,
   type ValidationResult,
+  type Wind,
 } from '@vector/sim-core';
 import { airlines, performanceCatalog } from '../airspaces/registry';
+import { radarSensors } from '../scope/radar-coverage';
 import { RadarTracker } from '../scope/radar-tracker';
 
 /** Sim time run before the session starts, so traffic is already spread out. */
@@ -39,7 +44,25 @@ export interface SessionStatus {
   rp: number;
   /** Changes whenever RP is earned or lost. */
   scoreEventCount: number;
+  /** One wind for the region, and each airport's. */
+  regionalWind: Wind | undefined;
+  winds: Readonly<Record<string, Wind>>;
+  /** Changes whenever a reported wind changes. */
+  windKey: string;
+  /** Live wind mode: whether the latest weather check worked, and when reports last arrived. */
+  liveWeather: LiveWeatherStatus;
+  /** The latest live weather report per airport. */
+  liveReports: Readonly<Record<string, Readonly<LiveWeatherReport>>>;
+  /** Each airport's ATIS, and a key that changes when any is reissued. */
+  atis: Readonly<Record<string, Readonly<Atis>>>;
+  atisKey: string;
 }
+
+export type LiveWeatherStatus =
+  | { state: 'off' }
+  | { state: 'waiting' }
+  | { state: 'ok'; updatedAt: Date }
+  | { state: 'failed'; updatedAt: Date | undefined; message: string };
 
 export type TrafficSettings = Pick<SessionSettings, (typeof IN_SESSION_TRAFFIC_KEYS)[number]>;
 
@@ -51,6 +74,7 @@ export type SessionOrigin =
       /** Random seed; the setup screen passes the one it previewed. */
       seed?: number;
       runwayConfigs?: Record<string, string>;
+      liveWeather?: MetarObservation[];
     }
   | { kind: 'saved'; snapshot: unknown; savedId: string; name: string };
 
@@ -91,6 +115,7 @@ export class ScopeSession {
         airspace: pack,
         airlines,
         ...(origin.runwayConfigs ? { runwayConfigs: origin.runwayConfigs } : {}),
+        ...(origin.liveWeather ? { liveWeather: origin.liveWeather } : {}),
       });
       // Start with traffic already under way: arrivals spread along their routes.
       for (let i = 0; i < WARM_UP_SEC / this.engine.config.tickSeconds; i++) this.engine.step();
@@ -98,11 +123,16 @@ export class ScopeSession {
     this.engine.subscribe((event) => {
       if (event.type.startsWith('departure') || event.type === 'tookOff') this.queueVersion++;
     });
-    this.radar = new RadarTracker(
-      this.engine.settings['radar.sweepIntervalSec'],
-      pack.airspace.radar.position,
-    );
+    const { sensors, primary } = radarSensors(pack, this.engine.settings);
+    this.radar = new RadarTracker(sensors, primary);
     this.radar.update(this.engine.displayTimeSec, this.engine.listAircraft());
+    if (this.usesLiveWeather) {
+      // Reports from the setup screen (or a saved session's) count until the first check here.
+      const fresh = origin.kind === 'new' && (origin.liveWeather?.length ?? 0) > 0;
+      this.liveWeatherStatus = fresh
+        ? { state: 'ok', updatedAt: new Date() }
+        : { state: 'waiting' };
+    }
     this.status = this.readStatus();
   }
 
@@ -225,7 +255,50 @@ export class ScopeSession {
       trafficKey: IN_SESSION_TRAFFIC_KEYS.map((key) => this.engine.settings[key]).join(','),
       rp: this.engine.score.total,
       scoreEventCount: this.engine.score.nextEventNumber,
+      regionalWind: this.engine.regionalWind,
+      winds: this.engine.winds,
+      windKey: Object.entries(this.engine.winds)
+        .map(([icao, w]) => `${icao}:${w.directionDeg}/${w.speedKts}/${w.gustKts ?? ''}`)
+        .join(','),
+      liveWeather: this.liveWeatherStatus,
+      liveReports: this.engine.liveWeather,
+      atis: this.engine.atis,
+      atisKey: Object.entries(this.engine.atis)
+        .map(([icao, a]) => `${icao}:${a.letter}`)
+        .join(','),
     };
+  }
+
+  private liveWeatherStatus: LiveWeatherStatus = { state: 'off' };
+
+  /** Whether this session takes its wind from live weather reports. */
+  get usesLiveWeather(): boolean {
+    return this.engine.settings['weather.windMode'] === 'live';
+  }
+
+  /**
+   * Checks for new live weather and applies it. Failures keep the last
+   * reports (or the fallback wind) and are shown in the top bar.
+   */
+  async refreshLiveWeather(
+    fetchReports: (stations: readonly string[]) => Promise<{ observations: MetarObservation[] }>,
+  ): Promise<void> {
+    if (!this.usesLiveWeather) return;
+    const last =
+      this.liveWeatherStatus.state === 'ok' ? this.liveWeatherStatus.updatedAt : undefined;
+    try {
+      const { observations } = await fetchReports(this.pack.airspace.airports);
+      if (observations.length === 0) throw new Error('No reports for these airports right now');
+      this.engine.applyLiveWeather(observations);
+      this.liveWeatherStatus = { state: 'ok', updatedAt: new Date() };
+    } catch (error) {
+      this.liveWeatherStatus = {
+        state: 'failed',
+        updatedAt: last,
+        message: error instanceof Error ? error.message : String(error),
+      };
+    }
+    this.refreshStatus(true);
   }
 
   /** Publishes status when something visible changed (the clock at whole seconds). */
@@ -244,7 +317,10 @@ export class ScopeSession {
       next.conflictsKey !== this.status.conflictsKey ||
       next.violationCount !== this.status.violationCount ||
       next.trafficKey !== this.status.trafficKey ||
-      next.scoreEventCount !== this.status.scoreEventCount;
+      next.scoreEventCount !== this.status.scoreEventCount ||
+      next.windKey !== this.status.windKey ||
+      next.liveWeather !== this.status.liveWeather ||
+      next.atisKey !== this.status.atisKey;
     if (!changed) return;
     this.status = next;
     for (const listener of this.listeners) listener();

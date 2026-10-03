@@ -17,6 +17,63 @@
     },
     "rangeNm": 60
   },
+  "radars": [
+    {
+      "id": "JFK",
+      "name": "JFK ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.63587,
+        "lon": -73.76694
+      },
+      "antennaElevationFt": 63,
+      "rangeNm": 60
+    },
+    {
+      "id": "EWR",
+      "name": "EWR ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.68765,
+        "lon": -74.16291
+      },
+      "antennaElevationFt": 68,
+      "rangeNm": 60
+    },
+    {
+      "id": "HPN",
+      "name": "HPN ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 41.06695,
+        "lon": -73.70757
+      },
+      "antennaElevationFt": 489,
+      "rangeNm": 60
+    },
+    {
+      "id": "ISP",
+      "name": "ISP ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 40.80137,
+        "lon": -73.09489
+      },
+      "antennaElevationFt": 149,
+      "rangeNm": 60
+    },
+    {
+      "id": "PHL",
+      "name": "PHL ASR",
+      "kind": "asr",
+      "position": {
+        "lat": 39.85512,
+        "lon": -75.27922
+      },
+      "antennaElevationFt": 86,
+      "rangeNm": 60
+    }
+  ],
   "boundary": {
     "ring": [
       [
@@ -1423,7 +1480,7 @@
       "name": "FAA National Airspace System Resources (NASR)",
       "url": "https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/",
       "edition": "2026-09-03",
-      "usedFor": "Tower frequencies, Center radio sites and ARTCC boundaries"
+      "usedFor": "Tower frequencies, Center radio sites, ARTCC boundaries and ASR radar sites"
     },
     {
       "name": "FAA Class Airspace",

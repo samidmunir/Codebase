@@ -16,6 +16,7 @@ export type GameAction =
   | 'toggleMapLayers'
   | 'toggleTraffic'
   | 'toggleScore'
+  | 'openHelp'
   | 'openSettings'
   | 'saveSession'
   | 'closeMenu';

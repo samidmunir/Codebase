@@ -12,6 +12,7 @@ import {
   type AirspaceFile,
   type CenterController,
   type Fix,
+  type Hold,
   type IlsApproach,
   type ProcedureLeg,
   type Runway,
@@ -56,9 +57,19 @@ export class AirspacePack {
     readonly approaches: readonly IlsApproach[],
     readonly videoMap: VideoMap,
     readonly traffic: TrafficProfile,
+    /** Published holding patterns, at most one per fix. */
+    readonly holds: readonly Hold[] = [],
   ) {
     this.airportsByIcao = new Map(airports.map((airport) => [airport.icao, airport]));
     this.fixesByIdent = new Map(fixes.map((fix) => [fix.ident, fix]));
+    this.holdsByFix = new Map(holds.map((hold) => [hold.fix, hold]));
+  }
+
+  private readonly holdsByFix: ReadonlyMap<string, Hold>;
+
+  /** The published hold at a fix, if there is one. */
+  holdAt(ident: string): Hold | undefined {
+    return this.holdsByFix.get(ident);
   }
 
   static parse(files: AirspacePackFiles): AirspacePack {
@@ -70,7 +81,7 @@ export class AirspacePack {
     };
     const airspace = parse('airspace.json', airspaceFileSchema, files.airspace);
     const { airports } = parse('airports.json', airportsFileSchema, files.airports);
-    const { fixes } = parse('navdata.json', navdataFileSchema, files.navdata);
+    const { fixes, holds } = parse('navdata.json', navdataFileSchema, files.navdata);
     const procedures = parse('procedures.json', proceduresFileSchema, files.procedures);
     const videoMap = parse('video-map.json', videoMapFileSchema, files.videoMap);
     const traffic = parse('traffic.json', trafficFileSchema, files.traffic);
@@ -84,6 +95,7 @@ export class AirspacePack {
       procedures.approaches,
       videoMap,
       traffic,
+      holds,
     );
     const problems = pack.crossCheck();
     if (problems.length > 0) throw new AirspaceDataError(problems);

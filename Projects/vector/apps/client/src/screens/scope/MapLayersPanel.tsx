@@ -16,11 +16,13 @@ const MAP_LAYERS: BooleanKey[] = [
   'map.classB',
   'map.classC',
   'map.sectorBoundary',
+  'map.traconBoundary',
   'map.artccBoundaries',
   'map.airwaysHigh',
   'map.airwaysLow',
   'map.minimumVectoringAltitudes',
   'map.minimumIfrAltitudes',
+  'map.radarSites',
 ];
 
 const TRAFFIC_COLORS = [

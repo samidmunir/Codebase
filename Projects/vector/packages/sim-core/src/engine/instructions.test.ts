@@ -71,6 +71,24 @@ describe('issuing instructions', () => {
     expect(engine.pendingInstructions(aircraft.id)).toHaveLength(0);
   });
 
+  it.each([
+    ['A388', 'Emirates two zero one super'],
+    ['B77W', 'Emirates two zero one heavy'],
+    ['B752', 'Emirates two zero one'],
+  ])('reads back as a %s with "%s"', (aircraftType, spoken) => {
+    const engine = createEngine();
+    const aircraft = engine.addAircraft({
+      ...newAircraft(),
+      callsign: 'UAE201',
+      telephony: 'Emirates',
+      aircraftType,
+    });
+    engine.issueInstruction(aircraft.id, [{ type: 'speed', iasKts: 210 }]);
+    expect(engine.comms.at(-1)!.text).toMatch(new RegExp(`^${spoken}, `));
+    run(engine, 3);
+    expect(engine.comms.at(-1)!.text).toMatch(new RegExp(`, ${spoken}\\.$`));
+  });
+
   it('uses brief readbacks when set', () => {
     const engine = SimEngine.create({
       performance,
@@ -100,7 +118,7 @@ describe('issuing instructions', () => {
         { type: 'heading', headingDeg: 90, turn: 'shortest' },
         { type: 'directTo', fix: 'CAMRN', position: { lat: 40.02, lon: -73.86 } },
       ],
-      /heading or a direct-to/,
+      /a heading, a direct-to, a hold or resume/,
     ],
     [
       'an ILS at another airport',
@@ -211,6 +229,43 @@ describe('navigation', () => {
 
     expect(passed).toEqual(['TESTX']);
     expect(engine.getAircraft(aircraft.id)!.navigation.mode).toBe('heading');
+  });
+
+  it('sequences a fix it overshoots instead of circling it (fast, high, wide turns)', () => {
+    const engine = createEngine([1, 1]);
+    const start = { lat: 40.5, lon: -73.5 };
+    // At FL400 (about 460 kt true) the turn radius is about 7 NM: a fix 3 NM off to the
+    // side is inside the turn and can't be flown over by turning toward it.
+    const fix = destinationPoint(start, 0, 3);
+    const aircraft = engine.addAircraft(
+      newAircraft({ position: start, headingDeg: 90 + 13, altitudeFt: 40_000, iasKts: 250 }),
+    );
+    const passed: string[] = [];
+    let headingEvents = 0;
+    engine.subscribe((event) => {
+      if (event.type === 'fixPassed') passed.push(event.fix);
+      if (event.type === 'headingReached') headingEvents++;
+    });
+    engine.issueInstruction(aircraft.id, [{ type: 'directTo', fix: 'WIDEX', position: fix }]);
+    run(engine, 900);
+    expect(passed).toEqual(['WIDEX']);
+    expect(engine.getAircraft(aircraft.id)!.navigation.mode).toBe('heading');
+    // Heading events are for assigned headings, not the moving target of a direct.
+    expect(headingEvents).toBe(0);
+  });
+
+  it('still turns around for a direct-to a fix behind the aircraft', () => {
+    const engine = createEngine([1, 1]);
+    const start = { lat: 40.5, lon: -73.5 };
+    const fix = destinationPoint(start, 270, 3);
+    const aircraft = engine.addAircraft(newAircraft({ position: start, headingDeg: 90 + 13 }));
+    const passed: number[] = [];
+    engine.subscribe((event) => event.type === 'fixPassed' && passed.push(engine.tick));
+    engine.issueInstruction(aircraft.id, [{ type: 'directTo', fix: 'BEHIND', position: fix }]);
+    run(engine, 5);
+    expect(engine.getAircraft(aircraft.id)!.navigation.mode).toBe('direct');
+    run(engine, 400);
+    expect(passed).toHaveLength(1);
   });
 
   it('intercepts the localizer, descends on the glideslope, slows down and lands', () => {

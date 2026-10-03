@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
-import type { SessionStatus } from '../../sim/scope-session';
+import type { LiveWeatherReport, Wind } from '@vector/sim-core';
+import type { LiveWeatherStatus, SessionStatus } from '../../sim/scope-session';
 import { shortAirport } from '../../scope/data-block';
-import { formatUtc } from './format';
+import { formatUtc, formatWind } from './format';
 import { formatRp } from './score-format';
 
 interface ScopeTopBarProps {
@@ -21,8 +23,91 @@ interface ScopeTopBarProps {
   onToggleTraffic: () => void;
   onSave: () => void;
   onOpenSettings: () => void;
+  onOpenHelp: () => void;
   scoreOpen: boolean;
   onToggleScore: () => void;
+  /** For pointing the wind arrow on a true-north display. */
+  magneticVariationDeg: number;
+  /** Leaving the scope (the Vector link): shows the debrief first. */
+  onLeave: () => void;
+}
+
+function WindReadout({
+  wind,
+  winds,
+  windKey,
+  magneticVariationDeg,
+  live,
+  reports,
+}: {
+  wind: Wind;
+  winds: Readonly<Record<string, Wind>>;
+  windKey: string;
+  magneticVariationDeg: number;
+  live: LiveWeatherStatus;
+  reports: Readonly<Record<string, Readonly<LiveWeatherReport>>>;
+}) {
+  const calm = formatWind(wind) === 'Calm';
+  // The arrow points where the wind blows to, turning the short way when the wind shifts
+  // (e.g. 350° to 010°): the angle accumulates instead of wrapping.
+  const toward = wind.directionDeg + magneticVariationDeg + 180;
+  const [arrow, setArrow] = useState({ toward, rotation: toward });
+  if (arrow.toward !== toward) {
+    const shortest = ((((toward - arrow.toward) % 360) + 540) % 360) - 180;
+    setArrow({ toward, rotation: arrow.rotation + shortest });
+  }
+  const towardDeg = arrow.rotation;
+  const detail = Object.entries(winds)
+    .map(([icao, w]) => {
+      const report = reports[icao];
+      return `${shortAirport(icao)} ${formatWind(w)}${report ? `\n  ${report.raw}` : ''}`;
+    })
+    .join('\n');
+  const liveNote =
+    live.state === 'ok'
+      ? `Live weather, checked ${live.updatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      : live.state === 'failed'
+        ? `Live weather unavailable (${live.message}); ${live.updatedAt ? 'showing the last reports' : 'using a realistic wind'}`
+        : live.state === 'waiting'
+          ? 'Getting live weather…'
+          : undefined;
+  return (
+    <div
+      className="scope-wind"
+      title={`${liveNote ? `${liveNote}\n` : ''}Regional wind (magnetic)\n${detail}`}
+      data-live={live.state}
+      aria-label={`Wind ${formatWind(wind)}`}
+    >
+      <span className="scope-wind__label">Wind</span>
+      {live.state !== 'off' && (
+        <span className="scope-wind__live" aria-label={liveNote}>
+          {live.state === 'failed' ? 'LIVE ⚠' : 'LIVE'}
+        </span>
+      )}
+      {!calm && (
+        <svg
+          className="scope-wind__arrow"
+          viewBox="0 0 16 16"
+          width="13"
+          height="13"
+          aria-hidden="true"
+          style={{ rotate: `${towardDeg}deg` }}
+        >
+          <path
+            d="M8 14 V3 M4.5 6.5 L8 2.5 L11.5 6.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+      <span key={windKey} className="scope-wind__value">
+        {formatWind(wind)}
+      </span>
+    </div>
+  );
 }
 
 export function ScopeTopBar(props: ScopeTopBarProps) {
@@ -30,7 +115,15 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
   return (
     <header className="scope-topbar">
       <div className="scope-topbar__identity">
-        <Link to="/" className="scope-brand" aria-label="Vector home">
+        <Link
+          to="/"
+          className="scope-brand"
+          aria-label="Vector home"
+          onClick={(event) => {
+            event.preventDefault();
+            props.onLeave();
+          }}
+        >
           <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
             <circle
               cx="16"
@@ -58,15 +151,50 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
         <div className="scope-chip">
           <span className="scope-chip__facility">{props.facility}</span>
           <span className="scope-chip__name">{props.name}</span>
-          <span className="scope-chip__airports">
-            {props.airports.map(shortAirport).join(' · ')}
+          {/* Each airport with its current ATIS letter; hover for the broadcasts. */}
+          <span
+            className="scope-chip__airports"
+            title={
+              props.airports
+                .map((icao) => status.atis[icao]?.text)
+                .filter(Boolean)
+                .join('\n\n') || undefined
+            }
+          >
+            {props.airports.map((icao, i) => (
+              <span key={icao}>
+                {i > 0 && ' · '}
+                {shortAirport(icao)}
+                {status.atis[icao] && (
+                  <b
+                    key={status.atis[icao].letter}
+                    className="scope-chip__atis"
+                    aria-label={`information ${status.atis[icao].letter}`}
+                  >
+                    {status.atis[icao].letter}
+                  </b>
+                )}
+              </span>
+            ))}
           </span>
         </div>
       </div>
 
-      <div className="scope-clock" aria-label="UTC time">
-        {formatUtc(status.utcTime)}
-        <span className="scope-clock__zone">Z</span>
+      <div className="scope-topbar__center">
+        <div className="scope-clock" aria-label="UTC time">
+          {formatUtc(status.utcTime)}
+          <span className="scope-clock__zone">Z</span>
+        </div>
+        {status.regionalWind && (
+          <WindReadout
+            wind={status.regionalWind}
+            winds={status.winds}
+            windKey={status.windKey}
+            magneticVariationDeg={props.magneticVariationDeg}
+            live={status.liveWeather}
+            reports={status.liveReports}
+          />
+        )}
       </div>
 
       <div className="scope-topbar__controls">
@@ -120,6 +248,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
           className="scope-button"
           aria-pressed={props.departuresOpen}
           onClick={props.onToggleDepartures}
+          title="Departure queues (Q)"
         >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
@@ -131,7 +260,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
               strokeLinejoin="round"
             />
           </svg>
-          Departures
+          <span className="scope-button__label">Departures</span>
         </button>
 
         <button
@@ -139,6 +268,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
           className="scope-button"
           aria-pressed={props.commsOpen}
           onClick={props.onToggleComms}
+          title="Radio log (L)"
         >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
@@ -149,7 +279,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
               strokeLinejoin="round"
             />
           </svg>
-          Radio
+          <span className="scope-button__label">Radio</span>
         </button>
 
         <button
@@ -157,6 +287,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
           className="scope-button"
           aria-pressed={props.trafficOpen}
           onClick={props.onToggleTraffic}
+          title="Traffic (T)"
         >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
@@ -170,7 +301,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
             <circle cx="5.5" cy="8" r="1.6" fill="currentColor" />
             <circle cx="11" cy="11.5" r="1.6" fill="currentColor" />
           </svg>
-          Traffic
+          <span className="scope-button__label">Traffic</span>
         </button>
 
         <button
@@ -178,6 +309,7 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
           className="scope-button"
           aria-pressed={props.layersOpen}
           onClick={props.onToggleLayers}
+          title="Map layers (M)"
         >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
@@ -195,10 +327,15 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
               strokeLinejoin="round"
             />
           </svg>
-          Layers
+          <span className="scope-button__label">Layers</span>
         </button>
 
-        <button type="button" className="scope-button" onClick={props.onSave} title="Save session">
+        <button
+          type="button"
+          className="scope-button"
+          onClick={props.onSave}
+          title="Save session (Shift+S)"
+        >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path
               d="M3 2.5 H11 L13.5 5 V13.5 H2.5 V3 Z M5 2.5 V6 H10.5 V2.5 M5 13.5 V9.5 H11 V13.5"
@@ -208,7 +345,19 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
               strokeLinejoin="round"
             />
           </svg>
-          Save
+          <span className="scope-button__label">Save</span>
+        </button>
+
+        <button
+          type="button"
+          className="scope-button scope-button--icon"
+          onClick={props.onOpenHelp}
+          aria-label="Quick reference"
+          title="Quick reference (?)"
+        >
+          <span className="scope-button__glyph" aria-hidden="true">
+            ?
+          </span>
         </button>
 
         <button

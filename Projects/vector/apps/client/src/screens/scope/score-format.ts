@@ -5,9 +5,12 @@ export const SCORE_KIND_LABELS: Record<ScoreKind, string> = {
   departureHandoff: 'Departures handed off',
   transitHandoff: 'Overflights handed off',
   separationLoss: 'Losses of separation',
+  wakeLoss: 'Wake spacing lost',
   nearMidAir: 'Near midair collisions',
   goAround: 'Go-arounds',
   leftWithoutHandoff: 'Left without a handoff',
+  onTime: 'On time',
+  late: 'Late',
 };
 
 /** Earning kinds first, then penalties, for the breakdown. */
@@ -15,9 +18,12 @@ export const SCORE_KIND_ORDER: ScoreKind[] = [
   'landing',
   'departureHandoff',
   'transitHandoff',
+  'onTime',
+  'late',
   'goAround',
   'leftWithoutHandoff',
   'separationLoss',
+  'wakeLoss',
   'nearMidAir',
 ];
 

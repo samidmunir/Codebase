@@ -3,10 +3,13 @@ import type { AirspacePack } from '../airspace/airspace-pack';
 import type { Airline } from '../airspace/schema';
 import { bearingTrue, distanceNm, trueToMagnetic, type LatLon } from '../math/geo';
 import type { SeededRandom } from '../random/seeded-random';
+import { atisSchema } from '../weather/atis';
 import { requestedCruiseAltitude } from './cruise-levels';
 import {
   generateWinds,
+  liveWeatherReportSchema,
   manualWinds,
+  type LiveWeatherReport,
   selectRunwayConfig,
   windSchema,
   type Wind,
@@ -41,13 +44,30 @@ export const activeRunwaysSchema = z.object({
   configId: z.string(),
   arrivals: z.array(z.string()).min(1),
   departures: z.array(z.string()).min(1),
+  /** The player picked this configuration: the wind doesn't change it. */
+  chosenByPlayer: z.boolean().optional(),
 });
 
 export type ActiveRunways = z.infer<typeof activeRunwaysSchema>;
 
 export const operationsStateSchema = z.object({
+  /** Wind at each airport now (changes over the session with wind variation). */
   winds: z.record(z.string(), windSchema),
+  /** Wind at each airport when the session started, which the wind varies around. */
+  baseWinds: z.record(z.string(), windSchema).optional(),
+  /** Seed for how the wind varies, fixed for the session. */
+  windSeed: z.number().int().min(0).optional(),
+  /** Latest live weather report per airport (live wind mode). */
+  liveWeather: z.record(z.string(), liveWeatherReportSchema).optional(),
+  /** Each airport's current ATIS broadcast. */
+  atis: z.record(z.string(), atisSchema).optional(),
   runways: z.record(z.string(), activeRunwaysSchema),
+  /** Runway changes announced for when the wind no longer suits the runways, by airport. */
+  pendingRunwayChanges: z
+    .record(z.string(), activeRunwaysSchema.extend({ atTick: z.number().int().min(0) }))
+    .default({}),
+  /** When each airport last changed runways (to avoid changing back and forth). */
+  lastRunwayChangeTick: z.record(z.string(), z.number().int()).default({}),
   departureQueue: z.array(departureEntrySchema),
   /** Departures ready but held at the gate because the queue is full, per airport. */
   gateHolds: z.record(z.string(), z.number().int().min(0)),
@@ -61,13 +81,43 @@ export const operationsStateSchema = z.object({
 
 export type OperationsState = z.infer<typeof operationsStateSchema>;
 
+/**
+ * Live winds from weather reports: METAR winds are true, the sim's are magnetic
+ * (like an ATIS), to the nearest 10°. Variable or calm wind has no direction.
+ */
+export function liveWinds(
+  reports: readonly LiveWeatherReport[],
+  airports: readonly string[],
+  magneticVariationDeg: number,
+): Record<string, Wind> {
+  const winds: Record<string, Wind> = {};
+  for (const report of reports) {
+    if (!airports.includes(report.icao)) continue;
+    const directionDeg =
+      report.windDirectionTrueDeg === null || report.windSpeedKts <= 0
+        ? 0
+        : Math.round(trueToMagnetic(report.windDirectionTrueDeg, magneticVariationDeg) / 10) * 10 ||
+          360;
+    const speedKts = Math.round(report.windSpeedKts);
+    // Gusts as the report gives them (the station decides when they are worth reporting).
+    winds[report.icao] =
+      report.gustKts !== undefined && report.gustKts > speedKts && directionDeg !== 0
+        ? { directionDeg, speedKts, gustKts: Math.round(report.gustKts) }
+        : { directionDeg, speedKts };
+  }
+  return winds;
+}
+
 /** Initial departures waiting at each airport when a session starts. */
 const INITIAL_QUEUE = 2;
 const MAX_GATE_HOLDS = 99;
 
 export interface OperationsSettings {
-  windMode: 'random' | 'manual';
+  windMode: 'live' | 'random' | 'manual';
   manualWind: Wind;
+  /** Live mode: the latest reports (airports without one get a random wind). */
+  liveWeather?: readonly LiveWeatherReport[];
+  magneticVariationDeg?: number;
   maxTailwindKts: number;
   maxCrosswindKts: number;
   departureRatePerHour: number;
@@ -101,6 +151,11 @@ export function initialOperations(
     settings.windMode === 'manual'
       ? manualWinds(airports, settings.manualWind)
       : generateWinds(random, airports);
+  if (settings.windMode === 'live' && settings.liveWeather)
+    Object.assign(
+      winds,
+      liveWinds(settings.liveWeather, airports, settings.magneticVariationDeg ?? 0),
+    );
   const runways: Record<string, ActiveRunways> = {};
   for (const icao of airports) {
     const configs = pack.traffic.airports[icao]!.runwayConfigs;
@@ -117,11 +172,26 @@ export function initialOperations(
       configId: config.id,
       arrivals: [...config.arrivals],
       departures: [...config.departures],
+      ...(chosen ? { chosenByPlayer: true } : {}),
     };
   }
   return {
     winds,
+    baseWinds: Object.fromEntries(Object.entries(winds).map(([icao, wind]) => [icao, { ...wind }])),
+    // From the generator's state without drawing from it, so traffic is unchanged.
+    windSeed: (random.getState() ^ 0x5bd1e995) >>> 0,
+    ...(settings.windMode === 'live' && settings.liveWeather
+      ? {
+          liveWeather: Object.fromEntries(
+            settings.liveWeather
+              .filter((report) => airports.includes(report.icao))
+              .map((report) => [report.icao, { ...report }]),
+          ),
+        }
+      : {}),
     runways,
+    pendingRunwayChanges: {},
+    lastRunwayChangeTick: {},
     departureQueue: [],
     gateHolds: Object.fromEntries(airports.map((icao) => [icao, 0])),
     nextDepartureTick: Object.fromEntries(airports.map((icao) => [icao, tick])),
@@ -132,13 +202,18 @@ export function initialOperations(
   };
 }
 
+/** "Never" for spawn scheduling: about 30 years of 1-second ticks. */
+export const NEVER_TICKS = 1_000_000_000;
+
 /** Ticks until the next departure is ready at an airport, around the configured rate. */
 export function departureInterval(
   random: SeededRandom,
   ratePerHour: number,
   tickSeconds: number,
 ): number {
-  if (ratePerHour <= 0) return Number.MAX_SAFE_INTEGER;
+  // Off: far in the future, but small enough to add to any tick and still be a safe
+  // integer in a saved session (turning the rate back on reschedules at once).
+  if (ratePerHour <= 0) return NEVER_TICKS;
   const meanSeconds = 3600 / ratePerHour;
   return Math.max(1, Math.round((meanSeconds * random.range(0.6, 1.4)) / tickSeconds));
 }
@@ -152,6 +227,8 @@ export interface NewDepartureContext {
   hasPerformance: (aircraftType: string) => boolean;
   /** Certified ceiling of an aircraft type. */
   ceilingFt: (aircraftType: string) => number;
+  /** Typical range of an aircraft type, in NM: it is never given a longer trip. */
+  rangeNm: (aircraftType: string) => number;
   /** 'varied' evens out the airline mix so smaller carriers show up more often. */
   fleetMix: FleetMix;
 }
@@ -169,6 +246,17 @@ export function airlineMix<T extends { weight: number }>(
   return mix === 'varied'
     ? airlines.map((airline) => ({ ...airline, weight: airline.weight ** VARIED_WEIGHT_EXPONENT }))
     : [...airlines];
+}
+
+/** Whether an airline flies to a destination: both the airline's and the destination's lists allow it. */
+export function servesDestination(
+  airline: { icao: string; destinations?: readonly string[] | undefined },
+  destination: { icao: string; airlines?: readonly string[] | undefined },
+): boolean {
+  return (
+    (airline.destinations?.includes(destination.icao) ?? true) &&
+    (destination.airlines?.includes(airline.icao) ?? true)
+  );
 }
 
 /** A new departure for an airport, with a realistic airline, type, destination and exit gate. */
@@ -191,14 +279,21 @@ export function newDepartureEntry(
     if (!context.callsignsInUse.has(callsign)) break;
   }
 
-  const served = airline.destinations
-    ? traffic.destinations.filter((d) => airline.destinations!.includes(d.icao))
-    : traffic.destinations;
-  const destination = weightedPick(random, served.length > 0 ? served : traffic.destinations);
+  const served = traffic.destinations.filter((d) => servesDestination(airline, d));
+  // Only destinations one of the airline's types can reach, and then a type that can.
+  const origin = pack.airport(airport).position;
+  const fleet = types.length > 0 ? types : airline.types;
+  const tripNm = (city: string) => tripBetween(pack, origin, city).distanceNm;
+  const candidates = served.length > 0 ? served : traffic.destinations;
+  const reachable = candidates.filter((d) =>
+    fleet.some((type) => context.rangeNm(type) >= tripNm(d.icao)),
+  );
+  const destination = weightedPick(random, reachable.length > 0 ? reachable : candidates);
   const gateFix = random.pick(pack.traffic.departureGates[destination.gate]!);
 
-  const aircraftType = random.pick(types.length > 0 ? types : airline.types);
-  const trip = tripBetween(pack, pack.airport(airport).position, destination.icao);
+  const able = fleet.filter((type) => context.rangeNm(type) >= tripNm(destination.icao));
+  const aircraftType = random.pick(able.length > 0 ? able : fleet);
+  const trip = tripBetween(pack, origin, destination.icao);
   return {
     id: `D${operations.nextDepartureNumber++}`,
     callsign,

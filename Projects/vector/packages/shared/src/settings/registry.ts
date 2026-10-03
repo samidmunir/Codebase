@@ -24,12 +24,40 @@ export const USER_SETTINGS = {
     category: 'display',
     label: 'Data block style',
     description:
-      'Expanded: callsign, altitude with full ground speed, then type and destination. STARS: the real two-line format, ground speed in tens of knots, time-shared with type and destination.',
+      'Expanded: callsign, altitude with the full speed, then type and destination. STARS: the real two-line format, speed in tens of knots, time-shared with type and destination.',
     options: [
       { value: 'expanded', label: 'Expanded' },
       { value: 'stars', label: 'STARS' },
     ],
     default: 'expanded',
+  }),
+  'display.dataBlockSpeed': setting.select({
+    category: 'display',
+    label: 'Data block speed',
+    description:
+      'Indicated airspeed is what the pilot flies and what speed restrictions and your speed assignments use. Ground speed is the speed over the ground (the real scope shows this); it reads higher at altitude.',
+    options: [
+      { value: 'indicated', label: 'Indicated airspeed (IAS)' },
+      { value: 'ground', label: 'Ground speed' },
+    ],
+    default: 'indicated',
+  }),
+  'display.dimClearedApproaches': setting.boolean({
+    category: 'display',
+    label: 'Dim aircraft cleared for the ILS',
+    description:
+      'Draw aircraft cleared for an approach faded, so the traffic that still needs you stands out. Selected, hovered and conflicting aircraft are drawn at full strength.',
+    default: true,
+  }),
+  'display.clearedApproachOpacity': setting.number({
+    category: 'display',
+    label: 'Cleared approach opacity',
+    description: 'How strongly aircraft cleared for the ILS are drawn when dimmed.',
+    min: 15,
+    max: 90,
+    step: 5,
+    unit: '%',
+    default: 45,
   }),
   'display.dataBlockFontSize': setting.number({
     category: 'display',
@@ -69,6 +97,13 @@ export const USER_SETTINGS = {
     max: 7,
     step: 1,
     default: 2,
+  }),
+  'display.autoPlaceDataBlocks': setting.boolean({
+    category: 'display',
+    label: 'Keep data blocks apart',
+    description:
+      'Automatically move data blocks to a clear side of their target when they would overlap. Blocks you place yourself stay where you put them.',
+    default: true,
   }),
   'display.heatTrail': setting.boolean({
     category: 'display',
@@ -243,6 +278,13 @@ export const USER_SETTINGS = {
     description: 'Show the region’s other airports and their runways, for orientation.',
     default: true,
   }),
+  'map.traconBoundary': setting.boolean({
+    category: 'map',
+    label: 'N90 TRACON boundary',
+    description:
+      'Show the New York TRACON’s own airspace (the approach/departure area), traced from its MVA chart. Beyond it is Center airspace, which you also work here.',
+    default: true,
+  }),
   'map.artccBoundaries': setting.boolean({
     category: 'map',
     label: 'Center boundaries',
@@ -252,8 +294,9 @@ export const USER_SETTINGS = {
   }),
   'map.sectorBoundary': setting.boolean({
     category: 'map',
-    label: 'Sector boundary',
-    description: 'Show the boundary of your airspace.',
+    label: 'Your airspace boundary',
+    description:
+      'Show the edge of the airspace you control in this session (the dashed circle, 150 NM around New York). Aircraft enter and leave across it.',
     default: true,
   }),
   'map.geography': setting.boolean({
@@ -266,6 +309,13 @@ export const USER_SETTINGS = {
     category: 'map',
     label: 'Minimum vectoring altitudes',
     description: 'Show TRACON MVA sectors and their minimum altitudes.',
+    default: false,
+  }),
+  'map.radarSites': setting.boolean({
+    category: 'map',
+    label: 'Radar sites',
+    description:
+      'Show the terminal radars that feed the scope and their 60 NM range. Low aircraft far from them drop out of coverage and coast.',
     default: false,
   }),
   'map.minimumIfrAltitudes': setting.boolean({
@@ -325,6 +375,13 @@ export const USER_SETTINGS = {
     step: 0.25,
     unit: 'x',
     default: 1,
+  }),
+  'controls.ctrlClickDirectTo': setting.boolean({
+    category: 'controls',
+    label: 'Ctrl-click a fix for direct-to',
+    description:
+      'With an aircraft selected, Ctrl-click (Cmd-click on a Mac) a fix on the scope to send the aircraft direct to it. Holding Ctrl highlights the fix under the cursor.',
+    default: true,
   }),
   'controls.directToRingNm': setting.select({
     category: 'controls',
@@ -403,6 +460,12 @@ export const USER_SETTINGS = {
     label: 'RP panel',
     description: 'Show or hide your RP total and how it was earned.',
     default: 'KeyR',
+  }),
+  'controls.keys.openHelp': setting.keybinding({
+    category: 'controls',
+    label: 'Quick reference',
+    description: 'Show symbols, colors, controls and how to work each kind of flight.',
+    default: 'Shift+Slash',
   }),
   'controls.keys.openSettings': setting.keybinding({
     category: 'controls',
@@ -484,12 +547,25 @@ export const SESSION_SETTINGS = {
   'weather.windMode': setting.select({
     category: 'weather',
     label: 'Wind',
-    description: 'Random generates realistic New York wind. Manual uses the values below.',
+    description:
+      'Live uses the real current weather (METARs from aviationweather.gov), updated during the session. Random generates realistic New York wind. Manual uses the values below.',
     options: [
+      { value: 'live', label: 'Live (real weather)' },
       { value: 'random', label: 'Random (realistic)' },
       { value: 'manual', label: 'Manual' },
     ],
-    default: 'random',
+    default: 'live',
+  }),
+  'weather.livePollMin': setting.number({
+    category: 'weather',
+    label: 'Live weather updates',
+    description:
+      'How often live weather is checked for a new report. Airports issue one about hourly, and special reports when the weather changes.',
+    min: 1,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 5,
   }),
   'weather.manualWindDirectionDeg': setting.number({
     category: 'weather',
@@ -510,6 +586,57 @@ export const SESSION_SETTINGS = {
     step: 1,
     unit: 'kts',
     default: 12,
+  }),
+  'weather.manualWindGustKts': setting.number({
+    category: 'weather',
+    label: 'Manual wind gusts',
+    description:
+      'Peak gusts, used when wind is Manual. 0 for none; gusts are only reported at least 10 kt above the steady wind. Crosswind limits are judged at the gust.',
+    min: 0,
+    max: 60,
+    step: 1,
+    unit: 'kts',
+    default: 0,
+  }),
+  'weather.windVariation': setting.select({
+    category: 'weather',
+    label: 'Wind variation',
+    description:
+      'How much the wind drifts during a session, around its starting value. Slight: up to 20° and 4 kt. Moderate: up to 40° and 8 kt.',
+    options: [
+      { value: 'off', label: 'Off (steady)' },
+      { value: 'slight', label: 'Slight' },
+      { value: 'moderate', label: 'Moderate' },
+    ],
+    default: 'slight',
+  }),
+  'weather.windVariationPeriodMin': setting.number({
+    category: 'weather',
+    label: 'Wind change pace',
+    description: 'About how long one swing of the wind takes. Shorter is more changeable.',
+    min: 5,
+    max: 60,
+    step: 5,
+    unit: 'min',
+    default: 20,
+  }),
+  'weather.runwayChanges': setting.boolean({
+    category: 'weather',
+    label: 'Change runways when the wind shifts',
+    description:
+      'When the wind puts the runways in use over the tailwind or crosswind limit, the airport announces a runway change and switches after the notice time. Runways you picked yourself are kept.',
+    default: true,
+  }),
+  'weather.runwayChangeNoticeMin': setting.number({
+    category: 'weather',
+    label: 'Runway change notice',
+    description:
+      'How long before a runway change it is announced, so you can plan the arrivals already on their way.',
+    min: 0,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 10,
   }),
   'weather.maxTailwindKts': setting.number({
     category: 'weather',
@@ -574,6 +701,13 @@ export const SESSION_SETTINGS = {
     unit: 'ft',
     default: 1000,
   }),
+  'separation.wakeTurbulence': setting.boolean({
+    category: 'separation',
+    label: 'Wake turbulence spacing on final',
+    description:
+      'Aircraft following a heavier one on the same approach need more than the radar minimum behind it: 4–6 NM behind a heavy, 4–5 NM behind a B757, 4–8 NM behind a super, and 4 NM for a small behind a large (FAA 7110.65).',
+    default: true,
+  }),
   'separation.conflictAlertLookaheadSec': setting.number({
     category: 'separation',
     label: 'Conflict Alert look-ahead',
@@ -589,14 +723,46 @@ export const SESSION_SETTINGS = {
   // ---- Radar ---------------------------------------------------------------
   'radar.sweepIntervalSec': setting.number({
     category: 'radar',
-    label: 'Radar update interval',
+    label: 'Terminal radar rotation',
     description:
-      'How often targets update on the scope. Real terminal radar updates about every 4.8 s.',
+      'How often each terminal radar (ASR) sweeps and updates the targets it covers. Real ASRs turn about every 4.8 s.',
     min: 1,
     max: 12,
     step: 0.1,
     unit: 's',
     default: 4.8,
+  }),
+  'radar.coverage': setting.select({
+    category: 'radar',
+    label: 'Radar coverage',
+    description:
+      'Realistic: aircraft show only where a radar covers them (terminal radars within range and line of sight, long-range radar above its floor), and coast elsewhere. Everywhere: one radar sees the whole region.',
+    options: [
+      { value: 'realistic', label: 'Realistic' },
+      { value: 'everywhere', label: 'Everywhere' },
+    ],
+    default: 'realistic',
+  }),
+  'radar.enrouteFloorFt': setting.number({
+    category: 'radar',
+    label: 'Long-range radar floor',
+    description:
+      'Long-range (en route) radar covers the whole region at and above this altitude. Below it, aircraft need a terminal radar.',
+    min: 0,
+    max: 18_000,
+    step: 500,
+    unit: 'ft',
+    default: 6_000,
+  }),
+  'radar.enrouteIntervalSec': setting.number({
+    category: 'radar',
+    label: 'Long-range radar rotation',
+    description: 'How often long-range radar updates the targets only it covers (about 12 s).',
+    min: 4,
+    max: 24,
+    step: 0.5,
+    unit: 's',
+    default: 12,
   }),
 
   // ---- Pilots --------------------------------------------------------------
@@ -640,10 +806,10 @@ export const SESSION_SETTINGS = {
     label: 'Max intercept angle',
     description: 'Largest angle to the localizer at which a pilot accepts the approach.',
     min: 10,
-    max: 45,
+    max: 90,
     step: 5,
     unit: '°',
-    default: 30,
+    default: 60,
   }),
   'approaches.interceptDistanceNm': setting.range({
     category: 'approaches',
@@ -694,12 +860,13 @@ export const SESSION_SETTINGS = {
   'scoring.departureHandoffRp': setting.number({
     category: 'scoring',
     label: 'Departure handed off',
-    description: 'RP for each departure handed to Center before it leaves your airspace.',
+    description:
+      'RP for each departure Center accepts before it leaves your airspace (bonuses below come on top).',
     min: 0,
     max: 500,
     step: 5,
     unit: 'RP',
-    default: 60,
+    default: 40,
   }),
   'scoring.requestedLevelBonusRp': setting.number({
     category: 'scoring',
@@ -710,17 +877,109 @@ export const SESSION_SETTINGS = {
     max: 500,
     step: 5,
     unit: 'RP',
-    default: 40,
+    default: 30,
   }),
-  'scoring.transitHandoffRp': setting.number({
+  'scoring.routeFlownBonusRp': setting.number({
     category: 'scoring',
-    label: 'Overflight handed off',
-    description: 'RP for each overflight handed to Center before it leaves your airspace.',
+    label: 'Route flown bonus',
+    description:
+      'Extra RP when a departure passed its departure gate fix, or an overflight its exit fix, before the handoff.',
     min: 0,
     max: 500,
     step: 5,
     unit: 'RP',
-    default: 50,
+    default: 30,
+  }),
+  'scoring.transitHandoffRp': setting.number({
+    category: 'scoring',
+    label: 'Overflight handed off',
+    description:
+      'RP for each overflight Center accepts before it leaves your airspace (bonuses below come on top).',
+    min: 0,
+    max: 500,
+    step: 5,
+    unit: 'RP',
+    default: 30,
+  }),
+  'scoring.timing': setting.boolean({
+    category: 'scoring',
+    label: 'Target times',
+    description:
+      'Give every flight a target time to land by (arrivals) or be handed to Center by (departures and overflights): its unimpeded flight time along its route plus an allowance for sequencing. On time earns RP; late costs RP.',
+    default: true,
+  }),
+  'scoring.onTimeRp': setting.number({
+    category: 'scoring',
+    label: 'On-time bonus',
+    description: 'RP for landing or handing off a flight by its target time.',
+    min: 0,
+    max: 200,
+    step: 5,
+    unit: 'RP',
+    default: 20,
+  }),
+  'scoring.lateRpPerMin': setting.number({
+    category: 'scoring',
+    label: 'Late, per minute',
+    description:
+      'RP lost for each minute (or part) a flight lands or is handed off after its target time.',
+    min: 0,
+    max: 50,
+    step: 1,
+    unit: 'RP',
+    default: 5,
+  }),
+  'scoring.lateMaxRp': setting.number({
+    category: 'scoring',
+    label: 'Most lost for lateness',
+    description: 'The most RP a single flight can lose for being late.',
+    min: 0,
+    max: 500,
+    step: 10,
+    unit: 'RP',
+    default: 60,
+  }),
+  'scoring.arrivalAllowanceMin': setting.number({
+    category: 'scoring',
+    label: 'Arrival allowance',
+    description:
+      'Time added to an arrival’s unimpeded flight time for vectors and sequencing to the runway.',
+    min: 0,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 10,
+  }),
+  'scoring.departureAllowanceMin': setting.number({
+    category: 'scoring',
+    label: 'Departure allowance',
+    description: 'Time added to a departure’s unimpeded time from radar contact to the handoff.',
+    min: 0,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 3,
+  }),
+  'scoring.transitAllowanceMin': setting.number({
+    category: 'scoring',
+    label: 'Overflight allowance',
+    description: 'Time added to an overflight’s unimpeded time from entering to the handoff.',
+    min: 0,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 3,
+  }),
+  'scoring.timingAllowancePct': setting.number({
+    category: 'scoring',
+    label: 'Allowance on flight time',
+    description:
+      'Extra time given in proportion to the unimpeded flight time, on top of the allowances above.',
+    min: 0,
+    max: 50,
+    step: 5,
+    unit: '%',
+    default: 10,
   }),
   'scoring.separationLossRp': setting.number({
     category: 'scoring',
@@ -732,6 +991,17 @@ export const SESSION_SETTINGS = {
     step: 10,
     unit: 'RP',
     default: 150,
+  }),
+  'scoring.wakeLossRp': setting.number({
+    category: 'scoring',
+    label: 'Wake turbulence spacing lost',
+    description:
+      'RP lost when an aircraft on final gets closer behind a heavier one than wake spacing allows, up to double the shorter the spacing. Closing inside the radar minimum counts as a loss of separation instead.',
+    min: 0,
+    max: 1000,
+    step: 10,
+    unit: 'RP',
+    default: 80,
   }),
   'scoring.penaltyMaxLateralNm': setting.number({
     category: 'scoring',
@@ -799,6 +1069,39 @@ export const SESSION_SETTINGS = {
     label: 'Center separates its traffic',
     description: 'Center changes levels to keep aircraft it controls apart from each other.',
     default: true,
+  }),
+  'center.handoffWindowNm': setting.number({
+    category: 'center',
+    label: 'Handoff window',
+    description:
+      'Center accepts a departure or overflight only within this distance of where it will leave the N90 TRACON’s airspace.',
+    min: 5,
+    max: 60,
+    step: 5,
+    unit: 'NM',
+    default: 20,
+  }),
+  'center.handoffMinimumEastboundFt': setting.number({
+    category: 'center',
+    label: 'Minimum handoff altitude, eastbound',
+    description:
+      'Center accepts an eastbound flight (magnetic course 000–179) only at or above this altitude, and never below the FAA minimum IFR altitude where it is and where it leaves.',
+    min: 0,
+    max: 24_000,
+    step: 1_000,
+    unit: 'ft',
+    default: 17_000,
+  }),
+  'center.handoffMinimumWestboundFt': setting.number({
+    category: 'center',
+    label: 'Minimum handoff altitude, westbound',
+    description:
+      'Center accepts a westbound flight (magnetic course 180–359) only at or above this altitude, and never below the FAA minimum IFR altitude where it is and where it leaves.',
+    min: 0,
+    max: 24_000,
+    step: 1_000,
+    unit: 'ft',
+    default: 18_000,
   }),
   'center.conflictLookaheadSec': setting.number({
     category: 'center',

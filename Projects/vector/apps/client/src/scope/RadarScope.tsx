@@ -3,6 +3,7 @@ import type { UserSettings } from '@vector/shared';
 import type { LatLon } from '@vector/sim-core';
 import type { ScopeSession } from '../sim/scope-session';
 import {
+  project,
   clampZoom,
   pan,
   unproject,
@@ -12,6 +13,7 @@ import {
   type ScreenPoint,
 } from './camera';
 import { stepCameraAnimation, type CameraAnimation } from './camera-animation';
+import { fixAt } from './fix-picking';
 import { drawMapLayer } from './render/map-layer';
 import { routePreview } from './route-preview';
 import { scopePalette } from './render/palette';
@@ -39,6 +41,8 @@ interface RadarScopeProps {
   preview: InstructionPreview | undefined;
   /** A fix to highlight on the map, e.g. while hovering it in the direct-to list. */
   highlightFix?: string | undefined;
+  /** Ctrl-click (Cmd-click) on a fix while an aircraft is selected. */
+  onFixCommand?: (ident: string) => void;
   ref?: Ref<RadarScopeHandle>;
 }
 
@@ -71,6 +75,7 @@ export function RadarScope({
   leaderDirections,
   preview,
   highlightFix,
+  onFixCommand,
   ref,
 }: RadarScopeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -83,10 +88,14 @@ export function RadarScope({
   const hitsRef = useRef<TargetHitArea[]>([]);
   const hoveredRef = useRef<string | undefined>(undefined);
   const gestureRef = useRef<Gesture | undefined>(undefined);
-  const callbacksRef = useRef({ onCameraChange, onCursorChange, onSelect });
+  const callbacksRef = useRef({ onCameraChange, onCursorChange, onSelect, onFixCommand });
+  /** The fix under the cursor while Ctrl (Cmd) is held with an aircraft selected. */
+  const ctrlFixRef = useRef<string | undefined>(undefined);
   const selectionRef = useRef({ selectedId, leaderDirections, preview, highlightFix });
+  // Automatic data block positions persist between frames so blocks stay put.
+  const autoLeaderDirectionsRef = useRef(new Map<string, LeaderDirection>());
   useEffect(() => {
-    callbacksRef.current = { onCameraChange, onCursorChange, onSelect };
+    callbacksRef.current = { onCameraChange, onCursorChange, onSelect, onFixCommand };
     selectionRef.current = { selectedId, leaderDirections, preview, highlightFix };
   });
 
@@ -112,6 +121,15 @@ export function RadarScope({
     if (instantMotion()) setCamera(zoomAround(camera, anchor, zoom));
     else animationRef.current = { kind: 'zoom', anchor, zoom };
   };
+
+  // Development only: let browser tests find where things are on screen.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    (
+      window as unknown as { __vectorProject?: (p: LatLon) => ScreenPoint | undefined }
+    ).__vectorProject = (position) =>
+      cameraRef.current ? project(cameraRef.current, position) : undefined;
+  }, []);
 
   // The wheel listener is attached once; it zooms through this ref.
   const zoomSmoothlyRef = useRef(zoomSmoothly);
@@ -215,16 +233,15 @@ export function RadarScope({
         trackOf: (id: string) => session.engine.track(id),
         tickSeconds: session.engine.config.tickSeconds,
         simTimeSec: session.engine.displayTimeSec,
-        scopeCenter: session.pack.airspace.radar.position,
-        // Drawn out to the boundary: the scope shows the whole region's radar picture.
-        sweepRadiusNm: Math.max(session.pack.airspace.radar.rangeNm, session.pack.boundaryRadiusNm),
-        sweepProgress: session.radar.sweepProgress(session.engine.displayTimeSec),
+        sweeps: session.radar.sweeps(session.engine.displayTimeSec),
         timeShare: Math.floor(now / TIME_SHARE_MS) % 2 === 0 ? 0 : 1,
         hoveredId: hoveredRef.current,
         ...selectionRef.current,
-        highlightFix: selectionRef.current.highlightFix
-          ? session.pack.fix(selectionRef.current.highlightFix)
-          : undefined,
+        autoLeaderDirections: autoLeaderDirectionsRef.current,
+        highlightFix: (() => {
+          const ident = ctrlFixRef.current ?? selectionRef.current.highlightFix;
+          return ident ? session.pack.fix(ident) : undefined;
+        })(),
         route: (() => {
           const id = selectionRef.current.selectedId;
           const aircraft = id ? session.engine.getAircraft(id) : undefined;
@@ -260,6 +277,15 @@ export function RadarScope({
     const camera = cameraRef.current;
     if (!camera) return;
     const point = pointFromEvent(event, event.currentTarget);
+    // Ctrl-click (Cmd-click on a Mac, where Ctrl-click is a right click) on a fix: direct-to.
+    if (event.button === 0 && ctrlClickActive(event)) {
+      const fix = fixAt(session.pack, camera, point);
+      if (fix) {
+        callbacksRef.current.onFixCommand?.(fix.ident);
+        ctrlFixRef.current = undefined;
+        return;
+      }
+    }
     event.currentTarget.setPointerCapture(event.pointerId);
     if (event.button === 2) {
       const at = unproject(camera, point);
@@ -289,9 +315,19 @@ export function RadarScope({
       gesture.to = unproject(camera, point);
     } else {
       hoveredRef.current = hitTest(hitsRef.current, point);
-      event.currentTarget.style.cursor = hoveredRef.current ? 'pointer' : 'crosshair';
+      ctrlFixRef.current = ctrlClickActive(event)
+        ? fixAt(session.pack, camera, point)?.ident
+        : undefined;
+      event.currentTarget.style.cursor =
+        hoveredRef.current || ctrlFixRef.current ? 'pointer' : 'crosshair';
     }
   };
+
+  /** Whether a pointer event is a Ctrl/Cmd gesture that can send the selected aircraft direct. */
+  const ctrlClickActive = (event: { ctrlKey: boolean; metaKey: boolean }) =>
+    (event.ctrlKey || event.metaKey) &&
+    selectionRef.current.selectedId !== undefined &&
+    settingsRef.current['controls.ctrlClickDirectTo'];
 
   const endGesture = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const gesture = gestureRef.current;
@@ -325,6 +361,7 @@ export function RadarScope({
         onPointerLeave={() => {
           callbacksRef.current.onCursorChange?.(undefined);
           hoveredRef.current = undefined;
+          ctrlFixRef.current = undefined;
         }}
         onDoubleClick={onDoubleClick}
         onContextMenu={(event) => event.preventDefault()}

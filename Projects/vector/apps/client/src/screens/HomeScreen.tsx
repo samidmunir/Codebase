@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { AIRSPACES } from '../airspaces/registry';
 import { auth, useAuth } from '../auth/auth-store';
 import { ApiStatus } from '../components/ApiStatus';
+import { HelpDialog } from '../components/help/HelpDialog';
 import { shortAirport } from '../scope/data-block';
 import { SavedSessions } from './SavedSessions';
 import './auth-screen.css';
@@ -9,6 +11,7 @@ import './home-screen.css';
 
 export function HomeScreen() {
   const session = useAuth();
+  const [helpOpen, setHelpOpen] = useState(false);
 
   return (
     <main className="shell">
@@ -22,6 +25,9 @@ export function HomeScreen() {
           <span>
             Signed in as <strong>{session.user.displayName}</strong>
           </span>
+          <button type="button" onClick={() => setHelpOpen(true)}>
+            How to play
+          </button>
           <Link to="/settings">Settings</Link>
           <button type="button" onClick={() => void auth.logout()}>
             Sign out
@@ -55,6 +61,7 @@ export function HomeScreen() {
       </section>
 
       <footer className="shell__footer">Preview build · v0.0.0</footer>
+      {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
     </main>
   );
 }

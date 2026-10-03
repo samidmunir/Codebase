@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { DepartureEntry } from '@vector/sim-core';
 import { shortAirport } from '../../scope/data-block';
 import type { ScopeSession } from '../../sim/scope-session';
+import { formatWind } from './format';
 
 interface DeparturesPanelProps {
   session: ScopeSession;
@@ -9,9 +10,6 @@ interface DeparturesPanelProps {
   queueVersion: number;
   onClose: () => void;
 }
-
-const formatWind = (direction: number, speed: number) =>
-  speed <= 2 ? 'Calm' : `${String(direction).padStart(3, '0')}° ${speed} kt`;
 
 function countdown(seconds: number): string {
   const s = Math.max(0, Math.round(seconds));
@@ -54,6 +52,8 @@ export function DeparturesPanel({ session, onClose }: DeparturesPanelProps) {
           const wind = engine.winds[icao];
           const entries = engine.departureQueue.filter((entry) => entry.airport === icao);
           const held = engine.gateHolds(icao);
+          const change = engine.pendingRunwayChanges[icao];
+          const atis = engine.atis[icao];
 
           return (
             <section
@@ -63,9 +63,10 @@ export function DeparturesPanel({ session, onClose }: DeparturesPanelProps) {
             >
               <div className="departure-airport__header">
                 <span className="departure-airport__code">{shortAirport(icao)}</span>
-                {wind && (
-                  <span className="departure-airport__wind">
-                    {formatWind(wind.directionDeg, wind.speedKts)}
+                {wind && <span className="departure-airport__wind">{formatWind(wind)}</span>}
+                {atis && (
+                  <span className="departure-airport__atis" title={atis.text}>
+                    ATIS <b>{atis.letter}</b>
                   </span>
                 )}
                 <span className="departure-airport__count">
@@ -81,6 +82,13 @@ export function DeparturesPanel({ session, onClose }: DeparturesPanelProps) {
                   <span>
                     <abbr title="Departure runways">DEP</abbr> {runways.departures.join(' ')}
                   </span>
+                </div>
+              )}
+              {change && (
+                <div className="departure-airport__change" role="status">
+                  Runway change in{' '}
+                  {countdown((change.atTick - engine.tick) * engine.config.tickSeconds)}: ARR{' '}
+                  <b>{change.arrivals.join(' ')}</b> DEP <b>{change.departures.join(' ')}</b>
                 </div>
               )}
 

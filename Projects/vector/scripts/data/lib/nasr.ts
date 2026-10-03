@@ -170,3 +170,132 @@ export function parseArtccBoundaries(content: string, artccs: readonly string[])
   }
   return boundaries.filter((boundary) => boundary.ring.length >= 4);
 }
+
+// ---- Radars (RDR.csv) ---------------------------------------------------------
+
+export interface RadarRecord {
+  /** FAA identifier of the facility, e.g. 'PHL'. */
+  facility: string;
+  facilityType: string;
+  radarType: string;
+}
+
+/** RDR.csv: radars by facility (no positions; ASRs sit at their airports). */
+export function parseRadars(csv: string): RadarRecord[] {
+  const [header, ...lines] = csv.split(/\r?\n/).filter((line) => line.trim() !== '');
+  const columns = csvFields(header!);
+  const [facility, type, radar] = ['FACILITY_ID', 'FACILITY_TYPE', 'RADAR_TYPE'].map((name) => {
+    const i = columns.indexOf(name);
+    if (i === -1) throw new Error(`RDR.csv has no ${name} column`);
+    return i;
+  }) as [number, number, number];
+  return lines.map((line) => {
+    const f = csvFields(line);
+    return { facility: f[facility]!, facilityType: f[type]!, radarType: f[radar]! };
+  });
+}
+
+// ---- Holding patterns (HPF CSV) -----------------------------------------------------
+
+export interface HoldRecord {
+  fix: string;
+  inboundCourseDeg: number;
+  turn: 'left' | 'right';
+  legNm?: number;
+  maxSpeedKts?: number;
+  minAltitudeFt?: number;
+  maxAltitudeFt?: number;
+  chart: string;
+}
+
+/** Rows of a CSV file as objects keyed by its header. */
+function csvRows(csv: string): Record<string, string>[] {
+  const [header, ...lines] = csv.split(/\r?\n/).filter((line) => line.trim() !== '');
+  const columns = csvFields(header!);
+  return lines.map((line) => {
+    const fields = csvFields(line);
+    return Object.fromEntries(columns.map((column, i) => [column, fields[i] ?? '']));
+  });
+}
+
+/** Charts a hold is published on, most useful first for a terminal area. */
+const CHART_PREFERENCE = ['STAR', 'ENROUTE LOW', 'ENROUTE HIGH', 'SID', 'IAP'];
+
+/**
+ * Published holding patterns at fixes, from NASR's HPF CSV files: base data
+ * (fix, inbound course, turns, leg length), speeds and altitudes, and the
+ * charts each appears on. Where a fix has several holds, the one charted on
+ * a STAR (then enroute) is kept.
+ */
+export function parseHolds(
+  baseCsv: string,
+  speedAltitudeCsv: string,
+  chartCsv: string,
+): HoldRecord[] {
+  const key = (row: Record<string, string>) => `${row.HP_NAME}#${row.HP_NO}`;
+  const charts = new Map<string, string[]>();
+  for (const row of csvRows(chartCsv)) {
+    const list = charts.get(key(row)) ?? [];
+    list.push(row.CHARTING_TYPE_DESC!);
+    charts.set(key(row), list);
+  }
+  const limits = new Map<string, { speed?: number; minFt?: number; maxFt?: number }>();
+  for (const row of csvRows(speedAltitudeCsv)) {
+    const current = limits.get(key(row)) ?? {};
+    const speed = Number(row.SPEED_RANGE);
+    // Altitudes in hundreds of feet: '50/175' is 5,000 to 17,500 ft.
+    const [min, max] = (row.ALTITUDE ?? '').split('/').map((v) => Number(v) * 100);
+    limits.set(key(row), {
+      ...(Number.isFinite(speed) && speed > 0
+        ? { speed: Math.min(speed, current.speed ?? Infinity) }
+        : {}),
+      ...(Number.isFinite(min) ? { minFt: Math.min(min!, current.minFt ?? Infinity) } : {}),
+      ...(Number.isFinite(max) ? { maxFt: Math.max(max!, current.maxFt ?? -Infinity) } : {}),
+    });
+  }
+  const byFix = new Map<string, { record: HoldRecord; rank: number }>();
+  for (const row of csvRows(baseCsv)) {
+    const fix = row.FIX_ID;
+    const course = Number(row.COURSE_INBOUND_DEG);
+    if (
+      !fix ||
+      !Number.isFinite(course) ||
+      (row.TURN_DIRECTION !== 'L' && row.TURN_DIRECTION !== 'R')
+    )
+      continue;
+    const chartList = charts.get(key(row)) ?? [];
+    const rank = Math.min(
+      ...chartList.map((c) => {
+        const i = CHART_PREFERENCE.findIndex((p) => c.startsWith(p));
+        return i === -1 ? CHART_PREFERENCE.length : i;
+      }),
+      CHART_PREFERENCE.length,
+    );
+    const limit = limits.get(key(row)) ?? {};
+    const leg = Number(row.LEG_LENGTH_DIST);
+    const record: HoldRecord = {
+      fix,
+      inboundCourseDeg: course % 360 || 360,
+      turn: row.TURN_DIRECTION === 'L' ? 'left' : 'right',
+      ...(Number.isFinite(leg) && leg > 0 ? { legNm: leg } : {}),
+      ...(limit.speed !== undefined ? { maxSpeedKts: limit.speed } : {}),
+      ...(limit.minFt !== undefined && Number.isFinite(limit.minFt)
+        ? { minAltitudeFt: limit.minFt }
+        : {}),
+      ...(limit.maxFt !== undefined && Number.isFinite(limit.maxFt)
+        ? { maxAltitudeFt: limit.maxFt }
+        : {}),
+      chart: chartList[0] ?? 'OTHER',
+    };
+    const best = byFix.get(fix);
+    if (!best || rank < best.rank)
+      byFix.set(fix, {
+        record: {
+          ...record,
+          chart: chartList.find((c) => c.startsWith(CHART_PREFERENCE[rank] ?? '#')) ?? record.chart,
+        },
+        rank,
+      });
+  }
+  return [...byFix.values()].map((v) => v.record);
+}

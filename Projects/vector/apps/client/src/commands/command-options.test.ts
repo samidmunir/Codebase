@@ -1,15 +1,21 @@
-import type { AircraftState } from '@vector/sim-core';
+import { destinationPoint, type AircraftState } from '@vector/sim-core';
 import { describe, expect, it } from 'vitest';
 import { performanceCatalog } from '../airspaces/registry';
 import { newYorkPack as pack } from '../testing/new-york-pack';
+import { draftCommands } from './draft';
 import {
   altitudeOptions,
   centerHandoff,
+  climbViaOption,
+  holdFixOptions,
+  holdSummary,
+  descendViaOption,
   directToGroups,
   ilsClearance,
   ilsRunways,
   isDeparting,
   minimumVectoringAltitude,
+  planningNotes,
   speedOptions,
 } from './command-options';
 
@@ -145,5 +151,224 @@ describe('command options', () => {
     const offshore = minimumVectoringAltitude(pack, { lat: 40.3, lon: -73.6 });
     expect(manhattan).toBeGreaterThan(offshore!);
     expect(offshore).toBeGreaterThanOrEqual(1_500);
+  });
+});
+
+describe('planning notes', () => {
+  const label = (ft: number) => (ft >= 18_000 ? `FL${ft / 100}` : `${ft}`);
+
+  it('tells when to start an arrival down (3:1)', () => {
+    const jfk = pack.airport('KJFK').position;
+    const arrival = (nm: number, targetFt = 35_000) =>
+      aircraft({
+        flightPlan: { origin: 'KBOS', destination: 'KJFK', route: [] },
+        phase: 'arrival',
+        position: destinationPoint(jfk, 45, nm),
+        altitudeFt: 35_000,
+        targets: { ...aircraft({}).targets, altitudeFt: targetFt },
+      });
+    // FL350 to 3,000 ft above the field is about 96 NM of descent.
+    expect(planningNotes(pack, arrival(150), label)).toEqual([
+      { label: 'JFK', value: '150 NM', tone: 'normal' },
+      { label: 'Descent', value: 'start in 54 NM', tone: 'normal' },
+    ]);
+    expect(planningNotes(pack, arrival(100), label)[1]).toMatchObject({
+      value: 'start down now',
+      tone: 'caution',
+    });
+    expect(planningNotes(pack, arrival(100, 11_000), label)[1]).toMatchObject({
+      value: 'descending',
+      tone: 'good',
+    });
+  });
+
+  it('shows the requested level and where a departure leaves', () => {
+    const departure = aircraft({
+      flightPlan: { origin: 'KJFK', destination: 'KBOS', route: [], requestedAltitudeFt: 30_000 },
+      headingDeg: 360,
+      altitudeFt: 20_000,
+      targets: { ...aircraft({}).targets, altitudeFt: 30_000 },
+    });
+    const settings = {
+      'center.handoffWindowNm': 20,
+      'center.handoffMinimumEastboundFt': 17_000,
+      'center.handoffMinimumWestboundFt': 18_000,
+    };
+    const notes = planningNotes(pack, departure, label, settings);
+    expect(notes[0]).toEqual({ label: 'Requested', value: 'FL300 ✓', tone: 'good' });
+    // Far from the N90 boundary: Boston Center takes it near the TRACON's northern edge.
+    expect(notes[1]).toMatchObject({
+      label: 'Handoff',
+      value: expect.stringMatching(/^Boston · in \d+ NM$/),
+    });
+  });
+});
+
+describe('descend via', () => {
+  // A procedure with a published altitude: a STAR for an arrival, a SID for a departure.
+  const procedure = (name: string): AircraftState['navigation'] => ({
+    mode: 'procedure',
+    name,
+    legs: [
+      {
+        pathTerminator: 'TF',
+        fix: 'KORRY',
+        position: destinationPoint({ lat: 40.3, lon: -73.8 }, 0, 20),
+        altitudeRestriction: { minFt: 10_000, maxFt: 10_000 },
+      },
+    ],
+    legIndex: 0,
+    legStart: { lat: 40.3, lon: -73.8 },
+  });
+
+  it('is offered for an arrival on its STAR', () => {
+    const arrival = aircraft({
+      flightPlan: { origin: 'KATL', destination: 'KLGA', route: ['PROUD2'] },
+      navigation: procedure('PROUD2'),
+    });
+    expect(descendViaOption(arrival)).toMatchObject({ procedure: 'PROUD2', bottomFt: 10_000 });
+  });
+
+  it('is never offered on a departure’s SID or a missed approach', () => {
+    const departure = aircraft({
+      flightPlan: { origin: 'KLGA', destination: 'KATL', route: ['GLDMN8', 'NEWEL'] },
+      phase: 'enroute',
+      navigation: procedure('GLDMN8'),
+    });
+    expect(descendViaOption(departure)).toBeUndefined();
+    expect(descendViaOption({ ...departure, phase: 'departure' })).toBeUndefined();
+    const wentAround = aircraft({
+      flightPlan: { origin: 'KATL', destination: 'KLGA', route: ['PROUD2'] },
+      navigation: procedure('Missed approach'),
+    });
+    expect(descendViaOption(wentAround)).toBeUndefined();
+  });
+});
+
+describe('climb via', () => {
+  const onSid = (phase: AircraftState['phase'] = 'enroute') =>
+    aircraft({
+      flightPlan: { origin: 'KLGA', destination: 'KATL', route: ['GLDMN8', 'NEWEL'] },
+      phase,
+      targets: { ...aircraft().targets, altitudeFt: 5_000 },
+      navigation: {
+        mode: 'procedure',
+        name: 'GLDMN8',
+        legs: [
+          {
+            pathTerminator: 'TF',
+            fix: 'VOBOZ',
+            position: destinationPoint({ lat: 40.3, lon: -73.8 }, 90, 6),
+            altitudeRestriction: { minFt: 4_500 },
+          },
+        ],
+        legIndex: 0,
+        legStart: { lat: 40.3, lon: -73.8 },
+        climbVia: true,
+      },
+    });
+
+  it('is offered for a departure on its SID, with its top altitude and next restriction', () => {
+    expect(climbViaOption(onSid())).toMatchObject({
+      procedure: 'GLDMN8',
+      topFt: 5_000,
+      active: true,
+      next: { fix: 'VOBOZ', label: '045+' },
+    });
+    expect(climbViaOption(aircraft())).toBeUndefined(); // an arrival
+  });
+
+  it('turns climb via plus an altitude into "climb via, except maintain"', () => {
+    expect(draftCommands({ climbVia: true, altitudeFt: 17_000 }, pack, onSid())).toEqual([
+      { type: 'climbVia', procedure: 'GLDMN8', exceptMaintainFt: 17_000 },
+    ]);
+    expect(draftCommands({ climbVia: true }, pack, onSid())).toEqual([
+      { type: 'climbVia', procedure: 'GLDMN8' },
+    ]);
+    expect(draftCommands({ altitudeFt: 17_000 }, pack, onSid())).toEqual([
+      { type: 'altitude', altitudeFt: 17_000 },
+    ]);
+  });
+});
+
+describe('holding', () => {
+  const clock = {
+    tick: 600,
+    tickSeconds: 1,
+    utcAtTick: (tick: number) => new Date(Date.UTC(2026, 8, 30, 14, 0, tick)),
+  };
+  const camrn = pack.fix('CAMRN')!;
+
+  it('offers route fixes first, then nearby fixes with published holds', () => {
+    const onCamrn = aircraft({
+      position: destinationPoint(camrn.position, 200, 20),
+      flightPlan: { origin: 'KATL', destination: 'KJFK', route: ['CAMRN'] },
+    });
+    const options = holdFixOptions(pack, onCamrn);
+    expect(options[0]).toMatchObject({
+      fix: { ident: 'CAMRN' },
+      onRoute: true,
+      published: { turn: 'left' },
+    });
+    expect(options.slice(1).every((o) => !o.onRoute && o.published && o.distanceNm <= 60)).toBe(
+      true,
+    );
+    expect(holdSummary(options[0]!.published!)).toBe('041° inbound, left turns, 210 kt');
+  });
+
+  it('builds the published hold with an EFC time from the sim clock', () => {
+    const commands = draftCommands(
+      {
+        hold: {
+          fix: 'CAMRN',
+          published: true,
+          inboundCourseDeg: 200,
+          turn: 'right',
+          efcMinutes: 15,
+        },
+      },
+      pack,
+      aircraft(),
+      clock,
+    );
+    expect(commands).toEqual([
+      {
+        type: 'hold',
+        fix: 'CAMRN',
+        position: camrn.position,
+        inboundCourseDeg: 41,
+        turn: 'left',
+        maxSpeedKts: 210,
+        published: true,
+        efcTick: 1_500,
+        efcTimeZ: '1425',
+      },
+    ]);
+  });
+
+  it('builds a described hold, and resume', () => {
+    const [hold] = draftCommands(
+      {
+        hold: {
+          fix: 'CAMRN',
+          published: false,
+          inboundCourseDeg: 200,
+          turn: 'right',
+          efcMinutes: 5,
+        },
+      },
+      pack,
+      aircraft(),
+      clock,
+    );
+    expect(hold).toMatchObject({
+      inboundCourseDeg: 200,
+      turn: 'right',
+      published: false,
+      efcTimeZ: '1415',
+    });
+    expect(draftCommands({ resume: true }, pack, aircraft(), clock)).toEqual([
+      { type: 'resumeProcedure' },
+    ]);
   });
 });

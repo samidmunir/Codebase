@@ -8,6 +8,24 @@
       "flightNumbers": [100, 2999]
     },
     {
+      "icao": "ACA",
+      "name": "Air Canada",
+      "telephony": "Air Canada",
+      "flightNumbers": [700, 799]
+    },
+    {
+      "icao": "AFR",
+      "name": "Air France",
+      "telephony": "Air France",
+      "flightNumbers": [1, 99]
+    },
+    {
+      "icao": "ASA",
+      "name": "Alaska Airlines",
+      "telephony": "Alaska",
+      "flightNumbers": [1, 1999]
+    },
+    {
       "icao": "BAW",
       "name": "British Airways",
       "telephony": "Speedbird",
@@ -20,10 +38,40 @@
       "flightNumbers": [100, 2999]
     },
     {
+      "icao": "DLH",
+      "name": "Lufthansa",
+      "telephony": "Lufthansa",
+      "flightNumbers": [400, 499]
+    },
+    {
       "icao": "EDV",
       "name": "Endeavor Air",
       "telephony": "Endeavor",
       "flightNumbers": [4600, 5499]
+    },
+    {
+      "icao": "ENY",
+      "name": "Envoy Air",
+      "telephony": "Envoy",
+      "flightNumbers": [3000, 4499]
+    },
+    {
+      "icao": "FDX",
+      "name": "FedEx Express",
+      "telephony": "FedEx",
+      "flightNumbers": [100, 1999]
+    },
+    {
+      "icao": "FFT",
+      "name": "Frontier Airlines",
+      "telephony": "Frontier Flight",
+      "flightNumbers": [1000, 2999]
+    },
+    {
+      "icao": "IBE",
+      "name": "Iberia",
+      "telephony": "Iberia",
+      "flightNumbers": [6250, 6299]
     },
     {
       "icao": "JBU",
@@ -32,16 +80,70 @@
       "flightNumbers": [100, 2799]
     },
     {
+      "icao": "JIA",
+      "name": "PSA Airlines",
+      "telephony": "Blue Streak",
+      "flightNumbers": [5000, 5999]
+    },
+    {
+      "icao": "KLM",
+      "name": "KLM Royal Dutch Airlines",
+      "telephony": "KLM",
+      "flightNumbers": [600, 699]
+    },
+    {
+      "icao": "QTR",
+      "name": "Qatar Airways",
+      "telephony": "Qatari",
+      "flightNumbers": [700, 799]
+    },
+    {
       "icao": "RPA",
       "name": "Republic Airways",
       "telephony": "Brickyard",
       "flightNumbers": [3400, 4799]
     },
     {
+      "icao": "SKW",
+      "name": "SkyWest Airlines",
+      "telephony": "Skywest",
+      "flightNumbers": [5000, 6499]
+    },
+    {
+      "icao": "SWA",
+      "name": "Southwest Airlines",
+      "telephony": "Southwest",
+      "flightNumbers": [100, 3999]
+    },
+    {
+      "icao": "TAP",
+      "name": "TAP Air Portugal",
+      "telephony": "Air Portugal",
+      "flightNumbers": [200, 299]
+    },
+    {
+      "icao": "UAE",
+      "name": "Emirates",
+      "telephony": "Emirates",
+      "flightNumbers": [200, 299]
+    },
+    {
       "icao": "UAL",
       "name": "United Airlines",
       "telephony": "United",
       "flightNumbers": [100, 2699]
+    },
+    {
+      "icao": "UPS",
+      "name": "UPS Airlines",
+      "telephony": "UPS",
+      "flightNumbers": [700, 2999]
+    },
+    {
+      "icao": "VIR",
+      "name": "Virgin Atlantic",
+      "telephony": "Virgin",
+      "flightNumbers": [1, 199]
     }
   ]
 }

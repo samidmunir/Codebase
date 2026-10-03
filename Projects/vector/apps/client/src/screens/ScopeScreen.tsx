@@ -1,5 +1,7 @@
+import { letterWords } from '@vector/sim-core';
+import { shortAirport } from '../scope/data-block';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router';
+import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { applyDifficulty, defaultSettings } from '@vector/shared';
 import type { LatLon } from '@vector/sim-core';
 import { findAirspace } from '../airspaces/registry';
@@ -10,7 +12,7 @@ import { useGameControls } from '../controls/use-game-controls';
 import { Basemap, BASEMAP_ATTRIBUTION, type BasemapHandle } from '../scope/Basemap';
 import type { Camera } from '../scope/camera';
 import { RadarScope, type RadarScopeHandle } from '../scope/RadarScope';
-import { DEFAULT_LEADER_DIRECTION, type LeaderDirection } from '../scope/render/traffic-layer';
+import type { LeaderDirection } from '../scope/render/traffic-layer';
 import { DEFAULT_DIFFICULTY, DIFFICULTY_LABELS, parseDifficulty } from '../settings/difficulty';
 import { useUserSettings } from '../settings/user-settings-store';
 import { ScopeSession } from '../sim/scope-session';
@@ -25,10 +27,13 @@ import {
   useInterfaceSounds,
 } from './scope/use-conflict-sounds';
 import { SaveSessionDialog } from './scope/SaveSessionDialog';
+import { DebriefDialog, type DebriefReason } from './scope/DebriefDialog';
+import { HelpDialog } from '../components/help/HelpDialog';
 import { ScorePanel } from './scope/ScorePanel';
 import { ScoreToasts } from './scope/ScoreToasts';
 import { SettingsDialog } from './scope/SettingsDialog';
 import { ScopeTopBar } from './scope/ScopeTopBar';
+import { useLiveWeather } from './scope/use-live-weather';
 import { TrafficPanel } from './scope/TrafficPanel';
 import { formatPosition } from './scope/format';
 import './scope-screen.css';
@@ -144,7 +149,22 @@ function Scope({ session }: { session: ScopeSession }) {
   const [trafficOpen, setTrafficOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  // The debrief: after a save, or before leaving the scope. The sim pauses while it's open.
+  const [debrief, setDebrief] = useState<DebriefReason | undefined>(undefined);
+  const [leaveAfterSave, setLeaveAfterSave] = useState(false);
+  const wasPausedRef = useRef(true);
+  const navigate = useNavigate();
+  const openDebrief = (reason: DebriefReason) => {
+    if (!debrief) wasPausedRef.current = session.engine.paused;
+    session.pause();
+    setDebrief(reason);
+  };
+  const closeDebrief = () => {
+    setDebrief(undefined);
+    if (!wasPausedRef.current) session.togglePause();
+  };
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [toast, setToast] = useState<string | undefined>(undefined);
   const [commsOpen, setCommsOpen] = useState(true);
   const [departuresOpen, setDeparturesOpen] = useState(true);
@@ -178,6 +198,31 @@ function Scope({ session }: { session: ScopeSession }) {
 
   useConflictSounds(session);
   useInterfaceSounds(session);
+  useLiveWeather(session);
+
+  // Runway changes: announced ahead, then made.
+  useEffect(
+    () =>
+      session.engine.subscribe((event) => {
+        const runways = (r: { arrivals: string[]; departures: string[] }) =>
+          `landing ${r.arrivals.join('/')}, departing ${r.departures.join('/')}`;
+        if (event.type === 'runwayChangePlanned') {
+          const minutes = Math.round(
+            ((event.atTick - session.engine.tick) * session.engine.config.tickSeconds) / 60,
+          );
+          setToast(
+            `${shortAirport(event.airport)} runway change ${minutes > 0 ? `in ${minutes} min` : 'now'}: ${runways(event.runways)}`,
+          );
+        } else if (event.type === 'runwayChanged') {
+          setToast(`${shortAirport(event.airport)} now ${runways(event.runways)}`);
+        } else if (event.type === 'atisChanged') {
+          setToast(
+            `${shortAirport(event.airport)} information ${letterWords(event.letter)} is current`,
+          );
+        }
+      }),
+    [session],
+  );
 
   useEffect(() => {
     if (!toast) return;
@@ -224,11 +269,14 @@ function Scope({ session }: { session: ScopeSession }) {
     toggleScore,
     saveSession: openSave,
     openSettings: () => setSettingsOpen((open) => !open),
+    openHelp: () => setHelpOpen((open) => !open),
     toggleCommsLog: () => setCommsOpen((open) => !open),
     toggleDepartureQueue: () => setDeparturesOpen((open) => !open),
     // Closes the topmost panel: the save dialog, then side panels, then the selected aircraft.
     closeMenu: () => {
-      if (settingsOpen) setSettingsOpen(false);
+      if (debrief) closeDebrief();
+      else if (helpOpen) setHelpOpen(false);
+      else if (settingsOpen) setSettingsOpen(false);
       else if (saveOpen) setSaveOpen(false);
       else if (layersOpen || trafficOpen || scoreOpen) {
         setLayersOpen(false);
@@ -261,6 +309,20 @@ function Scope({ session }: { session: ScopeSession }) {
         leaderDirections={leaderDirections}
         preview={preview}
         highlightFix={selected ? hoveredFix : undefined}
+        onFixCommand={(ident) => {
+          if (!selected) return;
+          const fix = session.pack.fix(ident);
+          if (!fix) return;
+          const result = session.issueInstruction(selected.id, [
+            { type: 'directTo', fix: fix.ident, position: fix.position },
+          ]);
+          if (!result.ok) setToast(`${selected.callsign}: ${result.reason}`);
+          else if (selection?.draft.directTo || selection?.draft.heading)
+            setSelection({
+              id: selected.id,
+              draft: { ...selection.draft, directTo: undefined, heading: undefined },
+            });
+        }}
       />
       <div className="scope-vignette" aria-hidden="true" />
 
@@ -268,6 +330,7 @@ function Scope({ session }: { session: ScopeSession }) {
         facility={airspace.facility}
         name={airspace.name}
         airports={airspace.airports}
+        magneticVariationDeg={airspace.magneticVariationDeg}
         status={status}
         onTogglePause={() => session.togglePause()}
         onSetSpeed={(speed) => session.setSpeed(speed)}
@@ -277,6 +340,8 @@ function Scope({ session }: { session: ScopeSession }) {
         onToggleTraffic={toggleTraffic}
         onSave={openSave}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
+        onLeave={() => openDebrief({ kind: 'leaving' })}
         scoreOpen={scoreOpen}
         onToggleScore={toggleScore}
         commsOpen={commsOpen}
@@ -292,52 +357,80 @@ function Scope({ session }: { session: ScopeSession }) {
         </div>
       )}
 
-      {selection && selected && (
-        <CommandPanel
-          key={selected.id}
-          session={session}
-          aircraft={selected}
-          draft={selection.draft}
-          onDraftChange={(draft) => setSelection({ id: selected.id, draft })}
-          leaderDirection={leaderDirections.get(selected.id) ?? DEFAULT_LEADER_DIRECTION}
-          onLeaderDirectionChange={(direction) =>
-            setLeaderDirections((current) => new Map(current).set(selected.id, direction))
-          }
-          onFixHover={setHoveredFix}
-          onClose={() => select(undefined)}
-        />
-      )}
+      {/* The right side: the open side panel, then the selected aircraft's command panel. */}
+      <div className="scope-dock">
+        {layersOpen && <MapLayersPanel settings={settings} onClose={() => setLayersOpen(false)} />}
 
-      {layersOpen && <MapLayersPanel settings={settings} onClose={() => setLayersOpen(false)} />}
+        {scoreOpen && (
+          <ScorePanel
+            session={session}
+            scoreEventCount={status.scoreEventCount}
+            onClose={() => setScoreOpen(false)}
+          />
+        )}
+
+        {trafficOpen && (
+          <TrafficPanel
+            session={session}
+            trafficKey={status.trafficKey}
+            onClose={() => setTrafficOpen(false)}
+          />
+        )}
+
+        {selection && selected && (
+          <CommandPanel
+            key={selected.id}
+            session={session}
+            aircraft={selected}
+            draft={selection.draft}
+            onDraftChange={(draft) => setSelection({ id: selected.id, draft })}
+            leaderDirection={leaderDirections.get(selected.id)}
+            onLeaderDirectionChange={(direction) =>
+              setLeaderDirections((current) => {
+                const next = new Map(current);
+                if (direction === undefined) next.delete(selected.id);
+                else next.set(selected.id, direction);
+                return next;
+              })
+            }
+            onFixHover={setHoveredFix}
+            onClose={() => select(undefined)}
+          />
+        )}
+      </div>
 
       <ScoreToasts session={session} />
 
-      {scoreOpen && (
-        <ScorePanel
-          session={session}
-          scoreEventCount={status.scoreEventCount}
-          onClose={() => setScoreOpen(false)}
-        />
-      )}
-
-      {trafficOpen && (
-        <TrafficPanel
-          session={session}
-          trafficKey={status.trafficKey}
-          onClose={() => setTrafficOpen(false)}
-        />
-      )}
-
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
 
       {saveOpen && (
         <SaveSessionDialog
           session={session}
-          onClose={() => setSaveOpen(false)}
+          onClose={() => {
+            setSaveOpen(false);
+            setLeaveAfterSave(false);
+          }}
           onSaved={(name) => {
             setSaveOpen(false);
             setToast(`Saved “${name}”`);
+            if (leaveAfterSave) void navigate('/');
+            else openDebrief({ kind: 'saved', name });
           }}
+        />
+      )}
+
+      {debrief && (
+        <DebriefDialog
+          session={session}
+          reason={debrief}
+          onKeepWorking={closeDebrief}
+          onSave={() => {
+            setDebrief(undefined);
+            setLeaveAfterSave(true);
+            setSaveOpen(true);
+          }}
+          onLeave={() => void navigate('/')}
         />
       )}
 

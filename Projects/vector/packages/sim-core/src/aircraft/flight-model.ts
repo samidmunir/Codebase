@@ -30,6 +30,9 @@ export const DEFAULT_FLIGHT_MODEL_CONFIG: FlightModelConfig = {
   levelOffMinRateFpm: 1_000,
 };
 
+/** Descending pilots plan to be at the speed limit this far above the limit altitude. */
+const SPEED_LIMIT_MARGIN_FT = 500;
+
 /** Converts bank angle and true airspeed (kts) to turn rate in degrees per second. */
 const TURN_RATE_CONSTANT = ((9.80665 / 0.514444) * 180) / Math.PI;
 
@@ -52,15 +55,36 @@ export function effectiveTargetSpeed(
   performance: AircraftPerformance,
   config: FlightModelConfig,
 ): number {
+  const navigation = aircraft.navigation;
+  // A published speed limit on the procedure applies unless ATC has assigned a speed.
+  const published =
+    aircraft.targets.speedMode === 'normal' && navigation.mode === 'procedure'
+      ? navigation.speedLimitKts
+      : undefined;
+  // Holding speed is a maximum whatever the speed mode.
+  const holding = navigation.mode === 'hold' ? navigation.speedLimitKts : undefined;
   let target = clamp(
     aircraft.targets.speedMode === 'normal'
-      ? normalSpeed(aircraft, performance)
+      ? Math.min(normalSpeed(aircraft, performance), published ?? Infinity)
       : aircraft.targets.iasKts,
     performance.speeds.final,
     performance.speeds.max,
   );
-  if (aircraft.altitudeFt < config.speedLimitBelowFt)
-    target = Math.min(target, config.speedLimitKts);
+  const limit = config.speedLimitKts;
+  if (holding !== undefined) target = Math.min(target, Math.max(performance.speeds.final, holding));
+  if (aircraft.altitudeFt < config.speedLimitBelowFt) target = Math.min(target, limit);
+  else if (target > limit && aircraft.targets.altitudeFt < config.speedLimitBelowFt) {
+    // Cleared below the limit altitude: slow down in time to cross it at the limit, at the
+    // rate it is descending (or will, if held level for now by a procedure restriction).
+    const descentFpm = Math.max(
+      -aircraft.verticalSpeedFpm,
+      rateAtAltitude(performance.descentRate, aircraft.altitudeFt),
+    );
+    const secondsToSlow = Math.max(0, aircraft.iasKts - limit) / performance.decelerationKtPerSec;
+    const heightToSlow = (secondsToSlow * descentFpm) / 60 + SPEED_LIMIT_MARGIN_FT;
+    if (aircraft.altitudeFt - config.speedLimitBelowFt <= heightToSlow)
+      target = Math.min(target, limit);
+  }
   return target;
 }
 
@@ -136,7 +160,13 @@ function stepAltitude(
   dtSec: number,
   config: FlightModelConfig,
 ): boolean {
-  const target = clamp(aircraft.targets.altitudeFt, 0, performance.ceilingFt);
+  // Descending via a procedure, the planned descent sets the altitude to be at now.
+  const navigation = aircraft.navigation;
+  const cleared =
+    navigation.mode === 'procedure' && navigation.vnavAltitudeFt !== undefined
+      ? navigation.vnavAltitudeFt
+      : aircraft.targets.altitudeFt;
+  const target = clamp(cleared, 0, performance.ceilingFt);
   const remaining = target - aircraft.altitudeFt;
   if (remaining === 0) {
     aircraft.verticalSpeedFpm = 0;
@@ -148,7 +178,15 @@ function stepAltitude(
     config.levelOffMinRateFpm,
     Math.abs(remaining) * config.levelOffRateFactor,
   );
-  const rateFpm = Math.min(rateAtAltitude(curve, aircraft.altitudeFt), levelOffRate);
+  let rateFpm = Math.min(rateAtAltitude(curve, aircraft.altitudeFt), levelOffRate);
+  // Still too fast to go below the speed-limit altitude: descend only as fast as it can
+  // slow down, holding at that altitude if need be, as pilots do (14 CFR 91.117).
+  const aboveLimitFt = aircraft.altitudeFt - config.speedLimitBelowFt;
+  const excessKts = aircraft.iasKts - config.speedLimitKts;
+  if (remaining < 0 && aboveLimitFt >= 0 && target < config.speedLimitBelowFt && excessKts > 1) {
+    const secondsToSlow = excessKts / performance.decelerationKtPerSec;
+    rateFpm = Math.min(rateFpm, (aboveLimitFt / secondsToSlow) * 60);
+  }
   const maxChange = (rateFpm * dtSec) / 60;
 
   if (Math.abs(remaining) <= maxChange) {
@@ -157,7 +195,7 @@ function stepAltitude(
     return true;
   }
   aircraft.altitudeFt += Math.sign(remaining) * maxChange;
-  aircraft.verticalSpeedFpm = Math.sign(remaining) * rateFpm;
+  aircraft.verticalSpeedFpm = maxChange > 0 ? Math.sign(remaining) * rateFpm : 0;
   return false;
 }
 

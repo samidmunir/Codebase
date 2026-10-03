@@ -5,6 +5,7 @@ import {
   parseCenterSites,
   parseDmsCoordinate,
   parseFrequencies,
+  parseRadars,
 } from './nasr';
 
 describe('parseFrequencies', () => {
@@ -111,5 +112,17 @@ describe('parseArtccBoundaries', () => {
     ]);
     expect(boundaries[0]!.ring[0]).toEqual([-73, 39]);
     expect(boundaries[0]!.ring.at(-1)).toEqual([-73, 39]);
+  });
+});
+
+describe('parseRadars', () => {
+  it('reads radar records by column name', () => {
+    const csv = [
+      '"EFF_DATE","FACILITY_ID","FACILITY_TYPE","STATE_CODE","COUNTRY_CODE","RADAR_TYPE","RADAR_NO","RADAR_HRS","REMARK"',
+      '"2026/09/03","PHL","AIRPORT","PA","US","ASR",1,"24",""',
+    ].join('\n');
+    expect(parseRadars(csv)).toEqual([
+      { facility: 'PHL', facilityType: 'AIRPORT', radarType: 'ASR' },
+    ]);
   });
 });

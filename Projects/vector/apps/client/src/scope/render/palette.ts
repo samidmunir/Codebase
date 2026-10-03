@@ -21,7 +21,10 @@ export interface ScopePalette {
   airwayLow: string;
   otherAirport: string;
   artccBoundary: string;
+  tracon: string;
   mia: string;
+  radarSite: string;
+  radarPrimary: string;
   boundary: string;
   rangeRing: string;
   finalCourse: string;
@@ -54,7 +57,10 @@ export function scopePalette(settings: UserSettings): ScopePalette {
     airwayLow: 'rgba(110, 160, 140, 0.22)',
     otherAirport: '#5f7d72',
     artccBoundary: 'rgba(140, 150, 200, 0.45)',
+    tracon: 'rgba(120, 220, 255, 0.55)',
     mia: 'rgba(190, 130, 90, 0.22)',
+    radarSite: 'rgba(120, 200, 230, 0.35)',
+    radarPrimary: 'rgba(76, 242, 160, 0.55)',
     boundary: '#2f4f9e',
     rangeRing: 'rgba(120, 190, 160, 0.10)',
     finalCourse: 'rgba(120, 200, 170, 0.35)',

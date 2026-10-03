@@ -1,5 +1,6 @@
 import { defaultSettings, type SessionSettings } from '@vector/shared';
 import { describe, expect, it } from 'vitest';
+import { distanceNm } from '../math/geo';
 import { SeededRandom } from '../random/seeded-random';
 import { departureProcedure } from '../traffic/departure-procedure';
 import { initialOperations, newDepartureEntry } from '../traffic/operations';
@@ -55,6 +56,26 @@ describe('wind and runways', () => {
     }
   });
 
+  it('runs dual runway operations at JFK only when the wind allows them on every runway', () => {
+    const jfk = (directionDeg: number, speedKts: number) =>
+      createEngine({
+        'weather.windMode': 'manual',
+        'weather.manualWindDirectionDeg': directionDeg,
+        'weather.manualWindSpeedKts': speedKts,
+      }).activeRunways.KJFK;
+    // A moderate southwest wind: land both 22s, depart 22R and 31L.
+    expect(jfk(220, 12)).toMatchObject({
+      configId: '22s-dual',
+      arrivals: ['22L', '22R'],
+      departures: ['22R', '31L'],
+    });
+    // A strong southwest wind puts too much crosswind on 31L: 22s only.
+    expect(jfk(220, 26)).toMatchObject({ configId: '22s', arrivals: ['22L'], departures: ['22R'] });
+    // A strong southeast wind is too much crosswind for 22L arrivals: 13L only.
+    expect(jfk(130, 26)).toMatchObject({ configId: '13s', arrivals: ['13L'] });
+    expect(jfk(130, 10)).toMatchObject({ configId: '13s-dual', arrivals: ['13L', '22L'] });
+  });
+
   it('uses a runway configuration the player chose over the wind', () => {
     const engine = SimEngine.create({
       performance,
@@ -83,7 +104,12 @@ describe('wind and runways', () => {
       'weather.manualWindSpeedKts': 18,
     });
     expect(engine.winds.KJFK).toEqual({ directionDeg: 310, speedKts: 18 });
-    expect(engine.activeRunways.KJFK).toMatchObject({ arrivals: ['31R'], departures: ['31L'] });
+    // Light enough for dual operations: arrivals on both 31s, departures on 31L.
+    expect(engine.activeRunways.KJFK).toMatchObject({
+      configId: '31s-dual',
+      arrivals: ['31R', '31L'],
+      departures: ['31L'],
+    });
   });
 });
 
@@ -119,6 +145,7 @@ describe('departure queue', () => {
         callsignsInUse: new Set<string>(),
         hasPerformance: (type: string) => performance.has(type),
         ceilingFt: (type: string) => performance.get(type).ceilingFt,
+        rangeNm: (type: string) => performance.get(type).rangeNm,
         fleetMix,
       };
       const entries = Array.from({ length: 1_000 }, () =>
@@ -148,6 +175,7 @@ describe('departure queue', () => {
       callsignsInUse: new Set<string>(),
       hasPerformance: (type: string) => performance.has(type),
       ceilingFt: (type: string) => performance.get(type).ceilingFt,
+      rangeNm: (type: string) => performance.get(type).rangeNm,
       fleetMix: 'realistic' as const,
     };
     const entries = Array.from({ length: 500 }, () =>
@@ -332,5 +360,43 @@ describe('snapshots with operations', () => {
     run(resumed, 370);
 
     expect(resumed.toSnapshot()).toEqual(continuous.toSnapshot());
+  });
+});
+
+describe('departure routes', () => {
+  it('fly on to the gate fix after the procedure, then toward the destination', () => {
+    const engine = createEngine({ 'traffic.departureRatePerHour': 10 });
+    for (const entry of engine.departureQueue) {
+      engine.releaseDeparture(entry.id, engine.activeRunways[entry.airport]!.departures[0]!);
+    }
+    const completed = new Set<string>();
+    engine.subscribe(
+      (event) => event.type === 'procedureCompleted' && completed.add(event.aircraftId),
+    );
+    // Looked at once one has turned on past its gate, before departures are handed off and gone.
+    const departedNow = () =>
+      engine
+        .listAircraft()
+        .filter(
+          (a) => completed.has(a.id) && newYork.airspace.airports.includes(a.flightPlan.origin),
+        );
+    const onToDestination = (a: ReturnType<typeof departedNow>[number]) =>
+      a.navigation.mode === 'direct' && a.navigation.fix === a.flightPlan.destination;
+    for (let t = 0; t < 2_400 && !departedNow().some(onToDestination); t += 10) run(engine, 10);
+    const departed = departedNow();
+    expect(departed.length).toBeGreaterThan(0);
+    for (const aircraft of departed) {
+      const gate = newYork.fix(aircraft.flightPlan.route.at(-1)!)!;
+      // On its way to the gate (which counts as passed from 2 NM short of it, while it
+      // turns), or past it and heading for the destination.
+      if (onToDestination(aircraft)) {
+        expect(engine.routeFlown(aircraft.id)).toBe(true);
+      } else {
+        expect(aircraft.navigation).toMatchObject({ mode: 'direct', fix: gate.ident });
+        if (engine.routeFlown(aircraft.id))
+          expect(distanceNm(aircraft.position, gate.position)).toBeLessThanOrEqual(2);
+      }
+    }
+    expect(departed.some((a) => engine.routeFlown(a.id))).toBe(true);
   });
 });

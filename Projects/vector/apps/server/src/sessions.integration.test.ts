@@ -166,6 +166,42 @@ describe.skipIf(!db)('saved sessions (integration)', () => {
     expect((await request(pilot, 'GET', '/api/sessions')).json().careerRp).toBe(210);
   });
 
+  it('records each session’s flight and safety numbers and totals them for the career', async () => {
+    const played = (landings: number, onTime: number, losses: number) => {
+      const data = snapshot();
+      data.state.score.tally = {
+        landing: { count: landings, rp: landings * 100 },
+        departureHandoff: { count: 2, rp: 80 },
+        ...(losses ? { separationLoss: { count: losses, rp: -150 * losses } } : {}),
+      };
+      data.state.score.timing = {
+        arrival: { count: landings, onTime, totalSec: 1_000, totalTargetSec: 1_200 },
+      };
+      return data;
+    };
+    const first = (await save(pilot, 'Morning', played(4, 3, 1))).json();
+    expect(first.stats).toMatchObject({
+      arrivals: 4,
+      departures: 2,
+      onTime: 3,
+      timed: 4,
+      separationLosses: 1,
+      goArounds: 0,
+    });
+    await save(pilot, 'Evening', played(6, 6, 0));
+    expect((await request(pilot, 'GET', '/api/sessions')).json().careerStats).toEqual({
+      arrivals: 10,
+      departures: 4,
+      overflights: 0,
+      onTime: 9,
+      timed: 10,
+      separationLosses: 1,
+      wakeLosses: 0,
+      nearMidAirs: 0,
+      goArounds: 0,
+    });
+  });
+
   it('requires sign-in', async () => {
     const response = await app.inject({ method: 'GET', url: '/api/sessions' });
     expect(response.statusCode).toBe(401);
