@@ -75,3 +75,16 @@ extend 3 NM out to sea. The builder:
   can use the nearest site on the right altitude band.
 - **Airport reference fixes.** Some STARs end with a heading leg that names the airport
   as a reference only; those legs keep their heading and drop the fix.
+
+### Chicago
+
+- **Departure procedures.** O'Hare's and Midway's SIDs are radar-vector procedures
+  published as text only, so CIFP codes none. All Chicago departures fly runway heading
+  to their initial altitude and expect radar vectors.
+- **Departure gates.** C90's departure gates aren't published. `traffic.json` uses
+  current navaids in each direction on routes Chicago traffic commonly flies (several
+  it once used, such as Pontiac, Bradford and Pullman, have been decommissioned).
+- **Midway 22L.** It has no ILS (real arrivals use RNAV or visual approaches), so in a
+  southwest wind Midway lands 31R and departs 22L.
+- **O'Hare 10R.** Its ILS Z is flown on a different localizer from the runway's ILS, so
+  the builder leaves it out; the ILS Y is kept.
