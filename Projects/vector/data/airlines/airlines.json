@@ -116,6 +116,12 @@
       "flightNumbers": [5000, 5999]
     },
     {
+      "icao": "KAL",
+      "name": "Korean Air",
+      "telephony": "Korean Air",
+      "flightNumbers": [1, 99]
+    },
+    {
       "icao": "KLM",
       "name": "KLM Royal Dutch Airlines",
       "telephony": "KLM",
@@ -125,6 +131,12 @@
       "icao": "LOT",
       "name": "LOT Polish Airlines",
       "telephony": "Pollot",
+      "flightNumbers": [1, 99]
+    },
+    {
+      "icao": "QFA",
+      "name": "Qantas",
+      "telephony": "Qantas",
       "flightNumbers": [1, 99]
     },
     {
@@ -192,6 +204,12 @@
       "name": "Virgin Atlantic",
       "telephony": "Virgin",
       "flightNumbers": [1, 199]
+    },
+    {
+      "icao": "VOI",
+      "name": "Volaris",
+      "telephony": "Volaris",
+      "flightNumbers": [800, 999]
     }
   ]
 }

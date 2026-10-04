@@ -28,6 +28,7 @@
     "data:airspace": "tsx scripts/data/build-airspace.ts",
     "data:new-york": "tsx scripts/data/build-airspace.ts new-york",
     "data:chicago": "tsx scripts/data/build-airspace.ts chicago",
+    "data:dallas": "tsx scripts/data/build-airspace.ts dallas",
     "data:preview": "tsx scripts/data/preview.ts"
   },
   "devDependencies": {

@@ -61,7 +61,24 @@ export const chicago = AirspacePack.parse({
   traffic: chiTraffic,
 });
 
+// ---- Dallas–Fort Worth airspace --------------------------------------------------
+import dfwAirports from '../../../../data/airspaces/dallas/airports.json';
+import dfwAirspace from '../../../../data/airspaces/dallas/airspace.json';
+import dfwNavdata from '../../../../data/airspaces/dallas/navdata.json';
+import dfwProcedures from '../../../../data/airspaces/dallas/procedures.json';
+import dfwTraffic from '../../../../data/airspaces/dallas/traffic.json';
+import dfwVideoMap from '../../../../data/airspaces/dallas/video-map.json';
+
+export const dallas = AirspacePack.parse({
+  airspace: dfwAirspace,
+  airports: dfwAirports,
+  navdata: dfwNavdata,
+  procedures: dfwProcedures,
+  videoMap: dfwVideoMap,
+  traffic: dfwTraffic,
+});
+
 /** Every airspace pack, for tests that hold for all of them. */
-export const allAirspaces = [newYork, chicago] as const;
+export const allAirspaces = [newYork, chicago, dallas] as const;
 
 export const airlines = airlinesFileSchema.parse(airlineData).airlines;

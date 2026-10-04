@@ -162,3 +162,36 @@ test('works Chicago the same way: O’Hare and Midway on their wind, saved and r
   });
   expect(resumed.runways).toEqual(saved.runways);
 });
+
+test('works Dallas–Fort Worth: DFW in south flow on four runways, departures climbing via their SIDs', async ({
+  page,
+}) => {
+  await registerPilot(page);
+  await newSession(page, 'Dallas');
+  await page.getByRole('radio', { name: 'Normal' }).click();
+  await page.getByRole('radio', { name: 'Manual' }).click();
+  await page.locator('#setting-weather-manualWindDirectionDeg').fill('180');
+  await page.locator('#setting-weather-manualWindSpeedKts').fill('12');
+  await expect(page.locator('.setup-airport', { hasText: 'DFW' })).toContainText('ARR 17C');
+  await page.getByRole('button', { name: 'Start session' }).click();
+
+  const started = await scopeState(page);
+  expect(started.runways.KDFW).toMatchObject({
+    arrivals: ['17C', '17L', '18R', '13R'],
+    departures: ['17R', '18L'],
+  });
+  expect(started.runways.KDAL).toMatchObject({ arrivals: ['13L'], departures: ['13R'] });
+
+  // Release a DFW departure: it checks in with Regional Departure, climbing via its SID.
+  const dfw = page.getByRole('region', { name: 'DFW departures' });
+  await dfw.locator('.departure__summary').first().click();
+  await dfw.getByRole('button', { name: 'Runway 17R' }).click();
+  await page.getByRole('button', { name: '4×' }).click();
+  await expect(
+    page
+      .locator('.comms-log__entry', {
+        hasText: /Regional Departure, .*climbing via the [A-Z]+ [a-z]+ departure/,
+      })
+      .first(),
+  ).toBeVisible({ timeout: 60_000 });
+});

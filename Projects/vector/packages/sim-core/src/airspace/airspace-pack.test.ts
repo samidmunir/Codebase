@@ -7,7 +7,7 @@ import traffic from '../../../../data/airspaces/new-york/traffic.json';
 import videoMap from '../../../../data/airspaces/new-york/video-map.json';
 import airlineData from '../../../../data/airlines/airlines.json';
 import performanceData from '../../../../data/aircraft-types/performance.json';
-import { chicago } from '../testing/fixtures';
+import { chicago, dallas } from '../testing/fixtures';
 import { cloneJson } from '../snapshot/clone';
 import { distanceNm } from '../math/geo';
 import { AirspaceDataError, AirspacePack, type AirspacePackFiles } from './airspace-pack';
@@ -201,6 +201,86 @@ describe('Chicago airspace pack', () => {
     expect(pack.centerAt({ lat: 41.9, lon: -87.9 }, 30_000).id).toBe('ZAU');
     expect(pack.isCenter('ZMP')).toBe(true);
     expect(pack.isCenter('C90')).toBe(false);
+  });
+});
+
+describe('Dallas–Fort Worth airspace pack', () => {
+  const pack = dallas;
+
+  it('validates, with D10 (Regional Approach) working DFW and Love Field', () => {
+    expect(pack.airspace).toMatchObject({ id: 'dallas', facility: 'D10' });
+    expect(pack.airspace.airports).toEqual(['KDFW', 'KDAL']);
+    expect(pack.airspace.controllers.approach.approachCallsign).toBe('Regional Approach');
+    expect(pack.airspace.controllers.center).toMatchObject({
+      id: 'ZFW',
+      callsign: 'Fort Worth Center',
+    });
+  });
+
+  it.each([
+    // Airport reference points, from the FAA Chart Supplement.
+    ['KDFW', { lat: 32.8968, lon: -97.038 }],
+    ['KDAL', { lat: 32.8471, lon: -96.8518 }],
+  ])('places %s at its real position', (icao, position) => {
+    expect(distanceNm(pack.airport(icao).position, position)).toBeLessThan(0.2);
+  });
+
+  it('has DFW’s seven runways and Love Field’s two', () => {
+    expect(pack.airport('KDFW').runways.map((r) => r.id)).toEqual([
+      '13L',
+      '13R',
+      '17C',
+      '17L',
+      '17R',
+      '18L',
+      '18R',
+      '31L',
+      '31R',
+      '35C',
+      '35L',
+      '35R',
+      '36L',
+      '36R',
+    ]);
+    expect(pack.airport('KDAL').runways.map((r) => r.id)).toEqual(['13L', '13R', '31L', '31R']);
+  });
+
+  it('gives DFW’s east-side runways Tower East and its west side Tower West', () => {
+    for (const runway of ['17C', '17L', '35R', '31R'])
+      expect(pack.runway('KDFW', runway).towerFrequencyMhz).toBe(126.55);
+    for (const runway of ['18R', '18L', '17R', '36L', '13R'])
+      expect(pack.runway('KDFW', runway).towerFrequencyMhz).toBe(124.15);
+    expect(pack.airport('KDFW').towerCallsign).toBe('DFW Tower');
+    expect(pack.airport('KDAL').towerCallsign).toBe('Love Tower');
+  });
+
+  it('has coded RNAV SIDs, which departures fly toward their gate', () => {
+    const rnav = pack.departures.filter((d) => d.airport === 'KDFW' && d.rnav);
+    expect(rnav.map((d) => d.id)).toEqual(
+      expect.arrayContaining(['BLECO8', 'ZACHH4', 'DARTZ9', 'HRPER4']),
+    );
+    for (const fixes of Object.values(pack.traffic.departureGates))
+      for (const ident of fixes) expect(pack.fix(ident), ident).toBeDefined();
+  });
+
+  it('has an ILS on every runway the traffic profile lands on, and STARs into both airports', () => {
+    for (const icao of pack.airspace.airports)
+      for (const config of pack.traffic.airports[icao]!.runwayConfigs)
+        for (const runway of config.arrivals) expect(pack.runway(icao, runway).ils).toBeDefined();
+    expect(pack.arrivals.filter((a) => a.airport === 'KDFW').length).toBeGreaterThan(15);
+    expect(pack.arrivals.filter((a) => a.airport === 'KDAL').length).toBeGreaterThan(3);
+  });
+
+  it('includes the video map layers', () => {
+    expect(pack.videoMap.classB.map((area) => area.name)).toContain('Dallas');
+    expect(pack.videoMap.traconBoundary?.name).toBe('D10');
+    expect(pack.videoMap.minimumVectoringAltitudes.length).toBeGreaterThan(40);
+  });
+
+  it('knows which Center owns the airspace around the region', () => {
+    expect(pack.centerAt({ lat: 32.9, lon: -97.0 }, 30_000).id).toBe('ZFW');
+    expect(pack.isCenter('ZHU')).toBe(true);
+    expect(pack.isCenter('D10')).toBe(false);
   });
 });
 

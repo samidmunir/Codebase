@@ -1,0 +1,493 @@
+{
+  "schemaVersion": 1,
+  "airports": [
+    {
+      "icao": "KDFW",
+      "name": "DALLAS-FORT WORTH INTL",
+      "position": {
+        "lat": 32.89723333333333,
+        "lon": -97.03769444444444
+      },
+      "elevationFt": 606,
+      "magneticVariationDeg": 4,
+      "towerCallsign": "DFW Tower",
+      "runways": [
+        {
+          "id": "13L",
+          "oppositeId": "31R",
+          "threshold": {
+            "lat": 32.91133055555555,
+            "lon": -97.02004166666667
+          },
+          "thresholdElevationFt": 550,
+          "displacedThresholdFt": 627,
+          "lengthFt": 9000,
+          "widthFt": 200,
+          "magneticHeadingDeg": 131,
+          "trueHeadingDeg": 135.4,
+          "towerFrequencyMhz": 126.55
+        },
+        {
+          "id": "13R",
+          "oppositeId": "31L",
+          "threshold": {
+            "lat": 32.909575,
+            "lon": -97.08313333333334
+          },
+          "thresholdElevationFt": 591,
+          "displacedThresholdFt": 0,
+          "lengthFt": 9300,
+          "widthFt": 150,
+          "magneticHeadingDeg": 135,
+          "trueHeadingDeg": 139.18,
+          "towerFrequencyMhz": 124.15,
+          "ils": {
+            "ident": "ILWN",
+            "frequencyMhz": 109.5,
+            "category": "2",
+            "courseDeg": 135,
+            "localizerPosition": {
+              "lat": 32.88817777777778,
+              "lon": -97.061125
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 55
+          }
+        },
+        {
+          "id": "17C",
+          "oppositeId": "35C",
+          "threshold": {
+            "lat": 32.915705555555554,
+            "lon": -97.025975
+          },
+          "thresholdElevationFt": 562,
+          "displacedThresholdFt": 0,
+          "lengthFt": 13400,
+          "widthFt": 150,
+          "magneticHeadingDeg": 176,
+          "trueHeadingDeg": 180.26,
+          "towerFrequencyMhz": 126.55,
+          "ils": {
+            "ident": "IFLQ",
+            "frequencyMhz": 110.3,
+            "category": "3",
+            "courseDeg": 176.3,
+            "localizerPosition": {
+              "lat": 32.875875,
+              "lon": -97.02618888888888
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 58
+          }
+        },
+        {
+          "id": "17L",
+          "oppositeId": "35R",
+          "threshold": {
+            "lat": 32.898319444444446,
+            "lon": -97.00977777777777
+          },
+          "thresholdElevationFt": 524,
+          "displacedThresholdFt": 0,
+          "lengthFt": 8500,
+          "widthFt": 150,
+          "magneticHeadingDeg": 176,
+          "trueHeadingDeg": 180.27,
+          "towerFrequencyMhz": 126.55,
+          "ils": {
+            "ident": "IPPZ",
+            "frequencyMhz": 111.75,
+            "category": "3",
+            "courseDeg": 176.3,
+            "localizerPosition": {
+              "lat": 32.87206666666667,
+              "lon": -97.009925
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 56
+          }
+        },
+        {
+          "id": "17R",
+          "oppositeId": "35L",
+          "threshold": {
+            "lat": 32.91572222222222,
+            "lon": -97.02988333333333
+          },
+          "thresholdElevationFt": 567,
+          "displacedThresholdFt": 0,
+          "lengthFt": 13400,
+          "widthFt": 200,
+          "magneticHeadingDeg": 176,
+          "trueHeadingDeg": 180.26,
+          "towerFrequencyMhz": 124.15,
+          "ils": {
+            "ident": "IJHZ",
+            "frequencyMhz": 111.35,
+            "category": "2",
+            "courseDeg": 176.3,
+            "localizerPosition": {
+              "lat": 32.87589166666667,
+              "lon": -97.03009722222222
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 54
+          }
+        },
+        {
+          "id": "18L",
+          "oppositeId": "36R",
+          "threshold": {
+            "lat": 32.9158,
+            "lon": -97.0507361111111
+          },
+          "thresholdElevationFt": 602,
+          "displacedThresholdFt": 0,
+          "lengthFt": 13401,
+          "widthFt": 200,
+          "magneticHeadingDeg": 176,
+          "trueHeadingDeg": 180.25,
+          "towerFrequencyMhz": 124.15,
+          "ils": {
+            "ident": "ICIX",
+            "frequencyMhz": 110.55,
+            "category": "1",
+            "courseDeg": 176.2,
+            "localizerPosition": {
+              "lat": 32.875994444444444,
+              "lon": -97.05094166666666
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 55
+          }
+        },
+        {
+          "id": "18R",
+          "oppositeId": "36L",
+          "threshold": {
+            "lat": 32.915813888888884,
+            "lon": -97.05464444444443
+          },
+          "thresholdElevationFt": 606,
+          "displacedThresholdFt": 0,
+          "lengthFt": 13400,
+          "widthFt": 150,
+          "magneticHeadingDeg": 176,
+          "trueHeadingDeg": 180.25,
+          "towerFrequencyMhz": 124.15,
+          "ils": {
+            "ident": "IVYN",
+            "frequencyMhz": 111.9,
+            "category": "3",
+            "courseDeg": 176.3,
+            "localizerPosition": {
+              "lat": 32.87609166666667,
+              "lon": -97.05484722222222
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 59
+          }
+        },
+        {
+          "id": "31L",
+          "oppositeId": "13R",
+          "threshold": {
+            "lat": 32.89026944444444,
+            "lon": -97.06327777777777
+          },
+          "thresholdElevationFt": 577,
+          "displacedThresholdFt": 0,
+          "lengthFt": 9300,
+          "widthFt": 150,
+          "magneticHeadingDeg": 315,
+          "trueHeadingDeg": 319.19,
+          "towerFrequencyMhz": 124.15
+        },
+        {
+          "id": "31R",
+          "oppositeId": "13L",
+          "threshold": {
+            "lat": 32.894980555555556,
+            "lon": -97.00084444444444
+          },
+          "thresholdElevationFt": 508,
+          "displacedThresholdFt": 0,
+          "lengthFt": 9000,
+          "widthFt": 200,
+          "magneticHeadingDeg": 311,
+          "trueHeadingDeg": 315.41,
+          "towerFrequencyMhz": 126.55,
+          "ils": {
+            "ident": "IRRA",
+            "frequencyMhz": 110.9,
+            "category": "1",
+            "courseDeg": 311.3,
+            "localizerPosition": {
+              "lat": 32.91336666666667,
+              "lon": -97.02243333333334
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 53
+          }
+        },
+        {
+          "id": "35C",
+          "oppositeId": "17C",
+          "threshold": {
+            "lat": 32.87887777777778,
+            "lon": -97.02617222222221
+          },
+          "thresholdElevationFt": 563,
+          "displacedThresholdFt": 0,
+          "lengthFt": 13400,
+          "widthFt": 150,
+          "magneticHeadingDeg": 356,
+          "trueHeadingDeg": 0.26,
+          "towerFrequencyMhz": 126.55,
+          "ils": {
+            "ident": "IPKQ",
+            "frequencyMhz": 110.3,
+            "category": "3",
+            "courseDeg": 356.3,
+            "localizerPosition": {
+              "lat": 32.91862222222222,
+              "lon": -97.02595833333334
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 59
+          }
+        },
+        {
+          "id": "35L",
+          "oppositeId": "17R",
+          "threshold": {
+            "lat": 32.87889444444445,
+            "lon": -97.03008055555556
+          },
+          "thresholdElevationFt": 563,
+          "displacedThresholdFt": 0,
+          "lengthFt": 13400,
+          "widthFt": 200,
+          "magneticHeadingDeg": 356,
+          "trueHeadingDeg": 0.26,
+          "towerFrequencyMhz": 124.15,
+          "ils": {
+            "ident": "IUWX",
+            "frequencyMhz": 111.35,
+            "category": "1",
+            "courseDeg": 356.3,
+            "localizerPosition": {
+              "lat": 32.91869722222222,
+              "lon": -97.02986666666666
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 47
+          }
+        },
+        {
+          "id": "35R",
+          "oppositeId": "17L",
+          "threshold": {
+            "lat": 32.87495833333333,
+            "lon": -97.00990833333333
+          },
+          "thresholdElevationFt": 576,
+          "displacedThresholdFt": 0,
+          "lengthFt": 8500,
+          "widthFt": 150,
+          "magneticHeadingDeg": 356,
+          "trueHeadingDeg": 0.27,
+          "towerFrequencyMhz": 126.55,
+          "ils": {
+            "ident": "IAJQ",
+            "frequencyMhz": 111.75,
+            "category": "3",
+            "courseDeg": 356.3,
+            "localizerPosition": {
+              "lat": 32.90116388888889,
+              "lon": -97.00976388888888
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 58
+          }
+        },
+        {
+          "id": "36L",
+          "oppositeId": "18R",
+          "threshold": {
+            "lat": 32.87898611111111,
+            "lon": -97.05483333333333
+          },
+          "thresholdElevationFt": 582,
+          "displacedThresholdFt": 0,
+          "lengthFt": 13400,
+          "widthFt": 150,
+          "magneticHeadingDeg": 356,
+          "trueHeadingDeg": 0.25,
+          "towerFrequencyMhz": 124.15,
+          "ils": {
+            "ident": "IBXN",
+            "frequencyMhz": 111.9,
+            "category": "1",
+            "courseDeg": 356.3,
+            "localizerPosition": {
+              "lat": 32.91858333333333,
+              "lon": -97.05463055555555
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 55
+          }
+        },
+        {
+          "id": "36R",
+          "oppositeId": "18L",
+          "threshold": {
+            "lat": 32.878972222222224,
+            "lon": -97.05092499999999
+          },
+          "thresholdElevationFt": 575,
+          "displacedThresholdFt": 0,
+          "lengthFt": 13401,
+          "widthFt": 200,
+          "magneticHeadingDeg": 356,
+          "trueHeadingDeg": 0.25,
+          "towerFrequencyMhz": 124.15,
+          "ils": {
+            "ident": "IFJN",
+            "frequencyMhz": 110.55,
+            "category": "1",
+            "courseDeg": 356.3,
+            "localizerPosition": {
+              "lat": 32.918569444444444,
+              "lon": -97.05072222222222
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 50
+          }
+        }
+      ]
+    },
+    {
+      "icao": "KDAL",
+      "name": "DALLAS LOVE FLD",
+      "position": {
+        "lat": 32.84594444444445,
+        "lon": -96.85087777777777
+      },
+      "elevationFt": 487,
+      "magneticVariationDeg": 3,
+      "towerCallsign": "Love Tower",
+      "runways": [
+        {
+          "id": "13L",
+          "oppositeId": "31R",
+          "threshold": {
+            "lat": 32.85648888888889,
+            "lon": -96.85588888888888
+          },
+          "thresholdElevationFt": 480,
+          "displacedThresholdFt": 399,
+          "lengthFt": 7752,
+          "widthFt": 150,
+          "magneticHeadingDeg": 133,
+          "trueHeadingDeg": 135.77,
+          "towerFrequencyMhz": 123.7,
+          "ils": {
+            "ident": "IDAL",
+            "frequencyMhz": 111.5,
+            "category": "2",
+            "courseDeg": 132.6,
+            "localizerPosition": {
+              "lat": 32.83929722222222,
+              "lon": -96.83596944444444
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 55
+          }
+        },
+        {
+          "id": "13R",
+          "oppositeId": "31L",
+          "threshold": {
+            "lat": 32.85035555555556,
+            "lon": -96.86233888888889
+          },
+          "thresholdElevationFt": 476,
+          "displacedThresholdFt": 489,
+          "lengthFt": 8800,
+          "widthFt": 150,
+          "magneticHeadingDeg": 133,
+          "trueHeadingDeg": 135.76,
+          "towerFrequencyMhz": 123.7,
+          "ils": {
+            "ident": "IDPX",
+            "frequencyMhz": 111.1,
+            "category": "1",
+            "courseDeg": 132.6,
+            "localizerPosition": {
+              "lat": 32.83196666666667,
+              "lon": -96.841025
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 47
+          }
+        },
+        {
+          "id": "31L",
+          "oppositeId": "13R",
+          "threshold": {
+            "lat": 32.83402777777778,
+            "lon": -96.84341666666666
+          },
+          "thresholdElevationFt": 476,
+          "displacedThresholdFt": 0,
+          "lengthFt": 8800,
+          "widthFt": 150,
+          "magneticHeadingDeg": 313,
+          "trueHeadingDeg": 315.77,
+          "towerFrequencyMhz": 123.7,
+          "ils": {
+            "ident": "ILVF",
+            "frequencyMhz": 111.1,
+            "category": "1",
+            "courseDeg": 312.6,
+            "localizerPosition": {
+              "lat": 32.8539,
+              "lon": -96.86644722222222
+            },
+            "glideslopeAngleDeg": 3.08,
+            "thresholdCrossingHeightFt": 55
+          }
+        },
+        {
+          "id": "31R",
+          "oppositeId": "13L",
+          "threshold": {
+            "lat": 32.84204444444445,
+            "lon": -96.83915277777777
+          },
+          "thresholdElevationFt": 487,
+          "displacedThresholdFt": 0,
+          "lengthFt": 7752,
+          "widthFt": 150,
+          "magneticHeadingDeg": 313,
+          "trueHeadingDeg": 315.78,
+          "towerFrequencyMhz": 123.7,
+          "ils": {
+            "ident": "IOVW",
+            "frequencyMhz": 111.5,
+            "category": "2",
+            "courseDeg": 312.6,
+            "localizerPosition": {
+              "lat": 32.857708333333335,
+              "lon": -96.85730277777778
+            },
+            "glideslopeAngleDeg": 3,
+            "thresholdCrossingHeightFt": 55
+          }
+        }
+      ]
+    }
+  ]
+}

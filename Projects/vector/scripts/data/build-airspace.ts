@@ -2,12 +2,14 @@
 //
 //   npm run data:airspace -- <id>       e.g. new-york, chicago
 import { chicago } from './airspaces/chicago';
+import { dallas } from './airspaces/dallas';
 import { newYork } from './airspaces/new-york';
 import { buildAirspace, type AirspaceBuildConfig } from './lib/build-airspace';
 
 const AIRSPACES: Record<string, AirspaceBuildConfig> = {
   [newYork.id]: newYork,
   [chicago.id]: chicago,
+  [dallas.id]: dallas,
 };
 
 const id = process.argv[2];

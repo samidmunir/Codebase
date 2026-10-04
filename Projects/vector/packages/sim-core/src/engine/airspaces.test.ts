@@ -87,7 +87,7 @@ describe.each(allAirspaces.map((pack) => [pack.airspace.name, pack] as const))(
       }
     });
 
-    it('sends departures on toward their gate when not vectored', () => {
+    it('sends departures on toward their gate when not vectored (on a SID, or direct)', () => {
       const engine = createEngine(pack, { 'traffic.departureRatePerHour': 10 });
       for (const entry of engine.departureQueue)
         engine.releaseDeparture(entry.id, engine.activeRunways[entry.airport]!.departures[0]!);
@@ -99,7 +99,11 @@ describe.each(allAirspaces.map((pack) => [pack.airspace.name, pack] as const))(
       for (const aircraft of departed) {
         const gate = aircraft.flightPlan.route.at(-1)!;
         expect(pack.fix(gate), gate).toBeDefined();
-        expect(aircraft.navigation, aircraft.callsign).toMatchObject({ mode: 'direct' });
+        // Still on its SID (whose exit is toward the gate), or direct to the gate or beyond.
+        const navigation = aircraft.navigation;
+        if (navigation.mode === 'procedure')
+          expect(navigation.name, aircraft.callsign).not.toBe('Runway heading');
+        else expect(navigation, aircraft.callsign).toMatchObject({ mode: 'direct' });
       }
     });
 

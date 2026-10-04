@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { AtcCommand } from '../commands/commands';
 import { destinationPoint, magneticToTrue } from '../math/geo';
 import type { AirspacePack } from '../airspace/airspace-pack';
-import { airlines, chicago, newYork, performance } from '../testing/fixtures';
+import { airlines, chicago, dallas, newYork, performance } from '../testing/fixtures';
 import { SimEngine } from './sim-engine';
 
 function clearanceFor(pack: AirspacePack, airport: string, runwayId: string) {
@@ -54,6 +54,18 @@ const AIRSPACES: [AirspacePack, [string, string][], [string, string][]][] = [
     [
       ['KORD', '28C'],
       ['KMDW', '13L'],
+    ],
+  ],
+  [
+    dallas,
+    [
+      ['KDFW', '17C'],
+      ['KDFW', '35R'],
+      ['KDAL', '13L'],
+    ],
+    [
+      ['KDFW', '18R'],
+      ['KDAL', '31R'],
     ],
   ],
 ];
