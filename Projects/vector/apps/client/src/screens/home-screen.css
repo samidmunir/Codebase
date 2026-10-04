@@ -159,6 +159,29 @@
   transform: translateY(-1px);
 }
 
+.airspace-card--closed,
+.airspace-card--closed:hover {
+  cursor: default;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--color-surface-border);
+  transform: none;
+}
+
+.airspace-card--closed > * {
+  opacity: 0.55;
+}
+
+.airspace-card--closed .airspace-card__action {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.saved-session__closed {
+  padding: 4px 10px;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
 .airspace-card__facility {
   grid-row: span 2;
   padding: var(--space-2) var(--space-3);

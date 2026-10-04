@@ -5,25 +5,31 @@ import { z } from 'zod';
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
 
-const email = z
+export const emailSchema = z
   .email()
   .max(254)
   .transform((value) => value.trim().toLowerCase());
-const password = z
+export const passwordSchema = z
   .string()
   .min(PASSWORD_MIN_LENGTH, `Use at least ${PASSWORD_MIN_LENGTH} characters`)
   .max(PASSWORD_MAX_LENGTH);
+export const displayNameSchema = z.string().trim().min(1, 'Enter a display name').max(40);
+
+/** A player, or an admin who can also manage users and airspaces. */
+export const USER_ROLES = ['player', 'admin'] as const;
+export const userRoleSchema = z.enum(USER_ROLES);
+export type UserRole = z.infer<typeof userRoleSchema>;
 
 export const registerRequestSchema = z.object({
-  email,
-  password,
-  displayName: z.string().trim().min(1, 'Enter a display name').max(40),
+  email: emailSchema,
+  password: passwordSchema,
+  displayName: displayNameSchema,
 });
 
 export type RegisterRequest = z.input<typeof registerRequestSchema>;
 
 export const loginRequestSchema = z.object({
-  email,
+  email: emailSchema,
   password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
 });
 
@@ -33,6 +39,7 @@ export const authUserSchema = z.object({
   id: z.uuid(),
   email: z.string(),
   displayName: z.string(),
+  role: userRoleSchema,
 });
 
 export type AuthUser = z.infer<typeof authUserSchema>;

@@ -82,6 +82,35 @@ export function savedSessionsRepository(db: Database) {
       return { ...toSummary(row), snapshot: row.snapshot };
     },
 
+    /** The airspace a user's saved session is in. */
+    async airspaceOf(userId: string, id: string): Promise<string> {
+      const { rows } = await db.query<{ airspace_id: string }>(
+        'SELECT airspace_id FROM saved_sessions WHERE user_id = $1 AND id = $2',
+        [userId, id],
+      );
+      if (!rows[0]) throw new SavedSessionNotFoundError();
+      return rows[0].airspace_id;
+    },
+
+    // ---- Administration (any user's sessions) ---------------------------------------
+
+    /** Removes one of a user's sessions. Returns its name. */
+    async adminDelete(userId: string, id: string): Promise<string> {
+      const { rows } = await db.query<{ name: string }>(
+        'DELETE FROM saved_sessions WHERE user_id = $1 AND id = $2 RETURNING name',
+        [userId, id],
+      );
+      if (!rows[0]) throw new SavedSessionNotFoundError();
+      return rows[0].name;
+    },
+
+    async count(): Promise<number> {
+      const { rows } = await db.query<{ count: number }>(
+        'SELECT count(*)::int AS count FROM saved_sessions',
+      );
+      return rows[0]!.count;
+    },
+
     async create(
       userId: string,
       input: { name: string; airspaceId: string } & SnapshotRecord,

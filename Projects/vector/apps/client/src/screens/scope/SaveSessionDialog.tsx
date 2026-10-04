@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { SESSION_NAME_MAX_LENGTH } from '@vector/shared';
+import { SESSION_NAME_MAX_LENGTH, airspaceIdSchema } from '@vector/shared';
 import { ApiRequestError } from '../../api/api-client';
 import {
   createSavedSession,
@@ -55,7 +55,7 @@ export function SaveSessionDialog({ session, onClose, onSaved }: SaveSessionDial
         saved = await createSavedSession({
           ...request,
           name: trimmed,
-          airspaceId: session.pack.airspace.id,
+          airspaceId: airspaceIdSchema.parse(session.pack.airspace.id),
         });
       }
       session.markSaved(saved.id, saved.name);

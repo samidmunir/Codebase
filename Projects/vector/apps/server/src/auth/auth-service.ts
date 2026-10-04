@@ -18,6 +18,14 @@ export class InvalidCredentialsError extends Error {
   }
 }
 
+/** The right password, but an admin has disabled the account. */
+export class AccountDisabledError extends Error {
+  constructor() {
+    super('This account has been disabled. Contact an administrator.');
+    this.name = 'AccountDisabledError';
+  }
+}
+
 /** The refresh token is missing, expired, revoked or reused. */
 export class InvalidSessionError extends Error {
   constructor(readonly reason: 'missing' | 'expired' | 'revoked' | 'reused' | 'stale') {
@@ -41,6 +49,7 @@ export const toAuthUser = (user: UserRecord): AuthUser => ({
   id: user.id,
   email: user.email,
   displayName: user.displayName,
+  role: user.role,
 });
 
 export function authService(
@@ -81,6 +90,8 @@ export function authService(
       // Always verify a hash, so response time doesn't reveal whether the account exists.
       const valid = await verifyPassword(input.password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
       if (!user || !valid) throw new InvalidCredentialsError();
+      // Only once the password is right, so this doesn't reveal which emails have accounts.
+      if (user.disabledAt) throw new AccountDisabledError();
       return signIn(user);
     },
 
@@ -101,7 +112,7 @@ export function authService(
       if (!(await sessions.markRotated(session.id))) throw new InvalidSessionError('stale');
 
       const user = await users.findById(session.userId);
-      if (!user) throw new InvalidSessionError('revoked');
+      if (!user || user.disabledAt) throw new InvalidSessionError('revoked');
       return signIn(user);
     },
 

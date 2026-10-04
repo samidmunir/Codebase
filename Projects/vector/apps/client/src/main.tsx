@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router';
 import { auth } from './auth/auth-store';
 import { RedirectIfSignedIn, RequireAuth } from './auth/RequireAuth';
+import { AdminScreen } from './screens/admin/AdminScreen';
 import { AuthScreen } from './screens/AuthScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { ScopeScreen } from './screens/ScopeScreen';
@@ -49,6 +50,14 @@ const router = createBrowserRouter([
     element: (
       <RequireAuth>
         <SettingsScreen />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: '/admin',
+    element: (
+      <RequireAuth>
+        <AdminScreen />
       </RequireAuth>
     ),
   },

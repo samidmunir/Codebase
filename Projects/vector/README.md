@@ -46,6 +46,22 @@ npm run migrate:up -- --test
 | `npm run migrate:up`               | Apply migrations (`-- --test` for the test database)      |
 | `npm run migrate:down`             | Roll back the last migration                              |
 | `npm run migrate:create -- <name>` | Create a new SQL migration                                |
+| `npm run admin:grant -- <email>`   | Make an existing account an admin (`--test` for test DB)  |
+| `npm run admin:revoke -- <email>`  | Make an admin a player again                              |
+| `npm run admin:list`               | List the admins                                           |
+| `npm run data:airspace -- <id>`    | Rebuild an airspace pack from FAA data                    |
+
+## Administration
+
+Admins manage users (create, edit, set passwords, sign out everywhere, disable,
+delete, and remove saved sessions) and open or close airspaces at `/admin`, linked
+from the start screen. Every change is recorded in the audit log there.
+
+The first admin is made from the command line, on the machine with the database:
+register the account in Vector, then run `npm run admin:grant -- <email>` and sign
+in again. No admin is ever created by a migration or from code. An admin can't
+demote, disable or delete themselves, and there is always at least one admin who
+can sign in; `admin:revoke` on the command line is the way around that if needed.
 
 ## Branching
 

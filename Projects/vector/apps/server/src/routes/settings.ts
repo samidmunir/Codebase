@@ -1,15 +1,15 @@
 import { parseSettingsPatch, type UserSettingsResponse } from '@vector/shared';
 import type { FastifyInstance } from 'fastify';
-import { authenticate } from '../auth/authenticate';
+import type { Authenticator } from '../auth/authenticate';
 import type { SettingsRepository } from '../settings/settings-repository';
 
 export interface SettingsRouteOptions {
   settings: SettingsRepository;
-  jwtSecret: string;
+  authenticate: Authenticator;
 }
 
 export async function settingsRoutes(app: FastifyInstance, options: SettingsRouteOptions) {
-  const preHandler = authenticate(options.jwtSecret);
+  const preHandler = options.authenticate.user;
 
   app.get('/settings', { preHandler }, async (request): Promise<UserSettingsResponse> => {
     const { settings, updatedAt } = await options.settings.get(request.userId!);

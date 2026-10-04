@@ -2,9 +2,15 @@ import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
 import { MAX_SNAPSHOT_BYTES } from '@vector/shared';
 import Fastify, { type FastifyServerOptions } from 'fastify';
+import { adminService } from './admin/admin-service';
+import { auditRepository } from './admin/audit-repository';
+import { airspacesRepository } from './airspaces/airspaces-repository';
 import { authService, type AuthConfig } from './auth/auth-service';
+import { authenticator } from './auth/authenticate';
 import { sessionsRepository } from './auth/sessions-repository';
 import type { Database } from './platform/database';
+import { adminRoutes } from './routes/admin';
+import { airspacesRoutes } from './routes/airspaces';
 import { authRoutes } from './routes/auth';
 import { errorHandler } from './routes/errors';
 import { healthRoutes } from './routes/health';
@@ -48,27 +54,40 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         await api.register(cookie);
         await api.register(rateLimit, { global: false });
         const users = usersRepository(db);
-        const auth = authService(users, sessionsRepository(db), authConfig);
+        const signIns = sessionsRepository(db);
+        const savedSessions = savedSessionsRepository(db);
+        const airspaces = airspacesRepository(db);
+        const auth = authService(users, signIns, authConfig);
+        const authenticate = authenticator(authConfig.jwtSecret, users);
         await api.register(authRoutes, {
           auth,
           users,
-          jwtSecret: authConfig.jwtSecret,
+          authenticate,
           secureCookies,
           signInRateLimit,
         });
-        await api.register(settingsRoutes, {
-          settings: settingsRepository(db),
-          jwtSecret: authConfig.jwtSecret,
-        });
+        await api.register(settingsRoutes, { settings: settingsRepository(db), authenticate });
         await api.register(sessionsRoutes, {
-          sessions: savedSessionsRepository(db),
-          jwtSecret: authConfig.jwtSecret,
+          sessions: savedSessions,
+          airspaces,
+          authenticate,
           bodyLimit: MAX_SNAPSHOT_BYTES,
           ...(deps.accounts.savedSessionLimit ? { limit: deps.accounts.savedSessionLimit } : {}),
         });
         await api.register(weatherRoutes, {
           metars: deps.accounts.metars ?? metarService(),
-          jwtSecret: authConfig.jwtSecret,
+          authenticate,
+        });
+        await api.register(airspacesRoutes, { airspaces });
+        await api.register(adminRoutes, {
+          admin: adminService({
+            users,
+            signIns,
+            savedSessions,
+            airspaces,
+            audit: auditRepository(db),
+          }),
+          authenticate,
         });
       }
     },

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { useAirspaceStatus } from '../airspaces/airspace-status';
 import { AIRSPACES } from '../airspaces/registry';
 import { auth, useAuth } from '../auth/auth-store';
 import { ApiStatus } from '../components/ApiStatus';
@@ -12,6 +13,7 @@ import './home-screen.css';
 export function HomeScreen() {
   const session = useAuth();
   const [helpOpen, setHelpOpen] = useState(false);
+  const { isOpen } = useAirspaceStatus();
 
   return (
     <main className="shell">
@@ -28,6 +30,7 @@ export function HomeScreen() {
           <button type="button" onClick={() => setHelpOpen(true)}>
             How to play
           </button>
+          {session.user.role === 'admin' && <Link to="/admin">Admin</Link>}
           <Link to="/settings">Settings</Link>
           <button type="button" onClick={() => void auth.logout()}>
             Sign out
@@ -43,16 +46,28 @@ export function HomeScreen() {
         </p>
 
         <div className="hero__airspaces">
-          {AIRSPACES.map((airspace) => (
-            <Link key={airspace.id} to={`/setup/${airspace.id}`} className="airspace-card">
-              <span className="airspace-card__facility">{airspace.facility}</span>
-              <span className="airspace-card__name">{airspace.name}</span>
-              <span className="airspace-card__airports">
-                {airspace.airports.map(shortAirport).join(' · ')}
-              </span>
-              <span className="airspace-card__action">New session →</span>
-            </Link>
-          ))}
+          {AIRSPACES.map((airspace) => {
+            const details = (
+              <>
+                <span className="airspace-card__facility">{airspace.facility}</span>
+                <span className="airspace-card__name">{airspace.name}</span>
+                <span className="airspace-card__airports">
+                  {airspace.airports.map(shortAirport).join(' · ')}
+                </span>
+              </>
+            );
+            return isOpen(airspace.id) ? (
+              <Link key={airspace.id} to={`/setup/${airspace.id}`} className="airspace-card">
+                {details}
+                <span className="airspace-card__action">New session →</span>
+              </Link>
+            ) : (
+              <div key={airspace.id} className="airspace-card airspace-card--closed">
+                {details}
+                <span className="airspace-card__action">Closed</span>
+              </div>
+            );
+          })}
         </div>
 
         {session.status === 'signedIn' && <SavedSessions />}

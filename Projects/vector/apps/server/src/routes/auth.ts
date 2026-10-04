@@ -2,7 +2,7 @@ import { loginRequestSchema, registerRequestSchema, type AuthResponse } from '@v
 import type { CookieSerializeOptions } from '@fastify/cookie';
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { toAuthUser, type AuthService, type SignedIn } from '../auth/auth-service';
-import { authenticate } from '../auth/authenticate';
+import type { Authenticator } from '../auth/authenticate';
 import type { UsersRepository } from '../users/users-repository';
 
 export const REFRESH_COOKIE = 'vector_refresh';
@@ -21,7 +21,7 @@ export function refreshCookieOptions(secure: boolean, expires?: Date): CookieSer
 export interface AuthRouteOptions {
   auth: AuthService;
   users: UsersRepository;
-  jwtSecret: string;
+  authenticate: Authenticator;
   secureCookies: boolean;
   /** Sign-in attempts allowed per IP per minute. */
   signInRateLimit: number;
@@ -61,7 +61,7 @@ export async function authRoutes(app: FastifyInstance, options: AuthRouteOptions
     return reply.code(204).send();
   });
 
-  app.get('/auth/me', { preHandler: authenticate(options.jwtSecret) }, async (request, reply) => {
+  app.get('/auth/me', { preHandler: options.authenticate.user }, async (request, reply) => {
     const user = await options.users.findById(request.userId!);
     if (!user)
       return reply
