@@ -97,8 +97,11 @@
   white-space: nowrap;
 }
 
+/* A long name gives way before the airports and their ATIS letters. */
 .scope-chip__name {
-  flex: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .scope-chip__facility {
@@ -116,13 +119,11 @@
 }
 
 .scope-chip__airports {
-  min-width: 0;
-  overflow: hidden;
+  flex: none;
   white-space: nowrap;
   color: var(--color-text-muted);
   font-family: var(--font-data);
   font-size: 0.78rem;
-  text-overflow: ellipsis;
 }
 
 .scope-clock {

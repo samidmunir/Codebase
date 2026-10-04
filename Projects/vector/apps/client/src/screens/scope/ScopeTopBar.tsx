@@ -150,7 +150,9 @@ export function ScopeTopBar(props: ScopeTopBarProps) {
         </Link>
         <div className="scope-chip">
           <span className="scope-chip__facility">{props.facility}</span>
-          <span className="scope-chip__name">{props.name}</span>
+          <span className="scope-chip__name" title={props.name}>
+            {props.name}
+          </span>
           {/* Each airport with its current ATIS letter; hover for the broadcasts. */}
           <span
             className="scope-chip__airports"

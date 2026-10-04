@@ -13,6 +13,12 @@ import chicagoNavdata from '../../../../data/airspaces/chicago/navdata.json?url'
 import chicagoProcedures from '../../../../data/airspaces/chicago/procedures.json?url';
 import chicagoTraffic from '../../../../data/airspaces/chicago/traffic.json?url';
 import chicagoVideoMap from '../../../../data/airspaces/chicago/video-map.json?url';
+import dallasAirports from '../../../../data/airspaces/dallas/airports.json?url';
+import dallasAirspace from '../../../../data/airspaces/dallas/airspace.json?url';
+import dallasNavdata from '../../../../data/airspaces/dallas/navdata.json?url';
+import dallasProcedures from '../../../../data/airspaces/dallas/procedures.json?url';
+import dallasTraffic from '../../../../data/airspaces/dallas/traffic.json?url';
+import dallasVideoMap from '../../../../data/airspaces/dallas/video-map.json?url';
 import newYorkAirports from '../../../../data/airspaces/new-york/airports.json?url';
 import newYorkAirspace from '../../../../data/airspaces/new-york/airspace.json?url';
 import newYorkNavdata from '../../../../data/airspaces/new-york/navdata.json?url';
@@ -92,6 +98,21 @@ export const AIRSPACES: AirspaceEntry[] = [
       procedures: chicagoProcedures,
       videoMap: chicagoVideoMap,
       traffic: chicagoTraffic,
+    }),
+  },
+  {
+    id: 'dallas',
+    name: 'Dallas–Fort Worth',
+    facility: 'D10',
+    airports: ['KDFW', 'KDAL'],
+    available: true,
+    load: packLoader({
+      airspace: dallasAirspace,
+      airports: dallasAirports,
+      navdata: dallasNavdata,
+      procedures: dallasProcedures,
+      videoMap: dallasVideoMap,
+      traffic: dallasTraffic,
     }),
   },
 ];
