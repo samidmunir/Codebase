@@ -46,8 +46,26 @@ export const auth = {
     await signedIn((await api.login(email, password)).user);
   },
 
-  async register(email: string, password: string, displayName: string): Promise<void> {
-    await signedIn((await api.register(email, password, displayName)).user);
+  async register(
+    email: string,
+    password: string,
+    displayName: string,
+    handle: string,
+  ): Promise<void> {
+    await signedIn((await api.register(email, password, displayName, handle)).user);
+  },
+
+  /** After the account page changes the handle or display name. */
+  updateUser(changes: Partial<AuthUser>): void {
+    if (state.status === 'signedIn')
+      set({ status: 'signedIn', user: { ...state.user, ...changes } });
+  },
+
+  /** After deleting the account: the session is gone on the server already. */
+  signedOutLocally(): void {
+    stopSettingsSync();
+    api.clearSession();
+    set({ status: 'signedOut' });
   },
 
   async logout(): Promise<void> {

@@ -31,7 +31,10 @@ export function RedirectIfSignedIn({ children }: { children: ReactNode }) {
   if (state.status === 'signedIn') {
     const next = new URLSearchParams(location.search).get('next');
     return (
-      <Navigate to={next && next.startsWith('/') && !next.startsWith('//') ? next : '/'} replace />
+      <Navigate
+        to={next && next.startsWith('/') && !next.startsWith('//') ? next : '/play'}
+        replace
+      />
     );
   }
   return children;

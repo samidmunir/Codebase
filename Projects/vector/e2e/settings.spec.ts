@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { registerPilot } from './helpers';
+import { openFromMenu, registerPilot } from './helpers';
 
 test('rebinds a key, warns about the conflict and keeps settings on the account', async ({
   page,
 }) => {
   await registerPilot(page);
-  await page.getByRole('link', { name: 'Settings' }).click();
+  await openFromMenu(page, 'Settings');
   const sections = page.getByRole('navigation', { name: 'Settings sections' });
   await sections.getByRole('button', { name: /^Keyboard/ }).click();
 
