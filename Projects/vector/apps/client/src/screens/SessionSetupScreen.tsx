@@ -9,6 +9,7 @@ import {
   type SessionSettings,
 } from '@vector/shared';
 import { withGust, type AirspacePack } from '@vector/sim-core';
+import { useAirspaceStatus } from '../airspaces/airspace-status';
 import { findAirspace } from '../airspaces/registry';
 import { SettingRow } from '../components/settings/SettingControl';
 import { useGameControls } from '../controls/use-game-controls';
@@ -57,6 +58,7 @@ const ADVANCED_GROUPS: { label: string; keys: SessionKey[] }[] = [
 export function SessionSetupScreen() {
   const { airspaceId = '' } = useParams();
   const entry = findAirspace(airspaceId);
+  const { isOpen } = useAirspaceStatus();
   const navigate = useNavigate();
   const [pack, setPack] = useState<{ id: string; pack: AirspacePack } | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -114,10 +116,14 @@ export function SessionSetupScreen() {
     [loadedPack, setup],
   );
 
-  if (!entry?.available) {
+  if (!entry?.available || !isOpen(entry.id)) {
     return (
       <main className="setup-screen setup-screen--message">
-        <p>Airspace “{airspaceId}” is not available.</p>
+        <p>
+          {entry?.available
+            ? `${entry.name} is closed right now. Try another airspace.`
+            : `Airspace “${airspaceId}” is not available.`}
+        </p>
         <Link to="/">Back to start</Link>
       </main>
     );

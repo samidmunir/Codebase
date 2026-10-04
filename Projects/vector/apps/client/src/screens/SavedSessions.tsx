@@ -7,6 +7,7 @@ import {
   emptySessionStats,
   type SessionStats,
 } from '@vector/shared';
+import { useAirspaceStatus } from '../airspaces/airspace-status';
 import { findAirspace } from '../airspaces/registry';
 import { ApiRequestError } from '../api/api-client';
 import { deleteSavedSession, listSavedSessions, renameSavedSession } from '../api/sessions-api';
@@ -30,6 +31,7 @@ const errorMessage = (error: unknown) =>
 
 /** The player's saved sessions, newest first, with resume, rename and delete. */
 export function SavedSessions() {
+  const { isOpen } = useAirspaceStatus();
   const [state, setState] = useState<ListState>({ kind: 'loading' });
   const [renaming, setRenaming] = useState<{ id: string; name: string } | undefined>(undefined);
   const [confirmDelete, setConfirmDelete] = useState<string | undefined>(undefined);
@@ -170,13 +172,20 @@ export function SavedSessions() {
               ) : (
                 renaming?.id !== saved.id && (
                   <div className="saved-session__actions">
-                    {airspace?.available && (
+                    {airspace?.available && isOpen(saved.airspaceId) ? (
                       <Link
                         className="saved-session__resume"
                         to={`/scope/${saved.airspaceId}?session=${saved.id}`}
                       >
                         Resume
                       </Link>
+                    ) : (
+                      <span
+                        className="saved-session__closed"
+                        title="This airspace is closed right now"
+                      >
+                        Closed
+                      </span>
                     )}
                     <button
                       type="button"

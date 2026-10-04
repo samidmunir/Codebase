@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { applyDifficulty, defaultSettings } from '@vector/shared';
 import type { LatLon } from '@vector/sim-core';
+import { useAirspaceStatus } from '../airspaces/airspace-status';
 import { findAirspace } from '../airspaces/registry';
 import { ApiRequestError } from '../api/api-client';
 import { getSavedSession } from '../api/sessions-api';
@@ -53,6 +54,7 @@ export function ScopeScreen() {
   const location = useLocation();
   const setup = useMemo(() => parseSetup(location.state), [location.state]);
   const entry = findAirspace(airspaceId);
+  const { isOpen } = useAirspaceStatus();
   // A new key for every start from the setup screen, so each start is a fresh session.
   const loadKey = `${entry?.id}:${savedId ? `session=${savedId}` : setup ? `setup=${location.key}` : difficulty}`;
   const [loaded, setLoaded] = useState<{ id: string; state: LoadState } | undefined>(undefined);
@@ -107,9 +109,11 @@ export function ScopeScreen() {
 
   const state: LoadState = !entry?.load
     ? { kind: 'error', message: `Airspace "${airspaceId}" is not available.` }
-    : loaded?.id === loadKey
-      ? loaded.state
-      : { kind: 'loading' };
+    : !isOpen(entry.id)
+      ? { kind: 'error', message: `${entry.name} is closed right now. Try another airspace.` }
+      : loaded?.id === loadKey
+        ? loaded.state
+        : { kind: 'loading' };
 
   if (state.kind === 'loading') {
     return (

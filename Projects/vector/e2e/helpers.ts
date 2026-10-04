@@ -1,15 +1,15 @@
 import { expect, type Page } from '@playwright/test';
 
-/** Registers a new account with a unique email and lands on the start screen. */
-export async function registerPilot(page: Page): Promise<void> {
+/** Registers a new account with a unique email and lands on the start screen. Returns the email. */
+export async function registerPilot(page: Page): Promise<string> {
+  const email = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
   await page.goto('/register');
   await page.getByLabel('Display name').fill('E2E Pilot');
-  await page
-    .getByLabel('Email')
-    .fill(`e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`);
+  await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill('correct horse battery');
   await page.getByRole('button', { name: /create account/i }).click();
   await expect(page.getByText('Signed in as')).toBeVisible();
+  return email;
 }
 
 /** Opens session setup for an airspace from the start screen. */

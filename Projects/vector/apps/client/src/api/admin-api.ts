@@ -1,0 +1,85 @@
+import {
+  adminAirspaceListSchema,
+  adminAirspaceSchema,
+  adminSummarySchema,
+  adminUserDetailSchema,
+  adminUserListSchema,
+  adminUserSchema,
+  auditLogSchema,
+  type AdminAirspace,
+  type AdminCreateUserRequest,
+  type AdminSummary,
+  type AdminUpdateUserRequest,
+  type AdminUser,
+  type AdminUserDetail,
+  type AdminUserList,
+  type AdminUserListQuery,
+  type AuditEntry,
+} from '@vector/shared';
+import { apiRequest } from './api-client';
+
+// The administration API (/api/admin). The server checks the admin role on every request.
+
+const user = (id: string) => `/admin/users/${encodeURIComponent(id)}`;
+
+export async function getAdminSummary(): Promise<AdminSummary> {
+  return adminSummarySchema.parse(await apiRequest('/admin/summary'));
+}
+
+export async function listAdminUsers(query: AdminUserListQuery = {}): Promise<AdminUserList> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query))
+    if (value !== undefined && value !== '') params.set(key, String(value));
+  const search = params.size > 0 ? `?${params}` : '';
+  return adminUserListSchema.parse(await apiRequest(`/admin/users${search}`));
+}
+
+export async function getAdminUser(id: string): Promise<AdminUserDetail> {
+  return adminUserDetailSchema.parse(await apiRequest(user(id)));
+}
+
+export async function createAdminUser(request: AdminCreateUserRequest): Promise<AdminUser> {
+  return adminUserSchema.parse(
+    await apiRequest('/admin/users', { method: 'POST', body: JSON.stringify(request) }),
+  );
+}
+
+export async function updateAdminUser(
+  id: string,
+  request: AdminUpdateUserRequest,
+): Promise<AdminUser> {
+  return adminUserSchema.parse(
+    await apiRequest(user(id), { method: 'PATCH', body: JSON.stringify(request) }),
+  );
+}
+
+export async function deleteAdminUser(id: string): Promise<void> {
+  await apiRequest(user(id), { method: 'DELETE' });
+}
+
+export async function signOutAdminUser(id: string): Promise<void> {
+  await apiRequest(`${user(id)}/sign-out`, { method: 'POST' });
+}
+
+export async function deleteAdminUserSession(id: string, sessionId: string): Promise<void> {
+  await apiRequest(`${user(id)}/sessions/${encodeURIComponent(sessionId)}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function listAdminAirspaces(): Promise<AdminAirspace[]> {
+  return adminAirspaceListSchema.parse(await apiRequest('/admin/airspaces')).airspaces;
+}
+
+export async function setAdminAirspace(id: string, enabled: boolean): Promise<AdminAirspace> {
+  return adminAirspaceSchema.parse(
+    await apiRequest(`/admin/airspaces/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled }),
+    }),
+  );
+}
+
+export async function getAuditLog(): Promise<AuditEntry[]> {
+  return auditLogSchema.parse(await apiRequest('/admin/audit')).entries;
+}
