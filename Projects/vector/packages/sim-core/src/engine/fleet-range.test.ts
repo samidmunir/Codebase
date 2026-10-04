@@ -59,6 +59,7 @@ function generatedFlights(pack: AirspacePack) {
 const HUB_CARRIERS: Record<string, string[]> = {
   'new-york': ['BAW', 'UAE', 'FDX', 'SWA'],
   chicago: ['BAW', 'DLH', 'FDX', 'SWA'],
+  dallas: ['KAL', 'JAL', 'SWA'],
 };
 
 describe.each(allAirspaces.map((pack) => [pack.airspace.name, pack] as const))(
@@ -143,7 +144,10 @@ describe.each(allAirspaces.map((pack) => [pack.airspace.name, pack] as const))(
       // The carriers that only fly to their hubs still show up.
       for (const airline of HUB_CARRIERS[pack.airspace.id]!) expect(seen).toContain(airline);
       expect(
-        flights.filter((f) => f.type === 'A388').every((f) => f.callsign.startsWith('UAE')),
+        // Only the airlines that fly their A380s to these airports.
+        flights
+          .filter((f) => f.type === 'A388')
+          .every((f) => ['UAE', 'BAW', 'QFA'].includes(f.callsign.slice(0, 3))),
       ).toBe(true);
     });
   },

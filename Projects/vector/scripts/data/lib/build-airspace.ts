@@ -81,6 +81,11 @@ export interface AirspaceBuildConfig {
   primaryRadarAirport: string;
   /** Radio names that don't title-case cleanly. */
   towerNames?: Record<string, string>;
+  /**
+   * Towers split by side rather than by runway in NASR (e.g. DFW's 'EAST' and 'WEST'):
+   * each airport's sector names and the runways they work.
+   */
+  towerSectors?: Record<string, Record<string, readonly string[]>>;
 }
 
 /** Grid spacing for tracing the TRACON outline from its MVA chart (degrees, about 0.4 NM). */
@@ -152,9 +157,13 @@ function buildAirports(cifp: CifpData, frequencyCsv: string): Airport[] {
     );
     const primary = towers.find((f) => f.use === 'LCL/P');
     if (!primary) throw new Error(`No primary tower frequency for ${icao}`);
+    const sectors = config.towerSectors?.[icao] ?? {};
     const towerFrequencyFor = (runway: string) =>
-      towers.find((f) => f.sectorization.split(/[ ,/]+/).includes(runway))?.frequencyMhz ??
-      primary.frequencyMhz;
+      towers.find(
+        (f) =>
+          f.sectorization.split(/[ ,/]+/).includes(runway) ||
+          sectors[f.sectorization]?.includes(runway),
+      )?.frequencyMhz ?? primary.frequencyMhz;
 
     const runwayRecords = cifp.runways.filter((r) => r.airport === icao);
     const runways = runwayRecords.map((runway) => {

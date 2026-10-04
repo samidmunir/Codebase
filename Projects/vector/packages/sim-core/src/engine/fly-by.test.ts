@@ -7,6 +7,7 @@ import { SimEngine } from './sim-engine';
 const SHARP_TURN_FIXES: Record<string, string[]> = {
   'new-york': ['BASYE', 'PROUD', 'CRANK'],
   chicago: [],
+  dallas: [],
 };
 
 describe.each(allAirspaces.map((pack) => [pack.airspace.name, pack] as const))(
