@@ -1,6 +1,12 @@
 import { SettingsValidationError, type ApiError } from '@vector/shared';
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
+import {
+  ConfirmationMismatchError,
+  HandleChangeTooSoonError,
+  LastAdminError,
+  WrongPasswordError,
+} from '../account/account-service';
 import { AdminGuardError } from '../admin/admin-service';
 import { AirspaceDisabledError, AirspaceNotFoundError } from '../airspaces/airspaces-repository';
 import {
@@ -10,7 +16,7 @@ import {
 } from '../auth/auth-service';
 import { ForbiddenError, UnauthorizedError } from '../auth/authenticate';
 import { SavedSessionLimitError, SavedSessionNotFoundError } from '../sessions/sessions-repository';
-import { EmailTakenError, UserNotFoundError } from '../users/users-repository';
+import { EmailTakenError, HandleTakenError, UserNotFoundError } from '../users/users-repository';
 import { WeatherUnavailableError } from '../weather/metar-service';
 import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
@@ -30,6 +36,24 @@ export function errorHandler(
       error.issues.map((issue) => [issue.path.join('.'), issue.message]),
     );
     return reply.code(400).send(body('invalid_request', 'Check the highlighted fields', fields));
+  }
+  if (error instanceof WrongPasswordError)
+    return reply.code(403).send(
+      body('wrong_password', error.message, {
+        currentPassword: error.message,
+        password: error.message,
+      }),
+    );
+  if (error instanceof HandleChangeTooSoonError)
+    return reply.code(409).send(body('handle_too_soon', error.message, { handle: error.message }));
+  if (error instanceof ConfirmationMismatchError)
+    return reply
+      .code(400)
+      .send(body('confirmation_mismatch', error.message, { confirmHandle: error.message }));
+  if (error instanceof LastAdminError)
+    return reply.code(409).send(body('last_admin', error.message));
+  if (error instanceof HandleTakenError) {
+    return reply.code(409).send(body('handle_taken', error.message, { handle: error.message }));
   }
   if (error instanceof EmailTakenError) {
     return reply.code(409).send(body('email_taken', error.message, { email: error.message }));

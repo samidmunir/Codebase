@@ -48,6 +48,8 @@ export interface SignedIn extends AuthResponse {
 export const toAuthUser = (user: UserRecord): AuthUser => ({
   id: user.id,
   email: user.email,
+  handle: user.handle,
+  handleGenerated: user.handleGenerated,
   displayName: user.displayName,
   role: user.role,
 });
@@ -74,11 +76,13 @@ export function authService(
   return {
     async register(input: {
       email: string;
+      handle: string;
       password: string;
       displayName: string;
     }): Promise<SignedIn> {
       const user = await users.create({
         email: input.email,
+        handle: input.handle,
         displayName: input.displayName,
         passwordHash: await hashPassword(input.password),
       });

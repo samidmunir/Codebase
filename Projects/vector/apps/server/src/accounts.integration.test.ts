@@ -40,8 +40,15 @@ const post = (url: string, payload?: unknown, cookie?: string) =>
     ...(cookie ? { cookies: { vector_refresh: cookie } } : {}),
   });
 
+/** A handle made from an email's name part, for test accounts. */
+const handleFor = (email: string) =>
+  `${email
+    .split('@')[0]!
+    .replace(/[^A-Za-z0-9_]/g, '_')
+    .slice(0, 14)}_pilot`;
+
 const register = (email = 'pilot@example.com', password = 'correct horse battery') =>
-  post('/api/auth/register', { email, password, displayName: 'Pilot' });
+  post('/api/auth/register', { email, handle: handleFor(email), password, displayName: 'Pilot' });
 
 describe.skipIf(!db)('accounts (integration)', () => {
   beforeAll(async () => {
@@ -81,6 +88,7 @@ describe.skipIf(!db)('accounts (integration)', () => {
     it('validates input', async () => {
       const response = await post('/api/auth/register', {
         email: 'nope',
+        handle: 'no',
         password: 'short',
         displayName: '',
       });
@@ -88,6 +96,7 @@ describe.skipIf(!db)('accounts (integration)', () => {
       expect(Object.keys(response.json().error.fields).sort()).toEqual([
         'displayName',
         'email',
+        'handle',
         'password',
       ]);
     });

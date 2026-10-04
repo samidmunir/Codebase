@@ -2,6 +2,7 @@ import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
 import { MAX_SNAPSHOT_BYTES } from '@vector/shared';
 import Fastify, { type FastifyServerOptions } from 'fastify';
+import { accountService } from './account/account-service';
 import { adminService } from './admin/admin-service';
 import { auditRepository } from './admin/audit-repository';
 import { airspacesRepository } from './airspaces/airspaces-repository';
@@ -9,6 +10,7 @@ import { authService, type AuthConfig } from './auth/auth-service';
 import { authenticator } from './auth/authenticate';
 import { sessionsRepository } from './auth/sessions-repository';
 import type { Database } from './platform/database';
+import { accountRoutes } from './routes/account';
 import { adminRoutes } from './routes/admin';
 import { airspacesRoutes } from './routes/airspaces';
 import { authRoutes } from './routes/auth';
@@ -79,6 +81,11 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           authenticate,
         });
         await api.register(airspacesRoutes, { airspaces });
+        await api.register(accountRoutes, {
+          account: accountService(users, signIns),
+          authenticate,
+          secureCookies,
+        });
         await api.register(adminRoutes, {
           admin: adminService({
             users,

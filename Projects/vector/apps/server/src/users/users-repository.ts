@@ -1,38 +1,58 @@
-import type { AdminUser, AdminUserListQuery, UserRole } from '@vector/shared';
+import {
+  HANDLE_CHANGE_DAYS,
+  type AdminUser,
+  type AdminUserListQuery,
+  type UserRole,
+} from '@vector/shared';
 import type { Database } from '../platform/database';
 
 export interface UserRecord {
   id: string;
   email: string;
+  handle: string;
+  /** Made up for an account from before handles; the pilot should choose one. */
+  handleGenerated: boolean;
+  handleChangedAt: Date | null;
   displayName: string;
   passwordHash: string;
   role: UserRole;
   disabledAt: Date | null;
+  createdAt: Date;
 }
 
 interface UserRow {
   id: string;
   email: string;
+  handle: string;
+  handle_generated: boolean;
+  handle_changed_at: Date | null;
   display_name: string;
   password_hash: string;
   role: UserRole;
   disabled_at: Date | null;
+  created_at: Date;
 }
 
-const COLUMNS = 'id, email, display_name, password_hash, role, disabled_at';
+const COLUMNS =
+  'id, email, handle, handle_generated, handle_changed_at, display_name, password_hash, role, disabled_at, created_at';
 
 const toRecord = (row: UserRow): UserRecord => ({
   id: row.id,
   email: row.email,
+  handle: row.handle,
+  handleGenerated: row.handle_generated,
+  handleChangedAt: row.handle_changed_at,
   displayName: row.display_name,
   passwordHash: row.password_hash,
   role: row.role,
   disabledAt: row.disabled_at,
+  createdAt: row.created_at,
 });
 
 interface AdminUserRow {
   id: string;
   email: string;
+  handle: string;
   display_name: string;
   role: UserRole;
   disabled_at: Date | null;
@@ -45,7 +65,7 @@ interface AdminUserRow {
 
 /** A user with their activity and saved-session totals, for the admin pages. */
 const ADMIN_USER_SELECT = `
-  SELECT u.id, u.email, u.display_name, u.role, u.disabled_at, u.created_at,
+  SELECT u.id, u.email, u.handle, u.display_name, u.role, u.disabled_at, u.created_at,
     (SELECT max(a.last_used_at) FROM auth_sessions a WHERE a.user_id = u.id) AS last_active_at,
     (SELECT count(*)::int FROM auth_sessions a
        WHERE a.user_id = u.id AND a.revoked_at IS NULL AND a.rotated_at IS NULL
@@ -57,6 +77,7 @@ const ADMIN_USER_SELECT = `
 const toAdminUser = (row: AdminUserRow): AdminUser => ({
   id: row.id,
   email: row.email,
+  handle: row.handle,
   displayName: row.display_name,
   role: row.role,
   disabledAt: row.disabled_at?.toISOString() ?? null,
@@ -75,6 +96,14 @@ export class EmailTakenError extends Error {
   }
 }
 
+/** Thrown for a handle someone else has, or has just given up. */
+export class HandleTakenError extends Error {
+  constructor() {
+    super('That handle is taken');
+    this.name = 'HandleTakenError';
+  }
+}
+
 export class UserNotFoundError extends Error {
   constructor() {
     super('That user no longer exists');
@@ -83,6 +112,12 @@ export class UserNotFoundError extends Error {
 }
 
 const isUniqueViolation = (error: unknown) => (error as { code?: string }).code === '23505';
+const violated = (error: unknown) => (error as { constraint?: string }).constraint;
+
+/** Maps a unique violation on users to the field it was about. */
+function uniqueError(error: unknown): Error {
+  return violated(error) === 'users_handle_key' ? new HandleTakenError() : new EmailTakenError();
+}
 
 /** Escapes LIKE wildcards in a search term. */
 const likePattern = (term: string) => `%${term.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
@@ -91,21 +126,51 @@ export function usersRepository(db: Database) {
   return {
     async create(input: {
       email: string;
+      handle: string;
       displayName: string;
       passwordHash: string;
       role?: UserRole | undefined;
     }): Promise<UserRecord> {
+      if (await this.findByEmail(input.email)) throw new EmailTakenError();
+      if (!(await this.handleAvailable(input.handle))) throw new HandleTakenError();
       try {
         const { rows } = await db.query<UserRow>(
-          `INSERT INTO users (email, display_name, password_hash, role) VALUES ($1, $2, $3, $4)
-           RETURNING ${COLUMNS}`,
-          [input.email, input.displayName, input.passwordHash, input.role ?? 'player'],
+          `INSERT INTO users (email, handle, display_name, password_hash, role)
+           VALUES ($1, $2, $3, $4, $5) RETURNING ${COLUMNS}`,
+          [
+            input.email,
+            input.handle,
+            input.displayName,
+            input.passwordHash,
+            input.role ?? 'player',
+          ],
         );
         return toRecord(rows[0]!);
       } catch (error) {
-        if (isUniqueViolation(error)) throw new EmailTakenError();
+        if (isUniqueViolation(error)) throw uniqueError(error);
         throw error;
       }
+    },
+
+    /**
+     * Whether a handle is free for this user (or a new account): nobody has it, and
+     * nobody else gave it up in the last 30 days.
+     */
+    async handleAvailable(handle: string, userId?: string): Promise<boolean> {
+      const { rows } = await db.query<{ taken: boolean }>(
+        `SELECT EXISTS (SELECT 1 FROM users WHERE handle = $1 AND id IS DISTINCT FROM $2)
+             OR EXISTS (SELECT 1 FROM released_handles WHERE handle = $1
+                          AND reserved_until > now() AND user_id IS DISTINCT FROM $2) AS taken`,
+        [handle, userId ?? null],
+      );
+      return !rows[0]!.taken;
+    },
+
+    async findByHandle(handle: string): Promise<UserRecord | undefined> {
+      const { rows } = await db.query<UserRow>(`SELECT ${COLUMNS} FROM users WHERE handle = $1`, [
+        handle,
+      ]);
+      return rows[0] ? toRecord(rows[0]) : undefined;
     },
 
     async findByEmail(email: string): Promise<UserRecord | undefined> {
@@ -131,7 +196,7 @@ export function usersRepository(db: Database) {
       if (query.q) {
         params.push(likePattern(query.q));
         conditions.push(
-          `(u.email ILIKE $${params.length} OR u.display_name ILIKE $${params.length})`,
+          `(u.email ILIKE $${params.length} OR u.handle ILIKE $${params.length} OR u.display_name ILIKE $${params.length})`,
         );
       }
       if (query.role) {
@@ -163,6 +228,7 @@ export function usersRepository(db: Database) {
       id: string,
       changes: {
         email?: string;
+        handle?: string;
         displayName?: string;
         passwordHash?: string;
         role?: UserRole;
@@ -178,6 +244,17 @@ export function usersRepository(db: Database) {
         sets.push(`${column} = $${params.length}`);
       };
       if (changes.email !== undefined) set('email', changes.email);
+      // A new handle (not just a change of case): the old one is reserved for this user a while.
+      const newHandle =
+        changes.handle !== undefined &&
+        changes.handle.toLowerCase() !== before.handle.toLowerCase();
+      if (changes.handle !== undefined && changes.handle !== before.handle) {
+        if (newHandle && !(await this.handleAvailable(changes.handle, id)))
+          throw new HandleTakenError();
+        set('handle', changes.handle);
+        sets.push('handle_generated = false');
+        if (newHandle) sets.push('handle_changed_at = now()');
+      }
       if (changes.displayName !== undefined) set('display_name', changes.displayName);
       if (changes.passwordHash !== undefined) set('password_hash', changes.passwordHash);
       if (changes.role !== undefined) set('role', changes.role);
@@ -185,6 +262,7 @@ export function usersRepository(db: Database) {
         sets.push(
           changes.disabled ? 'disabled_at = coalesce(disabled_at, now())' : 'disabled_at = NULL',
         );
+      if (sets.length === 0) return before;
       try {
         const { rowCount } = await db.query(
           `UPDATE users SET ${sets.join(', ')}, updated_at = now() WHERE id = $1`,
@@ -192,9 +270,16 @@ export function usersRepository(db: Database) {
         );
         if (!rowCount) throw new UserNotFoundError();
       } catch (error) {
-        if (isUniqueViolation(error)) throw new EmailTakenError();
+        if (isUniqueViolation(error)) throw uniqueError(error);
         throw error;
       }
+      if (newHandle)
+        await db.query(
+          `INSERT INTO released_handles (handle, user_id, reserved_until)
+           VALUES ($1, $2, now() + make_interval(days => $3))
+           ON CONFLICT (handle) DO UPDATE SET user_id = $2, reserved_until = excluded.reserved_until`,
+          [before.handle, id, HANDLE_CHANGE_DAYS],
+        );
       return before;
     },
 

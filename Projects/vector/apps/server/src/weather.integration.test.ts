@@ -57,7 +57,12 @@ describe.skipIf(!db)('live weather', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/register',
-      payload: { email: 'wx@example.com', password: 'correct horse battery', displayName: 'Pilot' },
+      payload: {
+        email: 'wx@example.com',
+        handle: 'wx_pilot',
+        password: 'correct horse battery',
+        displayName: 'Pilot',
+      },
     });
     headers = { authorization: `Bearer ${response.json<{ accessToken: string }>().accessToken}` };
   });
