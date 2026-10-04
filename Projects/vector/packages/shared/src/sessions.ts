@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { airspaceIdSchema } from './airspaces';
 import { DIFFICULTY_LEVELS } from './settings/difficulty';
 
 // Saved session API contracts, shared by the server and client. The snapshot
@@ -16,7 +17,7 @@ export type SessionDifficulty = z.infer<typeof sessionDifficultySchema>;
 
 export const createSavedSessionRequestSchema = z.object({
   name,
-  airspaceId: z.string().regex(/^[a-z0-9-]{1,40}$/, 'Unknown airspace'),
+  airspaceId: airspaceIdSchema,
   difficulty: sessionDifficultySchema.nullable().default(null),
   snapshot: z.unknown(),
 });

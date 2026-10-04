@@ -1,3 +1,5 @@
+export * from './admin';
+export * from './airspaces';
 export * from './auth';
 export * from './health';
 export * from './settings';

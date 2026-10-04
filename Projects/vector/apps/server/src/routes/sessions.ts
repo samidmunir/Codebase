@@ -12,7 +12,8 @@ import {
 import { parseSnapshot, scoreStats } from '@vector/sim-core';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { authenticate } from '../auth/authenticate';
+import type { Authenticator } from '../auth/authenticate';
+import type { AirspacesRepository } from '../airspaces/airspaces-repository';
 import {
   SavedSessionNotFoundError,
   type SavedSessionsRepository,
@@ -21,7 +22,9 @@ import {
 
 export interface SessionsRouteOptions {
   sessions: SavedSessionsRepository;
-  jwtSecret: string;
+  /** Sessions in an airspace an admin has closed can't be started, resumed or saved. */
+  airspaces: AirspacesRepository;
+  authenticate: Authenticator;
   /** Saved sessions allowed per account. */
   limit?: number;
   /** Largest request body accepted for a snapshot, in bytes. */
@@ -62,9 +65,9 @@ function snapshotRecord(
 }
 
 export async function sessionsRoutes(app: FastifyInstance, options: SessionsRouteOptions) {
-  const preHandler = authenticate(options.jwtSecret);
+  const preHandler = options.authenticate.user;
   const limit = options.limit ?? MAX_SAVED_SESSIONS;
-  const { sessions, bodyLimit } = options;
+  const { sessions, airspaces, bodyLimit } = options;
   const sessionId = (request: FastifyRequest) => {
     const parsed = idParams.safeParse(request.params);
     if (!parsed.success) throw new SavedSessionNotFoundError();
@@ -84,15 +87,18 @@ export async function sessionsRoutes(app: FastifyInstance, options: SessionsRout
     };
   });
 
-  app.get('/sessions/:id', { preHandler }, async (request): Promise<SavedSession> =>
-    sessions.get(request.userId!, sessionId(request)),
-  );
+  app.get('/sessions/:id', { preHandler }, async (request): Promise<SavedSession> => {
+    const saved = await sessions.get(request.userId!, sessionId(request));
+    await airspaces.requireEnabled(saved.airspaceId);
+    return saved;
+  });
 
   app.post(
     '/sessions',
     { preHandler, bodyLimit },
     async (request, reply): Promise<SavedSessionSummary> => {
       const body = createSavedSessionRequestSchema.parse(request.body);
+      await airspaces.requireEnabled(body.airspaceId);
       const saved = await sessions.create(
         request.userId!,
         {
@@ -113,6 +119,7 @@ export async function sessionsRoutes(app: FastifyInstance, options: SessionsRout
     async (request): Promise<SavedSessionSummary> => {
       const id = sessionId(request);
       const body = replaceSavedSessionRequestSchema.parse(request.body);
+      await airspaces.requireEnabled(await sessions.airspaceOf(request.userId!, id));
       return sessions.replace(request.userId!, id, snapshotRecord(body.snapshot, body.difficulty));
     },
   );

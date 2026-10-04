@@ -1,18 +1,18 @@
 import { stationIdsSchema, type MetarResponse } from '@vector/shared';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { authenticate } from '../auth/authenticate';
+import type { Authenticator } from '../auth/authenticate';
 import type { MetarService } from '../weather/metar-service';
 
 export interface WeatherRouteOptions {
   metars: MetarService;
-  jwtSecret: string;
+  authenticate: Authenticator;
 }
 
 const querySchema = z.object({ ids: stationIdsSchema });
 
 export async function weatherRoutes(app: FastifyInstance, options: WeatherRouteOptions) {
-  const preHandler = authenticate(options.jwtSecret);
+  const preHandler = options.authenticate.user;
 
   /** Latest METARs, e.g. GET /api/weather/metar?ids=KJFK,KLGA,KEWR. */
   app.get(

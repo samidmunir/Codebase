@@ -1,10 +1,16 @@
 import { SettingsValidationError, type ApiError } from '@vector/shared';
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
-import { InvalidCredentialsError, InvalidSessionError } from '../auth/auth-service';
-import { UnauthorizedError } from '../auth/authenticate';
+import { AdminGuardError } from '../admin/admin-service';
+import { AirspaceDisabledError, AirspaceNotFoundError } from '../airspaces/airspaces-repository';
+import {
+  AccountDisabledError,
+  InvalidCredentialsError,
+  InvalidSessionError,
+} from '../auth/auth-service';
+import { ForbiddenError, UnauthorizedError } from '../auth/authenticate';
 import { SavedSessionLimitError, SavedSessionNotFoundError } from '../sessions/sessions-repository';
-import { EmailTakenError } from '../users/users-repository';
+import { EmailTakenError, UserNotFoundError } from '../users/users-repository';
 import { WeatherUnavailableError } from '../weather/metar-service';
 import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
@@ -36,6 +42,18 @@ export function errorHandler(
   }
   if (error instanceof UnauthorizedError)
     return reply.code(401).send(body('unauthorized', error.message));
+  if (error instanceof AccountDisabledError)
+    return reply.code(403).send(body('account_disabled', error.message));
+  if (error instanceof ForbiddenError)
+    return reply.code(403).send(body('forbidden', error.message));
+  if (error instanceof AdminGuardError)
+    return reply.code(409).send(body('admin_guard', error.message));
+  if (error instanceof UserNotFoundError)
+    return reply.code(404).send(body('user_not_found', error.message));
+  if (error instanceof AirspaceNotFoundError)
+    return reply.code(404).send(body('airspace_not_found', error.message));
+  if (error instanceof AirspaceDisabledError)
+    return reply.code(403).send(body('airspace_disabled', error.message));
   if (error instanceof SettingsValidationError) {
     const fields = Object.fromEntries(error.issues.map((issue) => [issue.key, issue.message]));
     return reply.code(400).send(body('invalid_settings', 'Some settings are invalid', fields));
