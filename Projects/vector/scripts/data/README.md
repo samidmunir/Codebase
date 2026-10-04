@@ -7,6 +7,7 @@ Raw downloads are cached in `data/.cache/` (git-ignored), so rebuilds are fast a
 npm run data:airspace -- new-york              # build data/airspaces/new-york/
 npm run data:new-york                          # the same
 npm run data:chicago                           # build data/airspaces/chicago/
+npm run data:dallas                            # build data/airspaces/dallas/
 npm run data:preview -- new-york               # render data/.cache/preview-new-york.svg
 npm run data:preview -- new-york 40.64 -73.78 10   # zoomed preview (lat, lon, radius NM)
 ```
@@ -88,3 +89,14 @@ extend 3 NM out to sea. The builder:
   southwest wind Midway lands 31R and departs 22L.
 - **O'Hare 10R.** Its ILS Z is flown on a different localizer from the runway's ILS, so
   the builder leaves it out; the ILS Y is kept.
+
+### Dallas–Fort Worth
+
+- **Departure gates.** D10's gates aren't published. `traffic.json` uses fixes on DFW's
+  coded RNAV SIDs inside the airspace, one group per direction, and each destination
+  uses the gate nearest its great-circle bearing from DFW, so departures fly the SID
+  that leads there.
+- **DFW 13L and 31L.** They have no ILS, so arrivals never use them; in the 13s and 31s
+  configurations DFW lands the other diagonal and departs a parallel runway.
+- **Tower sectors.** NASR splits DFW's tower into EAST and WEST rather than by runway;
+  the config maps each side to its runways.
