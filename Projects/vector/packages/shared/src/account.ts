@@ -31,6 +31,9 @@ export type DeleteAccountRequest = z.input<typeof deleteAccountRequestSchema>;
 export const accountSchema = z.object({
   id: z.uuid(),
   email: z.string(),
+  emailVerified: z.boolean(),
+  /** An email change waiting for its link to be opened. */
+  pendingEmail: z.string().nullable(),
   handle: z.string(),
   handleGenerated: z.boolean(),
   displayName: z.string(),

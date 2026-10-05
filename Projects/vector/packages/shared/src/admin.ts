@@ -15,6 +15,7 @@ import { savedSessionSummarySchema, sessionDifficultySchema } from './sessions';
 export const adminUserSchema = z.object({
   id: z.uuid(),
   email: z.string(),
+  emailVerified: z.boolean(),
   handle: z.string(),
   displayName: z.string(),
   role: userRoleSchema,
@@ -60,6 +61,8 @@ export const adminCreateUserRequestSchema = z.object({
   displayName: displayNameSchema,
   password: passwordSchema,
   role: userRoleSchema.default('player'),
+  /** Send the new user a link to verify their email (otherwise an admin can mark it verified). */
+  sendVerification: z.boolean().default(true),
 });
 export type AdminCreateUserRequest = z.input<typeof adminCreateUserRequestSchema>;
 
@@ -72,6 +75,8 @@ export const adminUpdateUserRequestSchema = z
     password: passwordSchema,
     role: userRoleSchema,
     disabled: z.boolean(),
+    /** Mark the email verified (or not) without a link, e.g. for an account an admin set up. */
+    emailVerified: z.boolean(),
   })
   .partial()
   .refine((update) => Object.keys(update).length > 0, 'Change at least one thing');

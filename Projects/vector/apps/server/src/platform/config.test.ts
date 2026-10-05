@@ -37,4 +37,22 @@ describe('loadConfig', () => {
 
     expect(config.PORT).toBe(4100);
   });
+
+  it('logs email outside production, and needs Resend set up in production', () => {
+    const base = { DATABASE_URL: 'postgres://localhost/vector', JWT_SECRET: SECRET };
+    expect(loadConfig(base).EMAIL_DELIVERY).toBe('log');
+    expect(() => loadConfig({ ...base, NODE_ENV: 'production' })).toThrow(/RESEND_API_KEY/);
+    expect(() =>
+      loadConfig({ ...base, NODE_ENV: 'production', RESEND_API_KEY: 're_test' }),
+    ).toThrow(/EMAIL_FROM/);
+    expect(
+      loadConfig({
+        ...base,
+        NODE_ENV: 'production',
+        RESEND_API_KEY: 're_test',
+        EMAIL_FROM: 'Vector <hello@example.com>',
+      }).EMAIL_DELIVERY,
+    ).toBe('resend');
+    expect(() => loadConfig({ ...base, EMAIL_DELIVERY: 'outbox' })).toThrow(/EMAIL_OUTBOX_DIR/);
+  });
 });

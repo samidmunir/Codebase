@@ -10,6 +10,7 @@ import { handleSchema } from '@vector/shared';
 import { DUMMY_PASSWORD_HASH, hashPassword, verifyPassword } from '../auth/passwords';
 import type { SessionsRepository } from '../auth/sessions-repository';
 import { hashRefreshToken } from '../auth/tokens';
+import type { EmailTokensRepository } from '../email/email-tokens-repository';
 import { UserNotFoundError, type UsersRepository } from '../users/users-repository';
 
 /** The current password was wrong (changing the password, deleting the account). */
@@ -41,7 +42,11 @@ export class ConfirmationMismatchError extends Error {
 const DAY_MS = 86_400_000;
 
 /** What pilots can do with their own account. */
-export function accountService(users: UsersRepository, signIns: SessionsRepository) {
+export function accountService(
+  users: UsersRepository,
+  signIns: SessionsRepository,
+  emailTokens: EmailTokensRepository,
+) {
   async function current(userId: string) {
     const user = await users.findById(userId);
     if (!user) throw new UserNotFoundError();
@@ -65,6 +70,8 @@ export function accountService(users: UsersRepository, signIns: SessionsReposito
       return {
         id: user.id,
         email: user.email,
+        emailVerified: user.emailVerifiedAt !== null,
+        pendingEmail: await emailTokens.pendingEmail(user.id),
         handle: user.handle,
         handleGenerated: user.handleGenerated,
         displayName: user.displayName,
