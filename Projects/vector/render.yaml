@@ -1,0 +1,86 @@
+# Render Blueprint for Vector: staging (from vector/develop) and production (from
+# main), each a web service running the Dockerfile and its own Postgres. See
+# docs/Deploy.md. Values marked sync: false are entered in Render's dashboard.
+previews:
+  generation: off
+
+databases:
+  - name: vector-staging-db
+    plan: basic-256mb
+    region: virginia
+    databaseName: vector
+    postgresMajorVersion: '17'
+  - name: vector-production-db
+    plan: basic-256mb
+    region: virginia
+    databaseName: vector
+    postgresMajorVersion: '17'
+
+services:
+  - type: web
+    name: vector-staging
+    runtime: docker
+    plan: starter
+    region: virginia
+    branch: vector/develop
+    rootDir: Projects/vector
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: checksPass
+    healthCheckPath: /api/health
+    preDeployCommand: npm run migrate:up
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vector-staging-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_ORIGIN
+        sync: false # e.g. https://staging.your-domain.example
+      - key: TRUST_PROXY
+        value: '1'
+      - key: EMAIL_DELIVERY
+        value: resend
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false # e.g. Vector <hello@your-domain.example>
+      - key: LOG_LEVEL
+        value: info
+
+  - type: web
+    name: vector-production
+    runtime: docker
+    plan: starter
+    region: virginia
+    branch: main
+    rootDir: Projects/vector
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: checksPass
+    healthCheckPath: /api/health
+    preDeployCommand: npm run migrate:up
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vector-production-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_ORIGIN
+        sync: false # e.g. https://your-domain.example
+      - key: TRUST_PROXY
+        value: '1'
+      - key: EMAIL_DELIVERY
+        value: resend
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: LOG_LEVEL
+        value: info

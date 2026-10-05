@@ -36,6 +36,7 @@ import { createVerifier, type Verifier } from './results/verifier';
 import { airspacesRoutes } from './routes/airspaces';
 import { authRoutes } from './routes/auth';
 import { errorHandler } from './routes/errors';
+import { serveClient } from './platform/client-app';
 import { healthRoutes } from './routes/health';
 import { sessionsRoutes } from './routes/sessions';
 import { settingsRoutes } from './routes/settings';
@@ -66,6 +67,8 @@ export interface AppDependencies {
     /** Sending email (defaults: to the server log, with links to http://localhost:5173). */
     email?: { mailer?: Mailer; appUrl?: string };
   };
+  /** Serve the built client from here (production); HSTS once it's behind HTTPS. */
+  client?: { dir: string; hsts: boolean };
 }
 
 declare module 'fastify' {
@@ -208,6 +211,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
     },
     { prefix: '/api' },
   );
+  if (deps.client) app.register(serveClient, deps.client);
 
   return app;
 }
