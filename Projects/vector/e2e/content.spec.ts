@@ -55,7 +55,7 @@ test('an admin publishes news that visitors read, with unsafe markup removed', a
   // Granting ends the account's sign-ins.
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill('correct horse battery');
+  await page.getByLabel('Password', { exact: true }).fill('correct horse battery');
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(accountMenu(page)).toBeVisible();
 

@@ -1,29 +1,32 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { PASSWORD_MIN_LENGTH } from '@vector/shared';
 import { ApiRequestError } from '../api/api-client';
 import { auth } from '../auth/auth-store';
+import { AuthLayout } from '../components/auth/AuthLayout';
+import { PasswordField } from '../components/auth/PasswordField';
 import { HandleField } from '../components/HandleField';
 import { usePageMeta } from '../site/page-meta';
 import './auth-screen.css';
-import './home-screen.css';
 
 type Mode = 'login' | 'register';
 
 const COPY: Record<Mode, { title: string; subtitle: string; submit: string; busy: string }> = {
   login: {
     title: 'Welcome back',
-    subtitle: 'Sign in to open your scope.',
+    subtitle: 'Sign in to pick up your scope where you left it.',
     submit: 'Sign in',
     busy: 'Signing in',
   },
   register: {
-    title: 'Create your account',
-    subtitle: 'Your settings and saved sessions follow you everywhere.',
+    title: 'Take the frequency',
+    subtitle: 'One account for your settings, saved sessions, career and the records.',
     submit: 'Create account',
-    busy: 'Creating account',
+    busy: 'Creating your account',
   },
 };
+
+/** A different airspace behind each page. */
+const AIRSPACE: Record<Mode, string> = { login: 'chicago', register: 'dallas' };
 
 export function AuthScreen({ mode }: { mode: Mode }) {
   usePageMeta({ title: mode === 'login' ? 'Sign in' : 'Create an account' });
@@ -37,7 +40,7 @@ export function AuthScreen({ mode }: { mode: Mode }) {
   const [fields, setFields] = useState<Record<string, string>>({});
   const copy = COPY[mode];
   const next = searchParams.get('next');
-  const switchTo = `${mode === 'login' ? '/register' : '/login'}${next ? `?next=${encodeURIComponent(next)}` : ''}`;
+  const withNext = (path: string) => `${path}${next ? `?next=${encodeURIComponent(next)}` : ''}`;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -53,7 +56,7 @@ export function AuthScreen({ mode }: { mode: Mode }) {
           caught.fields &&
             Object.keys(caught.fields).length > 0 &&
             !['email_taken', 'handle_taken'].includes(caught.code)
-            ? undefined
+            ? 'Check the highlighted fields.'
             : caught.message,
         );
         setFields(caught.fields);
@@ -71,91 +74,141 @@ export function AuthScreen({ mode }: { mode: Mode }) {
       </span>
     ) : null;
 
+  const emailField = (
+    <label className="auth-field">
+      <span>Email</span>
+      <input
+        name="email"
+        type="email"
+        inputMode="email"
+        autoComplete="email"
+        autoCapitalize="off"
+        spellCheck={false}
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        aria-invalid={Boolean(fields.email)}
+        aria-describedby={fields.email ? 'email-error' : undefined}
+        required
+        // The first thing to type on either page.
+        autoFocus
+      />
+      {field('email')}
+    </label>
+  );
+
   return (
-    <main className="shell">
-      <div className="scope-backdrop" aria-hidden="true">
-        <div className="scope-backdrop__rings" />
-        <div className="scope-backdrop__sweep" />
-      </div>
+    <AuthLayout airspaceId={AIRSPACE[mode]}>
+      <nav className="auth-tabs" aria-label="Account">
+        <Link
+          to={withNext('/login')}
+          className="auth-tabs__tab"
+          aria-current={mode === 'login' ? 'page' : undefined}
+        >
+          Sign in
+        </Link>
+        <Link
+          to={withNext('/register')}
+          className="auth-tabs__tab"
+          aria-current={mode === 'register' ? 'page' : undefined}
+        >
+          Create account
+        </Link>
+      </nav>
 
-      <section className="hero auth-card">
-        <p className="hero__eyebrow">Vector</p>
-        <h1 className="auth-card__title">{copy.title}</h1>
-        <p className="hero__subtitle">{copy.subtitle}</p>
+      <h1 className="auth-card__title">{copy.title}</h1>
+      <p className="auth-card__subtitle">{copy.subtitle}</p>
 
-        <form className="auth-form" onSubmit={(event) => void submit(event)} noValidate>
-          {mode === 'register' && (
-            <label className="auth-field">
-              <span>Display name</span>
-              <input
-                name="displayName"
-                autoComplete="nickname"
-                maxLength={40}
-                value={displayName}
-                onChange={(event) => setDisplayName(event.target.value)}
-                aria-invalid={Boolean(fields.displayName)}
-                aria-describedby={fields.displayName ? 'displayName-error' : undefined}
-                required
-              />
-              {field('displayName')}
-            </label>
-          )}
-          {mode === 'register' && (
-            <HandleField value={handle} onChange={setHandle} error={fields.handle} />
-          )}
-          <label className="auth-field">
-            <span>Email</span>
-            <input
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              aria-invalid={Boolean(fields.email)}
-              aria-describedby={fields.email ? 'email-error' : undefined}
-              required
-            />
-            {field('email')}
-          </label>
-          <label className="auth-field">
-            <span>Password</span>
-            <input
-              name="password"
-              type="password"
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+      <form className="auth-form" onSubmit={(event) => void submit(event)} noValidate>
+        {mode === 'login' ? (
+          <>
+            {emailField}
+            <PasswordField
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              aria-invalid={Boolean(fields.password)}
-              aria-describedby={fields.password ? 'password-error' : undefined}
-              required
+              onChange={setPassword}
+              autoComplete="current-password"
+              error={fields.password}
+              labelAside={
+                <Link to="/forgot-password" className="auth-field__aside">
+                  Forgot password?
+                </Link>
+              }
             />
-            {mode === 'register' && !fields.password && (
-              <span className="auth-field__hint">At least {PASSWORD_MIN_LENGTH} characters</span>
-            )}
-            {field('password')}
-          </label>
-          {mode === 'login' && (
-            <Link to="/forgot-password" className="auth-form__forgot">
-              Forgot password?
-            </Link>
-          )}
+          </>
+        ) : (
+          <>
+            <fieldset className="auth-group">
+              <legend>Signing in</legend>
+              {emailField}
+              <PasswordField
+                value={password}
+                onChange={setPassword}
+                autoComplete="new-password"
+                error={fields.password}
+                showStrength
+              />
+            </fieldset>
+            <fieldset className="auth-group">
+              <legend>How others see you</legend>
+              <label className="auth-field">
+                <span>Display name</span>
+                <input
+                  name="displayName"
+                  autoComplete="nickname"
+                  maxLength={40}
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                  aria-invalid={Boolean(fields.displayName)}
+                  aria-describedby={fields.displayName ? 'displayName-error' : undefined}
+                  required
+                />
+                {field('displayName')}
+              </label>
+              <HandleField value={handle} onChange={setHandle} error={fields.handle} />
+              <div className="auth-preview" aria-label="How you’ll appear">
+                <span className="auth-preview__avatar" aria-hidden="true">
+                  {(displayName.trim() || handle || '?')
+                    .split(/\s+/)
+                    .map((word) => word[0])
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </span>
+                <span>
+                  <strong>{displayName.trim() || 'Your name'}</strong>
+                  <span className="auth-preview__handle">@{handle.trim() || 'handle'}</span>
+                </span>
+                <span className="auth-preview__where">on records, profiles and the community</span>
+              </div>
+            </fieldset>
+          </>
+        )}
 
-          {error && (
-            <p className="auth-form__error" role="alert">
-              {error}
-            </p>
-          )}
+        {error && (
+          <p className="auth-form__error" role="alert">
+            {error}
+          </p>
+        )}
 
-          <button type="submit" className="auth-form__submit" disabled={busy}>
-            {busy ? `${copy.busy}…` : copy.submit}
-          </button>
-        </form>
+        <button type="submit" className="auth-form__submit" disabled={busy}>
+          {busy && <span className="auth-form__spinner" aria-hidden="true" />}
+          {busy ? `${copy.busy}…` : copy.submit}
+        </button>
 
-        <p className="auth-card__switch">
-          {mode === 'login' ? 'New to Vector?' : 'Already have an account?'}{' '}
-          <Link to={switchTo}>{mode === 'login' ? 'Create an account' : 'Sign in'}</Link>
-        </p>
-      </section>
-    </main>
+        {mode === 'register' && (
+          <p className="auth-form__terms">
+            By creating an account you agree to the <Link to="/terms">Terms</Link> and the{' '}
+            <Link to="/privacy">Privacy policy</Link>. We’ll email you a link to verify your
+            address.
+          </p>
+        )}
+      </form>
+
+      <p className="auth-card__switch">
+        {mode === 'login' ? 'New to Vector?' : 'Already have an account?'}{' '}
+        <Link to={withNext(mode === 'login' ? '/register' : '/login')}>
+          {mode === 'login' ? 'Create an account' : 'Sign in'}
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }
