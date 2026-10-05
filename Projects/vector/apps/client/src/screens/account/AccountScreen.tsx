@@ -509,7 +509,7 @@ function DeleteSection({ handle }: { handle: string }) {
   return (
     <Section
       title="Delete account"
-      description="Permanently deletes your account, saved sessions and settings. This can’t be undone."
+      description="Permanently deletes your account, saved sessions and settings. Your community posts stay, shown as by a deleted pilot. This can’t be undone."
     >
       {open ? (
         <form className="account-form" onSubmit={(event) => void submit(event)}>

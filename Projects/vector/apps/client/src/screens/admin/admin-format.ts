@@ -18,6 +18,12 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'news.create': 'Wrote a news post',
   'news.update': 'Edited a news post',
   'news.delete': 'Deleted a news post',
+  'forum.hidePost': 'Hid a community post',
+  'forum.showPost': 'Showed a community post again',
+  'forum.deletePost': 'Deleted a community post',
+  'forum.updateThread': 'Moderated a thread',
+  'forum.deleteThread': 'Deleted a thread',
+  'forum.dismissReport': 'Dismissed a report',
   'admin.grant': 'Made admin',
   'admin.revoke': 'Removed admin',
 };
@@ -29,6 +35,19 @@ const describeChange = (key: string, value: unknown): string => {
   if (key === 'disabled') return value ? 'disabled' : 're-enabled';
   if (key === 'enabled') return value ? 'opened' : 'closed';
   if (key === 'published') return value ? 'published' : 'unpublished';
+  if (key === 'pinned') return value ? 'pinned' : 'unpinned';
+  if (key === 'locked') return value ? 'locked' : 'unlocked';
+  if (key === 'post') return `post ${String(value)}`;
+  if (key === 'thread') return `thread ${String(value)}`;
+  if (key === 'author') return `by @${String(value)}`;
+  if (key === 'reports') return `${String(value)} report${value === 1 ? '' : 's'}`;
+  if (key === 'replies') return `${String(value)} repl${value === 1 ? 'y' : 'ies'}`;
+  if (key === 'postingSuspension')
+    return value === 'lift'
+      ? 'posting suspension lifted'
+      : value === 'forever'
+        ? 'suspended from posting for good'
+        : `suspended from posting for ${String(value)}`;
   if (key === 'emailVerified') return value ? 'email marked verified' : 'email not verified';
   if (key === 'verificationSent') return value ? 'verification link sent' : 'no verification link';
   if (key === 'slug') return `/news/${String(value)}`;

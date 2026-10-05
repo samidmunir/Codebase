@@ -31,11 +31,18 @@
     "title": "News · Vector",
     "description": "Release notes and announcements from Vector."
   },
+  "/community": {
+    "title": "Community · Vector",
+    "description": "Talk controlling with other Vector pilots: techniques, airspaces, bug reports and feature requests."
+  },
   "/about": {
     "title": "About · Vector",
     "description": "What Vector is, where its data comes from, and what it isn’t."
   },
-  "/terms": { "title": "Terms of use · Vector", "description": "The terms for using Vector." },
+  "/terms": {
+    "title": "Terms of use · Vector",
+    "description": "The terms for using Vector."
+  },
   "/privacy": {
     "title": "Privacy · Vector",
     "description": "What Vector stores about you, and why."

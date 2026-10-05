@@ -20,6 +20,8 @@ export const adminUserSchema = z.object({
   displayName: z.string(),
   role: userRoleSchema,
   disabledAt: z.iso.datetime().nullable(),
+  /** Can't post in the community until then; 'forever' for good. */
+  postingSuspendedUntil: z.union([z.iso.datetime(), z.literal('forever')]).nullable(),
   createdAt: z.iso.datetime(),
   /** Last sign-in or token refresh, if any. */
   lastActiveAt: z.iso.datetime().nullable(),
@@ -77,6 +79,12 @@ export const adminUpdateUserRequestSchema = z
     disabled: z.boolean(),
     /** Mark the email verified (or not) without a link, e.g. for an account an admin set up. */
     emailVerified: z.boolean(),
+    /** Suspend from posting in the community for some days or for good, or lift it. */
+    postingSuspension: z.union([
+      z.number().int().min(1).max(365),
+      z.literal('forever'),
+      z.literal('lift'),
+    ]),
   })
   .partial()
   .refine((update) => Object.keys(update).length > 0, 'Change at least one thing');
@@ -111,6 +119,12 @@ export const AUDIT_ACTIONS = [
   'news.create',
   'news.update',
   'news.delete',
+  'forum.hidePost',
+  'forum.showPost',
+  'forum.deletePost',
+  'forum.updateThread',
+  'forum.deleteThread',
+  'forum.dismissReport',
   'admin.grant',
   'admin.revoke',
 ] as const;

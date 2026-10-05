@@ -122,6 +122,16 @@ export function adminService(deps: {
         ...(changes.role !== undefined ? { role: changes.role } : {}),
         ...(changes.disabled !== undefined ? { disabled: changes.disabled } : {}),
         ...(changes.emailVerified !== undefined ? { emailVerified: changes.emailVerified } : {}),
+        ...(changes.postingSuspension !== undefined
+          ? {
+              postingSuspendedUntil:
+                changes.postingSuspension === 'lift'
+                  ? null
+                  : changes.postingSuspension === 'forever'
+                    ? 'forever'
+                    : new Date(Date.now() + changes.postingSuspension * 86_400_000),
+            }
+          : {}),
       });
 
       // A new password, a disabled account or a role change ends every sign-in.
@@ -146,6 +156,11 @@ export function adminService(deps: {
         changes.email !== undefined && changes.email.toLowerCase() !== before.email.toLowerCase();
       const nowVerified = changes.emailVerified ?? (emailChanged ? false : wasVerified);
       if (nowVerified !== wasVerified) details.emailVerified = nowVerified;
+      if (changes.postingSuspension !== undefined)
+        details.postingSuspension =
+          typeof changes.postingSuspension === 'number'
+            ? `${changes.postingSuspension} days`
+            : changes.postingSuspension;
       if (Object.keys(details).length > 0)
         await audit.record(actor, 'user.update', before.email, details);
       return users.adminView(id);

@@ -3,6 +3,7 @@ export * from './admin';
 export * from './airspaces';
 export * from './auth';
 export * from './health';
+export * from './community';
 export * from './email';
 export * from './news';
 export * from './records';

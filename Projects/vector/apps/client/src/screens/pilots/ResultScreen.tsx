@@ -9,6 +9,7 @@ import { formatRp } from '../scope/score-format';
 import { SessionReportView } from '../scope/SessionReportView';
 import { airspaceLabel, difficultyLabel, formatHours, VERIFICATION } from './pilot-format';
 import { usePageMeta } from '../../site/page-meta';
+import { useAuth } from '../../auth/auth-store';
 import './pilots.css';
 
 type State =
@@ -22,6 +23,7 @@ export function ResultScreen() {
   usePageMeta({ title: 'Session result' });
   const { id = '' } = useParams();
   const [state, setState] = useState<State>({ kind: 'loading' });
+  const auth = useAuth();
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +93,13 @@ export function ResultScreen() {
           </span>
         </div>
       </header>
+      {auth.status === 'signedIn' && auth.user.handle === pilot.handle && (
+        <p className="result-share">
+          <Link to={`/community/general/new?result=${result.id}`} className="site-button">
+            Discuss this session in the community
+          </Link>
+        </p>
+      )}
       <div className="pilot-card result-report">
         <SessionReportView report={report} flightsListed={10} lossesListed={20} />
       </div>
