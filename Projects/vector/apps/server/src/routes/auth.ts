@@ -37,6 +37,8 @@ export interface AuthRouteOptions {
   /** Runs once an account is created (sends the verification email). */
   onRegistered?: (userId: string) => Promise<void>;
   signIns: SessionsRepository;
+  /** Refuses registration while it's switched off (admins can still create accounts). */
+  checkRegistrationOpen?: () => Promise<void>;
 }
 
 const signInParams = z.object({ id: z.uuid() });
@@ -58,6 +60,7 @@ export async function authRoutes(app: FastifyInstance, options: AuthRouteOptions
   };
 
   app.post('/auth/register', { config: { rateLimit: AUTH_RATE_LIMIT } }, async (request, reply) => {
+    await options.checkRegistrationOpen?.();
     const signedIn = await options.auth.register(
       registerRequestSchema.parse(request.body),
       clientInfo(request),

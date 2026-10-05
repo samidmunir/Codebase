@@ -12,5 +12,6 @@ export * from './records';
 export * from './results';
 export * from './settings';
 export * from './sign-ins';
+export * from './site-settings';
 export * from './sessions';
 export * from './weather';

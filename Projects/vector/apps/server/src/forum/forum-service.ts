@@ -36,7 +36,8 @@ import {
 /** Can't post: why, in words for the pilot. */
 export class ForumPostingError extends Error {
   constructor(
-    readonly reason: 'unverified' | 'suspended' | 'locked' | 'adminOnly' | 'rateLimited' | 'links',
+    readonly reason:
+      'unverified' | 'suspended' | 'locked' | 'adminOnly' | 'rateLimited' | 'links' | 'readOnly',
     message: string,
   ) {
     super(message);
@@ -102,8 +103,19 @@ export function forumService(deps: {
   forum: ForumRepository;
   users: UsersRepository;
   audit: AuditRepository;
+  /** Whether an admin has made the community read-only (players can't write). */
+  readOnly?: () => Promise<{ readOnly: boolean; message: string }>;
 }) {
   const { forum, users, audit } = deps;
+  const DEFAULT_READ_ONLY = 'The community is read-only for now. You can still read everything.';
+
+  /** Throws for players while the community is read-only (staff carry on). */
+  async function assertWritable(user: UserRecord | undefined): Promise<void> {
+    if (user && isStaffRole(user.role)) return;
+    const state = await deps.readOnly?.();
+    if (state?.readOnly)
+      throw new ForumPostingError('readOnly', state.message || DEFAULT_READ_ONLY);
+  }
   const editableSince = () => new Date(Date.now() - FORUM_EDIT_HOURS * HOUR_MS);
 
   /** Whether this pilot may post at all, and in this thread or category if given. */
@@ -115,6 +127,8 @@ export function forumService(deps: {
     const isAdmin = user.role === 'admin';
     // Staff (moderators and admins) can post anywhere they moderate, without new-poster limits.
     const isStaff = isStaffRole(user.role);
+    if (!isStaff && (await deps.readOnly?.())?.readOnly)
+      return { allowed: false, reason: 'readOnly' };
     if (!user.emailVerifiedAt && !isStaff) return { allowed: false, reason: 'unverified' };
     const suspended = suspension(user);
     if (suspended)
@@ -135,6 +149,7 @@ export function forumService(deps: {
     suspended: 'You’re suspended from posting',
     locked: 'This thread is locked',
     adminOnly: 'Only the Vector team posts new threads here',
+    readOnly: DEFAULT_READ_ONLY,
   };
 
   /** Throws unless the pilot can post this, now. */
@@ -145,6 +160,7 @@ export function forumService(deps: {
   ): Promise<void> {
     const allowed = await posting(user, where);
     if (!allowed.allowed) {
+      if (allowed.reason === 'readOnly') await assertWritable(user);
       const reason = allowed.reason === 'signedOut' ? 'unverified' : allowed.reason;
       let message = REFUSALS[allowed.reason];
       if (allowed.reason === 'suspended')
@@ -276,6 +292,7 @@ export function forumService(deps: {
       if (post.hidden) throw new ForumEditError('A moderator hid this post, so it can’t be edited');
       if (post.createdAt.getTime() <= editableSince().getTime())
         throw new ForumEditError(`Posts can be edited for ${FORUM_EDIT_HOURS} hours`);
+      await assertWritable(user);
       const suspended = suspension(user);
       if (suspended) throw new ForumPostingError('suspended', 'You’re suspended from posting');
       if (
@@ -297,6 +314,7 @@ export function forumService(deps: {
     },
 
     async setUseful(userId: string, postId: number, useful: boolean): Promise<void> {
+      await assertWritable(await users.findById(userId));
       const post = await forum.post(postId);
       if (post.authorId === userId && useful)
         throw new ForumEditError('You can’t mark your own post useful');
@@ -309,6 +327,7 @@ export function forumService(deps: {
     },
 
     async report(userId: string, postId: number, reason: string): Promise<void> {
+      await assertWritable(await users.findById(userId));
       await forum.post(postId); // Throws if it's gone.
       await forum.report(postId, userId, reason);
     },
