@@ -12,6 +12,9 @@ import { sessionsRepository } from './auth/sessions-repository';
 import type { Database } from './platform/database';
 import { accountRoutes } from './routes/account';
 import { adminRoutes } from './routes/admin';
+import { resultsRoutes } from './routes/results';
+import { resultsRepository } from './results/results-repository';
+import { resultsService } from './results/results-service';
 import { airspacesRoutes } from './routes/airspaces';
 import { authRoutes } from './routes/auth';
 import { errorHandler } from './routes/errors';
@@ -59,6 +62,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         const signIns = sessionsRepository(db);
         const savedSessions = savedSessionsRepository(db);
         const airspaces = airspacesRepository(db);
+        const results = resultsService({ results: resultsRepository(db), users, airspaces });
         const auth = authService(users, signIns, authConfig);
         const authenticate = authenticator(authConfig.jwtSecret, users);
         await api.register(authRoutes, {
@@ -71,6 +75,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         await api.register(settingsRoutes, { settings: settingsRepository(db), authenticate });
         await api.register(sessionsRoutes, {
           sessions: savedSessions,
+          careerTotals: results.careerTotals,
           airspaces,
           authenticate,
           bodyLimit: MAX_SNAPSHOT_BYTES,
@@ -81,6 +86,11 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           authenticate,
         });
         await api.register(airspacesRoutes, { airspaces });
+        await api.register(resultsRoutes, {
+          results,
+          authenticate,
+          bodyLimit: MAX_SNAPSHOT_BYTES,
+        });
         await api.register(accountRoutes, {
           account: accountService(users, signIns),
           authenticate,

@@ -6,8 +6,7 @@ import {
   type SavedSession,
   type SavedSessionList,
   type SavedSessionSummary,
-  addSessionStats,
-  emptySessionStats,
+  type CareerTotals,
 } from '@vector/shared';
 import { parseSnapshot, scoreStats } from '@vector/sim-core';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -22,6 +21,8 @@ import {
 
 export interface SessionsRouteOptions {
   sessions: SavedSessionsRepository;
+  /** The pilot's career totals (from their session results). */
+  careerTotals: (userId: string) => Promise<CareerTotals>;
   /** Sessions in an airspace an admin has closed can't be started, resumed or saved. */
   airspaces: AirspacesRepository;
   authenticate: Authenticator;
@@ -75,16 +76,11 @@ export async function sessionsRoutes(app: FastifyInstance, options: SessionsRout
   };
 
   app.get('/sessions', { preHandler }, async (request): Promise<SavedSessionList> => {
-    const list = await sessions.list(request.userId!);
-    return {
-      sessions: list,
-      limit,
-      careerRp: list.reduce((total, session) => total + session.rp, 0),
-      careerStats: list.reduce(
-        (total, session) => (session.stats ? addSessionStats(total, session.stats) : total),
-        emptySessionStats(),
-      ),
-    };
+    const [list, career] = await Promise.all([
+      sessions.list(request.userId!),
+      options.careerTotals(request.userId!),
+    ]);
+    return { sessions: list, limit, careerRp: career.rp, careerStats: career.stats };
   });
 
   app.get('/sessions/:id', { preHandler }, async (request): Promise<SavedSession> => {

@@ -32,6 +32,8 @@ export type PreHandler = (request: FastifyRequest, reply: FastifyReply) => Promi
 export interface Authenticator {
   /** Requires a valid access token for an account that still exists and isn't disabled. */
   user: PreHandler;
+  /** As `user` when there is a valid access token; otherwise carries on signed out. */
+  optional: PreHandler;
   /** As `user`, and the account must be an admin. */
   admin: PreHandler;
 }
@@ -54,6 +56,14 @@ export function authenticator(jwtSecret: string, users: UsersRepository): Authen
   };
   return {
     user,
+    async optional(request, reply) {
+      if (!request.headers.authorization) return;
+      try {
+        await user(request, reply);
+      } catch (error) {
+        if (!(error instanceof UnauthorizedError)) throw error;
+      }
+    },
     async admin(request, reply) {
       await user(request, reply);
       if (request.account?.role !== 'admin') throw new ForbiddenError();

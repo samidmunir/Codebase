@@ -160,14 +160,24 @@ describe.skipIf(!db)('saved sessions (integration)', () => {
     expect((await request(pilot, 'GET', `/api/sessions/${id}`)).json().name).toBe('Morning push');
   });
 
-  it('records each session’s RP and totals them for the career', async () => {
+  /** Records a snapshot as the result of the session with this id. */
+  const record = (headers: Headers, sessionKey: string, data: ReturnType<typeof snapshot>) => {
+    data.state.replay!.sessionId = sessionKey;
+    return request(headers, 'PUT', `/api/results/${sessionKey}`, {
+      airspaceId: 'new-york',
+      snapshot: data,
+    });
+  };
+
+  it('records each save’s RP; the career totals every session played', async () => {
     const withScore = (total: number) => {
       const data = snapshot();
       data.state.score.total = total;
       return data;
     };
     expect((await save(pilot, 'Morning', withScore(250))).json().rp).toBe(250);
-    await save(pilot, 'Evening', withScore(-40));
+    await record(pilot, 'morning', withScore(250));
+    await record(pilot, 'evening', withScore(-40));
     expect((await request(pilot, 'GET', '/api/sessions')).json().careerRp).toBe(210);
   });
 
@@ -193,7 +203,8 @@ describe.skipIf(!db)('saved sessions (integration)', () => {
       separationLosses: 1,
       goArounds: 0,
     });
-    await save(pilot, 'Evening', played(6, 6, 0));
+    await record(pilot, 'morning', played(4, 3, 1));
+    await record(pilot, 'evening', played(6, 6, 0));
     expect((await request(pilot, 'GET', '/api/sessions')).json().careerStats).toEqual({
       arrivals: 10,
       departures: 4,

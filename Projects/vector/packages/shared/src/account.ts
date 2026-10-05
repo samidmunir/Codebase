@@ -3,9 +3,9 @@ import { displayNameSchema, handleSchema, passwordSchema } from './auth';
 
 // Self-service account API (/api/account), shared by the server and client.
 
-/** Change your handle and display name (either or both). */
+/** Change your handle, display name or profile privacy. */
 export const updateProfileRequestSchema = z
-  .object({ handle: handleSchema, displayName: displayNameSchema })
+  .object({ handle: handleSchema, displayName: displayNameSchema, profilePublic: z.boolean() })
   .partial()
   .refine((update) => Object.keys(update).length > 0, 'Change at least one thing');
 export type UpdateProfileRequest = z.input<typeof updateProfileRequestSchema>;
@@ -29,6 +29,8 @@ export const accountSchema = z.object({
   handle: z.string(),
   handleGenerated: z.boolean(),
   displayName: z.string(),
+  /** Others can see your profile and results (you always can). */
+  profilePublic: z.boolean(),
   /** When the handle can next be changed (null: now). */
   handleChangeableAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
