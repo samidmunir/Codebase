@@ -5,6 +5,7 @@ import Fastify, { type FastifyServerOptions } from 'fastify';
 import { accountService } from './account/account-service';
 import { adminService } from './admin/admin-service';
 import { auditRepository } from './admin/audit-repository';
+import { statsRepository } from './admin/stats-repository';
 import { airspacesRepository } from './airspaces/airspaces-repository';
 import { authService, type AuthConfig } from './auth/auth-service';
 import { authenticator } from './auth/authenticate';
@@ -150,6 +151,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           secureCookies,
         });
         await api.register(adminRoutes, {
+          stats: statsRepository(db),
           admin: adminService({
             users,
             signIns,

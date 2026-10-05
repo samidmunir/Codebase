@@ -711,3 +711,109 @@
 .admin-inline-field .admin-input {
   width: auto;
 }
+
+/* ---- Dashboard ------------------------------------------------------------------------ */
+
+.admin-dashboard {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+/* Refetching keeps the charts, dimmed, instead of flashing. */
+.admin-dashboard[data-loading] .admin-stat-tiles,
+.admin-dashboard[data-loading] .admin-charts {
+  opacity: 0.55;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.admin-dashboard__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.admin-dashboard__updated {
+  margin-left: auto;
+  font-size: 0.8rem;
+}
+
+.admin-segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 999px;
+}
+
+.admin-segmented button {
+  padding: 6px 14px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  background: none;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.admin-segmented button:hover {
+  color: var(--color-text);
+}
+
+.admin-segmented button[aria-checked='true'] {
+  color: #04120c;
+  font-weight: 600;
+  background: var(--color-target);
+}
+
+.admin-now {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  padding: var(--space-3) var(--space-6);
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  list-style: none;
+  background: rgba(76, 242, 160, 0.04);
+  border: 1px solid rgba(76, 242, 160, 0.16);
+  border-radius: var(--radius-md);
+}
+
+.admin-now li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.admin-now strong {
+  color: var(--color-text);
+}
+
+.admin-now .admin-link {
+  font-size: inherit;
+}
+
+.admin-now__dot {
+  width: 8px;
+  height: 8px;
+  background: var(--color-target);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(76, 242, 160, 0.2);
+}
+
+.admin-stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.admin-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  gap: var(--space-3);
+}

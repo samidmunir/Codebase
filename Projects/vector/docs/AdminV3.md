@@ -1,0 +1,46 @@
+# Vector Admin V3: Monitoring and Full Control
+
+The admin pages after the web app (WebAppV2): charts and trends to watch Vector by,
+and control over everything players and staff touch.
+
+## Decisions
+
+| Question        | Decision                                                                                                                                                          |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Staff levels    | **Admin** (everything) and **Moderator** (the community only: reports, posts, threads, posting suspensions). Admins grant either.                                 |
+| Sign-in details | Each sign-in records its **browser, operating system and IP address**, shown to admins and to the pilot on their Account page, kept only while the sign-in lasts. |
+| Order           | Dashboard, then users and sign-ins, then site-wide content, then site switches.                                                                                   |
+
+## Milestones
+
+1. **Dashboard.** Charts by day or week over 7 days, 30 days, 90 days, a year or all
+   time: signups and verified emails, active pilots, sessions played and hours flown,
+   verification outcomes, airspaces and difficulties played, and community threads,
+   posts and reports. Headline numbers with the change from the previous period, and
+   what's happening now (pilots online, open reports, results waiting to verify).
+   Everything comes from data Vector already keeps (see below).
+2. **Users and sign-ins.** The Moderator role. A page per user with their profile,
+   career, results, saved sessions, posts, sign-ins (with device and IP) and history.
+   Email a password reset or a verification link, change privacy and records
+   settings, lift the handle-change limit, end single sign-ins. Bulk actions and CSV
+   export.
+3. **Site-wide content.** Community categories (create, rename, reorder, remove),
+   searching every thread and post, editing any post; a browser of every saved
+   session; records controls (take a pilot off the records, all results filtered).
+4. **Site switches.** Registration open or closed, a maintenance banner, community
+   read-only. All audited.
+
+## Where the dashboard's numbers come from
+
+| Chart                    | Source                                                                                                                             |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Signups, verified emails | `users.created_at`, `users.email_verified_at`                                                                                      |
+| Active pilots            | Distinct pilots with a sign-in or token refresh (`auth_sessions.created_at`; each refresh adds a row) or a session result that day |
+| Sessions, hours flown    | `session_results.created_at`, `sim_time_sec`                                                                                       |
+| Verification             | `session_results.verification` by the day the session was first played                                                             |
+| Airspaces, difficulties  | `session_results.airspace_id`, `difficulty`                                                                                        |
+| Community                | `forum_threads.created_at`, `forum_posts.created_at`, `forum_reports.created_at`                                                   |
+| Online now               | `auth_sessions.last_used_at` in the last 15 minutes                                                                                |
+
+Deleted accounts take their sign-ins and results with them, so history counts only
+pilots who still have accounts; signups count accounts that still exist.

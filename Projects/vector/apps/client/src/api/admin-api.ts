@@ -18,12 +18,19 @@ import {
   type AdminUserList,
   type AdminUserListQuery,
   type AuditEntry,
+  adminStatsSchema,
+  type AdminStats,
+  type StatsRange,
 } from '@vector/shared';
 import { apiRequest } from './api-client';
 
 // The administration API (/api/admin). The server checks the admin role on every request.
 
 const user = (id: string) => `/admin/users/${encodeURIComponent(id)}`;
+
+export async function getAdminStats(range: StatsRange): Promise<AdminStats> {
+  return adminStatsSchema.parse(await apiRequest(`/admin/stats?range=${range}`));
+}
 
 export async function getAdminSummary(): Promise<AdminSummary> {
   return adminSummarySchema.parse(await apiRequest('/admin/summary'));
