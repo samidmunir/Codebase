@@ -10,15 +10,7 @@ import type { Actor } from '../admin/admin-service';
 import type { AuditRepository } from '../admin/audit-repository';
 import type { Database } from '../platform/database';
 
-/** Registering while it's closed. */
-export class RegistrationClosedError extends Error {
-  constructor(message: string) {
-    super(message || 'New accounts aren’t being created right now. Check back soon.');
-    this.name = 'RegistrationClosedError';
-  }
-}
-
-const KEYS: SiteSettingKey[] = ['registration', 'banner', 'community'];
+const KEYS: SiteSettingKey[] = ['registration', 'banner', 'community', 'beta'];
 
 /** What changed between two values of a switch, for the log. */
 function changes(before: object, after: object): Record<string, unknown> {
@@ -62,7 +54,8 @@ export function siteSettingsRepository(db: Database, audit: AuditRepository) {
     async status(): Promise<SiteStatus> {
       const current = await settings();
       return {
-        registrationOpen: current.registration.open,
+        registrationMode: current.registration.mode,
+        registrationOpen: current.registration.mode !== 'closed',
         registrationMessage: current.registration.message,
         banner:
           current.banner.enabled && current.banner.message
@@ -70,6 +63,7 @@ export function siteSettingsRepository(db: Database, audit: AuditRepository) {
             : null,
         communityReadOnly: current.community.readOnly,
         communityMessage: current.community.message,
+        beta: current.beta.enabled,
       };
     },
 

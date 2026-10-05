@@ -84,9 +84,20 @@ log instead (Render → the service → Logs), which is fine for a first look.
    `npm run admin:prod -- grant your@email`. Sign in again: Admin is in your menu.
 3. Do the same on staging.
 
-Then, before inviting anyone, close registration in **Admin → Site** until invite
-codes arrive (the next milestone), and add testers yourself in **Admin → Users**
-(they get a verification email, and can reset their password from it).
+Then, before telling anyone about it, open the beta:
+
+1. **Admin → Site:** set Registration to **Invite only**, and turn **Beta** on (the
+   badge by the logo).
+2. **Admin → Beta → Invite codes:** make a code for each group of testers (e.g. one
+   with 25 uses for a Discord server), and send its link (**Copy link**): it opens the
+   registration page with the code filled in.
+3. Everyone else can ask on the registration page: they're in **Admin → Beta →
+   Waitlist**, and **Invite** emails them their own single-use code.
+4. Testers send feedback from their account menu (**Send feedback**); it's in
+   **Admin → Beta → Feedback**, with the page they were on and their browser. A
+   "Beta feedback" category in **Admin → Community** is a good place for discussion.
+
+When the beta's over, set Registration to **Open** and turn Beta off.
 
 ## Day to day
 

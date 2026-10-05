@@ -35,9 +35,7 @@ test('an admin closes registration, puts up a banner, and makes the community re
   await page.getByRole('button', { name: 'Site', exact: true }).click();
 
   const registration = page.getByRole('region', { name: 'Registration' });
-  await registration
-    .getByRole('switch', { name: 'New accounts can be created' })
-    .click({ force: true });
+  await registration.getByRole('radio', { name: 'Closed' }).click();
   await registration.getByLabel(/Message on the registration page/).fill('Back in November.');
   await registration.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('Registration is closed.')).toBeVisible();

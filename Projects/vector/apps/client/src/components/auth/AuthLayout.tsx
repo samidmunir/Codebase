@@ -4,6 +4,7 @@ import { findAirspace } from '../../airspaces/registry';
 import { LiveScope, type DemoTraffic } from '../../demo/LiveScope';
 import type { ScopeSession } from '../../sim/scope-session';
 import { SiteBanner } from '../../site/SiteBanner';
+import { useSiteStatus } from '../../site/site-status';
 import './auth-layout.css';
 
 /** A steady, busy session behind the sign-in pages. */
@@ -67,6 +68,7 @@ export function AuthLayout({
   const airspace = findAirspace(airspaceId);
   const [session, setSession] = useState<ScopeSession | undefined>(undefined);
   const onSession = useCallback((running: ScopeSession) => setSession(running), []);
+  const { beta } = useSiteStatus();
 
   return (
     <div className="auth-layout">
@@ -82,6 +84,7 @@ export function AuthLayout({
         <Link to="/" className="auth-layout__brand" aria-label="Vector home">
           <span className="auth-layout__mark" aria-hidden="true" />
           Vector
+          {beta && <span className="beta-badge">Beta</span>}
         </Link>
         <div className="auth-layout__caption">
           <p className="auth-layout__facility">

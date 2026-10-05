@@ -61,7 +61,7 @@ export function LandingScreen() {
   usePublicPageMeta('/');
   const auth = useAuth();
   const signedIn = auth.status === 'signedIn';
-  const { registrationOpen } = useSiteStatus();
+  const { registrationMode } = useSiteStatus();
   const hero = useRef<HTMLElement>(null);
   const page = useReveal<HTMLDivElement>();
   const [session, setSession] = useState<ScopeSession | undefined>(undefined);
@@ -100,10 +100,22 @@ export function LandingScreen() {
                 <Link to="/play" className="site-button site-button--primary site-button--large">
                   Play
                 </Link>
-              ) : !registrationOpen ? (
+              ) : registrationMode === 'closed' ? (
                 <Link to="/login" className="site-button site-button--primary site-button--large">
                   Sign in
                 </Link>
+              ) : registrationMode === 'invite' ? (
+                <>
+                  <Link
+                    to="/register"
+                    className="site-button site-button--primary site-button--large"
+                  >
+                    Have an invite? Join the beta
+                  </Link>
+                  <Link to="/login" className="site-button site-button--large landing-hero__ghost">
+                    Sign in
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link
@@ -195,12 +207,21 @@ export function LandingScreen() {
         <LatestNews />
       </div>
 
-      {!signedIn && registrationOpen && (
+      {!signedIn && registrationMode === 'open' && (
         <section className="landing-cta" data-reveal>
           <h2>Your scope is ready.</h2>
           <p>Create an account, pick an airspace, and take the frequency.</p>
           <Link to="/register" className="site-button site-button--primary site-button--large">
             Create a free account
+          </Link>
+        </section>
+      )}
+      {!signedIn && registrationMode === 'invite' && (
+        <section className="landing-cta" data-reveal>
+          <h2>Vector is in a private beta.</h2>
+          <p>Bring your invite code, or join the waitlist and we’ll send you one.</p>
+          <Link to="/register" className="site-button site-button--primary site-button--large">
+            Join the beta
           </Link>
         </section>
       )}

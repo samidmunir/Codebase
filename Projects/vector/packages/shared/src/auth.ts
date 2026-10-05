@@ -63,6 +63,8 @@ export const registerRequestSchema = z.object({
   handle: handleSchema,
   password: passwordSchema,
   displayName: displayNameSchema,
+  /** Needed while registration is invite-only. */
+  inviteCode: z.string().trim().max(40).optional(),
 });
 
 export type RegisterRequest = z.input<typeof registerRequestSchema>;

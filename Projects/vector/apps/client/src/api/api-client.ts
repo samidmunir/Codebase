@@ -70,8 +70,20 @@ async function postAuth(path: string, body?: unknown): Promise<AuthResponse> {
   return startSession(authResponseSchema.parse(await response.json()));
 }
 
-export const register = (email: string, password: string, displayName: string, handle: string) =>
-  postAuth('register', { email, password, displayName, handle });
+export const register = (
+  email: string,
+  password: string,
+  displayName: string,
+  handle: string,
+  inviteCode?: string,
+) =>
+  postAuth('register', {
+    email,
+    password,
+    displayName,
+    handle,
+    ...(inviteCode ? { inviteCode } : {}),
+  });
 
 export const login = (email: string, password: string) => postAuth('login', { email, password });
 

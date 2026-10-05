@@ -1,8 +1,32 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import type { AdminSiteSettings, SiteSettingKey, SiteSettings } from '@vector/shared';
+import {
+  REGISTRATION_MODES,
+  type AdminSiteSettings,
+  type RegistrationMode,
+  type SiteSettingKey,
+  type SiteSettings,
+} from '@vector/shared';
 import { getAdminSite, updateAdminSite } from '../../api/site-api';
 import { refreshSiteStatus } from '../../site/site-status';
 import { errorMessage, formatAgo } from './admin-format';
+
+const REGISTRATION_LABEL: Record<RegistrationMode, string> = {
+  open: 'Open',
+  invite: 'Invite only',
+  closed: 'Closed',
+};
+
+const REGISTRATION_HELP: Record<RegistrationMode, string> = {
+  open: 'Anyone can create an account.',
+  invite: 'Only with an invite code (Beta tab). Others can join the waitlist.',
+  closed: 'Nobody can create an account; the page shows the message below.',
+};
+
+const REGISTRATION_DONE: Record<RegistrationMode, string> = {
+  open: 'Registration is open.',
+  invite: 'Registration is invite only.',
+  closed: 'Registration is closed.',
+};
 
 /** One switch's card: what it does, when it last changed, and Save. */
 function SwitchCard({
@@ -50,7 +74,7 @@ function SwitchCard({
   );
 }
 
-/** Site-wide switches: registration, a banner on every page, and the community's posting. */
+/** Site-wide switches: registration, the beta, a banner on every page, and the community's posting. */
 export function SiteTab() {
   const [saved, setSaved] = useState<AdminSiteSettings | undefined>(undefined);
   const [draft, setDraft] = useState<SiteSettings | undefined>(undefined);
@@ -105,30 +129,26 @@ export function SiteTab() {
       <div className="admin-site__grid">
         <SwitchCard
           title="Registration"
-          description="Whether new pilots can create accounts. Admins can always create them from Users."
+          description="Who can create an account. Admins can always create them from Users."
           changed={saved.changed.registration}
           dirty={dirty('registration')}
           busy={busy}
-          onSave={() =>
-            void save(
-              'registration',
-              draft.registration.open ? 'Registration is open.' : 'Registration is closed.',
-            )
-          }
+          onSave={() => void save('registration', REGISTRATION_DONE[draft.registration.mode])}
         >
-          <label className="admin-switch">
-            <input
-              type="checkbox"
-              role="switch"
-              aria-label="New accounts can be created"
-              checked={draft.registration.open}
-              onChange={(event) => set('registration', { open: event.target.checked })}
-            />
-            <span className="admin-switch__track" aria-hidden="true" />
-            <span className="admin-switch__label">
-              {draft.registration.open ? 'Open' : 'Closed'}
-            </span>
-          </label>
+          <div className="admin-segmented" role="radiogroup" aria-label="Registration">
+            {REGISTRATION_MODES.map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                role="radio"
+                aria-checked={draft.registration.mode === mode}
+                onClick={() => set('registration', { mode })}
+              >
+                {REGISTRATION_LABEL[mode]}
+              </button>
+            ))}
+          </div>
+          <p className="admin-muted">{REGISTRATION_HELP[draft.registration.mode]}</p>
           <label className="admin-site__field">
             Message on the registration page while it’s closed
             <textarea
@@ -139,6 +159,29 @@ export function SiteTab() {
               value={draft.registration.message}
               onChange={(event) => set('registration', { message: event.target.value })}
             />
+          </label>
+        </SwitchCard>
+
+        <SwitchCard
+          title="Beta"
+          description="Marks Vector as a beta: a Beta badge by the logo, and the waitlist on the registration page while it’s closed."
+          changed={saved.changed.beta}
+          dirty={dirty('beta')}
+          busy={busy}
+          onSave={() =>
+            void save('beta', draft.beta.enabled ? 'Vector is in beta.' : 'The beta badge is off.')
+          }
+        >
+          <label className="admin-switch">
+            <input
+              type="checkbox"
+              role="switch"
+              aria-label="Vector is in beta"
+              checked={draft.beta.enabled}
+              onChange={(event) => set('beta', { enabled: event.target.checked })}
+            />
+            <span className="admin-switch__track" aria-hidden="true" />
+            <span className="admin-switch__label">{draft.beta.enabled ? 'Beta' : 'Off'}</span>
           </label>
         </SwitchCard>
 

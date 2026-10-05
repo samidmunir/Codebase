@@ -145,6 +145,13 @@ export function TermsScreen() {
         Vector is a simulation for entertainment and learning. It isn’t certified training, and its
         data is not for navigation or for controlling real aircraft.
       </p>
+      <h2>The beta</h2>
+      <p>
+        While Vector is in beta, expect rough edges: things can break, change or be reset, and that
+        can include saved sessions, results and the records. Invite codes are personal to the people
+        they were sent to; one that’s shared around can be withdrawn. Feedback you send can be used
+        to improve Vector, with no obligation either way.
+      </p>
       <h2>The service</h2>
       <p>
         Vector is provided as it is, without warranties. Features, airspaces and rules can change,
@@ -195,6 +202,12 @@ export function PrivacyScreen() {
           your password or change your email), a hash of it, when it was sent, and the new address
           for an email change. Links stop working after a day at most (a week for undoing an email
           change).
+        </li>
+        <li>
+          <strong>The beta:</strong> if you join the waitlist, your email address and what you told
+          us, until you’re invited or ask us to remove it; if you joined with an invite code, which
+          one; and feedback you send, with the page you were on and your browser (e.g. “Firefox on
+          macOS”), seen only by administrators.
         </li>
         <li>
           <strong>Server logs:</strong> requests to the server, including your IP address, kept for

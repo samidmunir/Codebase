@@ -3,7 +3,9 @@ import { Link, useSearchParams } from 'react-router';
 import { ApiRequestError } from '../api/api-client';
 import { auth } from '../auth/auth-store';
 import { AuthLayout } from '../components/auth/AuthLayout';
+import { InviteField } from '../components/auth/InviteField';
 import { PasswordField } from '../components/auth/PasswordField';
+import { WaitlistForm } from '../components/auth/WaitlistForm';
 import { HandleField } from '../components/HandleField';
 import { usePageMeta } from '../site/page-meta';
 import { useSiteStatus } from '../site/site-status';
@@ -36,12 +38,16 @@ export function AuthScreen({ mode }: { mode: Mode }) {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [handle, setHandle] = useState('');
+  const [inviteCode, setInviteCode] = useState(searchParams.get('invite') ?? '');
+  // On the invite-only page: asking for an invite instead.
+  const [waitlist, setWaitlist] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [fields, setFields] = useState<Record<string, string>>({});
   const copy = COPY[mode];
   const site = useSiteStatus();
-  const closed = mode === 'register' && !site.registrationOpen;
+  const closed = mode === 'register' && site.registrationMode === 'closed';
+  const inviteOnly = mode === 'register' && site.registrationMode === 'invite';
   const next = searchParams.get('next');
   const withNext = (path: string) => `${path}${next ? `?next=${encodeURIComponent(next)}` : ''}`;
 
@@ -52,13 +58,20 @@ export function AuthScreen({ mode }: { mode: Mode }) {
     setFields({});
     try {
       if (mode === 'login') await auth.login(email, password);
-      else await auth.register(email, password, displayName, handle);
+      else
+        await auth.register(
+          email,
+          password,
+          displayName,
+          handle,
+          inviteOnly ? inviteCode.trim().toUpperCase() : undefined,
+        );
     } catch (caught) {
       if (caught instanceof ApiRequestError) {
         setError(
           caught.fields &&
             Object.keys(caught.fields).length > 0 &&
-            !['email_taken', 'handle_taken'].includes(caught.code)
+            !['email_taken', 'handle_taken', 'invite_required'].includes(caught.code)
             ? 'Check the highlighted fields.'
             : caught.message,
         );
@@ -119,19 +132,36 @@ export function AuthScreen({ mode }: { mode: Mode }) {
       </nav>
 
       <h1 className="auth-card__title">{copy.title}</h1>
-      <p className="auth-card__subtitle">{copy.subtitle}</p>
+      <p className="auth-card__subtitle">
+        {inviteOnly
+          ? 'Vector is in a private beta: bring your invite code, or ask for one.'
+          : copy.subtitle}
+      </p>
 
       {closed ? (
-        <div className="auth-closed" role="status">
-          <strong>New accounts are paused.</strong>
-          <p>
-            {site.registrationMessage ||
-              'We’re not creating new accounts right now. Check back soon.'}
+        <>
+          <div className="auth-closed" role="status">
+            <strong>New accounts are paused.</strong>
+            <p>
+              {site.registrationMessage ||
+                'We’re not creating new accounts right now. Check back soon.'}
+            </p>
+            <p>
+              Already have one? <Link to={withNext('/login')}>Sign in</Link>.
+            </p>
+          </div>
+          {site.beta && <WaitlistForm />}
+        </>
+      ) : inviteOnly && waitlist ? (
+        <>
+          <WaitlistForm />
+          <p className="auth-beta-switch">
+            Got a code after all?{' '}
+            <button type="button" onClick={() => setWaitlist(false)}>
+              Use your invite
+            </button>
           </p>
-          <p>
-            Already have one? <Link to={withNext('/login')}>Sign in</Link>.
-          </p>
-        </div>
+        </>
       ) : (
         <form className="auth-form" onSubmit={(event) => void submit(event)} noValidate>
           {mode === 'login' ? (
@@ -151,6 +181,16 @@ export function AuthScreen({ mode }: { mode: Mode }) {
             </>
           ) : (
             <>
+              {inviteOnly && (
+                <fieldset className="auth-group">
+                  <legend>Your invite</legend>
+                  <InviteField
+                    value={inviteCode}
+                    onChange={setInviteCode}
+                    error={fields.inviteCode}
+                  />
+                </fieldset>
+              )}
               <fieldset className="auth-group">
                 <legend>Signing in</legend>
                 {emailField}
@@ -219,6 +259,15 @@ export function AuthScreen({ mode }: { mode: Mode }) {
             </p>
           )}
         </form>
+      )}
+
+      {inviteOnly && !waitlist && (
+        <p className="auth-beta-switch">
+          No invite yet?{' '}
+          <button type="button" onClick={() => setWaitlist(true)}>
+            Join the waitlist
+          </button>
+        </p>
       )}
 
       {!closed && (

@@ -10,11 +10,13 @@ const REFRESH_MS = 5 * 60_000;
 
 /** Until the server answers: everything as normal. */
 const NORMAL: SiteStatus = {
+  registrationMode: 'open',
   registrationOpen: true,
   registrationMessage: '',
   banner: null,
   communityReadOnly: false,
   communityMessage: '',
+  beta: false,
 };
 
 let status: SiteStatus = NORMAL;

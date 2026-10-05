@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { auth, useAuth } from '../auth/auth-store';
 import { useCommunityUnread } from './community-unread';
+import { FeedbackDialog } from './FeedbackDialog';
 import { SiteBanner } from './SiteBanner';
+import { useSiteStatus } from './site-status';
 import { VerifyEmailBanner } from './VerifyEmailBanner';
 import './site.css';
 
@@ -22,6 +24,7 @@ export function SiteLayout() {
 
   const signedIn = session.status === 'signedIn' ? session.user : undefined;
   const communityUnread = useCommunityUnread(location.pathname);
+  const { beta, registrationMode } = useSiteStatus();
 
   return (
     <div className="site">
@@ -29,6 +32,11 @@ export function SiteLayout() {
         <Link to="/" className="site-header__brand" aria-label="Vector home">
           <span className="site-header__mark" aria-hidden="true" />
           Vector
+          {beta && (
+            <span className="beta-badge" title="Vector is in beta: thanks for flying it early">
+              Beta
+            </span>
+          )}
         </Link>
         <nav className="site-header__nav" aria-label="Main">
           {signedIn && (
@@ -69,9 +77,11 @@ export function SiteLayout() {
               <Link to="/login" className="site-header__link">
                 Sign in
               </Link>
-              <Link to="/register" className="site-button site-button--primary">
-                Create account
-              </Link>
+              {registrationMode !== 'closed' && (
+                <Link to="/register" className="site-button site-button--primary">
+                  {registrationMode === 'invite' ? 'Join the beta' : 'Create account'}
+                </Link>
+              )}
             </>
           )}
         </div>
@@ -121,8 +131,10 @@ function AccountMenu({
   staff: 'moderator' | 'admin' | undefined;
 }) {
   const [open, setOpen] = useState(false);
+  const [feedback, setFeedback] = useState(false);
   const menu = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!open) return;
@@ -186,6 +198,16 @@ function AccountMenu({
           <Link role="menuitem" to="/settings">
             Settings
           </Link>
+          <button
+            role="menuitem"
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setFeedback(true);
+            }}
+          >
+            Send feedback
+          </button>
           {staff && (
             <Link role="menuitem" to="/admin">
               {staff === 'admin' ? 'Admin' : 'Moderation'}
@@ -203,6 +225,7 @@ function AccountMenu({
           </button>
         </div>
       )}
+      {feedback && <FeedbackDialog page={location.pathname} onClose={() => setFeedback(false)} />}
     </div>
   );
 }

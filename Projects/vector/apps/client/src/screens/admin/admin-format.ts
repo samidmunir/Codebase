@@ -16,6 +16,10 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'user.export': 'Exported users',
   'user.sessionDelete': 'Deleted a saved session',
   'site.update': 'Changed a site switch',
+  'invite.create': 'Made an invite code',
+  'invite.revoke': 'Withdrew an invite code',
+  'waitlist.invite': 'Invited from the waitlist',
+  'waitlist.delete': 'Removed from the waitlist',
   'airspace.update': 'Changed airspace',
   'result.hide': 'Hid a session result',
   'result.show': 'Showed a session result',
@@ -39,11 +43,26 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
 
 export const auditActionLabel = (action: AuditEntry['action']) => ACTIONS[action];
 
-const describeChange = (key: string, value: unknown, action?: AuditEntry['action']): string => {
+const REGISTRATION_WORDS: Record<string, string> = {
+  open: 'registration open',
+  invite: 'registration invite only',
+  closed: 'registration closed',
+};
+
+const describeChange = (key: string, value: unknown, entry: AuditEntry): string => {
+  const { action } = entry;
   if (key === 'password') return 'new password';
   if (key === 'disabled') return value ? 'disabled' : 're-enabled';
+  if (key === 'enabled' && action === 'site.update' && entry.target === 'beta')
+    return value ? 'beta on' : 'beta off';
   if (key === 'enabled' && action === 'site.update')
     return value ? 'banner shown' : 'banner hidden';
+  if (key === 'mode') return REGISTRATION_WORDS[String(value)] ?? `mode ${String(value)}`;
+  if (key === 'note') return `“${String(value)}”`;
+  if (key === 'uses') return `${String(value)} use${value === 1 ? '' : 's'}`;
+  if (key === 'used') return `used ${String(value)} time${value === 1 ? '' : 's'}`;
+  if (key === 'expiresInDays') return `expires in ${String(value)} day${value === 1 ? '' : 's'}`;
+  if (key === 'code') return `code ${String(value)}`;
   if (key === 'enabled') return value ? 'opened' : 'closed';
   if (key === 'published') return value ? 'published' : 'unpublished';
   if (key === 'pinned') return value ? 'pinned' : 'unpinned';
@@ -95,7 +114,7 @@ const describeChange = (key: string, value: unknown, action?: AuditEntry['action
 /** A one-line summary of what an audit entry changed. */
 export function auditDetails(entry: AuditEntry): string {
   return Object.entries(entry.details)
-    .map(([key, value]) => describeChange(key, value, entry.action))
+    .map(([key, value]) => describeChange(key, value, entry))
     .join(' · ');
 }
 

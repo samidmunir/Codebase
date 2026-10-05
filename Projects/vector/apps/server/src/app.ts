@@ -17,7 +17,10 @@ import { logMailer, type Mailer } from './email/mailer';
 import type { Database } from './platform/database';
 import { emailRoutes } from './routes/email';
 import { siteRoutes } from './routes/site';
-import { RegistrationClosedError, siteSettingsRepository } from './site/site-settings-repository';
+import { siteSettingsRepository } from './site/site-settings-repository';
+import { betaRepository } from './beta/beta-repository';
+import { betaService } from './beta/beta-service';
+import { betaRoutes } from './routes/beta';
 import { accountRoutes } from './routes/account';
 import { adminRoutes } from './routes/admin';
 import { forumRepository } from './forum/forum-repository';
@@ -136,6 +139,15 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         });
         app.addHook('onClose', () => app.housekeeping?.stop());
         const site = siteSettingsRepository(db, audit);
+        const betaRepo = betaRepository(db);
+        const beta = betaService({
+          beta: betaRepo,
+          audit,
+          registration: async () => (await site.settings()).registration,
+          mailer: deps.accounts.email?.mailer ?? logMailer(app.log),
+          appUrl: deps.accounts.email?.appUrl ?? 'http://localhost:5173',
+          log: app.log,
+        });
         const auth = authService(users, signIns, authConfig);
         const authenticate = authenticator(authConfig.jwtSecret, users);
         await api.register(authRoutes, {
@@ -146,10 +158,13 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           signInRateLimit,
           onRegistered: sendVerification,
           signIns,
-          checkRegistrationOpen: async () => {
-            const { registration } = await site.settings();
-            if (!registration.open) throw new RegistrationClosedError(registration.message);
-          },
+          admit: (code) => beta.admit(code),
+        });
+        await api.register(betaRoutes, {
+          beta,
+          repository: betaRepo,
+          authenticate,
+          rateLimit: signInRateLimit,
         });
         await api.register(siteRoutes, { site, authenticate });
         await api.register(emailRoutes, { emails, authenticate, rateLimit: signInRateLimit });
