@@ -5,6 +5,7 @@ import { ActivityTab } from './ActivityTab';
 import { AirspacesTab } from './AirspacesTab';
 import { CommunityTab } from './CommunityTab';
 import { NewsTab } from './NewsTab';
+import { DashboardTab } from './DashboardTab';
 import { OverviewTab } from './OverviewTab';
 import { ResultsTab } from './ResultsTab';
 import { UsersTab } from './UsersTab';
@@ -12,7 +13,7 @@ import { usePageMeta } from '../../site/page-meta';
 import './admin-screen.css';
 
 const TABS = [
-  { id: 'overview', label: 'Overview' },
+  { id: 'overview', label: 'Dashboard' },
   { id: 'users', label: 'Users' },
   { id: 'airspaces', label: 'Airspaces' },
   { id: 'results', label: 'Results' },
@@ -63,7 +64,12 @@ export function AdminScreen() {
       </nav>
 
       <div className="admin-screen__panel">
-        {tab === 'overview' && <OverviewTab onOpen={open} />}
+        {tab === 'overview' && (
+          <>
+            <DashboardTab onOpen={open} />
+            <OverviewTab onOpen={open} />
+          </>
+        )}
         {tab === 'users' && (
           <UsersTab
             selectedId={params.get('user') ?? undefined}
