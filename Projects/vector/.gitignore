@@ -5,5 +5,5 @@ data/.cache/
 test-results/
 playwright-report/
 
-# The root .gitignore ignores site/ (generated docs); this one is source.
-!apps/client/src/site/
+# The root .gitignore ignores site/ (generated docs); Vector's src/site folders are source.
+!**/src/site/
