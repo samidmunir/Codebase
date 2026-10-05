@@ -12,6 +12,8 @@ import { sessionsRepository } from './auth/sessions-repository';
 import type { Database } from './platform/database';
 import { accountRoutes } from './routes/account';
 import { adminRoutes } from './routes/admin';
+import { newsRepository } from './news/news-repository';
+import { newsRoutes } from './routes/news';
 import { recordsRoutes } from './routes/records';
 import { recordsRepository } from './records/records-repository';
 import { resultsRoutes } from './routes/results';
@@ -76,6 +78,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         const airspaces = airspacesRepository(db);
         const resultsRepo = resultsRepository(db);
         const records = recordsRepository(db);
+        const audit = auditRepository(db);
         const results = resultsService({ results: resultsRepo, users, airspaces, records });
         const verifier = createVerifier({
           results: resultsRepo,
@@ -109,6 +112,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         });
         await api.register(airspacesRoutes, { airspaces });
         await api.register(recordsRoutes, { records, authenticate });
+        await api.register(newsRoutes, { news: newsRepository(db), audit, authenticate });
         await api.register(resultsRoutes, {
           results,
           authenticate,
@@ -125,7 +129,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
             signIns,
             savedSessions,
             airspaces,
-            audit: auditRepository(db),
+            audit,
             results: resultsRepo,
             verifier,
           }),

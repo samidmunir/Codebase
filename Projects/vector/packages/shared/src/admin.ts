@@ -103,6 +103,9 @@ export const AUDIT_ACTIONS = [
   'result.hide',
   'result.show',
   'result.reverify',
+  'news.create',
+  'news.update',
+  'news.delete',
   'admin.grant',
   'admin.revoke',
 ] as const;
