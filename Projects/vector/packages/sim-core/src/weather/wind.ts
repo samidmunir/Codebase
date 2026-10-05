@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { RunwayConfig } from '../airspace/schema';
 import { headingDifference, toRadians } from '../math/angles';
 import type { SeededRandom } from '../random/seeded-random';
+import * as dmath from '../math/dmath';
 
 export const windSchema = z.object({
   /** Direction the wind blows from, magnetic, in tens of degrees (10-360); 0 when calm. */
@@ -135,8 +136,8 @@ export function windComponents(wind: Wind, runwayHeadingDeg: number): WindCompon
   const angle = toRadians(headingDifference(runwayHeadingDeg, wind.directionDeg));
   const peakKts = Math.max(wind.speedKts, wind.gustKts ?? 0);
   return {
-    headwindKts: wind.speedKts * Math.cos(angle),
-    crosswindKts: Math.abs(peakKts * Math.sin(angle)),
+    headwindKts: wind.speedKts * dmath.cos(angle),
+    crosswindKts: Math.abs(peakKts * dmath.sin(angle)),
   };
 }
 
@@ -254,7 +255,7 @@ function latticeValue(seed: number, channel: string, index: number): number {
 function smoothNoise(seed: number, channel: string, t: number): number {
   const layer = (x: number, salt: string) => {
     const i = Math.floor(x);
-    const eased = (1 - Math.cos(Math.PI * (x - i))) / 2;
+    const eased = (1 - dmath.cos(Math.PI * (x - i))) / 2;
     const a = latticeValue(seed, channel + salt, i);
     return a + (latticeValue(seed, channel + salt, i + 1) - a) * eased;
   };
@@ -300,14 +301,14 @@ export function regionalWind(winds: Readonly<Record<string, Wind>>): Wind | unde
   let y = 0;
   for (const wind of list) {
     if (wind.directionDeg === 0) continue;
-    x += wind.speedKts * Math.sin(toRadians(wind.directionDeg));
-    y += wind.speedKts * Math.cos(toRadians(wind.directionDeg));
+    x += wind.speedKts * dmath.sin(toRadians(wind.directionDeg));
+    y += wind.speedKts * dmath.cos(toRadians(wind.directionDeg));
   }
-  const speedKts = Math.round(Math.hypot(x, y) / list.length);
+  const speedKts = Math.round(dmath.hypot(x, y) / list.length);
   if (speedKts <= 0 || (x === 0 && y === 0)) return { directionDeg: 0, speedKts: 0 };
   const spreads = list.flatMap((w) => (w.gustKts === undefined ? [] : [w.gustKts - w.speedKts]));
   return withGust(
-    { directionDeg: roundDirection((Math.atan2(x, y) * 180) / Math.PI), speedKts },
+    { directionDeg: roundDirection((dmath.atan2(x, y) * 180) / Math.PI), speedKts },
     spreads.length > 0 ? speedKts + Math.max(...spreads) : undefined,
   );
 }

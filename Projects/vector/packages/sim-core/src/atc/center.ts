@@ -2,6 +2,7 @@ import { groundSpeedKts, type AircraftState } from '../aircraft/aircraft';
 import type { AirspacePack } from '../airspace/airspace-pack';
 import { headingDifference, toRadians } from '../math/angles';
 import { bearingTrue, distanceNm, magneticToTrue, type LatLon } from '../math/geo';
+import * as dmath from '../math/dmath';
 
 // The computer Center controller. Traffic the player hands to Center is
 // flown on: climbed or descended to its requested cruise level, routed along
@@ -68,15 +69,15 @@ function motion(
   referenceLat: number,
   variation: number,
 ): Motion {
-  const kx = NM_PER_DEG_LAT * Math.cos(toRadians(referenceLat));
+  const kx = NM_PER_DEG_LAT * dmath.cos(toRadians(referenceLat));
   const speed = groundSpeedKts(aircraft) / 3600;
   const course = toRadians(magneticToTrue(aircraft.headingDeg, variation));
   return {
     aircraft,
     x: aircraft.position.lon * kx,
     y: aircraft.position.lat * NM_PER_DEG_LAT,
-    vx: speed * Math.sin(course),
-    vy: speed * Math.cos(course),
+    vx: speed * dmath.sin(course),
+    vy: speed * dmath.cos(course),
   };
 }
 
@@ -108,7 +109,7 @@ export function predictedConflict(
   const ma = motion(a, referenceLat, separation.magneticVariationDeg);
   const mb = motion(b, referenceLat, separation.magneticVariationDeg);
   for (let t = 0; t <= separation.lookaheadSec; t += STEP_SEC) {
-    const lateral = Math.hypot(
+    const lateral = dmath.hypot(
       ma.x + ma.vx * t - (mb.x + mb.vx * t),
       ma.y + ma.vy * t - (mb.y + mb.vy * t),
     );

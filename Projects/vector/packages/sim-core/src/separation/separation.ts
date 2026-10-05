@@ -3,6 +3,7 @@ import { groundSpeedKts, type AircraftState } from '../aircraft/aircraft';
 import { finalApproachGeometry } from '../aircraft/navigation';
 import { toRadians } from '../math/angles';
 import { distanceNm, magneticToTrue, type LatLon } from '../math/geo';
+import * as dmath from '../math/dmath';
 
 // Separation monitoring and Conflict Alert. Aircraft pairs that involve the
 // player's traffic are checked against the lateral and vertical minima; pairs
@@ -169,15 +170,15 @@ interface Track {
 }
 
 function track(aircraft: Readonly<AircraftState>, referenceLat: number, variation: number): Track {
-  const kx = NM_PER_DEG_LAT * Math.cos(toRadians(referenceLat));
+  const kx = NM_PER_DEG_LAT * dmath.cos(toRadians(referenceLat));
   const speed = groundSpeedKts(aircraft) / 3600;
   const course = toRadians(magneticToTrue(aircraft.headingDeg, variation));
   return {
     aircraft,
     x: aircraft.position.lon * kx,
     y: aircraft.position.lat * NM_PER_DEG_LAT,
-    vx: speed * Math.sin(course),
-    vy: speed * Math.cos(course),
+    vx: speed * dmath.sin(course),
+    vy: speed * dmath.cos(course),
     vz: aircraft.verticalSpeedFpm / 60,
   };
 }
@@ -260,10 +261,10 @@ export function updateSeparation(
 
       const radarMin = players ? requiredLateralNm(a.aircraft, b.aircraft, settings) : 0;
       const wakeMin = wakePair && wakePair.requiredNm > radarMin ? wakePair.requiredNm : 0;
-      const lateral = Math.hypot(a.x - b.x, a.y - b.y);
+      const lateral = dmath.hypot(a.x - b.x, a.y - b.y);
       const vertical = Math.abs(a.aircraft.altitudeFt - b.aircraft.altitudeFt);
       // Quick reject: too far apart to conflict within the look-ahead.
-      const closing = Math.hypot(a.vx - b.vx, a.vy - b.vy) * settings.lookaheadSec;
+      const closing = dmath.hypot(a.vx - b.vx, a.vy - b.vy) * settings.lookaheadSec;
       if (lateral - closing > Math.max(radarMin, wakeMin) + 1) continue;
 
       /** Which minimum a lateral and vertical distance breaks, if any. */
@@ -282,7 +283,7 @@ export function updateSeparation(
           const dx = a.x + a.vx * t - (b.x + b.vx * t);
           const dy = a.y + a.vy * t - (b.y + b.vy * t);
           const dz = a.aircraft.altitudeFt + a.vz * t - (b.aircraft.altitudeFt + b.vz * t);
-          minimum = broken(Math.hypot(dx, dy), Math.abs(dz));
+          minimum = broken(dmath.hypot(dx, dy), Math.abs(dz));
           if (minimum) {
             kind = 'predicted';
             break;

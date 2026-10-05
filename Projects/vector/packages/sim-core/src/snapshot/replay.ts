@@ -13,7 +13,7 @@ import { liveWeatherReportSchema } from '../weather/wind';
  * (physics, traffic, scoring, pilots…), so replays from an older engine aren't
  * judged by the new one.
  */
-export const SIM_ENGINE_VERSION = '1';
+export const SIM_ENGINE_VERSION = '2';
 
 const tick = z.number().int().min(0);
 
