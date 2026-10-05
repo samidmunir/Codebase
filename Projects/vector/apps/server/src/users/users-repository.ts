@@ -9,6 +9,8 @@ import type { Database } from '../platform/database';
 export interface UserRecord {
   id: string;
   email: string;
+  /** When they opened a link emailed to this address (null: not yet). */
+  emailVerifiedAt: Date | null;
   handle: string;
   /** Made up for an account from before handles; the pilot should choose one. */
   handleGenerated: boolean;
@@ -27,6 +29,7 @@ export interface UserRecord {
 interface UserRow {
   id: string;
   email: string;
+  email_verified_at: Date | null;
   handle: string;
   handle_generated: boolean;
   handle_changed_at: Date | null;
@@ -40,11 +43,12 @@ interface UserRow {
 }
 
 const COLUMNS =
-  'id, email, handle, handle_generated, handle_changed_at, display_name, password_hash, role, disabled_at, created_at, profile_public, show_on_records';
+  'id, email, email_verified_at, handle, handle_generated, handle_changed_at, display_name, password_hash, role, disabled_at, created_at, profile_public, show_on_records';
 
 const toRecord = (row: UserRow): UserRecord => ({
   id: row.id,
   email: row.email,
+  emailVerifiedAt: row.email_verified_at,
   handle: row.handle,
   handleGenerated: row.handle_generated,
   handleChangedAt: row.handle_changed_at,
@@ -60,6 +64,7 @@ const toRecord = (row: UserRow): UserRecord => ({
 interface AdminUserRow {
   id: string;
   email: string;
+  email_verified_at: Date | null;
   handle: string;
   display_name: string;
   role: UserRole;
@@ -73,7 +78,7 @@ interface AdminUserRow {
 
 /** A user with their activity and saved-session totals, for the admin pages. */
 const ADMIN_USER_SELECT = `
-  SELECT u.id, u.email, u.handle, u.display_name, u.role, u.disabled_at, u.created_at,
+  SELECT u.id, u.email, u.email_verified_at, u.handle, u.display_name, u.role, u.disabled_at, u.created_at,
     (SELECT max(a.last_used_at) FROM auth_sessions a WHERE a.user_id = u.id) AS last_active_at,
     (SELECT count(*)::int FROM auth_sessions a
        WHERE a.user_id = u.id AND a.revoked_at IS NULL AND a.rotated_at IS NULL
@@ -86,6 +91,7 @@ const ADMIN_USER_SELECT = `
 const toAdminUser = (row: AdminUserRow): AdminUser => ({
   id: row.id,
   email: row.email,
+  emailVerified: row.email_verified_at !== null,
   handle: row.handle,
   displayName: row.display_name,
   role: row.role,
@@ -242,6 +248,8 @@ export function usersRepository(db: Database) {
         passwordHash?: string;
         role?: UserRole;
         disabled?: boolean;
+        /** Defaults to false when the email changes. */
+        emailVerified?: boolean;
         profilePublic?: boolean;
         showOnRecords?: boolean;
       },
@@ -255,6 +263,18 @@ export function usersRepository(db: Database) {
         sets.push(`${column} = $${params.length}`);
       };
       if (changes.email !== undefined) set('email', changes.email);
+      // A new address hasn't been verified, unless the change says it has.
+      const verified =
+        changes.emailVerified ??
+        (changes.email !== undefined && changes.email.toLowerCase() !== before.email.toLowerCase()
+          ? false
+          : undefined);
+      if (verified !== undefined)
+        sets.push(
+          verified
+            ? 'email_verified_at = coalesce(email_verified_at, now())'
+            : 'email_verified_at = NULL',
+        );
       // A new handle (not just a change of case): the old one is reserved for this user a while.
       const newHandle =
         changes.handle !== undefined &&

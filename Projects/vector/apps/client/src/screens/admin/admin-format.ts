@@ -29,6 +29,8 @@ const describeChange = (key: string, value: unknown): string => {
   if (key === 'disabled') return value ? 'disabled' : 're-enabled';
   if (key === 'enabled') return value ? 'opened' : 'closed';
   if (key === 'published') return value ? 'published' : 'unpublished';
+  if (key === 'emailVerified') return value ? 'email marked verified' : 'email not verified';
+  if (key === 'verificationSent') return value ? 'verification link sent' : 'no verification link';
   if (key === 'slug') return `/news/${String(value)}`;
   if (key === 'session') return `“${String(value)}”`;
   if (key === 'result') return `session ${String(value).slice(0, 8)}`;

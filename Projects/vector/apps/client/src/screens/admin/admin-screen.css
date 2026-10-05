@@ -677,3 +677,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+}

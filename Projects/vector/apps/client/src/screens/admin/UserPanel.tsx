@@ -119,6 +119,18 @@ export function UserPanel({
           </dd>
         </div>
         <div>
+          <dt>Email</dt>
+          <dd>
+            {user.emailVerified ? (
+              <span className="admin-pill" data-tone="ok">
+                Verified
+              </span>
+            ) : (
+              <span className="admin-pill">Not verified</span>
+            )}
+          </dd>
+        </div>
+        <div>
           <dt>Joined</dt>
           <dd>{formatDateTime(user.createdAt)}</dd>
         </div>
@@ -172,6 +184,21 @@ export function UserPanel({
             onClick={() => void act(() => signOutAdminUser(user.id), 'Signed out on every device.')}
           >
             Sign out everywhere
+          </button>
+          <button
+            type="button"
+            className="admin-button"
+            disabled={busy}
+            onClick={() =>
+              void update(
+                { emailVerified: !user.emailVerified },
+                user.emailVerified
+                  ? 'Email marked not verified. They’re off the records until they verify it.'
+                  : 'Email marked verified.',
+              )
+            }
+          >
+            {user.emailVerified ? 'Mark email not verified' : 'Mark email verified'}
           </button>
           {disabled ? (
             <button

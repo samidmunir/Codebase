@@ -21,14 +21,35 @@ const configSchema = z.object({
   /** How often the verifier looks for results to check. */
   RESULT_VERIFY_POLL_MS: z.coerce.number().int().positive().default(15_000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  /**
+   * Where emails go: `resend` sends them; `log` writes them to the server log;
+   * `outbox` writes each to a file in EMAIL_OUTBOX_DIR (for end-to-end tests).
+   * Defaults to `resend` in production and `log` otherwise.
+   */
+  EMAIL_DELIVERY: z.enum(['resend', 'log', 'outbox']).optional(),
+  /** Resend API key; never commit it. */
+  RESEND_API_KEY: z.string().min(1).optional(),
+  /** The sender, e.g. "Vector <hello@example.com>", on a domain verified in Resend. */
+  EMAIL_FROM: z.string().min(3).default('Vector <onboarding@resend.dev>'),
+  EMAIL_OUTBOX_DIR: z.string().min(1).optional(),
 });
 
-export type Config = z.infer<typeof configSchema>;
+export type Config = z.infer<typeof configSchema> & {
+  EMAIL_DELIVERY: 'resend' | 'log' | 'outbox';
+};
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const result = configSchema.safeParse(env);
   if (!result.success) {
     throw new Error(`Invalid server configuration:\n${z.prettifyError(result.error)}`);
   }
-  return result.data;
+  const config = result.data;
+  const delivery = config.EMAIL_DELIVERY ?? (config.NODE_ENV === 'production' ? 'resend' : 'log');
+  if (delivery === 'resend' && !config.RESEND_API_KEY)
+    throw new Error('Invalid server configuration: set RESEND_API_KEY to send email');
+  if (delivery === 'resend' && config.NODE_ENV === 'production' && !env.EMAIL_FROM)
+    throw new Error('Invalid server configuration: set EMAIL_FROM to an address on your domain');
+  if (delivery === 'outbox' && !config.EMAIL_OUTBOX_DIR)
+    throw new Error('Invalid server configuration: set EMAIL_OUTBOX_DIR for EMAIL_DELIVERY=outbox');
+  return { ...config, EMAIL_DELIVERY: delivery };
 }

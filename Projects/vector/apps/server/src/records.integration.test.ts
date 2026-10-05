@@ -39,6 +39,8 @@ async function register(handle: string): Promise<Pilot> {
     },
   });
   const body = response.json<{ accessToken: string; user: { id: string } }>();
+  // As if they'd opened the verification link: only verified emails go on the records.
+  await db!.query('UPDATE users SET email_verified_at = now() WHERE id = $1', [body.user.id]);
   return { id: body.user.id, handle, headers: { authorization: `Bearer ${body.accessToken}` } };
 }
 
@@ -192,6 +194,13 @@ describe.skipIf(!db)('records (integration)', () => {
     expect(handles(await board('board=career'))).toEqual(['Bravo']);
     await db!.query('UPDATE users SET disabled_at = now() WHERE id = $1', [bravo.id]);
     expect(handles(await board('board=career'))).toEqual([]);
+  });
+
+  it('leaves out pilots who haven’t verified their email', async () => {
+    await result(ace, { rp: 300 });
+    await result(bravo, { rp: 200 });
+    await db!.query('UPDATE users SET email_verified_at = NULL WHERE id = $1', [ace.id]);
+    expect(handles(await board('board=career'))).toEqual(['Bravo']);
   });
 
   it('shows the signed-in pilot their own place, and puts it on their profile', async () => {

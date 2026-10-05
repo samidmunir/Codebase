@@ -1,9 +1,15 @@
 import { buildApp } from './app';
+import { outboxMailer, resendMailer, type Mailer } from './email/mailer';
 import { loadConfig } from './platform/config';
 import { createDatabase, pingDatabase } from './platform/database';
 
 const config = loadConfig();
 const db = createDatabase(config.DATABASE_URL);
+
+let mailer: Mailer | undefined;
+if (config.EMAIL_DELIVERY === 'resend')
+  mailer = resendMailer({ apiKey: config.RESEND_API_KEY!, from: config.EMAIL_FROM });
+if (config.EMAIL_DELIVERY === 'outbox') mailer = outboxMailer(config.EMAIL_OUTBOX_DIR!);
 
 const app = buildApp(
   {
@@ -21,6 +27,7 @@ const app = buildApp(
         settleSec: config.RESULT_VERIFY_SETTLE_SEC,
         pollMs: config.RESULT_VERIFY_POLL_MS,
       },
+      email: { ...(mailer ? { mailer } : {}), appUrl: config.CLIENT_ORIGIN },
     },
   },
   { logger: { level: config.LOG_LEVEL } },

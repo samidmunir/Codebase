@@ -81,6 +81,8 @@ export const authUserSchema = z.object({
   handleGenerated: z.boolean(),
   displayName: z.string(),
   role: userRoleSchema,
+  /** They've opened the link emailed to their address. */
+  emailVerified: z.boolean(),
 });
 
 export type AuthUser = z.infer<typeof authUserSchema>;

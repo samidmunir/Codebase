@@ -6,7 +6,7 @@ import './legal.css';
 // About, Terms and Privacy. The Terms and Privacy text describe what Vector does
 // today; have them reviewed before taking payments (see docs/WebAppV2.md).
 
-const UPDATED = '4 October 2026';
+const UPDATED = '5 October 2026';
 
 function Page({
   title,
@@ -122,8 +122,8 @@ export function PrivacyScreen() {
       <h2>What we store</h2>
       <ul>
         <li>
-          <strong>Your account:</strong> email address, handle, display name, and your password as a
-          salted scrypt hash (never the password itself).
+          <strong>Your account:</strong> email address (and whether you’ve verified it), handle,
+          display name, and your password as a salted scrypt hash (never the password itself).
         </li>
         <li>
           <strong>Your sim:</strong> your settings, the sessions you save, and the results of the
@@ -133,6 +133,12 @@ export function PrivacyScreen() {
         <li>
           <strong>Signing in:</strong> a sign-in cookie on each device you use (only a hash of it is
           stored), and when each was last used.
+        </li>
+        <li>
+          <strong>Emailed links:</strong> when we email you a link (to verify your address, reset
+          your password or change your email), a hash of it, when it was sent, and the new address
+          for an email change. Links stop working after a day at most (a week for undoing an email
+          change).
         </li>
         <li>
           <strong>Server logs:</strong> requests to the server, including your IP address, kept for
@@ -153,8 +159,10 @@ export function PrivacyScreen() {
       <p>
         Vector’s administrators can see account details to run the service and keep it fair, and
         every administrative change is logged (the log keeps the email address an account had at the
-        time, even after the account is deleted). We don’t sell or share your data. Live weather
-        comes from the Aviation Weather Center through our server, so they never see you.
+        time, even after the account is deleted). We don’t sell your data. Live weather comes from
+        the Aviation Weather Center through our server, so they never see you. The emails we send
+        you go through Resend, our email provider, which gets your address and the email to deliver
+        it. We only email you about your account: no newsletters or marketing.
       </p>
       <h2>Cookies</h2>
       <p>

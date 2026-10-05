@@ -25,6 +25,8 @@ export interface AuthRouteOptions {
   secureCookies: boolean;
   /** Sign-in attempts allowed per IP per minute. */
   signInRateLimit: number;
+  /** Runs once an account is created (sends the verification email). */
+  onRegistered?: (userId: string) => Promise<void>;
 }
 
 export async function authRoutes(app: FastifyInstance, options: AuthRouteOptions) {
@@ -43,9 +45,11 @@ export async function authRoutes(app: FastifyInstance, options: AuthRouteOptions
     };
   };
 
-  app.post('/auth/register', { config: { rateLimit: AUTH_RATE_LIMIT } }, async (request, reply) =>
-    respond(reply, await options.auth.register(registerRequestSchema.parse(request.body)), 201),
-  );
+  app.post('/auth/register', { config: { rateLimit: AUTH_RATE_LIMIT } }, async (request, reply) => {
+    const signedIn = await options.auth.register(registerRequestSchema.parse(request.body));
+    await options.onRegistered?.(signedIn.user.id);
+    return respond(reply, signedIn, 201);
+  });
 
   app.post('/auth/login', { config: { rateLimit: AUTH_RATE_LIMIT } }, async (request, reply) =>
     respond(reply, await options.auth.login(loginRequestSchema.parse(request.body))),

@@ -134,6 +134,11 @@ export function AuthScreen({ mode }: { mode: Mode }) {
             )}
             {field('password')}
           </label>
+          {mode === 'login' && (
+            <Link to="/forgot-password" className="auth-form__forgot">
+              Forgot password?
+            </Link>
+          )}
 
           {error && (
             <p className="auth-form__error" role="alert">

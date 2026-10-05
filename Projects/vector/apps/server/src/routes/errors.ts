@@ -21,6 +21,12 @@ import { ResultNotFoundError } from '../results/results-repository';
 import { NewsNotFoundError, SlugTakenError } from '../news/news-repository';
 import { InvalidResultError } from '../results/results-service';
 import { WeatherUnavailableError } from '../weather/metar-service';
+import {
+  AlreadyVerifiedError,
+  EmailCooldownError,
+  InvalidEmailLinkError,
+  SameEmailError,
+} from '../email/email-service';
 import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
 
@@ -61,6 +67,17 @@ export function errorHandler(
   if (error instanceof EmailTakenError) {
     return reply.code(409).send(body('email_taken', error.message, { email: error.message }));
   }
+  if (error instanceof InvalidEmailLinkError)
+    return reply.code(400).send(body('invalid_link', error.message));
+  if (error instanceof EmailCooldownError)
+    return reply
+      .code(429)
+      .header('retry-after', String(error.retryAfterSec))
+      .send(body('email_cooldown', error.message));
+  if (error instanceof SameEmailError)
+    return reply.code(400).send(body('same_email', error.message, { email: error.message }));
+  if (error instanceof AlreadyVerifiedError)
+    return reply.code(409).send(body('already_verified', error.message));
   if (error instanceof InvalidCredentialsError)
     return reply.code(401).send(body('invalid_credentials', error.message));
   if (error instanceof InvalidSessionError) {

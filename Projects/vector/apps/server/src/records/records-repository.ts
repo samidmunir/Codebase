@@ -80,6 +80,8 @@ export function recordsRepository(db: Database) {
         'NOT r.hidden',
         'u.disabled_at IS NULL',
         'u.show_on_records',
+        // Only pilots who've verified their email go on the records.
+        'u.email_verified_at IS NOT NULL',
       ];
       const start = PERIOD_START[query.period];
       if (start) where.push(`r.created_at >= ${start}`);

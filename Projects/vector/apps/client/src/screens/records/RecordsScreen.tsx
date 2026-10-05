@@ -107,7 +107,8 @@ export function RecordsScreen() {
     <div className="site-page records-page">
       <h1>Records</h1>
       <p className="site-page__lede">
-        The best controllers on Vector. Only sessions the server has replayed and verified count.
+        The best controllers on Vector. Only sessions the server has replayed and verified count,
+        from pilots who’ve verified their email.
       </p>
 
       <nav className="records-boards" aria-label="Boards">

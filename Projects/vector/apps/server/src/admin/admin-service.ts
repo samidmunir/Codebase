@@ -48,6 +48,8 @@ export function adminService(deps: {
   audit: AuditRepository;
   results: ResultsRepository;
   verifier: Verifier;
+  /** Emails a new account its verification link. */
+  sendVerification?: (userId: string) => Promise<void>;
 }) {
   const { users, signIns, savedSessions, airspaces, audit, results, verifier } = deps;
 
@@ -77,7 +79,8 @@ export function adminService(deps: {
 
     async createUser(
       actor: Actor,
-      input: Required<Pick<AdminCreateUserRequest, 'role'>> & Omit<AdminCreateUserRequest, 'role'>,
+      input: Required<Pick<AdminCreateUserRequest, 'role' | 'sendVerification'>> &
+        Omit<AdminCreateUserRequest, 'role' | 'sendVerification'>,
     ): Promise<AdminUser> {
       const user = await users.create({
         email: input.email,
@@ -90,7 +93,9 @@ export function adminService(deps: {
         handle: user.handle,
         displayName: user.displayName,
         role: user.role,
+        verificationSent: input.sendVerification,
       });
+      if (input.sendVerification) await deps.sendVerification?.(user.id);
       return users.adminView(user.id);
     },
 
@@ -116,6 +121,7 @@ export function adminService(deps: {
           : {}),
         ...(changes.role !== undefined ? { role: changes.role } : {}),
         ...(changes.disabled !== undefined ? { disabled: changes.disabled } : {}),
+        ...(changes.emailVerified !== undefined ? { emailVerified: changes.emailVerified } : {}),
       });
 
       // A new password, a disabled account or a role change ends every sign-in.
@@ -135,6 +141,11 @@ export function adminService(deps: {
       if (changes.disabled !== undefined && changes.disabled !== Boolean(before.disabledAt))
         details.disabled = changes.disabled;
       if (changes.password !== undefined) details.password = 'changed';
+      const wasVerified = before.emailVerifiedAt !== null;
+      const emailChanged =
+        changes.email !== undefined && changes.email.toLowerCase() !== before.email.toLowerCase();
+      const nowVerified = changes.emailVerified ?? (emailChanged ? false : wasVerified);
+      if (nowVerified !== wasVerified) details.emailVerified = nowVerified;
       if (Object.keys(details).length > 0)
         await audit.record(actor, 'user.update', before.email, details);
       return users.adminView(id);

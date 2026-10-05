@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { auth, useAuth } from '../auth/auth-store';
+import { VerifyEmailBanner } from './VerifyEmailBanner';
 import './site.css';
 
 /**
@@ -71,6 +72,9 @@ export function SiteLayout() {
               Choose a handle
             </Link>
           </div>
+        )}
+        {signedIn && !signedIn.emailVerified && !signedIn.handleGenerated && (
+          <VerifyEmailBanner key={signedIn.email} user={signedIn} />
         )}
         <Outlet />
         <footer className="site-footer">

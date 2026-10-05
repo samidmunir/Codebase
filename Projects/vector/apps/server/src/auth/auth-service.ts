@@ -52,6 +52,7 @@ export const toAuthUser = (user: UserRecord): AuthUser => ({
   handleGenerated: user.handleGenerated,
   displayName: user.displayName,
   role: user.role,
+  emailVerified: user.emailVerifiedAt !== null,
 });
 
 export function authService(

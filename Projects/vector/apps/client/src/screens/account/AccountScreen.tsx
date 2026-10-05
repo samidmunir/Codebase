@@ -9,6 +9,7 @@ import {
   updateProfile,
 } from '../../api/account-api';
 import { ApiRequestError } from '../../api/api-client';
+import { cancelEmailChange, changeEmail, sendVerificationEmail } from '../../api/email-api';
 import { auth } from '../../auth/auth-store';
 import { HandleField } from '../../components/HandleField';
 import { useHandleAvailability } from '../../components/use-handle-availability';
@@ -64,6 +65,7 @@ export function AccountScreen() {
       {account && (
         <div className="account-sections">
           <ProfileSection key={account.id} account={account} onChanged={changed} />
+          <EmailSection account={account} onChanged={() => void getAccount().then(setAccount)} />
           <PasswordSection />
           <DevicesSection
             activeSignIns={account.activeSignIns}
@@ -226,6 +228,137 @@ function ProfileSection({
             }
           >
             Save profile
+          </button>
+        </div>
+      </form>
+    </Section>
+  );
+}
+
+function EmailSection({ account, onChanged }: { account: Account; onChanged: () => void }) {
+  const [email, setEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [fields, setFields] = useState<Record<string, string>>({});
+  const [status, setStatus] = useState<Status>(undefined);
+  const [busy, setBusy] = useState(false);
+
+  const run = async (action: () => Promise<void>, done: string) => {
+    setBusy(true);
+    setStatus(undefined);
+    setFields({});
+    try {
+      await action();
+      setStatus({ tone: 'ok', text: done });
+      onChanged();
+      return true;
+    } catch (caught) {
+      const error = failure(caught);
+      setFields(error?.fields ?? {});
+      setStatus({ tone: 'alert', text: error?.message ?? "Couldn't reach the server." });
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    const target = email.trim();
+    if (
+      await run(
+        () => changeEmail(target, currentPassword),
+        `We sent a link to ${target}. Your email changes when you open it.`,
+      )
+    ) {
+      setEmail('');
+      setCurrentPassword('');
+    }
+  };
+
+  return (
+    <Section
+      title="Email"
+      description="Where your sign-in and account emails go. It’s never shown to anyone."
+    >
+      <p className="account-email">
+        <strong>{account.email}</strong>{' '}
+        {account.emailVerified ? (
+          <span className="account-badge" data-tone="ok">
+            Verified
+          </span>
+        ) : (
+          <span className="account-badge">Not verified</span>
+        )}
+      </p>
+      {!account.emailVerified && (
+        <div className="account-form__actions account-form__actions--start">
+          <p className="account-field__hint">
+            Verify it to put your sessions on the records. We sent you a link when you signed up.
+          </p>
+          <button
+            type="button"
+            className="site-button"
+            disabled={busy}
+            onClick={() =>
+              void run(sendVerificationEmail, `We sent a new link to ${account.email}.`)
+            }
+          >
+            Send the link again
+          </button>
+        </div>
+      )}
+      {account.pendingEmail && (
+        <div className="account-form__actions account-form__actions--start">
+          <p className="account-field__hint">
+            Waiting for you to open the link sent to <strong>{account.pendingEmail}</strong>.
+          </p>
+          <button
+            type="button"
+            className="site-button"
+            disabled={busy}
+            onClick={() => void run(cancelEmailChange, 'Email change cancelled.')}
+          >
+            Cancel the change
+          </button>
+        </div>
+      )}
+      <form
+        className="account-form"
+        aria-label="Change email"
+        onSubmit={(event) => void submit(event)}
+      >
+        <label className="account-field">
+          <span>New email</span>
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+          {fields.email && <span className="account-field__error">{fields.email}</span>}
+        </label>
+        <label className="account-field">
+          <span>Current password</span>
+          <input
+            type="password"
+            autoComplete="current-password"
+            required
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+          />
+          {fields.currentPassword && (
+            <span className="account-field__error">{fields.currentPassword}</span>
+          )}
+        </label>
+        <StatusLine status={status} />
+        <div className="account-form__actions">
+          <button
+            type="submit"
+            className="site-button"
+            disabled={busy || !email.trim() || !currentPassword}
+          >
+            Change email
           </button>
         </div>
       </form>

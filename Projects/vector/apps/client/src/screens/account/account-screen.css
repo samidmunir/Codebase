@@ -141,3 +141,27 @@
 .account-check a {
   color: var(--color-target);
 }
+
+.account-email {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.account-badge {
+  padding: 2px 8px;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(255, 181, 71, 0.1);
+  border: 1px solid rgba(255, 181, 71, 0.3);
+  border-radius: 999px;
+}
+
+.account-badge[data-tone='ok'] {
+  color: var(--color-target);
+  background: rgba(76, 242, 160, 0.08);
+  border-color: rgba(76, 242, 160, 0.3);
+}

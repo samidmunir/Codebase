@@ -9,7 +9,11 @@ import { airspacesRepository } from './airspaces/airspaces-repository';
 import { authService, type AuthConfig } from './auth/auth-service';
 import { authenticator } from './auth/authenticate';
 import { sessionsRepository } from './auth/sessions-repository';
+import { emailService } from './email/email-service';
+import { emailTokensRepository } from './email/email-tokens-repository';
+import { logMailer, type Mailer } from './email/mailer';
 import type { Database } from './platform/database';
+import { emailRoutes } from './routes/email';
 import { accountRoutes } from './routes/account';
 import { adminRoutes } from './routes/admin';
 import { newsRepository } from './news/news-repository';
@@ -50,6 +54,8 @@ export interface AppDependencies {
     metars?: MetarService;
     /** Replaying results to verify them (defaults: 3 minutes after a session's last update, checked every 15 s). */
     verification?: { settleSec?: number; pollMs?: number };
+    /** Sending email (defaults: to the server log, with links to http://localhost:5173). */
+    email?: { mailer?: Mailer; appUrl?: string };
   };
 }
 
@@ -88,6 +94,17 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         });
         app.decorate('verifier', verifier);
         app.addHook('onClose', () => verifier.stop());
+        const emailTokens = emailTokensRepository(db);
+        const emails = emailService({
+          users,
+          tokens: emailTokens,
+          signIns,
+          mailer: deps.accounts.email?.mailer ?? logMailer(app.log),
+          appUrl: deps.accounts.email?.appUrl ?? 'http://localhost:5173',
+          log: app.log,
+        });
+        const sendVerification = (userId: string) =>
+          emails.sendVerification(userId, { ignoreCooldown: true });
         const auth = authService(users, signIns, authConfig);
         const authenticate = authenticator(authConfig.jwtSecret, users);
         await api.register(authRoutes, {
@@ -96,7 +113,9 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           authenticate,
           secureCookies,
           signInRateLimit,
+          onRegistered: sendVerification,
         });
+        await api.register(emailRoutes, { emails, authenticate, rateLimit: signInRateLimit });
         await api.register(settingsRoutes, { settings: settingsRepository(db), authenticate });
         await api.register(sessionsRoutes, {
           sessions: savedSessions,
@@ -119,7 +138,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           bodyLimit: MAX_SNAPSHOT_BYTES,
         });
         await api.register(accountRoutes, {
-          account: accountService(users, signIns),
+          account: accountService(users, signIns, emailTokens),
           authenticate,
           secureCookies,
         });
@@ -132,6 +151,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
             audit,
             results: resultsRepo,
             verifier,
+            sendVerification,
           }),
           authenticate,
         });
