@@ -1,5 +1,6 @@
 export * from './account';
 export * from './admin';
+export * from './admin-stats';
 export * from './airspaces';
 export * from './auth';
 export * from './health';

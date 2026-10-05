@@ -6,6 +6,8 @@ import {
   adminUpdateAirspaceRequestSchema,
   adminUpdateUserRequestSchema,
   adminUserListQuerySchema,
+  statsQuerySchema,
+  type AdminStats,
   type AdminAirspace,
   type AdminAirspaceList,
   type AdminSummary,
@@ -17,6 +19,7 @@ import {
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { AdminService, Actor } from '../admin/admin-service';
+import type { StatsRepository } from '../admin/stats-repository';
 import type { Authenticator } from '../auth/authenticate';
 import { UserNotFoundError } from '../users/users-repository';
 import { SavedSessionNotFoundError } from '../sessions/sessions-repository';
@@ -25,6 +28,7 @@ import { ResultNotFoundError } from '../results/results-repository';
 
 export interface AdminRouteOptions {
   admin: AdminService;
+  stats: StatsRepository;
   authenticate: Authenticator;
 }
 
@@ -47,6 +51,10 @@ export async function adminRoutes(app: FastifyInstance, options: AdminRouteOptio
   };
 
   app.get('/admin/summary', { preHandler }, async (): Promise<AdminSummary> => admin.summary());
+
+  app.get('/admin/stats', { preHandler }, async (request): Promise<AdminStats> =>
+    options.stats.stats(statsQuerySchema.parse(request.query).range),
+  );
 
   app.get('/admin/users', { preHandler }, async (request): Promise<AdminUserList> => {
     const query = adminUserListQuerySchema.parse(request.query);
