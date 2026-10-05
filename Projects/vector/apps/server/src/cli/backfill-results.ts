@@ -58,6 +58,7 @@ try {
       engineVersion: state.replay?.engineVersion ?? null,
       // Only results the client sent as they were played are put through verification.
       verification: 'unverifiable',
+      stateFingerprint: null,
     });
     // Dated when it was first saved, not today.
     await db.query(

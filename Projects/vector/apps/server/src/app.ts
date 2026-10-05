@@ -12,9 +12,12 @@ import { sessionsRepository } from './auth/sessions-repository';
 import type { Database } from './platform/database';
 import { accountRoutes } from './routes/account';
 import { adminRoutes } from './routes/admin';
+import { recordsRoutes } from './routes/records';
+import { recordsRepository } from './records/records-repository';
 import { resultsRoutes } from './routes/results';
 import { resultsRepository } from './results/results-repository';
 import { resultsService } from './results/results-service';
+import { createVerifier, type Verifier } from './results/verifier';
 import { airspacesRoutes } from './routes/airspaces';
 import { authRoutes } from './routes/auth';
 import { errorHandler } from './routes/errors';
@@ -43,7 +46,16 @@ export interface AppDependencies {
     savedSessionLimit?: number;
     /** Live METARs; defaults to fetching from aviationweather.gov. */
     metars?: MetarService;
+    /** Replaying results to verify them (defaults: 3 minutes after a session's last update, checked every 15 s). */
+    verification?: { settleSec?: number; pollMs?: number };
   };
+}
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    /** Verifies session results by replaying them (start it once the server is listening). */
+    verifier?: Verifier;
+  }
 }
 
 export function buildApp(deps: AppDependencies, options: FastifyServerOptions = {}) {
@@ -62,7 +74,17 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         const signIns = sessionsRepository(db);
         const savedSessions = savedSessionsRepository(db);
         const airspaces = airspacesRepository(db);
-        const results = resultsService({ results: resultsRepository(db), users, airspaces });
+        const resultsRepo = resultsRepository(db);
+        const records = recordsRepository(db);
+        const results = resultsService({ results: resultsRepo, users, airspaces, records });
+        const verifier = createVerifier({
+          results: resultsRepo,
+          settleSec: deps.accounts.verification?.settleSec ?? 180,
+          pollMs: deps.accounts.verification?.pollMs ?? 15_000,
+          log: app.log,
+        });
+        app.decorate('verifier', verifier);
+        app.addHook('onClose', () => verifier.stop());
         const auth = authService(users, signIns, authConfig);
         const authenticate = authenticator(authConfig.jwtSecret, users);
         await api.register(authRoutes, {
@@ -86,6 +108,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           authenticate,
         });
         await api.register(airspacesRoutes, { airspaces });
+        await api.register(recordsRoutes, { records, authenticate });
         await api.register(resultsRoutes, {
           results,
           authenticate,
@@ -103,6 +126,8 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
             savedSessions,
             airspaces,
             audit: auditRepository(db),
+            results: resultsRepo,
+            verifier,
           }),
           authenticate,
         });

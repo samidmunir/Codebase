@@ -9,6 +9,8 @@ import {
 } from '@vector/shared';
 import { parseSnapshot, scoreStats, sessionReport, SIM_ENGINE_VERSION } from '@vector/sim-core';
 import type { AirspacesRepository } from '../airspaces/airspaces-repository';
+import { fingerprintHash } from './fingerprint';
+import type { RecordsRepository } from '../records/records-repository';
 import { UserNotFoundError, type UsersRepository } from '../users/users-repository';
 import { ResultNotFoundError, type ResultsRepository } from './results-repository';
 
@@ -30,8 +32,9 @@ export function resultsService(deps: {
   results: ResultsRepository;
   users: UsersRepository;
   airspaces: AirspacesRepository;
+  records: RecordsRepository;
 }) {
-  const { results, users, airspaces } = deps;
+  const { results, users, airspaces, records } = deps;
 
   /** The pilot by handle, if the viewer may see their results. */
   async function visiblePilot(handle: string, viewerId: string | undefined) {
@@ -80,6 +83,7 @@ export function resultsService(deps: {
         replay: state.replay ?? null,
         engineVersion: state.replay?.engineVersion ?? null,
         verification: replayable ? 'pending' : 'unverifiable',
+        stateFingerprint: replayable ? fingerprintHash(state) : null,
       });
     },
 
@@ -97,11 +101,12 @@ export function resultsService(deps: {
     async profile(handle: string, viewerId: string | undefined): Promise<PilotProfile> {
       const { user, isYou, visible } = await visiblePilot(handle, viewerId);
       if (!visible) return { visibility: 'private', pilot: { handle: user.handle } };
-      const [career, byAirspace, history, recent] = await Promise.all([
+      const [career, byAirspace, history, recent, rank] = await Promise.all([
         results.careerTotals(user.id),
         results.byAirspace(user.id),
         results.history(user.id),
         results.page(user.id, 0, PROFILE_RECENT),
+        records.board({ board: 'career', period: 'all' }, user.id, 0),
       ]);
       return {
         visibility: 'public',
@@ -113,6 +118,7 @@ export function resultsService(deps: {
           isYou,
         },
         career,
+        careerRank: rank.you?.rank ?? null,
         byAirspace,
         history,
         recent: recent.results,

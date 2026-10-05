@@ -33,6 +33,7 @@ process.once('SIGTERM', () => void shutdown('SIGTERM'));
 
 try {
   await app.listen({ host: config.HOST, port: config.PORT });
+  app.verifier?.start();
 } catch (error) {
   app.log.error(error);
   await db.end();

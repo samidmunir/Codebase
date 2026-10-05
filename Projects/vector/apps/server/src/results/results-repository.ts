@@ -1,5 +1,6 @@
 import {
   emptySessionStats,
+  type AdminResult,
   type CareerTotals,
   type ResultSummary,
   type SessionDifficulty,
@@ -27,6 +28,18 @@ export interface ResultRecord {
   replay: unknown;
   engineVersion: string | null;
   verification: Verification;
+  /** SHA-256 of the final state's fingerprint, as uploaded. */
+  stateFingerprint: string | null;
+}
+
+/** A result waiting to be verified, with what replaying it needs. */
+export interface PendingResult {
+  id: string;
+  airspaceId: string;
+  finalTick: number;
+  replay: unknown;
+  engineVersion: string | null;
+  stateFingerprint: string | null;
 }
 
 interface SummaryRow {
@@ -89,14 +102,15 @@ export function resultsRepository(db: Database) {
       const { rows } = await db.query<SummaryRow>(
         `INSERT INTO session_results AS r
            (user_id, session_key, airspace_id, difficulty, sim_time_sec, final_tick, rp, stats,
-            report, replay, engine_version, verification)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            report, replay, engine_version, verification, state_fingerprint)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          ON CONFLICT (user_id, session_key) DO UPDATE SET
            difficulty = excluded.difficulty, sim_time_sec = excluded.sim_time_sec,
            final_tick = excluded.final_tick, rp = excluded.rp, stats = excluded.stats,
            report = excluded.report, replay = excluded.replay,
            engine_version = excluded.engine_version, verification = excluded.verification,
-           updated_at = now()
+           state_fingerprint = excluded.state_fingerprint, verified_at = NULL,
+           verification_note = NULL, updated_at = now()
          WHERE r.final_tick <= excluded.final_tick
          RETURNING ${SUMMARY_COLUMNS}`,
         [
@@ -114,6 +128,7 @@ export function resultsRepository(db: Database) {
             : JSON.stringify(record.replay),
           record.engineVersion,
           record.verification,
+          record.stateFingerprint,
         ],
       );
       if (rows[0]) return toSummary(rows[0]);
@@ -123,6 +138,142 @@ export function resultsRepository(db: Database) {
         [userId, record.sessionKey],
       );
       return toSummary(existing.rows[0]!);
+    },
+
+    /** The pending result updated longest ago, if its session has been quiet for `settleSec`. */
+    async nextPending(settleSec: number): Promise<PendingResult | undefined> {
+      const { rows } = await db.query<{
+        id: string;
+        airspace_id: string;
+        final_tick: number;
+        replay: unknown;
+        engine_version: string | null;
+        state_fingerprint: string | null;
+      }>(
+        `SELECT id, airspace_id, final_tick, replay, engine_version, state_fingerprint
+         FROM session_results
+         WHERE verification = 'pending' AND updated_at <= now() - make_interval(secs => $1)
+         ORDER BY updated_at LIMIT 1`,
+        [settleSec],
+      );
+      const row = rows[0];
+      return row
+        ? {
+            id: row.id,
+            airspaceId: row.airspace_id,
+            finalTick: row.final_tick,
+            replay: row.replay,
+            engineVersion: row.engine_version,
+            stateFingerprint: row.state_fingerprint,
+          }
+        : undefined;
+    },
+
+    /**
+     * Records a verification outcome, unless the result changed while it was being
+     * checked (a newer snapshot came in): then it stays pending for another go.
+     */
+    async settle(
+      id: string,
+      finalTick: number,
+      verification: Exclude<Verification, 'pending'>,
+      note: string | null,
+    ): Promise<boolean> {
+      const { rowCount } = await db.query(
+        `UPDATE session_results SET verification = $3, verification_note = $4, verified_at = now()
+         WHERE id = $1 AND final_tick = $2 AND verification = 'pending'`,
+        [id, finalTick, verification, note],
+      );
+      return rowCount === 1;
+    },
+
+    /** Puts a result back in the queue (an admin asked for it to be checked again). */
+    async requeue(id: string): Promise<boolean> {
+      const { rowCount } = await db.query(
+        `UPDATE session_results SET verification = 'pending', verification_note = NULL,
+           verified_at = NULL, updated_at = now() - interval '1 day'
+         WHERE id = $1 AND replay IS NOT NULL`,
+        [id],
+      );
+      return rowCount === 1;
+    },
+
+    // ---- Administration (any pilot's results) ------------------------------------
+
+    async adminList(query: {
+      verification?: Verification | undefined;
+      hidden?: boolean | undefined;
+      handle?: string | undefined;
+      offset: number;
+      limit: number;
+    }): Promise<{ results: AdminResult[]; total: number }> {
+      const where: string[] = [];
+      const params: unknown[] = [];
+      if (query.verification) {
+        params.push(query.verification);
+        where.push(`r.verification = $${params.length}`);
+      }
+      if (query.hidden !== undefined) {
+        params.push(query.hidden);
+        where.push(`r.hidden = $${params.length}`);
+      }
+      if (query.handle) {
+        params.push(query.handle);
+        where.push(`u.handle = $${params.length}`);
+      }
+      const clause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
+      const from = `FROM session_results r JOIN users u ON u.id = r.user_id ${clause}`;
+      const [{ rows }, count] = await Promise.all([
+        db.query<
+          SummaryRow & { handle: string; hidden: boolean; verification_note: string | null }
+        >(
+          `SELECT ${SUMMARY_COLUMNS}, u.handle, r.hidden, r.verification_note ${from}
+           ORDER BY r.updated_at DESC, r.id
+           LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+          [...params, query.limit, query.offset],
+        ),
+        db.query<{ total: number }>(`SELECT count(*)::int AS total ${from}`, params),
+      ]);
+      return {
+        results: rows.map((row) => {
+          const summary = toSummary(row);
+          return {
+            id: summary.id,
+            handle: row.handle,
+            airspaceId: summary.airspaceId,
+            difficulty: summary.difficulty,
+            simTimeSec: summary.simTimeSec,
+            rp: summary.rp,
+            verification: summary.verification,
+            verificationNote: row.verification_note,
+            hidden: row.hidden,
+            playedAt: summary.playedAt,
+            updatedAt: summary.updatedAt,
+          };
+        }),
+        total: count.rows[0]!.total,
+      };
+    },
+
+    /** Hides a result from profiles and records, or shows it again. Returns its pilot's handle. */
+    async setHidden(id: string, hidden: boolean): Promise<string> {
+      const { rows } = await db.query<{ handle: string }>(
+        `UPDATE session_results r SET hidden = $2 FROM users u
+         WHERE r.id = $1 AND u.id = r.user_id RETURNING u.handle`,
+        [id, hidden],
+      );
+      if (!rows[0]) throw new ResultNotFoundError();
+      return rows[0].handle;
+    },
+
+    /** A result's pilot's handle (any result, hidden or not). */
+    async handleOf(id: string): Promise<string> {
+      const { rows } = await db.query<{ handle: string }>(
+        'SELECT u.handle FROM session_results r JOIN users u ON u.id = r.user_id WHERE r.id = $1',
+        [id],
+      );
+      if (!rows[0]) throw new ResultNotFoundError();
+      return rows[0].handle;
     },
 
     /** A result, its report, and whose it is. */

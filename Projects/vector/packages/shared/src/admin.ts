@@ -6,7 +6,8 @@ import {
   passwordSchema,
   userRoleSchema,
 } from './auth';
-import { savedSessionSummarySchema } from './sessions';
+import { verificationSchema } from './results';
+import { savedSessionSummarySchema, sessionDifficultySchema } from './sessions';
 
 // Administration API contracts (/api/admin), shared by the server and client.
 
@@ -99,6 +100,9 @@ export const AUDIT_ACTIONS = [
   'user.signOut',
   'user.sessionDelete',
   'airspace.update',
+  'result.hide',
+  'result.show',
+  'result.reverify',
   'admin.grant',
   'admin.revoke',
 ] as const;
@@ -129,3 +133,39 @@ export const adminSummarySchema = z.object({
   savedSessions: z.number().int().min(0),
 });
 export type AdminSummary = z.infer<typeof adminSummarySchema>;
+
+/** A session result as an admin sees it (any pilot's, hidden or not). */
+export const adminResultSchema = z.object({
+  id: z.uuid(),
+  handle: z.string(),
+  airspaceId: z.string(),
+  difficulty: sessionDifficultySchema.nullable(),
+  simTimeSec: z.number(),
+  rp: z.number(),
+  verification: verificationSchema,
+  /** Why it isn't verified, e.g. 'replay differs'. */
+  verificationNote: z.string().nullable(),
+  hidden: z.boolean(),
+  playedAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+export type AdminResult = z.infer<typeof adminResultSchema>;
+
+export const adminResultListQuerySchema = z.object({
+  verification: verificationSchema.optional(),
+  hidden: z.enum(['true', 'false']).optional(),
+  /** A pilot's handle. */
+  handle: z.string().trim().max(40).optional(),
+  offset: z.coerce.number().int().min(0).default(0),
+  limit: z.coerce.number().int().min(1).max(200).default(ADMIN_USERS_PAGE_SIZE),
+});
+export type AdminResultListQuery = z.input<typeof adminResultListQuerySchema>;
+
+export const adminResultListSchema = z.object({
+  results: z.array(adminResultSchema),
+  total: z.number().int().min(0),
+});
+export type AdminResultList = z.infer<typeof adminResultListSchema>;
+
+export const adminUpdateResultRequestSchema = z.object({ hidden: z.boolean() });
+export type AdminUpdateResultRequest = z.input<typeof adminUpdateResultRequestSchema>;

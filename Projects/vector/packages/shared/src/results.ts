@@ -73,6 +73,8 @@ export const pilotProfileSchema = z.discriminatedUnion('visibility', [
       isYou: z.boolean(),
     }),
     career: careerTotalsSchema,
+    /** Place on the all-time career RP board, if ranked. */
+    careerRank: z.number().int().positive().nullable(),
     byAirspace: z.array(careerTotalsSchema.extend({ airspaceId: z.string(), bestRp: z.number() })),
     /** Career RP after each session, oldest first. */
     history: z.array(z.object({ at: z.iso.datetime(), rp: z.number() })),
