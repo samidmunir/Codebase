@@ -75,3 +75,13 @@ pilots who still have accounts; signups count accounts that still exist.
     size (`GET /api/admin/sessions`).
   - Admin → Results filters by airspace and difficulty, sorts by RP, takes a pilot off
     the records (or back on), and hides or shows several results at once.
+- **Site switches** (milestone 4): Admin → Site, stored in `site_settings` and
+  served to everyone at `GET /api/site` (`PUT /api/admin/site` to change, admins
+  only; each change is logged as `site.update`).
+  - Registration open or closed, with a message for the registration page; while
+    closed, `POST /api/auth/register` answers 403 `registration_closed` and the front
+    page offers only sign-in. Admins can still create accounts.
+  - A banner (information or warning) on every page, the sign-in pages, session
+    setup and the scope; readers dismiss it, and a new message shows again.
+  - Community read-only: players can read but not post, reply, edit, mark useful or
+    report (503 `forum_readOnly`, with the admins' message); staff carry on.

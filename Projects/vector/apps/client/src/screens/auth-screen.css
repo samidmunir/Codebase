@@ -373,3 +373,24 @@
     animation-duration: 2s;
   }
 }
+
+.auth-closed {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  background: rgba(255, 181, 71, 0.08);
+  border: 1px solid rgba(255, 181, 71, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.auth-closed p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.auth-closed a {
+  color: var(--color-target);
+  font-weight: 500;
+  text-decoration: none;
+}

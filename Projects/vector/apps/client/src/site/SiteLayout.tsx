@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { auth, useAuth } from '../auth/auth-store';
 import { useCommunityUnread } from './community-unread';
+import { SiteBanner } from './SiteBanner';
 import { VerifyEmailBanner } from './VerifyEmailBanner';
 import './site.css';
 
@@ -77,6 +78,7 @@ export function SiteLayout() {
       </header>
 
       <main className="site__main" ref={main}>
+        <SiteBanner />
         {signedIn?.handleGenerated && location.pathname !== '/account' && (
           <div className="site-banner" role="status">
             Choose your handle: it’s how you’ll appear on records and in the community. For now

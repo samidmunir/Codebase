@@ -388,3 +388,8 @@
     gap: var(--space-3);
   }
 }
+
+/* The admins' banner runs edge to edge above the setup. */
+.setup-screen > .site-notice {
+  margin: calc(var(--space-6) * -1) calc(var(--space-4) * -1) var(--space-6);
+}

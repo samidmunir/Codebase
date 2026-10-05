@@ -17,7 +17,7 @@
 }
 
 /* Pages fill the space above the footer. */
-.site__main > :not(.site-footer, .site-banner) {
+.site__main > :not(.site-footer, .site-banner, .site-notice) {
   flex: 1 0 auto;
 }
 
@@ -341,4 +341,81 @@
   vertical-align: 1px;
   background: var(--color-target);
   border-radius: 999px;
+}
+
+/* ---- The admins' banner ---------------------------------------------------------------- */
+
+.site-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) max(var(--page-gutter), calc((100% - var(--page-width)) / 2));
+  font-size: 0.88rem;
+  background: rgba(57, 135, 229, 0.12);
+  border-bottom: 1px solid rgba(57, 135, 229, 0.35);
+}
+
+.site-notice[data-tone='warning'] {
+  background: rgba(255, 181, 71, 0.12);
+  border-bottom-color: rgba(255, 181, 71, 0.4);
+}
+
+.site-notice__icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: #04120c;
+  font-size: 0.75rem;
+  font-weight: 800;
+  background: #6da7ec;
+  border-radius: 50%;
+}
+
+.site-notice[data-tone='warning'] .site-notice__icon {
+  background: var(--color-caution);
+}
+
+.site-notice__text {
+  flex: 1;
+}
+
+.site-notice__close {
+  padding: 0 6px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.site-notice__close:hover {
+  color: var(--color-text);
+}
+
+/* Over the scope: a small card that leaves the radar where it is. */
+.site-notice--floating {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  z-index: 30;
+  width: max-content;
+  max-width: min(640px, calc(100% - 32px));
+  padding: var(--space-2) var(--space-3);
+  translate: -50% 0;
+  background: rgba(10, 16, 22, 0.94);
+  border: 1px solid rgba(57, 135, 229, 0.45);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.site-notice--floating[data-tone='warning'] {
+  border-color: rgba(255, 181, 71, 0.55);
+}
+
+.admin-switch-card .admin-switch__label {
+  white-space: nowrap;
 }

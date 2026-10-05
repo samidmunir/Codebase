@@ -12,6 +12,7 @@ import { threadPath } from '../../api/community-api';
 import { getResult } from '../../api/results-api';
 import { Markdown } from '../../components/Markdown';
 import { formatAgo, formatDate } from '../../format/dates';
+import { useSiteStatus } from '../../site/site-status';
 import { airspaceLabel, difficultyLabel, formatHours, VERIFICATION } from '../pilots/pilot-format';
 import { formatRp } from '../scope/score-format';
 
@@ -100,6 +101,7 @@ export function ThreadList({
 
 /** Why the pilot can't post here, and what to do about it. */
 export function PostingNotice({ posting, next }: { posting: ForumPosting; next: string }) {
+  const site = useSiteStatus();
   if (posting.allowed) return null;
   const notice: Record<typeof posting.reason, ReactNode> = {
     signedOut: (
@@ -119,6 +121,8 @@ export function PostingNotice({ posting, next }: { posting: ForumPosting; next: 
       : 'You’re suspended from posting.',
     locked: 'This thread is locked, so it can’t take new replies.',
     adminOnly: 'Only the Vector team starts threads here. You can reply to them.',
+    readOnly:
+      site.communityMessage || 'The community is read-only for now. You can still read everything.',
   };
   return (
     <p className="forum-notice" role="status">

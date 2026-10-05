@@ -9,6 +9,7 @@ import { DashboardTab } from './DashboardTab';
 import { OverviewTab } from './OverviewTab';
 import { ResultsTab } from './ResultsTab';
 import { SessionsTab } from './SessionsTab';
+import { SiteTab } from './SiteTab';
 import { UsersTab } from './UsersTab';
 import { usePageMeta } from '../../site/page-meta';
 import './admin-screen.css';
@@ -17,6 +18,7 @@ const TABS = [
   { id: 'overview', label: 'Dashboard' },
   { id: 'users', label: 'Users' },
   { id: 'airspaces', label: 'Airspaces' },
+  { id: 'site', label: 'Site' },
   { id: 'results', label: 'Results' },
   { id: 'sessions', label: 'Saved sessions' },
   { id: 'news', label: 'News' },
@@ -85,6 +87,7 @@ export function AdminScreen() {
         )}
         {tab === 'users' && <UsersTab currentUserId={auth.user.id} />}
         {tab === 'airspaces' && <AirspacesTab />}
+        {tab === 'site' && <SiteTab />}
         {tab === 'results' && <ResultsTab />}
         {tab === 'sessions' && <SessionsTab />}
         {tab === 'news' && <NewsTab />}

@@ -26,6 +26,7 @@ import {
   type SessionSetup,
 } from '../sim/session-setup';
 import { usePageMeta } from '../site/page-meta';
+import { SiteBanner } from '../site/SiteBanner';
 import './session-setup.css';
 
 type SessionKey = keyof SessionSettings;
@@ -154,6 +155,7 @@ export function SessionSetupScreen() {
 
   return (
     <main className="setup-screen">
+      <SiteBanner />
       <header className="setup-screen__bar">
         <Link to="/play" className="setup-screen__back">
           ← Back
