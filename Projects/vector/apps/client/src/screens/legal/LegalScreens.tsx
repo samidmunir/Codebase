@@ -91,6 +91,21 @@ export function TermsScreen() {
         Don’t attack, overload or try to get unauthorized access to Vector or other people’s
         accounts, and don’t use Vector to harass anyone.
       </p>
+      <h2>The community</h2>
+      <ul>
+        <li>
+          Be civil. No harassment, hate, spam, advertising, illegal content, or other people’s
+          private information.
+        </li>
+        <li>
+          You keep the rights to what you post, and let Vector show it on the site for as long as
+          it’s there, including after you delete your account (shown as by a deleted pilot).
+        </li>
+        <li>
+          Administrators can hide or delete posts, lock or move threads, and suspend accounts from
+          posting, for a time or for good, when these terms are broken.
+        </li>
+      </ul>
       <h2>Not for real-world use</h2>
       <p>
         Vector is a simulation for entertainment and learning. It isn’t certified training, and its
@@ -135,6 +150,11 @@ export function PrivacyScreen() {
           stored), and when each was last used.
         </li>
         <li>
+          <strong>The community:</strong> what you post, when, any edits, the posts you mark useful,
+          threads you follow and when you last read them, and reports you make (seen only by
+          administrators).
+        </li>
+        <li>
           <strong>Emailed links:</strong> when we email you a link (to verify your address, reset
           your password or change your email), a hash of it, when it was sent, and the new address
           for an email change. Links stop working after a day at most (a week for undoing an email
@@ -153,7 +173,8 @@ export function PrivacyScreen() {
       <p>
         Your handle and display name. Your profile, career and sessions are public unless you make
         your profile private on your Account page; your verified sessions appear on the records
-        unless you turn that off there too. Your email address is never shown to anyone.
+        unless you turn that off there too. What you post in the community is public, as is which
+        posts you’ve marked useful (as a count). Your email address is never shown to anyone.
       </p>
       <h2>Who sees it</h2>
       <p>
@@ -177,7 +198,8 @@ export function PrivacyScreen() {
         <li>Sign out your other devices from your Account page.</li>
         <li>
           Delete your account from your Account page: your account, settings, saved sessions and
-          results are deleted at once.
+          results are deleted at once. Your community posts stay so that threads still make sense,
+          but they no longer show your name or link to you; they show as by a deleted pilot.
         </li>
       </ul>
       <h2>Changes</h2>

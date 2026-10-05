@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { auth, useAuth } from '../auth/auth-store';
+import { useCommunityUnread } from './community-unread';
 import { VerifyEmailBanner } from './VerifyEmailBanner';
 import './site.css';
 
@@ -19,6 +20,7 @@ export function SiteLayout() {
   }, [location.pathname]);
 
   const signedIn = session.status === 'signedIn' ? session.user : undefined;
+  const communityUnread = useCommunityUnread(location.pathname);
 
   return (
     <div className="site">
@@ -38,6 +40,17 @@ export function SiteLayout() {
           </NavLink>
           <NavLink to="/records" className="site-header__link">
             Records
+          </NavLink>
+          <NavLink to="/community" className="site-header__link">
+            Community
+            {communityUnread > 0 && (
+              <span
+                className="site-header__badge"
+                aria-label={`, ${communityUnread} followed thread${communityUnread === 1 ? '' : 's'} with new posts`}
+              >
+                {communityUnread}
+              </span>
+            )}
           </NavLink>
           <NavLink to="/guide" className="site-header__link">
             Guide

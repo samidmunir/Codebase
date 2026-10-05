@@ -2,6 +2,8 @@
 
 .site {
   display: grid;
+  /* One column no wider than the screen, so the header's links scroll instead. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   height: 100%;
   background: var(--color-bg);
@@ -57,6 +59,18 @@
 .site-header__nav {
   display: flex;
   gap: var(--space-1);
+  /* On narrow screens the links scroll rather than widen the page. */
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.site-header__nav::-webkit-scrollbar {
+  display: none;
+}
+
+.site-header__link {
+  flex-shrink: 0;
 }
 
 .site-header__link {
@@ -313,4 +327,19 @@
   .site-header__account .site-header__link {
     display: none;
   }
+}
+
+.site-header__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  margin-left: 5px;
+  padding: 0 4px;
+  color: #04120c;
+  font-size: 0.68rem;
+  font-weight: 700;
+  vertical-align: 1px;
+  background: var(--color-target);
+  border-radius: 999px;
 }

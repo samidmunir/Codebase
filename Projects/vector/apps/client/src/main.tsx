@@ -27,6 +27,10 @@ import {
   ForgotPasswordScreen,
   ResetPasswordScreen,
 } from './screens/email/EmailScreens';
+import { CategoryScreen } from './screens/community/CategoryScreen';
+import { CommunityScreen } from './screens/community/CommunityScreen';
+import { NewThreadScreen } from './screens/community/NewThreadScreen';
+import { ThreadScreen } from './screens/community/ThreadScreen';
 import { SiteLayout } from './site/SiteLayout';
 import './styles/global.css';
 
@@ -48,6 +52,11 @@ const router = createBrowserRouter([
       { path: '/airspaces', element: <AirspacesScreen /> },
       { path: '/airspaces/:id', element: <AirspaceScreen /> },
       { path: '/news', element: <NewsScreen /> },
+      { path: '/community', element: <CommunityScreen /> },
+      { path: '/community/t/:id', element: <ThreadScreen /> },
+      { path: '/community/t/:id/:slug', element: <ThreadScreen /> },
+      { path: '/community/:category', element: <CategoryScreen /> },
+      { path: '/community/:category/new', element: signedIn(<NewThreadScreen />) },
       { path: '/about', element: <AboutScreen /> },
       { path: '/terms', element: <TermsScreen /> },
       { path: '/privacy', element: <PrivacyScreen /> },

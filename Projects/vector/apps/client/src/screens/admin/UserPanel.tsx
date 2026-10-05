@@ -34,6 +34,7 @@ export function UserPanel({
   const [detail, setDetail] = useState<AdminUserDetail | undefined>(undefined);
   const [loadError, setLoadError] = useState<string | undefined>(undefined);
   const [notice, setNotice] = useState<Notice | undefined>(undefined);
+  const [suspendFor, setSuspendFor] = useState('7');
   const [busy, setBusy] = useState(false);
 
   const [version, setVersion] = useState(0);
@@ -223,6 +224,57 @@ export function UserPanel({
               }
             >
               Disable account
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section className="admin-section">
+        <h3>Community</h3>
+        <p className="admin-muted">
+          {user.postingSuspendedUntil === 'forever'
+            ? 'Suspended from posting for good.'
+            : user.postingSuspendedUntil
+              ? `Suspended from posting until ${formatDateTime(user.postingSuspendedUntil)}.`
+              : 'Can post (once their email is verified).'}
+        </p>
+        <div className="admin-actions">
+          <label className="admin-inline-field">
+            For
+            <select
+              className="admin-input"
+              value={suspendFor}
+              onChange={(event) => setSuspendFor(event.target.value)}
+            >
+              <option value="1">1 day</option>
+              <option value="7">7 days</option>
+              <option value="30">30 days</option>
+              <option value="forever">Good (no end)</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            className="admin-button admin-button--caution"
+            disabled={busy}
+            onClick={() =>
+              void update(
+                {
+                  postingSuspension: suspendFor === 'forever' ? 'forever' : Number(suspendFor),
+                },
+                'Suspended from posting.',
+              )
+            }
+          >
+            Suspend from posting
+          </button>
+          {user.postingSuspendedUntil && (
+            <button
+              type="button"
+              className="admin-button"
+              disabled={busy}
+              onClick={() => void update({ postingSuspension: 'lift' }, 'They can post again.')}
+            >
+              Lift suspension
             </button>
           )}
         </div>

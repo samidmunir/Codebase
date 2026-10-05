@@ -108,3 +108,9 @@ export async function emailLink(address: string, subject: string): Promise<strin
 
 /** How many emails have gone to an address. */
 export const emailsTo = (address: string) => sentTo(address).length;
+
+/** Verifies a pilot's email by opening the link they were sent. */
+export async function verifyEmail(page: Page, email: string): Promise<void> {
+  await page.goto(await emailLink(email, 'Verify your email for Vector'));
+  await expect(page.getByText('Your email is verified.')).toBeVisible();
+}

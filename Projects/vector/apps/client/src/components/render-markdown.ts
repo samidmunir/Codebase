@@ -1,9 +1,10 @@
 import DOMPurify from 'dompurify';
-import { marked } from 'marked';
+import { Marked } from 'marked';
 
-// Markdown written on the site (news now, the forum later), rendered to safe HTML:
+// Markdown written on the site (news and the community), rendered to safe HTML:
 // marked turns it into HTML, and DOMPurify keeps only harmless markup (no scripts,
-// styles, event handlers or javascript: links).
+// styles, event handlers or javascript: links). Community posts can't use raw HTML
+// at all: it shows as the text that was typed.
 
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   if (node.tagName !== 'A') return;
@@ -15,9 +16,19 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   }
 });
 
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+const withHtml = new Marked({ gfm: true });
+const withoutHtml = new Marked({
+  gfm: true,
+  renderer: { html: ({ text }) => escapeHtml(text) },
+});
+
 /** Markdown as sanitized HTML, ready to show. */
-export function renderMarkdown(markdown: string): string {
-  const html = marked.parse(markdown, { async: false, gfm: true });
+export function renderMarkdown(markdown: string, options: { allowHtml?: boolean } = {}): string {
+  const parser = options.allowHtml === false ? withoutHtml : withHtml;
+  const html = parser.parse(markdown, { async: false });
   return DOMPurify.sanitize(html, {
     FORBID_TAGS: ['style', 'iframe', 'form', 'input', 'img'],
     FORBID_ATTR: ['style'],

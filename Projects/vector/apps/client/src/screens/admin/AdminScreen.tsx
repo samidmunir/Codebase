@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/auth-store';
 import { useGameControls } from '../../controls/use-game-controls';
 import { ActivityTab } from './ActivityTab';
 import { AirspacesTab } from './AirspacesTab';
+import { CommunityTab } from './CommunityTab';
 import { NewsTab } from './NewsTab';
 import { OverviewTab } from './OverviewTab';
 import { ResultsTab } from './ResultsTab';
@@ -16,6 +17,7 @@ const TABS = [
   { id: 'airspaces', label: 'Airspaces' },
   { id: 'results', label: 'Results' },
   { id: 'news', label: 'News' },
+  { id: 'community', label: 'Community' },
   { id: 'activity', label: 'Activity' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
@@ -72,6 +74,7 @@ export function AdminScreen() {
         {tab === 'airspaces' && <AirspacesTab />}
         {tab === 'results' && <ResultsTab />}
         {tab === 'news' && <NewsTab />}
+        {tab === 'community' && <CommunityTab />}
         {tab === 'activity' && <ActivityTab />}
       </div>
     </div>
