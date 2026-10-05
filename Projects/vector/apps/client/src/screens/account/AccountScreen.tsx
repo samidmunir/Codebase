@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { PASSWORD_MIN_LENGTH, type Account } from '@vector/shared';
 import {
   changePassword,
@@ -111,12 +111,14 @@ function ProfileSection({
 }) {
   const [handle, setHandle] = useState(account.handleGenerated ? '' : account.handle);
   const [displayName, setDisplayName] = useState(account.displayName);
+  const [profilePublic, setProfilePublic] = useState(account.profilePublic);
   const [fields, setFields] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<Status>(undefined);
   const [busy, setBusy] = useState(false);
   const availability = useHandleAvailability(handle, account.handle);
   const handleChanged = handle.trim() !== '' && handle.trim() !== account.handle;
   const nameChanged = displayName.trim() !== account.displayName;
+  const privacyChanged = profilePublic !== account.profilePublic;
   const lockedUntil = account.handleChangeableAt;
 
   const submit = async (event: FormEvent) => {
@@ -129,6 +131,7 @@ function ProfileSection({
         await updateProfile({
           ...(handleChanged ? { handle: handle.trim() } : {}),
           ...(nameChanged ? { displayName: displayName.trim() } : {}),
+          ...(privacyChanged ? { profilePublic } : {}),
         }),
       );
       setStatus({ tone: 'ok', text: 'Saved.' });
@@ -177,12 +180,31 @@ function ProfileSection({
           />
           {fields.displayName && <span className="account-field__error">{fields.displayName}</span>}
         </label>
+        <label className="account-check">
+          <input
+            type="checkbox"
+            checked={profilePublic}
+            onChange={(event) => setProfilePublic(event.target.checked)}
+          />
+          <span>
+            <strong>Public profile</strong>
+            <span>
+              Anyone can see your career and sessions at{' '}
+              <Link to={`/pilots/${account.handle}`}>/pilots/{account.handle}</Link>. Turned off,
+              only you can.
+            </span>
+          </span>
+        </label>
         <StatusLine status={status} />
         <div className="account-form__actions">
           <button
             type="submit"
             className="site-button site-button--primary"
-            disabled={busy || (!handleChanged && !nameChanged) || availability?.available === false}
+            disabled={
+              busy ||
+              (!handleChanged && !nameChanged && !privacyChanged) ||
+              availability?.available === false
+            }
           >
             Save profile
           </button>
