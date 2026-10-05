@@ -130,7 +130,7 @@ export function ScopeScreen() {
       <div className="scope-screen scope-screen--message">
         <div className="scope-error" role="alert">
           <p>{state.message}</p>
-          <Link to="/">Back to start</Link>
+          <Link to="/play">Back to start</Link>
         </div>
       </div>
     );
@@ -418,7 +418,7 @@ function Scope({ session }: { session: ScopeSession }) {
           onSaved={(name) => {
             setSaveOpen(false);
             setToast(`Saved “${name}”`);
-            if (leaveAfterSave) void navigate('/');
+            if (leaveAfterSave) void navigate('/play');
             else openDebrief({ kind: 'saved', name });
           }}
         />
@@ -434,7 +434,7 @@ function Scope({ session }: { session: ScopeSession }) {
             setLeaveAfterSave(true);
             setSaveOpen(true);
           }}
-          onLeave={() => void navigate('/')}
+          onLeave={() => void navigate('/play')}
         />
       )}
 

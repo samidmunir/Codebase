@@ -27,6 +27,13 @@ const app = buildApp({
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+/** A handle made from an email's name part, for test accounts. */
+const handleFor = (email: string) =>
+  `${email
+    .split('@')[0]!
+    .replace(/[^A-Za-z0-9_]/g, '_')
+    .slice(0, 14)}_pilot`;
+
 interface Account {
   id: string;
   email: string;
@@ -38,7 +45,7 @@ async function register(email: string, displayName = 'Pilot'): Promise<Account> 
   const response = await app.inject({
     method: 'POST',
     url: '/api/auth/register',
-    payload: { email, password: PASSWORD, displayName },
+    payload: { email, handle: handleFor(email), password: PASSWORD, displayName },
   });
   const body = response.json<{ accessToken: string; user: { id: string } }>();
   return {
@@ -171,6 +178,7 @@ describe.skipIf(!db)('administration (integration)', () => {
   it('creates accounts that can sign in, and refuses a duplicate email', async () => {
     const created = await call(admin, 'POST', '/api/admin/users', {
       email: 'New.Controller@Example.com',
+      handle: 'NewController',
       displayName: 'New Controller',
       password: 'a long enough password',
       role: 'admin',
@@ -182,6 +190,7 @@ describe.skipIf(!db)('administration (integration)', () => {
     );
     const duplicate = await call(admin, 'POST', '/api/admin/users', {
       email: 'pilot@example.com',
+      handle: 'Again',
       displayName: 'Again',
       password: 'a long enough password',
     });

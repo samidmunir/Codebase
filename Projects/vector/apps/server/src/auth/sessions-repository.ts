@@ -69,6 +69,24 @@ export function sessionsRepository(db: Database) {
       );
     },
 
+    /** Ends every sign-in but one (this device's). */
+    async revokeOthers(userId: string, keepSessionId: string): Promise<void> {
+      await db.query(
+        `UPDATE auth_sessions SET revoked_at = now()
+         WHERE user_id = $1 AND id <> $2 AND revoked_at IS NULL`,
+        [userId, keepSessionId],
+      );
+    },
+
+    async countActive(userId: string): Promise<number> {
+      const { rows } = await db.query<{ count: number }>(
+        `SELECT count(*)::int AS count FROM auth_sessions
+         WHERE user_id = $1 AND revoked_at IS NULL AND rotated_at IS NULL AND expires_at > now()`,
+        [userId],
+      );
+      return rows[0]!.count;
+    },
+
     async revokeAllForUser(userId: string): Promise<void> {
       await db.query(
         'UPDATE auth_sessions SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL',

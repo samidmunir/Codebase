@@ -1,4 +1,4 @@
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { useAuth } from '../../auth/auth-store';
 import { useGameControls } from '../../controls/use-game-controls';
 import { ActivityTab } from './ActivityTab';
@@ -20,10 +20,10 @@ export function AdminScreen() {
   const auth = useAuth();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  useGameControls({ closeMenu: () => void navigate('/') });
+  useGameControls({ closeMenu: () => void navigate('/play') });
 
   if (auth.status !== 'signedIn') return null;
-  if (auth.user.role !== 'admin') return <Navigate to="/" replace />;
+  if (auth.user.role !== 'admin') return <Navigate to="/play" replace />;
 
   const tab: TabId = TABS.some((t) => t.id === params.get('tab'))
     ? (params.get('tab') as TabId)
@@ -32,11 +32,8 @@ export function AdminScreen() {
     setParams({ ...(next === 'overview' ? {} : { tab: next }), ...extra });
 
   return (
-    <main className="admin-screen">
+    <div className="admin-screen">
       <header className="admin-screen__bar">
-        <Link to="/" className="admin-screen__back">
-          ← Back
-        </Link>
         <h1>Administration</h1>
         <span className="admin-screen__who">
           Signed in as <strong>{auth.user.email}</strong>
@@ -69,6 +66,6 @@ export function AdminScreen() {
         {tab === 'airspaces' && <AirspacesTab />}
         {tab === 'activity' && <ActivityTab />}
       </div>
-    </main>
+    </div>
   );
 }

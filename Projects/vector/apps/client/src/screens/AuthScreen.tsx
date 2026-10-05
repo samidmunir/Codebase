@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router';
 import { PASSWORD_MIN_LENGTH } from '@vector/shared';
 import { ApiRequestError } from '../api/api-client';
 import { auth } from '../auth/auth-store';
+import { HandleField } from '../components/HandleField';
 import './auth-screen.css';
 import './home-screen.css';
 
@@ -28,6 +29,7 @@ export function AuthScreen({ mode }: { mode: Mode }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [handle, setHandle] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [fields, setFields] = useState<Record<string, string>>({});
@@ -42,11 +44,13 @@ export function AuthScreen({ mode }: { mode: Mode }) {
     setFields({});
     try {
       if (mode === 'login') await auth.login(email, password);
-      else await auth.register(email, password, displayName);
+      else await auth.register(email, password, displayName, handle);
     } catch (caught) {
       if (caught instanceof ApiRequestError) {
         setError(
-          caught.fields && Object.keys(caught.fields).length > 0 && caught.code !== 'email_taken'
+          caught.fields &&
+            Object.keys(caught.fields).length > 0 &&
+            !['email_taken', 'handle_taken'].includes(caught.code)
             ? undefined
             : caught.message,
         );
@@ -93,6 +97,9 @@ export function AuthScreen({ mode }: { mode: Mode }) {
               />
               {field('displayName')}
             </label>
+          )}
+          {mode === 'register' && (
+            <HandleField value={handle} onChange={setHandle} error={fields.handle} />
           )}
           <label className="auth-field">
             <span>Email</span>

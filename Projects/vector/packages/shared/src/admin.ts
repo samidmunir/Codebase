@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { emailSchema, passwordSchema, displayNameSchema, userRoleSchema } from './auth';
+import {
+  displayNameSchema,
+  emailSchema,
+  handleSchema,
+  passwordSchema,
+  userRoleSchema,
+} from './auth';
 import { savedSessionSummarySchema } from './sessions';
 
 // Administration API contracts (/api/admin), shared by the server and client.
@@ -8,6 +14,7 @@ import { savedSessionSummarySchema } from './sessions';
 export const adminUserSchema = z.object({
   id: z.uuid(),
   email: z.string(),
+  handle: z.string(),
   displayName: z.string(),
   role: userRoleSchema,
   disabledAt: z.iso.datetime().nullable(),
@@ -31,7 +38,7 @@ export const adminUserListSchema = z.object({
 export type AdminUserList = z.infer<typeof adminUserListSchema>;
 
 export const adminUserListQuerySchema = z.object({
-  /** Matches email or display name. */
+  /** Matches email, handle or display name. */
   q: z.string().trim().max(100).optional(),
   role: userRoleSchema.optional(),
   status: z.enum(['active', 'disabled']).optional(),
@@ -48,6 +55,7 @@ export type AdminUserDetail = z.infer<typeof adminUserDetailSchema>;
 
 export const adminCreateUserRequestSchema = z.object({
   email: emailSchema,
+  handle: handleSchema,
   displayName: displayNameSchema,
   password: passwordSchema,
   role: userRoleSchema.default('player'),
@@ -58,6 +66,7 @@ export type AdminCreateUserRequest = z.input<typeof adminCreateUserRequestSchema
 export const adminUpdateUserRequestSchema = z
   .object({
     email: emailSchema,
+    handle: handleSchema,
     displayName: displayNameSchema,
     password: passwordSchema,
     role: userRoleSchema,

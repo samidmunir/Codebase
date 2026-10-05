@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from '@playwright/test';
-import { registerPilot } from './helpers';
+import { accountMenu, openFromMenu, registerPilot } from './helpers';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
@@ -18,14 +18,15 @@ async function signIn(page: Page, email: string): Promise<void> {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill('correct horse battery');
   await page.getByRole('button', { name: /sign in/i }).click();
-  await expect(page.getByText('Signed in as')).toBeVisible();
+  await expect(accountMenu(page)).toBeVisible();
 }
 
 test('keeps players out of the admin pages', async ({ page }) => {
   await registerPilot(page);
-  await expect(page.getByRole('link', { name: 'Admin' })).toHaveCount(0);
+  await accountMenu(page).click();
+  await expect(page.getByRole('menuitem', { name: 'Admin' })).toHaveCount(0);
   await page.goto('/admin');
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/play$/);
 });
 
 test('an admin manages users and airspaces, and every change is logged', async ({ page }) => {
@@ -34,7 +35,7 @@ test('an admin manages users and airspaces, and every change is logged', async (
   grantAdmin(email);
   // Granting ends the account's sign-ins, so the new role applies on the next sign-in.
   await signIn(page, email);
-  await page.getByRole('link', { name: 'Admin' }).click();
+  await openFromMenu(page, 'Admin');
   await expect(page.getByRole('heading', { name: 'Administration' })).toBeVisible();
   await expect(page.locator('.admin-tile', { hasText: 'Admins' })).toBeVisible();
 
@@ -44,6 +45,7 @@ test('an admin manages users and airspaces, and every change is logged', async (
   const created = `e2e-created-${Date.now()}@example.com`;
   const form = page.getByRole('form', { name: 'New user' });
   await form.getByLabel('Display name').fill('Night Shift');
+  await form.getByLabel('Handle').fill(`night_${Date.now().toString(36)}`);
   await form.getByLabel('Email').fill(created);
   await form.getByLabel('Password').fill('a long enough password');
   await form.getByRole('button', { name: 'Create user' }).click();
@@ -65,7 +67,7 @@ test('an admin manages users and airspaces, and every change is logged', async (
   const chicago = page.getByRole('switch', { name: 'Chicago open to players' });
   await chicago.click({ force: true });
   await expect(chicago).not.toBeChecked();
-  await page.getByRole('link', { name: '← Back' }).click();
+  await page.getByRole('link', { name: 'Play', exact: true }).click();
   await expect(page.locator('.airspace-card--closed', { hasText: 'Chicago' })).toContainText(
     'Closed',
   );

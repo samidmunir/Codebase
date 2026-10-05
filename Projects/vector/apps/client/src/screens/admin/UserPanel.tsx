@@ -94,7 +94,9 @@ export function UserPanel({
       <header className="admin-card__header">
         <div>
           <h2>{user.displayName}</h2>
-          <p className="admin-muted">{user.email}</p>
+          <p className="admin-muted">
+            @{user.handle} · {user.email}
+          </p>
         </div>
         <button type="button" className="admin-icon-button" aria-label="Close" onClick={onClose}>
           ×
@@ -143,8 +145,9 @@ export function UserPanel({
       )}
 
       <DetailsForm
-        key={`${user.email}|${user.displayName}|${user.role}`}
+        key={`${user.email}|${user.handle}|${user.displayName}|${user.role}`}
         email={user.email}
+        handle={user.handle}
         displayName={user.displayName}
         role={user.role}
         isSelf={isSelf}
@@ -250,6 +253,7 @@ export function UserPanel({
 
 function DetailsForm({
   email,
+  handle,
   displayName,
   role,
   isSelf,
@@ -257,15 +261,17 @@ function DetailsForm({
   onSave,
 }: {
   email: string;
+  handle: string;
   displayName: string;
   role: UserRole;
   isSelf: boolean;
   busy: boolean;
   onSave: (changes: AdminUpdateUserRequest) => Promise<boolean>;
 }) {
-  const [form, setForm] = useState({ email, displayName, role });
+  const [form, setForm] = useState({ email, handle, displayName, role });
   const changes: AdminUpdateUserRequest = {
     ...(form.email.trim().toLowerCase() !== email ? { email: form.email } : {}),
+    ...(form.handle.trim() !== handle ? { handle: form.handle } : {}),
     ...(form.displayName.trim() !== displayName ? { displayName: form.displayName } : {}),
     ...(form.role !== role ? { role: form.role } : {}),
   };
@@ -279,6 +285,17 @@ function DetailsForm({
     <form className="admin-section admin-form" onSubmit={submit} aria-label="Account details">
       <h3>Details</h3>
       <div className="admin-form__grid">
+        <label>
+          Handle
+          <input
+            className="admin-input"
+            required
+            maxLength={20}
+            autoCapitalize="off"
+            value={form.handle}
+            onChange={(event) => setForm({ ...form, handle: event.target.value })}
+          />
+        </label>
         <label>
           Display name
           <input

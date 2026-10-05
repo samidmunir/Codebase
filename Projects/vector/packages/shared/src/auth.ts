@@ -15,6 +15,43 @@ export const passwordSchema = z
   .max(PASSWORD_MAX_LENGTH);
 export const displayNameSchema = z.string().trim().min(1, 'Enter a display name').max(40);
 
+/**
+ * A public handle: how a pilot appears on profiles, records and the forum. Case is
+ * kept for display; uniqueness ignores it.
+ */
+export const HANDLE_MIN_LENGTH = 3;
+export const HANDLE_MAX_LENGTH = 20;
+/** Days between handle changes, and how long a released handle stays reserved. */
+export const HANDLE_CHANGE_DAYS = 30;
+export const RESERVED_HANDLES = [
+  'admin',
+  'administrator',
+  'moderator',
+  'mod',
+  'support',
+  'help',
+  'vector',
+  'staff',
+  'system',
+  'root',
+  'official',
+  'deleted',
+  'anonymous',
+  'me',
+  'null',
+  'undefined',
+] as const;
+export const handleSchema = z
+  .string()
+  .trim()
+  .min(HANDLE_MIN_LENGTH, `Use at least ${HANDLE_MIN_LENGTH} characters`)
+  .max(HANDLE_MAX_LENGTH, `Use at most ${HANDLE_MAX_LENGTH} characters`)
+  .regex(/^[A-Za-z0-9_]+$/, 'Use letters, numbers and underscores only')
+  .refine(
+    (handle) => !(RESERVED_HANDLES as readonly string[]).includes(handle.toLowerCase()),
+    'That handle is reserved',
+  );
+
 /** A player, or an admin who can also manage users and airspaces. */
 export const USER_ROLES = ['player', 'admin'] as const;
 export const userRoleSchema = z.enum(USER_ROLES);
@@ -22,6 +59,7 @@ export type UserRole = z.infer<typeof userRoleSchema>;
 
 export const registerRequestSchema = z.object({
   email: emailSchema,
+  handle: handleSchema,
   password: passwordSchema,
   displayName: displayNameSchema,
 });
@@ -38,6 +76,9 @@ export type LoginRequest = z.input<typeof loginRequestSchema>;
 export const authUserSchema = z.object({
   id: z.uuid(),
   email: z.string(),
+  handle: z.string(),
+  /** The handle was made up for an account from before handles: ask them to choose one. */
+  handleGenerated: z.boolean(),
   displayName: z.string(),
   role: userRoleSchema,
 });

@@ -69,7 +69,7 @@ export function UsersTab({
           <input
             type="search"
             className="admin-input admin-toolbar__search"
-            placeholder="Search name or email"
+            placeholder="Search name, handle or email"
             aria-label="Search users"
             value={filters.q}
             onChange={(event) => setFilters({ ...filters, q: event.target.value })}
@@ -157,7 +157,9 @@ export function UsersTab({
                           {user.displayName}
                           {user.id === currentUserId && <span className="admin-muted"> (you)</span>}
                         </span>
-                        <span className="admin-user-link__email">{user.email}</span>
+                        <span className="admin-user-link__email">
+                          @{user.handle} · {user.email}
+                        </span>
                       </button>
                     </td>
                     <td>
@@ -229,6 +231,7 @@ function CreateUserForm({
   onCreated: (user: AdminUser) => void;
 }) {
   const [form, setForm] = useState({
+    handle: '',
     displayName: '',
     email: '',
     password: '',
@@ -274,6 +277,18 @@ function CreateUserForm({
           {error?.fields.displayName && (
             <span className="admin-field-error">{error.fields.displayName}</span>
           )}
+        </label>
+        <label>
+          Handle
+          <input
+            className="admin-input"
+            required
+            maxLength={20}
+            autoCapitalize="off"
+            value={form.handle}
+            onChange={(event) => setForm({ ...form, handle: event.target.value })}
+          />
+          {error?.fields.handle && <span className="admin-field-error">{error.fields.handle}</span>}
         </label>
         <label>
           Email

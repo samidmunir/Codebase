@@ -67,7 +67,7 @@ test('sets up a session, controls traffic, saves it and resumes exactly', async 
   await expect(debrief).toContainText('Saved “E2E evening rush”');
   await expect(debrief).toContainText('Timing');
   await debrief.getByRole('button', { name: 'Back to start' }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/play$/);
   const card = page.locator('.saved-session', { hasText: 'E2E evening rush' });
   await expect(card).toContainText('Normal');
   await card.getByRole('link', { name: 'Resume' }).click();

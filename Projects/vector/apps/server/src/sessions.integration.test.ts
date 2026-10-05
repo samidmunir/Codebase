@@ -56,7 +56,12 @@ async function signIn(email: string) {
   const response = await app.inject({
     method: 'POST',
     url: '/api/auth/register',
-    payload: { email, password: 'correct horse battery', displayName: 'Pilot' },
+    payload: {
+      email,
+      handle: email.split('@')[0]!.replace(/[^A-Za-z0-9_]/g, '_'),
+      password: 'correct horse battery',
+      displayName: 'Pilot',
+    },
   });
   return { authorization: `Bearer ${response.json<{ accessToken: string }>().accessToken}` };
 }

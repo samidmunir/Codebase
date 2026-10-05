@@ -68,7 +68,7 @@ export function SessionSetupScreen() {
     runwayConfigs: {},
   }));
 
-  useGameControls({ closeMenu: () => void navigate('/') });
+  useGameControls({ closeMenu: () => void navigate('/play') });
 
   useEffect(() => {
     if (!entry?.load) return;
@@ -124,7 +124,7 @@ export function SessionSetupScreen() {
             ? `${entry.name} is closed right now. Try another airspace.`
             : `Airspace “${airspaceId}” is not available.`}
         </p>
-        <Link to="/">Back to start</Link>
+        <Link to="/play">Back to start</Link>
       </main>
     );
   }
@@ -153,7 +153,7 @@ export function SessionSetupScreen() {
   return (
     <main className="setup-screen">
       <header className="setup-screen__bar">
-        <Link to="/" className="setup-screen__back">
+        <Link to="/play" className="setup-screen__back">
           ← Back
         </Link>
         <div>

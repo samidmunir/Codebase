@@ -1,48 +1,32 @@
-import { useState } from 'react';
 import { Link } from 'react-router';
 import { useAirspaceStatus } from '../airspaces/airspace-status';
 import { AIRSPACES } from '../airspaces/registry';
-import { auth, useAuth } from '../auth/auth-store';
+import { useAuth } from '../auth/auth-store';
 import { ApiStatus } from '../components/ApiStatus';
-import { HelpDialog } from '../components/help/HelpDialog';
 import { shortAirport } from '../scope/data-block';
 import { SavedSessions } from './SavedSessions';
 import './auth-screen.css';
 import './home-screen.css';
 
-export function HomeScreen() {
+/** The signed-in hub: choose an airspace, or resume a saved session. */
+export function PlayScreen() {
   const session = useAuth();
-  const [helpOpen, setHelpOpen] = useState(false);
   const { isOpen } = useAirspaceStatus();
 
   return (
-    <main className="shell">
+    <div className="shell">
       <div className="scope-backdrop" aria-hidden="true">
         <div className="scope-backdrop__rings" />
         <div className="scope-backdrop__sweep" />
       </div>
 
-      {session.status === 'signedIn' && (
-        <div className="home-account">
-          <span>
-            Signed in as <strong>{session.user.displayName}</strong>
-          </span>
-          <button type="button" onClick={() => setHelpOpen(true)}>
-            How to play
-          </button>
-          {session.user.role === 'admin' && <Link to="/admin">Admin</Link>}
-          <Link to="/settings">Settings</Link>
-          <button type="button" onClick={() => void auth.logout()}>
-            Sign out
-          </button>
-        </div>
-      )}
-
       <section className="hero">
         <p className="hero__eyebrow">Approach &amp; departure control</p>
         <h1 className="hero__title">Vector</h1>
         <p className="hero__subtitle">
-          A realistic air traffic control simulator built on real FAA data.
+          {session.status === 'signedIn'
+            ? `Welcome back, ${session.user.displayName}. Pick an airspace to work.`
+            : 'A realistic air traffic control simulator built on real FAA data.'}
         </p>
 
         <div className="hero__airspaces">
@@ -74,9 +58,6 @@ export function HomeScreen() {
 
         <ApiStatus />
       </section>
-
-      <footer className="shell__footer">Preview build · v0.0.0</footer>
-      {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
-    </main>
+    </div>
   );
 }

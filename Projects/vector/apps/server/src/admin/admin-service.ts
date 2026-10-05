@@ -77,11 +77,13 @@ export function adminService(deps: {
     ): Promise<AdminUser> {
       const user = await users.create({
         email: input.email,
+        handle: input.handle,
         displayName: input.displayName,
         passwordHash: await hashPassword(input.password),
         role: input.role,
       });
       await audit.record(actor, 'user.create', user.email, {
+        handle: user.handle,
         displayName: user.displayName,
         role: user.role,
       });
@@ -103,6 +105,7 @@ export function adminService(deps: {
 
       const before = await users.update(id, {
         ...(changes.email !== undefined ? { email: changes.email } : {}),
+        ...(changes.handle !== undefined ? { handle: changes.handle } : {}),
         ...(changes.displayName !== undefined ? { displayName: changes.displayName } : {}),
         ...(changes.password !== undefined
           ? { passwordHash: await hashPassword(changes.password) }
@@ -120,6 +123,8 @@ export function adminService(deps: {
       const details: Record<string, unknown> = {};
       if (changes.email !== undefined && changes.email !== before.email)
         details.email = { from: before.email, to: changes.email };
+      if (changes.handle !== undefined && changes.handle !== before.handle)
+        details.handle = { from: before.handle, to: changes.handle };
       if (changes.displayName !== undefined && changes.displayName !== before.displayName)
         details.displayName = { from: before.displayName, to: changes.displayName };
       if (roleChanged) details.role = { from: before.role, to: changes.role };
