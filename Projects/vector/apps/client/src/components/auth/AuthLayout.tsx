@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { findAirspace } from '../../airspaces/registry';
 import { LiveScope, type DemoTraffic } from '../../demo/LiveScope';
 import type { ScopeSession } from '../../sim/scope-session';
+import { SiteBanner } from '../../site/SiteBanner';
 import './auth-layout.css';
 
 /** A steady, busy session behind the sign-in pages. */
@@ -93,7 +94,10 @@ export function AuthLayout({
       </section>
 
       <main className="auth-layout__panel">
-        <div className="auth-layout__form">{children}</div>
+        <div className="auth-layout__form">
+          <SiteBanner />
+          {children}
+        </div>
         <p className="auth-layout__legal">
           <Link to="/about">About</Link> · <Link to="/terms">Terms</Link> ·{' '}
           <Link to="/privacy">Privacy</Link>

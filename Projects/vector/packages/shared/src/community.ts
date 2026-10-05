@@ -104,7 +104,7 @@ export const forumPostingSchema = z.discriminatedUnion('allowed', [
   z.object({ allowed: z.literal(true), newPoster: z.boolean() }),
   z.object({
     allowed: z.literal(false),
-    reason: z.enum(['signedOut', 'unverified', 'suspended', 'locked', 'adminOnly']),
+    reason: z.enum(['signedOut', 'unverified', 'suspended', 'locked', 'adminOnly', 'readOnly']),
     /** Suspended until then (null: for good). */
     until: z.iso.datetime().nullable().optional(),
   }),

@@ -220,3 +220,14 @@
     animation: none;
   }
 }
+
+.auth-layout__form > .site-notice {
+  margin-bottom: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgba(57, 135, 229, 0.35);
+  border-radius: var(--radius-sm);
+}
+
+.auth-layout__form > .site-notice[data-tone='warning'] {
+  border-color: rgba(255, 181, 71, 0.4);
+}

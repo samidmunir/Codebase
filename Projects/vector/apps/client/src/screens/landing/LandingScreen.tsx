@@ -6,6 +6,7 @@ import { LiveScope, type DemoTraffic } from '../../demo/LiveScope';
 import { shortAirport } from '../../scope/data-block';
 import type { ScopeSession } from '../../sim/scope-session';
 import { usePublicPageMeta } from '../../site/page-meta';
+import { useSiteStatus } from '../../site/site-status';
 import { LatestNews } from '../news/LatestNews';
 import { AIRSPACE_PITCH } from '../airspaces/airspace-pitch';
 import { useParallax, useReveal } from './landing-motion';
@@ -60,6 +61,7 @@ export function LandingScreen() {
   usePublicPageMeta('/');
   const auth = useAuth();
   const signedIn = auth.status === 'signedIn';
+  const { registrationOpen } = useSiteStatus();
   const hero = useRef<HTMLElement>(null);
   const page = useReveal<HTMLDivElement>();
   const [session, setSession] = useState<ScopeSession | undefined>(undefined);
@@ -97,6 +99,10 @@ export function LandingScreen() {
               {signedIn ? (
                 <Link to="/play" className="site-button site-button--primary site-button--large">
                   Play
+                </Link>
+              ) : !registrationOpen ? (
+                <Link to="/login" className="site-button site-button--primary site-button--large">
+                  Sign in
                 </Link>
               ) : (
                 <>
@@ -189,7 +195,7 @@ export function LandingScreen() {
         <LatestNews />
       </div>
 
-      {!signedIn && (
+      {!signedIn && registrationOpen && (
         <section className="landing-cta" data-reveal>
           <h2>Your scope is ready.</h2>
           <p>Create an account, pick an airspace, and take the frequency.</p>

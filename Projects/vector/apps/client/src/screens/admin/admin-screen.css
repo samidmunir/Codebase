@@ -1111,3 +1111,41 @@ a.admin-user-link:hover .admin-user-link__name {
   font-weight: 500;
   text-decoration: none;
 }
+
+/* ---- Site switches -------------------------------------------------------------------- */
+
+.admin-site,
+.admin-switch-card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-site__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  align-items: start;
+  gap: var(--space-3);
+}
+
+.admin-site__field {
+  display: grid;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.admin-site__field textarea {
+  font: inherit;
+  resize: vertical;
+}
+
+.admin-site__preview {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}
+
+.admin-switch-card__footer {
+  align-items: center;
+  justify-content: space-between;
+}

@@ -16,6 +16,8 @@ import { emailTokensRepository } from './email/email-tokens-repository';
 import { logMailer, type Mailer } from './email/mailer';
 import type { Database } from './platform/database';
 import { emailRoutes } from './routes/email';
+import { siteRoutes } from './routes/site';
+import { RegistrationClosedError, siteSettingsRepository } from './site/site-settings-repository';
 import { accountRoutes } from './routes/account';
 import { adminRoutes } from './routes/admin';
 import { forumRepository } from './forum/forum-repository';
@@ -130,6 +132,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           },
         });
         app.addHook('onClose', () => app.housekeeping?.stop());
+        const site = siteSettingsRepository(db, audit);
         const auth = authService(users, signIns, authConfig);
         const authenticate = authenticator(authConfig.jwtSecret, users);
         await api.register(authRoutes, {
@@ -140,7 +143,12 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           signInRateLimit,
           onRegistered: sendVerification,
           signIns,
+          checkRegistrationOpen: async () => {
+            const { registration } = await site.settings();
+            if (!registration.open) throw new RegistrationClosedError(registration.message);
+          },
         });
+        await api.register(siteRoutes, { site, authenticate });
         await api.register(emailRoutes, { emails, authenticate, rateLimit: signInRateLimit });
         await api.register(settingsRoutes, { settings: settingsRepository(db), authenticate });
         await api.register(sessionsRoutes, {
@@ -160,7 +168,12 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         await api.register(newsRoutes, { news: newsRepository(db), audit, authenticate });
         const forum = forumRepository(db);
         await api.register(communityRoutes, {
-          forum: forumService({ forum, users, audit }),
+          forum: forumService({
+            forum,
+            users,
+            audit,
+            readOnly: async () => (await site.settings()).community,
+          }),
           content: forumAdminService({ admin: forumAdminRepository(db), forum, audit }),
           authenticate,
         });

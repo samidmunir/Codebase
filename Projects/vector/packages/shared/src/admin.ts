@@ -159,6 +159,7 @@ export const AUDIT_ACTIONS = [
   'user.sendVerification',
   'user.export',
   'airspace.update',
+  'site.update',
   'result.hide',
   'result.show',
   'result.reverify',

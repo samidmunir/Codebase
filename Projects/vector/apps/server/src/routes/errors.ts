@@ -39,6 +39,7 @@ import {
   OpeningPostError,
 } from '../forum/forum-service';
 import { CategoryNotEmptyError, CategoryTakenError } from '../forum/forum-admin-repository';
+import { RegistrationClosedError } from '../site/site-settings-repository';
 import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
 
@@ -87,7 +88,15 @@ export function errorHandler(
     return reply.code(404).send(body('forum_not_found', error.message));
   if (error instanceof ForumPostingError)
     return reply
-      .code(error.reason === 'rateLimited' ? 429 : error.reason === 'links' ? 400 : 403)
+      .code(
+        error.reason === 'rateLimited'
+          ? 429
+          : error.reason === 'links'
+            ? 400
+            : error.reason === 'readOnly'
+              ? 503
+              : 403,
+      )
       .send(
         body(
           `forum_${error.reason}`,
@@ -107,6 +116,8 @@ export function errorHandler(
     return reply
       .code(409)
       .send(body('category_not_empty', error.message, { moveTo: error.message }));
+  if (error instanceof RegistrationClosedError)
+    return reply.code(403).send(body('registration_closed', error.message));
   if (error instanceof InvalidEmailLinkError)
     return reply.code(400).send(body('invalid_link', error.message));
   if (error instanceof EmailCooldownError)

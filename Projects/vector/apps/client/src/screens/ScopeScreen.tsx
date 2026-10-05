@@ -38,6 +38,7 @@ import { useLiveWeather } from './scope/use-live-weather';
 import { TrafficPanel } from './scope/TrafficPanel';
 import { formatPosition } from './scope/format';
 import { usePageMeta } from '../site/page-meta';
+import { SiteBanner } from '../site/SiteBanner';
 import './scope-screen.css';
 import './scope/command/command-panel.css';
 
@@ -315,6 +316,7 @@ function Scope({ session }: { session: ScopeSession }) {
       className="scope-screen"
       style={{ filter: `brightness(${settings['display.brightness'] / 100})` }}
     >
+      <SiteBanner floating />
       <Basemap
         ref={basemapRef}
         enabled={settings['map.basemap']}

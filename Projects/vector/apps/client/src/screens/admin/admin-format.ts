@@ -15,6 +15,7 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'user.sendVerification': 'Sent a verification link',
   'user.export': 'Exported users',
   'user.sessionDelete': 'Deleted a saved session',
+  'site.update': 'Changed a site switch',
   'airspace.update': 'Changed airspace',
   'result.hide': 'Hid a session result',
   'result.show': 'Showed a session result',
@@ -38,13 +39,19 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
 
 export const auditActionLabel = (action: AuditEntry['action']) => ACTIONS[action];
 
-const describeChange = (key: string, value: unknown): string => {
+const describeChange = (key: string, value: unknown, action?: AuditEntry['action']): string => {
   if (key === 'password') return 'new password';
   if (key === 'disabled') return value ? 'disabled' : 're-enabled';
+  if (key === 'enabled' && action === 'site.update')
+    return value ? 'banner shown' : 'banner hidden';
   if (key === 'enabled') return value ? 'opened' : 'closed';
   if (key === 'published') return value ? 'published' : 'unpublished';
   if (key === 'pinned') return value ? 'pinned' : 'unpinned';
   if (key === 'device') return String(value);
+  if (key === 'open') return value ? 'registration open' : 'registration closed';
+  if (key === 'readOnly') return value ? 'community read-only' : 'community open';
+  if (key === 'tone') return `${String(value)} tone`;
+  if (key === 'message') return value ? `“${String(value)}”` : 'no message';
   if (key === 'before') return 'previous text kept';
   if (key === 'threadsMoved') return `${String(value)} thread${value === 1 ? '' : 's'} moved`;
   if (key === 'to') return `to ${String(value)}`;
@@ -88,7 +95,7 @@ const describeChange = (key: string, value: unknown): string => {
 /** A one-line summary of what an audit entry changed. */
 export function auditDetails(entry: AuditEntry): string {
   return Object.entries(entry.details)
-    .map(([key, value]) => describeChange(key, value))
+    .map(([key, value]) => describeChange(key, value, entry.action))
     .join(' · ');
 }
 
