@@ -202,24 +202,32 @@ itself.
 
 ## 6. Community
 
-Built into Vector.
+Built into Vector, at `/community`.
 
-- **Structure:** categories (General, Airspaces, Techniques, Bug reports, Feature
-  requests, Announcements, which only admins post in), threads and replies.
-- **Posts:** Markdown, rendered safely (no raw HTML; links get `rel="nofollow
-ugc"`), editable by the author for 24 hours (with an "edited" mark), and quotable.
-  Threads can link a session overview, which shows as a card.
-- **Engagement:** a "useful" reaction, view and reply counts, "new since your last
-  visit", and following a thread (notifications on the site; email digests later).
-- **Safety:** posting needs a verified email; new accounts are rate-limited (a few
-  posts an hour, links limited until they've posted a few times). Anyone signed in
-  can report a post with a reason.
-- **Moderation (admin):** a reports queue; hide or delete posts; lock, pin, move or
-  delete threads; suspend a user from posting for a time or for good. All audited.
+- **Structure:** categories (Announcements, where only admins start threads; General,
+  Airspaces, Techniques, Bug reports, Feature requests), threads and replies. Thread
+  addresses are `/community/t/<id>/<slug>`; the slug is only for reading.
+- **Posts:** Markdown rendered with marked and DOMPurify, with raw HTML shown as text
+  and links to other sites given `rel="nofollow ugc"`. Authors can edit for 24 hours
+  (marked "edited"); posts can be quoted into a reply. A thread can share one of the
+  author's own session results, shown as a card.
+- **Engagement:** a "useful" mark (not on your own posts), view and reply counts, "New"
+  on threads with posts since you last read them (or new threads you haven't opened,
+  for 3 days), and following: you follow threads you start or reply to, and the
+  header's Community link shows how many followed threads have new posts. Email
+  digests later.
+- **Safety:** posting needs a verified email and an account that isn't suspended.
+  Accounts under 3 days old can post 5 times an hour (others 20); links to other
+  sites unlock after a pilot's first 3 posts. Anyone signed in can report a post.
+- **Moderation (admin):** a reports queue in Admin → Community (dismiss, hide, delete);
+  on a thread, hide, show or delete posts and pin, lock, move or delete the thread; on
+  a user's page, suspend them from posting for 1, 7 or 30 days or for good. All in the
+  audit log.
+- **Deleted accounts:** their posts stay, shown as by a deleted pilot.
 
-Tables: `forum_categories`, `forum_threads`, `forum_posts`, `forum_reactions`,
-`forum_reports`, `forum_follows`, `forum_reads`, and `posting_suspended_until` on
-users.
+Tables: `forum_categories` (seeded by the migration), `forum_threads`, `forum_posts`,
+`forum_reactions`, `forum_reports`, `forum_follows`, `forum_reads`, and
+`posting_suspended_until` on users ('infinity' for good).
 
 ---
 
