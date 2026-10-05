@@ -16,7 +16,7 @@ function grantAdmin(email: string): void {
 async function signIn(page: Page, email: string): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill('correct horse battery');
+  await page.getByLabel('Password', { exact: true }).fill('correct horse battery');
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(accountMenu(page)).toBeVisible();
 }
@@ -47,7 +47,7 @@ test('an admin manages users and airspaces, and every change is logged', async (
   await form.getByLabel('Display name').fill('Night Shift');
   await form.getByLabel('Handle').fill(`night_${Date.now().toString(36)}`);
   await form.getByLabel('Email').fill(created);
-  await form.getByLabel('Password').fill('a long enough password');
+  await form.getByLabel('Password', { exact: true }).fill('a long enough password');
   await form.getByRole('button', { name: 'Create user' }).click();
 
   const panel = page.getByRole('complementary', { name: `Manage ${created}` });

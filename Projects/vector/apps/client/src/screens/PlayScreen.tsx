@@ -8,7 +8,6 @@ import { AIRSPACE_PITCH } from './airspaces/airspace-pitch';
 import { SavedSessions } from './SavedSessions';
 import { LatestNews } from './news/LatestNews';
 import { usePageMeta } from '../site/page-meta';
-import './auth-screen.css';
 import './home-screen.css';
 
 /** The signed-in hub: choose an airspace, or resume a saved session. */

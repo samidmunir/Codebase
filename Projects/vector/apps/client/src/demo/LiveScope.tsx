@@ -50,6 +50,8 @@ async function warmUp(session: ScopeSession, minutes: number, cancelled: () => b
 const LOAD_DELAY_MS = 250;
 
 const noop = () => undefined;
+/** Numbers each demo session, to give each its own scope. */
+let sessionCount = 0;
 const NO_LEADERS = new Map();
 
 /**
@@ -74,7 +76,12 @@ export function LiveScope({
 }) {
   const { arrivalsPerHour, departuresPerHour, transitsPerHour } = traffic;
   const settings = useUserSettings();
-  const [session, setSession] = useState<ScopeSession | undefined>(undefined);
+  // The session, and the airspace it's for: when the airspace changes (the same
+  // LiveScope moving from one page to the next), the old one stops showing at once.
+  const [running, setRunning] = useState<
+    { airspaceId: string; session: ScopeSession; key: number } | undefined
+  >(undefined);
+  const session = running?.airspaceId === airspaceId ? running.session : undefined;
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -100,7 +107,8 @@ export function LiveScope({
           if (warmUpMinutes > 0) await warmUp(demo, warmUpMinutes, () => cancelled);
           if (cancelled) return;
           demo.setSpeed(DEMO_SPEED);
-          setSession(demo);
+          sessionCount += 1;
+          setRunning({ airspaceId, session: demo, key: sessionCount });
         })
         .catch(noop);
     }, LOAD_DELAY_MS);
@@ -141,7 +149,9 @@ export function LiveScope({
   return (
     <div className="live-scope" ref={container} role="img" aria-label={label}>
       {session && (
+        // A new session gets a new scope, so its map and camera fit its airspace.
         <RadarScope
+          key={running?.key}
           session={session}
           settings={settings}
           selectedId={undefined}

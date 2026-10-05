@@ -51,3 +51,43 @@ test('registers with a handle, edits the profile, and signs out from the menu', 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('banner').getByRole('link', { name: 'Sign in' })).toBeVisible();
 });
+
+test('the sign-in pages help: tabs keep where you were going, and passwords can be checked', async ({
+  page,
+}) => {
+  await page.goto('/login?next=%2Frecords');
+  await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+  // A live session runs beside the form.
+  await expect(page.getByRole('img', { name: /live Vector session in Chicago/ })).toBeVisible();
+  await page
+    .getByRole('navigation', { name: 'Account' })
+    .getByRole('link', { name: 'Create account' })
+    .click();
+  await expect(page).toHaveURL(/\/register\?next=%2Frecords$/);
+
+  const password = page.getByLabel('Password', { exact: true });
+  await password.fill('abc');
+  await expect(page.getByText('5 more characters')).toBeVisible();
+  await password.fill('Correct horse battery 9');
+  await expect(page.getByText('Strong')).toBeVisible();
+  await expect(password).toHaveAttribute('type', 'password');
+  await page.getByRole('button', { name: 'Show password' }).click();
+  await expect(password).toHaveAttribute('type', 'text');
+  await page.getByRole('button', { name: 'Hide password' }).click();
+  await expect(password).toHaveAttribute('type', 'password');
+
+  // How you'll appear, as you type.
+  await page.getByLabel('Display name').fill('Night Shift');
+  await page.getByLabel('Handle').fill('night_owl');
+  const preview = page.getByLabel('How you’ll appear');
+  await expect(preview).toContainText('Night Shift');
+  await expect(preview).toContainText('@night_owl');
+  await expect(preview).toContainText('NS');
+
+  await page
+    .getByRole('navigation', { name: 'Account' })
+    .getByRole('link', { name: 'Sign in' })
+    .click();
+  await page.getByRole('link', { name: 'Forgot password?' }).click();
+  await expect(page.getByRole('heading', { name: 'Forgot your password?' })).toBeVisible();
+});

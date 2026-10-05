@@ -12,8 +12,9 @@ import {
 } from '../../api/email-api';
 import { auth, useAuth } from '../../auth/auth-store';
 import { usePageMeta } from '../../site/page-meta';
+import { AuthLayout } from '../../components/auth/AuthLayout';
+import { PasswordField } from '../../components/auth/PasswordField';
 import '../auth-screen.css';
-import '../home-screen.css';
 
 // The pages emailed links open, and asking for a password reset. Tokens are in the
 // URL fragment: read once, then removed from the address bar.
@@ -23,17 +24,10 @@ const message = (caught: unknown) => (caught instanceof ApiRequestError ? caught
 
 function FocusCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <main className="shell">
-      <div className="scope-backdrop" aria-hidden="true">
-        <div className="scope-backdrop__rings" />
-        <div className="scope-backdrop__sweep" />
-      </div>
-      <section className="hero auth-card">
-        <p className="hero__eyebrow">Vector</p>
-        <h1 className="auth-card__title">{title}</h1>
-        {children}
-      </section>
-    </main>
+    <AuthLayout>
+      <h1 className="auth-card__title">{title}</h1>
+      <div className="auth-card__body">{children}</div>
+    </AuthLayout>
   );
 }
 
@@ -76,7 +70,7 @@ export function ForgotPasswordScreen() {
     <FocusCard title={sent ? 'Check your email' : 'Forgot your password?'}>
       {sent ? (
         <>
-          <p className="hero__subtitle">
+          <p className="auth-card__subtitle">
             If an account uses <strong>{email}</strong>, we’ve sent it a link to choose a new
             password. The link works for an hour.
           </p>
@@ -86,7 +80,9 @@ export function ForgotPasswordScreen() {
         </>
       ) : (
         <>
-          <p className="hero__subtitle">Enter your email and we’ll send you a link to reset it.</p>
+          <p className="auth-card__subtitle">
+            Enter your email and we’ll send you a link to reset it.
+          </p>
           <form className="auth-form" onSubmit={(event) => void submit(event)} noValidate>
             <label className="auth-field">
               <span>Email</span>
@@ -146,7 +142,9 @@ export function ResetPasswordScreen() {
   if (state === 'done')
     return (
       <FocusCard title="Password changed">
-        <p className="hero__subtitle">You’ve been signed out everywhere. Sign in with it now.</p>
+        <p className="auth-card__subtitle">
+          You’ve been signed out everywhere. Sign in with it now.
+        </p>
         <Link to="/login" className="auth-form__submit auth-card__action">
           Sign in
         </Link>
@@ -156,7 +154,9 @@ export function ResetPasswordScreen() {
   if (!token)
     return (
       <FocusCard title="This link is incomplete">
-        <p className="hero__subtitle">Copy the whole link from the email, or ask for a new one.</p>
+        <p className="auth-card__subtitle">
+          Copy the whole link from the email, or ask for a new one.
+        </p>
         <p className="auth-card__switch">
           <Link to="/forgot-password">Send a new link</Link>
         </p>
@@ -165,20 +165,15 @@ export function ResetPasswordScreen() {
 
   return (
     <FocusCard title="Choose a new password">
-      <p className="hero__subtitle">It signs you out on every device.</p>
+      <p className="auth-card__subtitle">It signs you out on every device.</p>
       <form className="auth-form" onSubmit={(event) => void submit(event)} noValidate>
-        <label className="auth-field">
-          <span>New password</span>
-          <input
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-          <span className="auth-field__hint">At least {PASSWORD_MIN_LENGTH} characters</span>
-        </label>
+        <PasswordField
+          label="New password"
+          value={password}
+          onChange={setPassword}
+          autoComplete="new-password"
+          showStrength
+        />
         {error && (
           <p className="auth-form__error" role="alert">
             {error}{' '}
@@ -266,7 +261,7 @@ export function EmailLinkScreen({ kind }: { kind: LinkKind }) {
 
   return (
     <FocusCard title={result?.ok === false ? 'That didn’t work' : copy.title}>
-      <p className="hero__subtitle" role="status">
+      <p className="auth-card__subtitle" role="status">
         {!result ? copy.working : result.ok ? copy.done : result.error}
       </p>
       {result?.ok && kind === 'undo' && (

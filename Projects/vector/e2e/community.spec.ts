@@ -122,7 +122,7 @@ test('pilots report posts, and an admin hides them and locks the thread', async 
   });
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill('correct horse battery');
+  await page.getByLabel('Password', { exact: true }).fill('correct horse battery');
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(accountMenu(page)).toBeVisible();
   await openFromMenu(page, 'Admin');

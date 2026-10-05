@@ -11,7 +11,7 @@ export async function registerPilot(page: Page): Promise<string> {
   await page.getByLabel('Display name').fill('E2E Pilot');
   await page.getByLabel('Handle').fill(`e2e_${id}`.slice(0, 20));
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill('correct horse battery');
+  await page.getByLabel('Password', { exact: true }).fill('correct horse battery');
   await page.getByRole('button', { name: /create account/i }).click();
   await expect(page).toHaveURL(/\/play$/);
   await expect(accountMenu(page)).toBeVisible();
