@@ -43,7 +43,29 @@
   --radius-sm: 6px;
   --radius-md: 12px;
 
+  /*
+   * Page width: site pages span most of the screen (about 80%), with a gutter
+   * that keeps them off the edges on narrow screens. Use --page-inline as a width.
+   */
+  --page-width: min(80vw, 2000px);
+  --page-gutter: 24px;
+  --page-inline: min(var(--page-width), calc(100% - 2 * var(--page-gutter)));
+  /* Long text stays readable inside the wide page. */
+  --measure: 78ch;
+
   /* Motion */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --duration-fast: 150ms;
+}
+
+@media (max-width: 1000px) {
+  :root {
+    --page-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --page-gutter: 16px;
+  }
 }

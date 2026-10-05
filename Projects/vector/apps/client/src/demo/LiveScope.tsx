@@ -10,6 +10,42 @@ import './live-scope.css';
 /** How fast the demo runs, and how often its controller looks at the traffic (real ms). */
 const DEMO_SPEED = 2;
 const CONTROLLER_MS = 1_500;
+/** While warming up, the controller looks at the traffic this often (sim seconds). */
+const WARM_UP_CONTROLLER_SEC = 10;
+/** Ticks run between yields to the page while warming up. */
+const WARM_UP_CHUNK = 60;
+
+export interface DemoTraffic {
+  arrivalsPerHour: number;
+  departuresPerHour: number;
+  transitsPerHour: number;
+}
+
+const DEFAULT_TRAFFIC: DemoTraffic = {
+  arrivalsPerHour: 14,
+  departuresPerHour: 10,
+  transitsPerHour: 6,
+};
+
+/**
+ * Runs the session forward this far before showing it, with the controller
+ * working, so the scope opens on traffic already in the air. Yields to the page
+ * between chunks so it never freezes.
+ */
+async function warmUp(session: ScopeSession, minutes: number, cancelled: () => boolean) {
+  const tickSec = session.engine.config.tickSeconds;
+  const ticks = Math.round((minutes * 60) / tickSec);
+  const controllerEvery = Math.max(1, Math.round(WARM_UP_CONTROLLER_SEC / tickSec));
+  for (let done = 0; done < ticks && !cancelled();) {
+    const end = Math.min(ticks, done + WARM_UP_CHUNK);
+    for (; done < end; done += 1) {
+      session.engine.step();
+      if (done % controllerEvery === 0) runDemoController(session);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  session.frame(0);
+}
 /** Wait this long after the page appears before loading the airspace. */
 const LOAD_DELAY_MS = 250;
 
@@ -24,10 +60,19 @@ const NO_LEADERS = new Map();
 export function LiveScope({
   airspaceId = 'new-york',
   label,
+  traffic = DEFAULT_TRAFFIC,
+  warmUpMinutes = 0,
+  onSession,
 }: {
   airspaceId?: string;
   label: string;
+  traffic?: DemoTraffic;
+  /** Start this far into the session, so it opens busy. */
+  warmUpMinutes?: number;
+  /** Called once the session is running (for a live readout of it). */
+  onSession?: (session: ScopeSession) => void;
 }) {
+  const { arrivalsPerHour, departuresPerHour, transitsPerHour } = traffic;
   const settings = useUserSettings();
   const [session, setSession] = useState<ScopeSession | undefined>(undefined);
   const container = useRef<HTMLDivElement>(null);
@@ -38,19 +83,22 @@ export function LiveScope({
     let cancelled = false;
     const timer = setTimeout(() => {
       entry.load!()
-        .then((pack) => {
+        .then(async (pack) => {
           if (cancelled) return;
           const demo = new ScopeSession(pack, {
             kind: 'new',
             settings: {
               ...defaultSettings('session'),
               'weather.windMode': 'random',
-              'traffic.arrivalRatePerHour': 14,
-              'traffic.departureRatePerHour': 10,
-              'traffic.transitRatePerHour': 6,
+              'traffic.arrivalRatePerHour': arrivalsPerHour,
+              'traffic.departureRatePerHour': departuresPerHour,
+              'traffic.transitRatePerHour': transitsPerHour,
+              'traffic.maxDepartureQueue': 20,
               'scoring.timing': false,
             },
           });
+          if (warmUpMinutes > 0) await warmUp(demo, warmUpMinutes, () => cancelled);
+          if (cancelled) return;
           demo.setSpeed(DEMO_SPEED);
           setSession(demo);
         })
@@ -60,7 +108,11 @@ export function LiveScope({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [airspaceId]);
+  }, [airspaceId, arrivalsPerHour, departuresPerHour, transitsPerHour, warmUpMinutes]);
+
+  useEffect(() => {
+    if (session) onSession?.(session);
+  }, [session, onSession]);
 
   // The stand-in controller, and pausing while nobody can see it.
   useEffect(() => {

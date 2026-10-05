@@ -1,6 +1,6 @@
 .news-page,
 .news-post {
-  width: min(760px, 100%);
+  width: var(--page-inline);
 }
 
 .news-muted {
@@ -9,6 +9,7 @@
 
 .news-list {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
   gap: var(--space-3);
   margin: 0;
   padding: 0;
@@ -72,7 +73,12 @@
 }
 
 .news-post__body {
+  max-width: var(--measure);
   margin-top: var(--space-4);
+}
+
+.news-post__summary {
+  max-width: var(--measure);
 }
 
 .latest-news__header {

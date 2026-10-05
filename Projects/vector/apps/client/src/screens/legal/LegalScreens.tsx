@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { usePublicPageMeta } from '../../site/page-meta';
 import './legal.css';
@@ -17,11 +17,45 @@ function Page({
   updated?: string;
   children: ReactNode;
 }) {
+  const body = useRef<HTMLDivElement>(null);
+  const [sections, setSections] = useState<{ id: string; title: string }[]>([]);
+
+  // The page's own headings, for the list beside it.
+  useEffect(() => {
+    const headings = [...(body.current?.querySelectorAll('h2') ?? [])];
+    for (const heading of headings)
+      heading.id ||= (heading.textContent ?? '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    setSections(headings.map((heading) => ({ id: heading.id, title: heading.textContent ?? '' })));
+  }, []);
+
   return (
     <article className="site-page legal-page">
       <h1>{title}</h1>
       {updated && <p className="legal-updated">Last updated {updated}</p>}
-      {children}
+      <div className="legal-layout">
+        <div className="legal-body" ref={body}>
+          {children}
+        </div>
+        {sections.length > 0 && (
+          <nav className="legal-contents" aria-label="On this page">
+            <p>On this page</p>
+            <ol>
+              {sections.map((section) => (
+                <li key={section.id}>
+                  <a href={`#${section.id}`}>{section.title}</a>
+                </li>
+              ))}
+            </ol>
+            <p className="legal-contents__others">
+              <Link to="/about">About</Link> · <Link to="/terms">Terms</Link> ·{' '}
+              <Link to="/privacy">Privacy</Link>
+            </p>
+          </nav>
+        )}
+      </div>
     </article>
   );
 }

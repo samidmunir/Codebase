@@ -1,9 +1,9 @@
 .forum-page {
-  width: min(1000px, 100%);
+  width: var(--page-inline);
 }
 
 .forum-page--narrow {
-  width: min(820px, 100%);
+  width: var(--page-inline);
 }
 
 .forum-muted {

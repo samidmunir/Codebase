@@ -2,7 +2,7 @@
   display: grid;
   align-content: start;
   gap: var(--space-4);
-  width: min(1040px, 100%);
+  width: var(--page-inline);
 }
 
 .pilot-muted {

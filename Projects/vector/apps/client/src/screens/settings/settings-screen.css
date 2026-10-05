@@ -9,7 +9,7 @@
 
 .settings-screen__bar,
 .settings-screen__panel {
-  width: min(960px, 100%);
+  width: var(--page-inline);
   margin: 0 auto;
 }
 
