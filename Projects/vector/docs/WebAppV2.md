@@ -80,18 +80,26 @@ changed at most once every 30 days; the old one stays reserved for 30 days.
 
 ### 3.2 Email
 
-With Resend as the provider (`RESEND_API_KEY` in `apps/server/.env`, never
-committed):
+With Resend as the provider (`RESEND_API_KEY` and `EMAIL_FROM` in `apps/server/.env`,
+never committed). `EMAIL_DELIVERY` picks where emails go: `resend`, `log` (the server
+log, the default outside production) or `outbox` (a file each, for end-to-end tests).
 
-- **Verification.** New accounts get a link (valid 24 hours). Unverified accounts
-  can play and save but can't post in the forum or appear on leaderboards.
+- **Verification.** New accounts get a link (valid 24 hours); unverified pilots see a
+  banner with "Send it again". Unverified accounts can play and save but don't appear
+  on the records (and won't post in the forum). Existing accounts start unverified.
+  Admins can mark an email verified, and choose whether a new account is sent a link.
 - **Password reset.** "Forgot password" sends a link (valid 1 hour, single use).
-  Resetting ends every sign-in.
-- **Email change.** Sent to the new address; takes effect when confirmed.
-- Tokens are random 256-bit values; only their SHA-256 hash is stored, as with
-  refresh tokens. Requests are rate-limited and never reveal whether an email has
-  an account.
-- In development and tests, emails go to the server log instead of Resend.
+  Resetting ends every sign-in, and verifies the address.
+- **Email change.** Needs the current password. The link goes to the new address and
+  the change happens when it's opened; the old address is then told, with a link
+  (valid 7 days) that moves the account back and signs it out everywhere. If the new
+  address already has an account, its owner is told instead; the requester sees the
+  same "we sent a link".
+- Tokens are random 256-bit values; only their SHA-256 hash is stored (`email_tokens`).
+  Links carry them in the URL fragment, which the client reads once and removes.
+  Requests are rate-limited, each kind of email goes at most once a minute per
+  account, emails are sent in the background, and nothing reveals whether an email
+  has an account.
 
 ### 3.3 Self-service
 
