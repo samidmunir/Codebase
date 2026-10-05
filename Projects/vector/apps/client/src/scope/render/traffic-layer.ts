@@ -1,0 +1,710 @@
+import type { TrackPoint } from '@vector/sim-core';
+import type { UserSettings } from '@vector/shared';
+import {
+  bearingTrue,
+  destinationPoint,
+  distanceNm,
+  magneticToTrue,
+  toRadians,
+  trueToMagnetic,
+  type LatLon,
+} from '@vector/sim-core';
+import { pixelsPerNm, project, type Camera, type ScreenPoint } from '../camera';
+import { dataBlockLines } from '../data-block';
+import type { RadarTarget } from '../radar-tracker';
+import type { Sweep } from '../radar-tracker';
+import type { RoutePreview } from '../route-preview';
+import { trafficCategory } from '../traffic-category';
+import { placeDataBlocks } from './label-placement';
+import { HEAT_AGE_RANGE_SEC, heatColor, heatFade, heatValue } from './heat-scale';
+import { withAlpha, type ScopePalette } from './palette';
+
+/** Pixels per leader line length step (STARS uses discrete lengths). */
+const LEADER_STEP_PX = 12;
+const SWEEP_WEDGE_RAD = (55 * Math.PI) / 180;
+
+export interface TrafficFrame {
+  camera: Camera;
+  settings: UserSettings;
+  palette: ScopePalette;
+  targets: readonly RadarTarget[];
+  /** Controller the player works as; their aircraft are drawn bright. */
+  playerId: string;
+  /** The airspace's airports, to tell arrivals, departures and overflights apart. */
+  airports: ReadonlySet<string>;
+  /** Each aircraft's recorded path since it entered the airspace, for heat trails. */
+  trackOf: (aircraftId: string) => readonly Readonly<TrackPoint>[];
+  /** Sim seconds per tick, and the current sim time (for trail ages). */
+  tickSeconds: number;
+  simTimeSec: number;
+  /** Each drawn radar's beam: its antenna, reach and position in its turn. */
+  sweeps: readonly Sweep[];
+  /** Alternates data block line 2. */
+  timeShare: 0 | 1;
+  hoveredId: string | undefined;
+  selectedId: string | undefined;
+  /** Data block positions the player chose (0 = north, clockwise in 45° steps). Default northeast. */
+  leaderDirections: ReadonlyMap<string, LeaderDirection>;
+  /** Automatic data block positions, kept between frames (updated in place). */
+  autoLeaderDirections: Map<string, LeaderDirection>;
+  /** Preview of the instruction being composed for the selected aircraft. */
+  preview: InstructionPreview | undefined;
+  /** Fix highlighted on the map (hovered in the direct-to list). */
+  highlightFix?: { ident: string; position: LatLon } | undefined;
+  /** The route the selected aircraft is flying. */
+  route: RoutePreview | undefined;
+  /** Conflict Alert state per aircraft, and the conflicting pairs. */
+  conflicts: readonly {
+    aircraftIds: readonly [string, string];
+    kind: 'predicted' | 'loss';
+    lateralNm: number;
+    verticalFt: number;
+    /** Wake turbulence spacing on final, rather than radar separation. */
+    wake?: boolean | undefined;
+    requiredLateralNm?: number | undefined;
+  }[];
+  /** Real time in ms, for flashing alerts. */
+  nowMs: number;
+  measure: { from: LatLon; to: LatLon } | undefined;
+  magneticVariationDeg: number;
+}
+
+export type LeaderDirection = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export const DEFAULT_LEADER_DIRECTION: LeaderDirection = 1;
+
+export interface InstructionPreview {
+  /** Magnetic heading being assigned. */
+  headingDeg?: number;
+  /** Fix being assigned direct. */
+  directTo?: LatLon;
+}
+
+/** Length of the heading vector beyond the target symbol. */
+const HEADING_VECTOR_PX = 16;
+/** Heading preview line length. */
+const PREVIEW_NM = 10;
+
+export interface TargetHitArea {
+  id: string;
+  center: ScreenPoint;
+  /** Data block rectangle. */
+  block: { x: number; y: number; width: number; height: number };
+}
+
+/** Draws everything that changes every frame. Returns hit areas for pointer interaction. */
+export function drawTrafficLayer(
+  ctx: CanvasRenderingContext2D,
+  frame: TrafficFrame,
+): TargetHitArea[] {
+  const { camera, settings, palette } = frame;
+  ctx.clearRect(0, 0, camera.width, camera.height);
+
+  if (settings['display.sweepEffect'])
+    for (const sweep of frame.sweeps) drawSweep(ctx, frame, sweep);
+  if (settings['display.heatTrail']) drawHeatTrails(ctx, frame);
+  if (frame.route) drawRoute(ctx, frame, frame.route);
+
+  // Conflict Alert state per aircraft: an actual loss outranks a prediction.
+  const alertOf = new Map<string, 'predicted' | 'loss'>();
+  // Aircraft whose only alerts are for wake spacing show 'WK' instead of 'CA'.
+  const radarAlert = new Set<string>();
+  for (const conflict of frame.conflicts) {
+    for (const id of conflict.aircraftIds) {
+      if (alertOf.get(id) !== 'loss') alertOf.set(id, conflict.kind);
+      if (!conflict.wake) radarAlert.add(id);
+    }
+  }
+  const flashOn = Math.floor(frame.nowMs / 400) % 2 === 0;
+  drawConflictLines(ctx, frame);
+
+  const fontSize = settings['display.dataBlockFontSize'];
+  const lineHeight = Math.round(fontSize * 1.25);
+  const leaderLength = settings['display.leaderLineLength'] * LEADER_STEP_PX;
+  const trailLength = settings['display.historyTrailLength'];
+  ctx.font = `500 ${fontSize}px "JetBrains Mono", monospace`;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+
+  const hits: TargetHitArea[] = [];
+  // Other controllers' traffic first, then the player's, then the selected aircraft on top.
+  const rank = (target: RadarTarget) =>
+    target.id === frame.selectedId ? 2 : target.owner === frame.playerId ? 1 : 0;
+  const ordered = [...frame.targets].sort((a, b) => rank(a) - rank(b));
+
+  // Data block lines and positions, then leader directions that keep blocks apart.
+  const blocks = new Map(
+    ordered.map((target) => {
+      const lines = dataBlockLines(
+        target,
+        frame.timeShare,
+        settings['display.dataBlockStyle'],
+        settings['display.dataBlockSpeed'],
+      );
+      return [
+        target.id,
+        {
+          lines,
+          width: Math.max(...lines.map((text) => ctx.measureText(text).width)),
+          height: lineHeight * lines.length,
+        },
+      ];
+    }),
+  );
+  const directions = settings['display.autoPlaceDataBlocks']
+    ? placeDataBlocks(
+        ordered.map((target) => {
+          const { x, y } = project(camera, target.position);
+          const { width, height } = blocks.get(target.id)!;
+          return {
+            id: target.id,
+            x,
+            y,
+            width,
+            height,
+            priority: rank(target),
+            fixed: frame.leaderDirections.get(target.id),
+          };
+        }),
+        leaderLength,
+        frame.autoLeaderDirections,
+      )
+    : frame.leaderDirections;
+
+  for (const target of ordered) {
+    const owned = target.owner === frame.playerId;
+    const hovered = target.id === frame.hoveredId;
+    const selected = target.id === frame.selectedId;
+    const alert = alertOf.get(target.id);
+    const category = palette.traffic[trafficCategory(target, frame.airports)];
+    const color = alert === 'loss' ? palette.alert : owned ? category.target : palette.unowned;
+    const position = project(camera, target.position);
+    // Cleared for the ILS: faded, unless it needs attention or is being looked at.
+    const dim =
+      settings['display.dimClearedApproaches'] &&
+      target.approachCleared &&
+      !selected &&
+      !hovered &&
+      !alert
+        ? settings['display.clearedApproachOpacity'] / 100
+        : 1;
+    ctx.globalAlpha = dim;
+
+    // History trail, fading with age.
+    for (let i = 0; i < Math.min(trailLength, target.history.length); i++) {
+      const point = project(camera, target.history[i]!);
+      ctx.fillStyle = withAlpha(color, 0.55 * (1 - i / (trailLength + 1)));
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, owned ? 2 : 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Heading vector: a short line in the direction the aircraft is pointing (true, north-up scope).
+    if (settings['display.headingVector']) {
+      const heading = toRadians(magneticToTrue(target.headingDeg, frame.magneticVariationDeg));
+      const [dx, dy] = [Math.sin(heading), -Math.cos(heading)];
+      ctx.strokeStyle = withAlpha(color, owned ? 0.9 : 0.55);
+      ctx.lineWidth = owned ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(position.x + dx * 6, position.y + dy * 6);
+      ctx.lineTo(
+        position.x + dx * (6 + HEADING_VECTOR_PX),
+        position.y + dy * (6 + HEADING_VECTOR_PX),
+      );
+      ctx.stroke();
+    }
+
+    // Position symbol: '#' while coasting (no radar covers it), as on STARS.
+    ctx.save();
+    if (target.coasting) {
+      ctx.fillStyle = withAlpha(color, 0.8);
+      ctx.font = `700 ${fontSize + 1}px "JetBrains Mono", monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('#', position.x, position.y);
+    } else if (owned) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = hovered ? 18 : 10;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(position.x, position.y, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(position.x, position.y, 3.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    if (hovered || selected) {
+      ctx.strokeStyle = selected ? palette.hover : withAlpha(palette.hover, 0.6);
+      ctx.lineWidth = selected ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.arc(position.x, position.y, selected ? 11 : 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Leader line, then the data block on the chosen side.
+    const direction = directions.get(target.id) ?? DEFAULT_LEADER_DIRECTION;
+    const angle = -Math.PI / 2 + (direction * Math.PI) / 4;
+    const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
+    const lineEnd = {
+      x: position.x + cos * (leaderLength + 6),
+      y: position.y + sin * (leaderLength + 6),
+    };
+    if (leaderLength > 0) {
+      ctx.strokeStyle = withAlpha(color, owned ? 0.8 : 0.5);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(position.x + cos * 6, position.y + sin * 6);
+      ctx.lineTo(lineEnd.x, lineEnd.y);
+      ctx.stroke();
+    }
+
+    const { lines, width, height } = blocks.get(target.id)!;
+    const blockX =
+      cos > 0.3 ? lineEnd.x + 3 : cos < -0.3 ? lineEnd.x - 3 - width : lineEnd.x - width / 2;
+    const blockY = sin < -0.3 ? lineEnd.y - height : sin > 0.3 ? lineEnd.y : lineEnd.y - height / 2;
+
+    if (selected) {
+      ctx.fillStyle = 'rgba(6, 12, 16, 0.78)';
+      ctx.strokeStyle = withAlpha(palette.hover, 0.35);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(blockX - 5, blockY - 3, width + 10, height + 4, 4);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.save();
+    ctx.fillStyle = owned
+      ? hovered || selected
+        ? palette.hover
+        : category.text
+      : palette.unownedText;
+    if (owned) {
+      ctx.shadowColor = withAlpha(category.target, 0.5);
+      ctx.shadowBlur = 6;
+    }
+    lines.forEach((text, i) => {
+      // Type and destination (the expanded style's third line) are secondary: dim them.
+      ctx.globalAlpha = dim * (i === 2 ? 0.65 : 1);
+      ctx.fillText(text, blockX, blockY + i * lineHeight);
+    });
+    ctx.restore();
+
+    // Conflict Alert: 'CA' above the data block, flashing for an actual loss of separation.
+    if (alert && (alert === 'predicted' || flashOn)) {
+      ctx.save();
+      ctx.fillStyle = alert === 'loss' ? palette.alert : palette.caution;
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 8;
+      ctx.font = `700 ${fontSize}px "JetBrains Mono", monospace`;
+      ctx.fillText(radarAlert.has(target.id) ? 'CA' : 'WK', blockX, blockY - lineHeight);
+      ctx.restore();
+    }
+
+    ctx.globalAlpha = 1;
+    hits.push({ id: target.id, center: position, block: { x: blockX, y: blockY, width, height } });
+    if (selected && frame.preview) drawPreview(ctx, frame, target.position, frame.preview);
+  }
+
+  if (frame.highlightFix) {
+    const selected = frame.targets.find((t) => t.id === frame.selectedId);
+    drawHighlightedFix(ctx, frame, frame.highlightFix, selected?.position);
+  }
+  if (frame.measure) drawMeasure(ctx, frame);
+  return hits;
+}
+
+/** Period of the highlight ring's pulse. */
+const HIGHLIGHT_PULSE_MS = 1_200;
+
+/**
+ * A fix being considered for direct-to: a pulsing ring and crosshair with its
+ * name, and a line from the selected aircraft labeled with bearing and distance.
+ */
+function drawHighlightedFix(
+  ctx: CanvasRenderingContext2D,
+  frame: TrafficFrame,
+  fix: { ident: string; position: LatLon },
+  from: LatLon | undefined,
+): void {
+  const { camera, palette } = frame;
+  const point = project(camera, fix.position);
+  const pulse = (frame.nowMs % HIGHLIGHT_PULSE_MS) / HIGHLIGHT_PULSE_MS;
+  ctx.save();
+  ctx.strokeStyle = palette.measure;
+  ctx.fillStyle = palette.measure;
+  ctx.shadowColor = palette.measure;
+  ctx.shadowBlur = 10;
+
+  if (from) {
+    const start = project(camera, from);
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
+
+  // Expanding, fading ring, plus a steady ring and crosshair.
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 1 - pulse;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, 8 + pulse * 14, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+  ctx.stroke();
+  for (const [dx, dy] of [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ] as const) {
+    ctx.beginPath();
+    ctx.moveTo(point.x + dx * 10, point.y + dy * 10);
+    ctx.lineTo(point.x + dx * 15, point.y + dy * 15);
+    ctx.stroke();
+  }
+
+  ctx.font = '700 12px "JetBrains Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(fix.ident, point.x + 14, point.y - 8);
+  if (from) {
+    const bearing =
+      Math.round(trueToMagnetic(bearingTrue(from, fix.position), frame.magneticVariationDeg)) %
+        360 || 360;
+    ctx.font = '500 11px "JetBrains Mono", monospace';
+    ctx.textBaseline = 'top';
+    ctx.fillText(
+      `${String(bearing).padStart(3, '0')}° ${distanceNm(from, fix.position).toFixed(0)} NM`,
+      point.x + 14,
+      point.y - 6,
+    );
+  }
+  ctx.restore();
+}
+
+function drawRoute(ctx: CanvasRenderingContext2D, frame: TrafficFrame, route: RoutePreview): void {
+  const { camera } = frame;
+  // In the selected aircraft's own color, so the route reads as belonging to it.
+  const selected = frame.targets.find((target) => target.id === frame.selectedId);
+  const palette = {
+    route: selected
+      ? frame.palette.traffic[trafficCategory(selected, frame.airports)].target
+      : frame.palette.route,
+  };
+  const polyline = (points: readonly LatLon[]) => {
+    ctx.beginPath();
+    points.forEach((point, i) => {
+      const { x, y } = project(camera, point);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  };
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = palette.route;
+  ctx.shadowBlur = 6;
+
+  if (route.onward.length >= 2) {
+    ctx.strokeStyle = withAlpha(palette.route, 0.35);
+    ctx.lineWidth = 1.25;
+    ctx.setLineDash([3, 6]);
+    polyline(route.onward);
+  }
+  if (route.headingTail) {
+    ctx.strokeStyle = withAlpha(palette.route, 0.55);
+    ctx.lineWidth = 1.25;
+    ctx.setLineDash([8, 6]);
+    polyline([route.headingTail.from, route.headingTail.to]);
+  }
+  if (route.path.length >= 2) {
+    ctx.strokeStyle = withAlpha(palette.route, 0.8);
+    ctx.lineWidth = 1.75;
+    ctx.setLineDash([]);
+    polyline(route.path);
+  }
+  ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+
+  ctx.font = '600 11px "JetBrains Mono", monospace';
+  ctx.textBaseline = 'bottom';
+  ctx.textAlign = 'left';
+  for (const fix of route.fixes) {
+    const { x, y } = project(camera, fix.position);
+    ctx.fillStyle = palette.route;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 5);
+    ctx.lineTo(x + 5, y + 3);
+    ctx.lineTo(x - 5, y + 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillText(fix.ident, x + 7, y - 3);
+    if (fix.note) {
+      ctx.fillStyle = withAlpha(palette.route, 0.7);
+      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.fillText(fix.note, x + 7, y + 9);
+      ctx.font = '600 11px "JetBrains Mono", monospace';
+    }
+  }
+  ctx.restore();
+}
+
+function drawConflictLines(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
+  const { camera, palette } = frame;
+  const positions = new Map(frame.targets.map((target) => [target.id, target.position]));
+  for (const conflict of frame.conflicts) {
+    const a = positions.get(conflict.aircraftIds[0]);
+    const b = positions.get(conflict.aircraftIds[1]);
+    if (!a || !b) continue;
+    const pa = project(camera, a);
+    const pb = project(camera, b);
+    const color = conflict.kind === 'loss' ? palette.alert : palette.caution;
+    ctx.save();
+    ctx.strokeStyle = withAlpha(color, 0.75);
+    ctx.lineWidth = 1.25;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pb.x, pb.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = color;
+    ctx.font = '600 11px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // Lateral and vertical distance, e.g. '4.6 NM · 800 ft', or the wake spacing, 'WAKE 3.8/5 NM'.
+    const label = conflict.wake
+      ? `WAKE ${conflict.lateralNm.toFixed(1)}/${conflict.requiredLateralNm ?? '?'} NM`
+      : `${conflict.lateralNm.toFixed(1)} NM · ${(Math.round(conflict.verticalFt / 100) * 100).toLocaleString('en-US')} ft`;
+    ctx.fillText(label, (pa.x + pb.x) / 2, (pa.y + pb.y) / 2 - 10);
+    ctx.restore();
+  }
+}
+
+function drawPreview(
+  ctx: CanvasRenderingContext2D,
+  frame: TrafficFrame,
+  from: LatLon,
+  preview: InstructionPreview,
+): void {
+  const { camera, palette } = frame;
+  const start = project(camera, from);
+  const end =
+    preview.directTo ??
+    (preview.headingDeg !== undefined
+      ? destinationPoint(
+          from,
+          magneticToTrue(preview.headingDeg, frame.magneticVariationDeg),
+          PREVIEW_NM,
+        )
+      : undefined);
+  if (!end) return;
+  const target = project(camera, end);
+
+  ctx.save();
+  ctx.strokeStyle = palette.measure;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([7, 5]);
+  ctx.shadowColor = palette.measure;
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(start.x, start.y);
+  ctx.lineTo(target.x, target.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  if (preview.directTo) {
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, 7, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawSweep(ctx: CanvasRenderingContext2D, frame: TrafficFrame, sweep: Sweep): void {
+  const { camera, palette } = frame;
+  const center = project(camera, sweep.antenna);
+  const radius = sweep.radiusNm * pixelsPerNm(camera);
+  const angle = -Math.PI / 2 + sweep.progress * Math.PI * 2;
+  // The primary radar's beam is a little brighter than the others.
+  const strength = sweep.primary ? 1 : 0.6;
+
+  const gradient = ctx.createConicGradient(angle - SWEEP_WEDGE_RAD, center.x, center.y);
+  const wedge = SWEEP_WEDGE_RAD / (Math.PI * 2);
+  gradient.addColorStop(0, `rgba(${palette.sweep}, 0)`);
+  gradient.addColorStop(wedge * 0.999, `rgba(${palette.sweep}, ${0.1 * strength})`);
+  gradient.addColorStop(wedge, `rgba(${palette.sweep}, 0)`);
+  gradient.addColorStop(1, `rgba(${palette.sweep}, 0)`);
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = `rgba(${palette.sweep}, ${0.28 * strength})`;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(center.x, center.y);
+  ctx.lineTo(center.x + Math.cos(angle) * radius, center.y + Math.sin(angle) * radius);
+  ctx.stroke();
+}
+
+function drawMeasure(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
+  const { camera, palette, measure } = frame;
+  if (!measure) return;
+  const a = project(camera, measure.from);
+  const b = project(camera, measure.to);
+  const bearing =
+    Math.round(trueToMagnetic(bearingTrue(measure.from, measure.to), frame.magneticVariationDeg)) %
+    360;
+  const label = `${String(bearing || 360).padStart(3, '0')}° ${distanceNm(measure.from, measure.to).toFixed(1)} NM`;
+
+  ctx.strokeStyle = palette.measure;
+  ctx.fillStyle = palette.measure;
+  ctx.lineWidth = 1.25;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y);
+  ctx.lineTo(b.x, b.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  for (const p of [a, b]) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.font = '600 12px "JetBrains Mono", monospace';
+  const width = ctx.measureText(label).width + 14;
+  const x = b.x + 12;
+  const y = b.y - 26;
+  ctx.fillStyle = 'rgba(10, 16, 22, 0.88)';
+  ctx.strokeStyle = withAlpha(palette.measure, 0.6);
+  ctx.beginPath();
+  ctx.roundRect(x, y, width, 22, 6);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = palette.measure;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, x + 7, y + 11);
+}
+
+/** The target under a screen point, checking symbols first, then data blocks. */
+export function hitTest(hits: readonly TargetHitArea[], point: ScreenPoint): string | undefined {
+  let best: { id: string; distance: number } | undefined;
+  for (const hit of hits) {
+    const distance = Math.hypot(hit.center.x - point.x, hit.center.y - point.y);
+    if (distance <= 12 && (!best || distance < best.distance)) best = { id: hit.id, distance };
+  }
+  if (best) return best.id;
+  for (let i = hits.length - 1; i >= 0; i--) {
+    const { block, id } = hits[i]!;
+    if (
+      point.x >= block.x &&
+      point.x <= block.x + block.width &&
+      point.y >= block.y &&
+      point.y <= block.y + block.height
+    ) {
+      return id;
+    }
+  }
+  return undefined;
+}
+
+/** Heat trail colors are drawn in this many bands. */
+const HEAT_BANDS = 16;
+/** Opacity steps for fading the oldest part of a trail. */
+const HEAT_FADE_LEVELS = 6;
+const HEAT_TRAIL_WIDTH_PX = 2.5;
+
+/**
+ * Each aircraft's path since it entered the airspace (or its last part, for
+ * a limited trail length, fading out at the old end), colored by the heat
+ * mode and ending at its current radar position.
+ */
+function drawHeatTrails(ctx: CanvasRenderingContext2D, frame: TrafficFrame): void {
+  const { camera, settings } = frame;
+  const mode = settings['display.heatTrailColorBy'];
+  const onlySelected = settings['display.heatTrailAircraft'] === 'selected';
+  const lengthSec = settings['display.heatTrailLengthMin'] * 60;
+  const ageRange = lengthSec > 0 ? lengthSec : HEAT_AGE_RANGE_SEC;
+  // Segments grouped by color band and fade level: one canvas path per group.
+  const groups: { x1: number; y1: number; x2: number; y2: number }[][] = Array.from(
+    { length: HEAT_BANDS * HEAT_FADE_LEVELS },
+    () => [],
+  );
+  const ageOf = (tick: number) => frame.simTimeSec - tick * frame.tickSeconds;
+
+  for (const target of frame.targets) {
+    if (onlySelected && target.id !== frame.selectedId) continue;
+    // Only what the radar has shown so far (the trail ends at the painted target),
+    // and only as far back as the trail length.
+    const track = frame
+      .trackOf(target.id)
+      .filter(
+        (point) =>
+          point[0] * frame.tickSeconds <= target.seenAtSec &&
+          (lengthSec <= 0 || ageOf(point[0]) <= lengthSec),
+      );
+    if (track.length === 0) continue;
+    let previous = project(camera, { lat: track[0]![1], lon: track[0]![2] });
+    const segment = (
+      to: { x: number; y: number },
+      point: { ageSec: number; altitudeFt: number; groundSpeedKts: number },
+    ) => {
+      const heat = heatValue(mode, point, ageRange);
+      const band = Math.min(HEAT_BANDS - 1, Math.floor(heat * HEAT_BANDS));
+      const fade = heatFade(point.ageSec, lengthSec);
+      if (fade > 0) {
+        const level = Math.min(HEAT_FADE_LEVELS - 1, Math.floor(fade * HEAT_FADE_LEVELS));
+        groups[band * HEAT_FADE_LEVELS + level]!.push({
+          x1: previous.x,
+          y1: previous.y,
+          x2: to.x,
+          y2: to.y,
+        });
+      }
+      previous = to;
+    };
+    for (const [tick, lat, lon, altitudeFt, groundSpeedKts] of track.slice(1)) {
+      segment(project(camera, { lat, lon }), { ageSec: ageOf(tick), altitudeFt, groundSpeedKts });
+    }
+    segment(project(camera, target.position), {
+      ageSec: frame.simTimeSec - target.seenAtSec,
+      altitudeFt: target.altitudeFt,
+      groundSpeedKts: target.groundSpeedKts,
+    });
+  }
+
+  ctx.save();
+  const opacity = settings['display.heatTrailOpacity'] / 100;
+  ctx.lineWidth = HEAT_TRAIL_WIDTH_PX;
+  ctx.lineCap = 'round';
+  groups.forEach((segments, index) => {
+    if (segments.length === 0) return;
+    const band = Math.floor(index / HEAT_FADE_LEVELS);
+    const level = index % HEAT_FADE_LEVELS;
+    ctx.globalAlpha = opacity * ((level + 1) / HEAT_FADE_LEVELS);
+    ctx.strokeStyle = heatColor((band + 0.5) / HEAT_BANDS);
+    ctx.beginPath();
+    for (const { x1, y1, x2, y2 } of segments) {
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+    }
+    ctx.stroke();
+  });
+  ctx.restore();
+}

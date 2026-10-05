@@ -1,0 +1,201 @@
+.account-page {
+  width: var(--page-inline);
+}
+
+.account-sections {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* Two columns of sections on a wide screen. */
+@media (min-width: 1400px) {
+  .account-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.account-section {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  gap: var(--space-4) var(--space-6);
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+}
+
+.account-section h2 {
+  margin: 0 0 var(--space-1);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.account-section header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.account-section__body,
+.account-form {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.account-field {
+  display: grid;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.account-field input {
+  padding: 8px 10px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.92rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}
+
+.account-field input:focus-visible {
+  border-color: rgba(76, 242, 160, 0.55);
+  outline: none;
+}
+
+.account-field input[aria-invalid='true'] {
+  border-color: rgba(255, 90, 95, 0.55);
+}
+
+.account-field__hint {
+  margin: 0;
+  color: var(--color-text-faint);
+  font-size: 0.75rem;
+}
+
+.account-field__error {
+  color: var(--color-alert);
+  font-size: 0.75rem;
+}
+
+.account-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.account-form__actions--start {
+  justify-content: flex-start;
+}
+
+.account-status {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.account-status[data-tone='ok'] {
+  color: var(--color-ok);
+}
+
+.account-status[data-tone='alert'] {
+  color: var(--color-alert);
+}
+
+.account-danger {
+  color: var(--color-alert);
+  border-color: rgba(255, 90, 95, 0.45);
+}
+
+.account-section[aria-label='Delete account'] h2 {
+  color: var(--color-alert);
+}
+
+@media (max-width: 640px) {
+  .account-section {
+    grid-template-columns: 1fr;
+    padding: var(--space-4);
+  }
+}
+
+.account-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.account-check input {
+  margin-top: 3px;
+  accent-color: var(--color-target);
+}
+
+.account-check > span {
+  display: grid;
+  gap: 2px;
+}
+
+.account-check > span > span {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.account-check a {
+  color: var(--color-target);
+}
+
+.account-email {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.account-badge {
+  padding: 2px 8px;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(255, 181, 71, 0.1);
+  border: 1px solid rgba(255, 181, 71, 0.3);
+  border-radius: 999px;
+}
+
+.account-badge[data-tone='ok'] {
+  color: var(--color-target);
+  background: rgba(76, 242, 160, 0.08);
+  border-color: rgba(76, 242, 160, 0.3);
+}
+
+.account-devices {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.account-devices li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-surface-border);
+}
+
+.account-devices li > span {
+  display: grid;
+  gap: 2px;
+}
+
+.account-devices .account-badge {
+  justify-self: start;
+}

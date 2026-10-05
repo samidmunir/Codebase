@@ -1,0 +1,4523 @@
+{
+  "schemaVersion": 1,
+  "fixes": [
+    {
+      "ident": "AAA",
+      "kind": "ndb",
+      "position": {
+        "lat": 40.16011666666667,
+        "lon": -89.33801666666666
+      },
+      "name": "ABRAHAM",
+      "frequencyMhz": 329
+    },
+    {
+      "ident": "ADALE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.853011111111115,
+        "lon": -86.01099166666667
+      },
+      "name": "ADALE"
+    },
+    {
+      "ident": "ADAME",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96913888888889,
+        "lon": -87.65236111111112
+      },
+      "name": "ADAME"
+    },
+    {
+      "ident": "ADLMN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98222222222223,
+        "lon": -88.51206944444445
+      },
+      "name": "ADLMN"
+    },
+    {
+      "ident": "AGONY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.85685277777778,
+        "lon": -90.54248888888888
+      },
+      "name": "AGONY"
+    },
+    {
+      "ident": "AHSTN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.71266111111112,
+        "lon": -88.35733611111111
+      },
+      "name": "AHSTN"
+    },
+    {
+      "ident": "AI",
+      "kind": "ndb",
+      "position": {
+        "lat": 40.06952777777778,
+        "lon": -85.51068611111111
+      },
+      "name": "VIDEO",
+      "frequencyMhz": 394
+    },
+    {
+      "ident": "ALPHE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.4359,
+        "lon": -84.50991666666667
+      },
+      "name": "ALPHE"
+    },
+    {
+      "ident": "ALQUE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.56942222222222,
+        "lon": -88.02393611111111
+      },
+      "name": "ALQUE"
+    },
+    {
+      "ident": "AQ",
+      "kind": "ndb",
+      "position": {
+        "lat": 44.215947222222226,
+        "lon": -88.39893888888889
+      },
+      "name": "KOOKY",
+      "frequencyMhz": 407
+    },
+    {
+      "ident": "ARIST",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96646944444445,
+        "lon": -88.51176666666667
+      },
+      "name": "ARIST"
+    },
+    {
+      "ident": "ASHEN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.480491666666666,
+        "lon": -84.64675000000001
+      },
+      "name": "ASHEN"
+    },
+    {
+      "ident": "AWSUM",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.522149999999996,
+        "lon": -86.57315277777778
+      },
+      "name": "AWSUM"
+    },
+    {
+      "ident": "AXC",
+      "kind": "vor",
+      "position": {
+        "lat": 39.737522222222225,
+        "lon": -88.85643055555555
+      },
+      "name": "ADDERS",
+      "frequencyMhz": 117.2
+    },
+    {
+      "ident": "AZ",
+      "kind": "ndb",
+      "position": {
+        "lat": 42.13116388888889,
+        "lon": -85.52974722222223
+      },
+      "name": "AUSTN",
+      "frequencyMhz": 371
+    },
+    {
+      "ident": "AZUMO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.45776111111111,
+        "lon": -87.00479722222222
+      },
+      "name": "AZUMO"
+    },
+    {
+      "ident": "BAE",
+      "kind": "vor",
+      "position": {
+        "lat": 43.11685277777778,
+        "lon": -88.28434444444444
+      },
+      "name": "BADGER",
+      "frequencyMhz": 116.4
+    },
+    {
+      "ident": "BAGEL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.515975,
+        "lon": -85.61368888888889
+      },
+      "name": "BAGEL"
+    },
+    {
+      "ident": "BAIRY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96318055555556,
+        "lon": -88.51175555555555
+      },
+      "name": "BAIRY"
+    },
+    {
+      "ident": "BAMBB",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.09097222222223,
+        "lon": -88.27537222222222
+      },
+      "name": "BAMBB"
+    },
+    {
+      "ident": "BANER",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.61060555555556,
+        "lon": -87.97205277777778
+      },
+      "name": "BANER"
+    },
+    {
+      "ident": "BASHH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98348333333333,
+        "lon": -87.58233333333332
+      },
+      "name": "BASHH"
+    },
+    {
+      "ident": "BENJO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.88568055555555,
+        "lon": -85.20920833333334
+      },
+      "name": "BENJO"
+    },
+    {
+      "ident": "BENKY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.511830555555555,
+        "lon": -88.70901666666667
+      },
+      "name": "BENKY"
+    },
+    {
+      "ident": "BENNR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.526466666666664,
+        "lon": -90.82066111111111
+      },
+      "name": "BENNR"
+    },
+    {
+      "ident": "BFORD",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.160091666666666,
+        "lon": -89.58741111111111
+      },
+      "name": "BFORD"
+    },
+    {
+      "ident": "BGOSH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.26204722222222,
+        "lon": -89.43415555555556
+      },
+      "name": "BGOSH"
+    },
+    {
+      "ident": "BHAWK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.51846944444444,
+        "lon": -89.77689166666667
+      },
+      "name": "BHAWK"
+    },
+    {
+      "ident": "BITTR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.12157777777778,
+        "lon": -85.9439388888889
+      },
+      "name": "BITTR"
+    },
+    {
+      "ident": "BJB",
+      "kind": "vor",
+      "position": {
+        "lat": 43.42197222222222,
+        "lon": -88.12518055555554
+      },
+      "name": "WEST BEND",
+      "frequencyMhz": 109.8
+    },
+    {
+      "ident": "BLUTO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96879444444445,
+        "lon": -87.441925
+      },
+      "name": "BLUTO"
+    },
+    {
+      "ident": "BOCAH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.85021666666667,
+        "lon": -87.33763611111111
+      },
+      "name": "BOCAH"
+    },
+    {
+      "ident": "BONNT",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.49365,
+        "lon": -85.67937500000001
+      },
+      "name": "BONNT"
+    },
+    {
+      "ident": "BONZO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.0025,
+        "lon": -87.65234444444445
+      },
+      "name": "BONZO"
+    },
+    {
+      "ident": "BOOKK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.704347222222225,
+        "lon": -90.31305555555555
+      },
+      "name": "BOOKK"
+    },
+    {
+      "ident": "BOONE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.36375833333334,
+        "lon": -87.19214722222223
+      },
+      "name": "BOONE"
+    },
+    {
+      "ident": "BOOWW",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98768333333334,
+        "lon": -87.51212777777778
+      },
+      "name": "BOOWW"
+    },
+    {
+      "ident": "BOWNN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.585686111111116,
+        "lon": -88.67805277777778
+      },
+      "name": "BOWNN"
+    },
+    {
+      "ident": "BRIBE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.79833333333333,
+        "lon": -89.94036111111112
+      },
+      "name": "BRIBE"
+    },
+    {
+      "ident": "BRL",
+      "kind": "vor",
+      "position": {
+        "lat": 40.72345555555556,
+        "lon": -90.92588888888889
+      },
+      "name": "BURLINGTON",
+      "frequencyMhz": 115.55
+    },
+    {
+      "ident": "BRTTN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.570638888888894,
+        "lon": -85.52989444444444
+      },
+      "name": "BRTTN"
+    },
+    {
+      "ident": "BT",
+      "kind": "ndb",
+      "position": {
+        "lat": 42.361961111111114,
+        "lon": -85.18432222222222
+      },
+      "name": "BATOL",
+      "frequencyMhz": 272
+    },
+    {
+      "ident": "BUGSE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.968741666666666,
+        "lon": -88.041825
+      },
+      "name": "BUGSE"
+    },
+    {
+      "ident": "BULLZ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.457572222222225,
+        "lon": -88.77129722222222
+      },
+      "name": "BULLZ"
+    },
+    {
+      "ident": "BURKE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96735,
+        "lon": -88.37150555555554
+      },
+      "name": "BURKE"
+    },
+    {
+      "ident": "BURKK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.96911111111111,
+        "lon": -91.23091388888889
+      },
+      "name": "BURKK"
+    },
+    {
+      "ident": "BURUU",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.54066944444444,
+        "lon": -90.16789166666668
+      },
+      "name": "BURUU"
+    },
+    {
+      "ident": "BVT",
+      "kind": "vor",
+      "position": {
+        "lat": 40.556172222222216,
+        "lon": -87.069375
+      },
+      "name": "BOILER",
+      "frequencyMhz": 115.1
+    },
+    {
+      "ident": "BYLAW",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.28635,
+        "lon": -89.27584444444445
+      },
+      "name": "BYLAW"
+    },
+    {
+      "ident": "CABIJ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.88834166666667,
+        "lon": -87.6102361111111
+      },
+      "name": "CABIJ"
+    },
+    {
+      "ident": "CADIZ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.167775,
+        "lon": -87.3877138888889
+      },
+      "name": "CADIZ"
+    },
+    {
+      "ident": "CADON",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.651827777777775,
+        "lon": -87.920175
+      },
+      "name": "CADON"
+    },
+    {
+      "ident": "CAKOS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.957372222222226,
+        "lon": -87.65236111111112
+      },
+      "name": "CAKOS"
+    },
+    {
+      "ident": "CARLE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96834722222222,
+        "lon": -88.16131666666668
+      },
+      "name": "CARLE"
+    },
+    {
+      "ident": "CARVR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.0005,
+        "lon": -85.5475
+      },
+      "name": "CARVR"
+    },
+    {
+      "ident": "CASHN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.95888888888889,
+        "lon": -90.25944444444444
+      },
+      "name": "CASHN"
+    },
+    {
+      "ident": "CENAK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.99611111111111,
+        "lon": -86.97527777777778
+      },
+      "name": "CENAK"
+    },
+    {
+      "ident": "CERMI",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98742777777778,
+        "lon": -87.44195277777779
+      },
+      "name": "CERMI"
+    },
+    {
+      "ident": "CFJ",
+      "kind": "ndb",
+      "position": {
+        "lat": 39.98095,
+        "lon": -86.91572222222223
+      },
+      "name": "CRAWFORDSVILLE",
+      "frequencyMhz": 388
+    },
+    {
+      "ident": "CFLCC",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.95749444444445,
+        "lon": -87.92788055555556
+      },
+      "name": "CFLCC(CNF)"
+    },
+    {
+      "ident": "CFLTH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.03689444444444,
+        "lon": -85.06010277777777
+      },
+      "name": "CFLTH(CNF)"
+    },
+    {
+      "ident": "CGT",
+      "kind": "vor",
+      "position": {
+        "lat": 41.51000555555556,
+        "lon": -87.57154722222222
+      },
+      "name": "CHICAGO HEIGHTS",
+      "frequencyMhz": 114.2
+    },
+    {
+      "ident": "CHDRR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.33635833333334,
+        "lon": -87.87206666666665
+      },
+      "name": "CHDRR"
+    },
+    {
+      "ident": "CHILR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98339722222222,
+        "lon": -88.23136944444444
+      },
+      "name": "CHILR"
+    },
+    {
+      "ident": "CHMPN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.429874999999996,
+        "lon": -89.05880277777777
+      },
+      "name": "CHMPN"
+    },
+    {
+      "ident": "CHUMP",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.376447222222225,
+        "lon": -89.99057222222223
+      },
+      "name": "CHUMP"
+    },
+    {
+      "ident": "CITGO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.714394444444444,
+        "lon": -87.84125555555555
+      },
+      "name": "CITGO"
+    },
+    {
+      "ident": "CJ",
+      "kind": "ndb",
+      "position": {
+        "lat": 39.79439444444444,
+        "lon": -89.592225
+      },
+      "name": "CALDE",
+      "frequencyMhz": 240
+    },
+    {
+      "ident": "CLSBY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.40911111111111,
+        "lon": -88.89374166666667
+      },
+      "name": "CLSBY"
+    },
+    {
+      "ident": "CLUSO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.65473333333333,
+        "lon": -87.49489444444444
+      },
+      "name": "CLUSO"
+    },
+    {
+      "ident": "CM",
+      "kind": "ndb",
+      "position": {
+        "lat": 39.966188888888894,
+        "lon": -88.18239166666667
+      },
+      "name": "VEALS",
+      "frequencyMhz": 407
+    },
+    {
+      "ident": "CMI",
+      "kind": "vor",
+      "position": {
+        "lat": 40.034530555555556,
+        "lon": -88.276075
+      },
+      "name": "CHAMPAIGN",
+      "frequencyMhz": 115.75
+    },
+    {
+      "ident": "COGSS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.34427222222222,
+        "lon": -88.39490277777779
+      },
+      "name": "COGSS"
+    },
+    {
+      "ident": "COTON",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.31991666666667,
+        "lon": -89.31222777777778
+      },
+      "name": "COTON"
+    },
+    {
+      "ident": "COUPR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96364166666667,
+        "lon": -88.44162777777778
+      },
+      "name": "COUPR"
+    },
+    {
+      "ident": "COWES",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.27818333333333,
+        "lon": -88.77190277777778
+      },
+      "name": "COWES"
+    },
+    {
+      "ident": "CRICO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98713333333333,
+        "lon": -87.37177777777777
+      },
+      "name": "CRICO"
+    },
+    {
+      "ident": "CSTLO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.18065555555555,
+        "lon": -85.37574166666666
+      },
+      "name": "CSTLO"
+    },
+    {
+      "ident": "CUUPP",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.43790555555555,
+        "lon": -89.12150555555554
+      },
+      "name": "CUUPP"
+    },
+    {
+      "ident": "CVA",
+      "kind": "vor",
+      "position": {
+        "lat": 41.70854722222222,
+        "lon": -90.48331388888889
+      },
+      "name": "DAVENPORT",
+      "frequencyMhz": 113.8
+    },
+    {
+      "ident": "DABJU",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.19843611111111,
+        "lon": -86.27327222222222
+      },
+      "name": "DABJU"
+    },
+    {
+      "ident": "DAIFE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.26888888888889,
+        "lon": -85.85527777777777
+      },
+      "name": "DAIFE"
+    },
+    {
+      "ident": "DAJON",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.45776666666667,
+        "lon": -89.10545555555555
+      },
+      "name": "DAJON"
+    },
+    {
+      "ident": "DARKK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.25349444444444,
+        "lon": -90.4999888888889
+      },
+      "name": "DARKK"
+    },
+    {
+      "ident": "DBQ",
+      "kind": "vor",
+      "position": {
+        "lat": 42.401469444444444,
+        "lon": -90.70907777777778
+      },
+      "name": "DUBUQUE",
+      "frequencyMhz": 115.8
+    },
+    {
+      "ident": "DE",
+      "kind": "ndb",
+      "position": {
+        "lat": 39.79045,
+        "lon": -88.9538888888889
+      },
+      "name": "ELWIN",
+      "frequencyMhz": 275
+    },
+    {
+      "ident": "DEANI",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.71871111111111,
+        "lon": -85.77477777777777
+      },
+      "name": "DEANI"
+    },
+    {
+      "ident": "DEERE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.19913333333333,
+        "lon": -87.60390277777778
+      },
+      "name": "DEERE"
+    },
+    {
+      "ident": "DEGAN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.683474999999994,
+        "lon": -88.21738611111111
+      },
+      "name": "DEGAN"
+    },
+    {
+      "ident": "DEVON",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.983583333333335,
+        "lon": -88.1612138888889
+      },
+      "name": "DEVON"
+    },
+    {
+      "ident": "DITCA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.746158333333334,
+        "lon": -85.72329722222223
+      },
+      "name": "DITCA"
+    },
+    {
+      "ident": "DLL",
+      "kind": "vor",
+      "position": {
+        "lat": 43.55083611111111,
+        "lon": -89.76362222222222
+      },
+      "name": "DELLS",
+      "frequencyMhz": 117
+    },
+    {
+      "ident": "DN",
+      "kind": "ndb",
+      "position": {
+        "lat": 40.28959166666667,
+        "lon": -87.52994444444444
+      },
+      "name": "JULIP",
+      "frequencyMhz": 332
+    },
+    {
+      "ident": "DOOGY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.00259444444445,
+        "lon": -88.16126944444446
+      },
+      "name": "DOOGY"
+    },
+    {
+      "ident": "DPA",
+      "kind": "vor",
+      "position": {
+        "lat": 41.89037222222222,
+        "lon": -88.35017777777777
+      },
+      "name": "DUPAGE",
+      "frequencyMhz": 114.55
+    },
+    {
+      "ident": "DRAMS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.825897222222224,
+        "lon": -90.59827222222222
+      },
+      "name": "DRAMS"
+    },
+    {
+      "ident": "DROSE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.52761388888889,
+        "lon": -86.05800555555555
+      },
+      "name": "DROSE"
+    },
+    {
+      "ident": "DRSCL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.988261111111115,
+        "lon": -87.78553055555555
+      },
+      "name": "DRSCL"
+    },
+    {
+      "ident": "DUTYS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.130605555555555,
+        "lon": -89.33494999999999
+      },
+      "name": "DUTYS"
+    },
+    {
+      "ident": "DWEEB",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.865833333333335,
+        "lon": -86.82944444444443
+      },
+      "name": "DWEEB"
+    },
+    {
+      "ident": "EBENS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98365277777778,
+        "lon": -87.65250555555556
+      },
+      "name": "EBENS"
+    },
+    {
+      "ident": "EDENS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.116391666666665,
+        "lon": -90.04852777777778
+      },
+      "name": "EDENS"
+    },
+    {
+      "ident": "ELLJO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.58139722222223,
+        "lon": -87.38123888888889
+      },
+      "name": "ELLJO"
+    },
+    {
+      "ident": "ENDEE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.37405555555556,
+        "lon": -88.50897222222223
+      },
+      "name": "ENDEE"
+    },
+    {
+      "ident": "ENNZO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.36061111111111,
+        "lon": -91.4363888888889
+      },
+      "name": "ENNZO"
+    },
+    {
+      "ident": "EON",
+      "kind": "vor",
+      "position": {
+        "lat": 41.26963333333333,
+        "lon": -87.79105277777778
+      },
+      "name": "PEOTONE",
+      "frequencyMhz": 113.2
+    },
+    {
+      "ident": "ERNNY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.33871944444445,
+        "lon": -87.53418333333333
+      },
+      "name": "ERNNY"
+    },
+    {
+      "ident": "ESSPO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.58173611111111,
+        "lon": -87.24408333333334
+      },
+      "name": "ESSPO"
+    },
+    {
+      "ident": "ESSSS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.0016,
+        "lon": -88.44192777777778
+      },
+      "name": "ESSSS"
+    },
+    {
+      "ident": "EZELL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98821388888889,
+        "lon": -88.04188055555555
+      },
+      "name": "EZELL"
+    },
+    {
+      "ident": "EZZRA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.26186111111111,
+        "lon": -89.4564388888889
+      },
+      "name": "EZZRA"
+    },
+    {
+      "ident": "FAALZ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.76861944444445,
+        "lon": -87.84875833333332
+      },
+      "name": "FAALZ"
+    },
+    {
+      "ident": "FARCE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.63782222222222,
+        "lon": -90.29048055555555
+      },
+      "name": "FARCE"
+    },
+    {
+      "ident": "FARGO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.72146111111111,
+        "lon": -89.77640833333334
+      },
+      "name": "FARGO"
+    },
+    {
+      "ident": "FATOX",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.801205555555555,
+        "lon": -87.1959638888889
+      },
+      "name": "FATOX"
+    },
+    {
+      "ident": "FERLL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.93590833333333,
+        "lon": -88.51175555555555
+      },
+      "name": "FERLL"
+    },
+    {
+      "ident": "FFRAN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98779444444445,
+        "lon": -88.23138055555556
+      },
+      "name": "FFRAN"
+    },
+    {
+      "ident": "FGHRN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.102222222222224,
+        "lon": -87.8025
+      },
+      "name": "FGHRN"
+    },
+    {
+      "ident": "FISSK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.049166666666665,
+        "lon": -86.43277777777779
+      },
+      "name": "FISSK"
+    },
+    {
+      "ident": "FITAR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.95731111111112,
+        "lon": -87.58222222222221
+      },
+      "name": "FITAR"
+    },
+    {
+      "ident": "FIYER",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.39776944444444,
+        "lon": -87.32116944444444
+      },
+      "name": "FIYER"
+    },
+    {
+      "ident": "FLLYN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.95366666666667,
+        "lon": -88.03753611111111
+      },
+      "name": "FLLYN"
+    },
+    {
+      "ident": "FNBAR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.28472222222222,
+        "lon": -89.24111111111111
+      },
+      "name": "FNBAR"
+    },
+    {
+      "ident": "FNLYY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.512322222222224,
+        "lon": -85.50286666666666
+      },
+      "name": "FNLYY"
+    },
+    {
+      "ident": "FNT",
+      "kind": "vor",
+      "position": {
+        "lat": 42.96676666666667,
+        "lon": -83.7469888888889
+      },
+      "name": "FLINT",
+      "frequencyMhz": 116.9
+    },
+    {
+      "ident": "FNUCH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.27994722222222,
+        "lon": -87.58229722222222
+      },
+      "name": "FNUCH"
+    },
+    {
+      "ident": "FOTTR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98258055555556,
+        "lon": -88.44189444444444
+      },
+      "name": "FOTTR"
+    },
+    {
+      "ident": "FRIDG",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.762166666666666,
+        "lon": -85.78366666666666
+      },
+      "name": "FRIDG"
+    },
+    {
+      "ident": "FTZ",
+      "kind": "vor",
+      "position": {
+        "lat": 38.69433333333333,
+        "lon": -90.97126944444445
+      },
+      "name": "FORISTELL",
+      "frequencyMhz": 114.35
+    },
+    {
+      "ident": "FUDDD",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.47960555555556,
+        "lon": -91.05541388888889
+      },
+      "name": "FUDDD"
+    },
+    {
+      "ident": "FWA",
+      "kind": "vor",
+      "position": {
+        "lat": 40.97906388888889,
+        "lon": -85.18805833333333
+      },
+      "name": "FORT WAYNE",
+      "frequencyMhz": 117.8
+    },
+    {
+      "ident": "FYTTE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.38006111111111,
+        "lon": -88.66779166666667
+      },
+      "name": "FYTTE"
+    },
+    {
+      "ident": "GAGGA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.55888888888889,
+        "lon": -87.70916666666668
+      },
+      "name": "GAGGA"
+    },
+    {
+      "ident": "GAULT",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.076886111111115,
+        "lon": -85.09364722222222
+      },
+      "name": "GAULT"
+    },
+    {
+      "ident": "GEMMS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98316666666667,
+        "lon": -88.30154722222223
+      },
+      "name": "GEMMS"
+    },
+    {
+      "ident": "GERBS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.77773888888889,
+        "lon": -84.42505555555556
+      },
+      "name": "GERBS"
+    },
+    {
+      "ident": "GERMN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.70183333333333,
+        "lon": -87.25182777777778
+      },
+      "name": "GERMN"
+    },
+    {
+      "ident": "GIBNS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.91888333333333,
+        "lon": -88.96057777777779
+      },
+      "name": "GIBNS"
+    },
+    {
+      "ident": "GIJ",
+      "kind": "vor",
+      "position": {
+        "lat": 41.76861111111111,
+        "lon": -86.31845277777778
+      },
+      "name": "GIPPER",
+      "frequencyMhz": 115.4
+    },
+    {
+      "ident": "GLEAM",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.65989166666667,
+        "lon": -87.57661944444445
+      },
+      "name": "GLEAM"
+    },
+    {
+      "ident": "GOOZY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.94664444444444,
+        "lon": -88.23144722222223
+      },
+      "name": "GOOZY"
+    },
+    {
+      "ident": "GORDO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.841769444444445,
+        "lon": -88.51203055555555
+      },
+      "name": "GORDO"
+    },
+    {
+      "ident": "GORLC",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.64748888888889,
+        "lon": -88.14043333333333
+      },
+      "name": "GORLC"
+    },
+    {
+      "ident": "GOTNE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.96127222222223,
+        "lon": -86.04804166666666
+      },
+      "name": "GOTNE"
+    },
+    {
+      "ident": "GR",
+      "kind": "ndb",
+      "position": {
+        "lat": 42.89564166666666,
+        "lon": -85.37864444444443
+      },
+      "name": "KNOBS",
+      "frequencyMhz": 263
+    },
+    {
+      "ident": "GRABL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.983019444444444,
+        "lon": -87.44199166666667
+      },
+      "name": "GRABL"
+    },
+    {
+      "ident": "GRB",
+      "kind": "vor",
+      "position": {
+        "lat": 44.55516111111111,
+        "lon": -88.19485833333334
+      },
+      "name": "GREEN BAY",
+      "frequencyMhz": 115.5
+    },
+    {
+      "ident": "GROOV",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.431308333333334,
+        "lon": -90.56908333333332
+      },
+      "name": "GROOV"
+    },
+    {
+      "ident": "GUIDO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.29039722222222,
+        "lon": -87.86345277777777
+      },
+      "name": "GUIDO"
+    },
+    {
+      "ident": "GURNN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.50726111111111,
+        "lon": -87.82688055555555
+      },
+      "name": "GURNN"
+    },
+    {
+      "ident": "GW",
+      "kind": "ndb",
+      "position": {
+        "lat": 41.30828611111111,
+        "lon": -84.94408055555556
+      },
+      "name": "SHENK",
+      "frequencyMhz": 227
+    },
+    {
+      "ident": "HALIE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.51606944444445,
+        "lon": -87.15887500000001
+      },
+      "name": "HALIE"
+    },
+    {
+      "ident": "HANNI",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.50315833333333,
+        "lon": -87.358975
+      },
+      "name": "HANNI"
+    },
+    {
+      "ident": "HANSO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.95720555555556,
+        "lon": -87.51208611111112
+      },
+      "name": "HANSO"
+    },
+    {
+      "ident": "HAREE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.002383333333334,
+        "lon": -87.58204722222222
+      },
+      "name": "HAREE"
+    },
+    {
+      "ident": "HARRL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.784863888888886,
+        "lon": -88.09834166666666
+      },
+      "name": "HARRL"
+    },
+    {
+      "ident": "HASTE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.67095277777778,
+        "lon": -85.16736111111112
+      },
+      "name": "HASTE"
+    },
+    {
+      "ident": "HAUPO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.342575000000004,
+        "lon": -86.5431
+      },
+      "name": "HAUPO"
+    },
+    {
+      "ident": "HAZIL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96586111111112,
+        "lon": -87.65235277777778
+      },
+      "name": "HAZIL"
+    },
+    {
+      "ident": "HEBKU",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.907488888888885,
+        "lon": -87.92446111111111
+      },
+      "name": "HEBKU"
+    },
+    {
+      "ident": "HEDOC",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.22720277777778,
+        "lon": -89.82205833333333
+      },
+      "name": "HEDOC"
+    },
+    {
+      "ident": "HIHRY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.61514722222223,
+        "lon": -88.32029166666666
+      },
+      "name": "HIHRY"
+    },
+    {
+      "ident": "HILLS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.62372222222222,
+        "lon": -87.52616111111111
+      },
+      "name": "HILLS"
+    },
+    {
+      "ident": "HILRO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.651666666666664,
+        "lon": -90.22487777777778
+      },
+      "name": "HILRO"
+    },
+    {
+      "ident": "HIMGO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.09106666666667,
+        "lon": -87.50885833333334
+      },
+      "name": "HIMGO"
+    },
+    {
+      "ident": "HITOB",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.83923611111111,
+        "lon": -87.82814444444445
+      },
+      "name": "HITOB"
+    },
+    {
+      "ident": "HOBEL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.743002777777775,
+        "lon": -87.69289722222223
+      },
+      "name": "HOBEL"
+    },
+    {
+      "ident": "HOPSS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.70534722222222,
+        "lon": -88.27994166666666
+      },
+      "name": "HOPSS"
+    },
+    {
+      "ident": "HU",
+      "kind": "ndb",
+      "position": {
+        "lat": 39.387816666666666,
+        "lon": -87.39772222222223
+      },
+      "name": "YINNO",
+      "frequencyMhz": 245
+    },
+    {
+      "ident": "HULLS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.656666666666666,
+        "lon": -86.79333333333334
+      },
+      "name": "HULLS"
+    },
+    {
+      "ident": "HUNKA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.53256388888889,
+        "lon": -88.28708611111111
+      },
+      "name": "HUNKA"
+    },
+    {
+      "ident": "HYYDE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.18636111111111,
+        "lon": -88.85291666666666
+      },
+      "name": "HYYDE"
+    },
+    {
+      "ident": "IDIOM",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.505,
+        "lon": -88.29916666666666
+      },
+      "name": "IDIOM"
+    },
+    {
+      "ident": "IGECY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.601908333333334,
+        "lon": -87.76784444444445
+      },
+      "name": "IGECY"
+    },
+    {
+      "ident": "IK",
+      "kind": "ndb",
+      "position": {
+        "lat": 41.017825,
+        "lon": -87.90376944444445
+      },
+      "name": "LUKOW",
+      "frequencyMhz": 272
+    },
+    {
+      "ident": "ILIAD",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.76027777777778,
+        "lon": -89.90666666666667
+      },
+      "name": "ILIAD"
+    },
+    {
+      "ident": "ILIUM",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.002161111111114,
+        "lon": -88.30157777777778
+      },
+      "name": "ILIUM"
+    },
+    {
+      "ident": "IRK",
+      "kind": "vor",
+      "position": {
+        "lat": 40.135016666666665,
+        "lon": -92.59171388888889
+      },
+      "name": "KIRKSVILLE",
+      "frequencyMhz": 114.6
+    },
+    {
+      "ident": "IROCK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.51909166666667,
+        "lon": -86.90519722222223
+      },
+      "name": "IROCK"
+    },
+    {
+      "ident": "IRS",
+      "kind": "ndb",
+      "position": {
+        "lat": 41.81314444444444,
+        "lon": -85.43378611111112
+      },
+      "name": "STURGIS",
+      "frequencyMhz": 382
+    },
+    {
+      "ident": "IYLEK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.00191944444445,
+        "lon": -87.44168888888889
+      },
+      "name": "IYLEK"
+    },
+    {
+      "ident": "IZARD",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.78696111111111,
+        "lon": -87.49769166666667
+      },
+      "name": "IZARD"
+    },
+    {
+      "ident": "JAAVE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.840525,
+        "lon": -88.25472222222223
+      },
+      "name": "JAAVE"
+    },
+    {
+      "ident": "JAKSA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.84390277777778,
+        "lon": -89.04518611111111
+      },
+      "name": "JAKSA"
+    },
+    {
+      "ident": "JALAP",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.83833333333334,
+        "lon": -93.56333333333333
+      },
+      "name": "JALAP"
+    },
+    {
+      "ident": "JARKE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.07973888888889,
+        "lon": -88.40121111111112
+      },
+      "name": "JARKE"
+    },
+    {
+      "ident": "JAVON",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.957058333333336,
+        "lon": -87.44195277777779
+      },
+      "name": "JAVON"
+    },
+    {
+      "ident": "JBAGS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.52296944444444,
+        "lon": -90.316825
+      },
+      "name": "JBAGS"
+    },
+    {
+      "ident": "JHONN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.00125277777778,
+        "lon": -88.51209444444444
+      },
+      "name": "JHONN"
+    },
+    {
+      "ident": "JIBOR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.84040277777778,
+        "lon": -90.09180555555555
+      },
+      "name": "JIBOR"
+    },
+    {
+      "ident": "JILLZ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.212875000000004,
+        "lon": -88.96806666666667
+      },
+      "name": "JILLZ"
+    },
+    {
+      "ident": "JLOWW",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98385277777778,
+        "lon": -87.785375
+      },
+      "name": "JLOWW"
+    },
+    {
+      "ident": "JMBBO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.988061111111115,
+        "lon": -87.65248055555556
+      },
+      "name": "JMBBO"
+    },
+    {
+      "ident": "JN",
+      "kind": "ndb",
+      "position": {
+        "lat": 40.18092222222222,
+        "lon": -85.32098333333333
+      },
+      "name": "BALLL",
+      "frequencyMhz": 365
+    },
+    {
+      "ident": "JNSNN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.021683333333335,
+        "lon": -90.73429722222222
+      },
+      "name": "JNSNN"
+    },
+    {
+      "ident": "JODEE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 45.27869444444444,
+        "lon": -84.70104722222223
+      },
+      "name": "JODEE"
+    },
+    {
+      "ident": "JOEBO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98272222222222,
+        "lon": -87.37182222222222
+      },
+      "name": "JOEBO"
+    },
+    {
+      "ident": "JOKKR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.001619444444444,
+        "lon": -87.37151666666666
+      },
+      "name": "JOKKR"
+    },
+    {
+      "ident": "JORJO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.884483333333336,
+        "lon": -87.98855
+      },
+      "name": "JORJO"
+    },
+    {
+      "ident": "JOT",
+      "kind": "vor",
+      "position": {
+        "lat": 41.546419444444446,
+        "lon": -88.3184111111111
+      },
+      "name": "JOLIET",
+      "frequencyMhz": 112.3
+    },
+    {
+      "ident": "JUMPN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.817283333333336,
+        "lon": -89.05800277777777
+      },
+      "name": "JUMPN"
+    },
+    {
+      "ident": "JVL",
+      "kind": "vor",
+      "position": {
+        "lat": 42.55800833333333,
+        "lon": -89.10525833333332
+      },
+      "name": "JANESVILLE",
+      "frequencyMhz": 114.3
+    },
+    {
+      "ident": "JZY",
+      "kind": "ndb",
+      "position": {
+        "lat": 40.51810277777778,
+        "lon": -90.56043888888888
+      },
+      "name": "MACOMB",
+      "frequencyMhz": 251
+    },
+    {
+      "ident": "KALZO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96693055555556,
+        "lon": -88.44163888888889
+      },
+      "name": "KALZO"
+    },
+    {
+      "ident": "KAMBL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.06416944444444,
+        "lon": -90.70906111111111
+      },
+      "name": "KAMBL"
+    },
+    {
+      "ident": "KAYTO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.73216111111111,
+        "lon": -87.58302222222221
+      },
+      "name": "KAYTO"
+    },
+    {
+      "ident": "KAYYS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.884433333333334,
+        "lon": -84.58066666666666
+      },
+      "name": "KAYYS"
+    },
+    {
+      "ident": "KEGNE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.95686666666667,
+        "lon": -87.37182777777777
+      },
+      "name": "KEGNE"
+    },
+    {
+      "ident": "KELTS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.124230555555556,
+        "lon": -89.26950555555555
+      },
+      "name": "KELTS"
+    },
+    {
+      "ident": "KENIL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.11448333333333,
+        "lon": -87.70775833333333
+      },
+      "name": "KENIL"
+    },
+    {
+      "ident": "KEOKK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.55340277777778,
+        "lon": -91.40366666666667
+      },
+      "name": "KEOKK"
+    },
+    {
+      "ident": "KOENN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96553055555556,
+        "lon": -87.44191666666667
+      },
+      "name": "KOENN"
+    },
+    {
+      "ident": "KOHLL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.63804722222222,
+        "lon": -87.84139166666667
+      },
+      "name": "KOHLL"
+    },
+    {
+      "ident": "KOOKS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.177125,
+        "lon": -89.12535555555554
+      },
+      "name": "KOOKS"
+    },
+    {
+      "ident": "KOOSS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98696944444445,
+        "lon": -88.44190555555556
+      },
+      "name": "KOOSS"
+    },
+    {
+      "ident": "KRENA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.374880555555556,
+        "lon": -88.49945555555556
+      },
+      "name": "KRENA"
+    },
+    {
+      "ident": "KURKK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.091836111111114,
+        "lon": -88.0272
+      },
+      "name": "KURKK"
+    },
+    {
+      "ident": "KVENN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.949225,
+        "lon": -88.16130555555556
+      },
+      "name": "KVENN"
+    },
+    {
+      "ident": "KYLAA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.964058333333334,
+        "lon": -88.37149444444444
+      },
+      "name": "KYLAA"
+    },
+    {
+      "ident": "LA",
+      "kind": "ndb",
+      "position": {
+        "lat": 40.42644722222222,
+        "lon": -87.05208055555555
+      },
+      "name": "EARLE",
+      "frequencyMhz": 401
+    },
+    {
+      "ident": "LAACY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.699727777777774,
+        "lon": -87.40010277777779
+      },
+      "name": "LAACY"
+    },
+    {
+      "ident": "LAIKE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.04008888888889,
+        "lon": -87.79640277777777
+      },
+      "name": "LAIKE"
+    },
+    {
+      "ident": "LAIRD",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98352222222222,
+        "lon": -87.59370277777778
+      },
+      "name": "LAIRD"
+    },
+    {
+      "ident": "LARVA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.88226944444445,
+        "lon": -90.55165555555556
+      },
+      "name": "LARVA"
+    },
+    {
+      "ident": "LCOLN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.29376388888889,
+        "lon": -87.55704444444444
+      },
+      "name": "LCOLN"
+    },
+    {
+      "ident": "LEATH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.94403055555555,
+        "lon": -88.30135555555556
+      },
+      "name": "LEATH"
+    },
+    {
+      "ident": "LH",
+      "kind": "ndb",
+      "position": {
+        "lat": 40.56035277777777,
+        "lon": -88.87463333333332
+      },
+      "name": "EGROW",
+      "frequencyMhz": 334
+    },
+    {
+      "ident": "LLTCH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.06227222222222,
+        "lon": -84.765475
+      },
+      "name": "LLTCH"
+    },
+    {
+      "ident": "LLVSS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.86888888888889,
+        "lon": -89.755
+      },
+      "name": "LLVSS"
+    },
+    {
+      "ident": "LNANE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.75510555555555,
+        "lon": -87.27858888888889
+      },
+      "name": "LNANE"
+    },
+    {
+      "ident": "LNDUH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96509722222223,
+        "lon": -87.30164722222221
+      },
+      "name": "LNDUH"
+    },
+    {
+      "ident": "LOAMY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.424530555555556,
+        "lon": -91.7844
+      },
+      "name": "LOAMY"
+    },
+    {
+      "ident": "LQ",
+      "kind": "ndb",
+      "position": {
+        "lat": 39.911902777777776,
+        "lon": -89.60316944444443
+      },
+      "name": "LICOL",
+      "frequencyMhz": 375
+    },
+    {
+      "ident": "LTOUR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.849358333333335,
+        "lon": -84.91830555555556
+      },
+      "name": "LTOUR"
+    },
+    {
+      "ident": "LYNNI",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.83460277777778,
+        "lon": -87.58144444444444
+      },
+      "name": "LYNNI"
+    },
+    {
+      "ident": "LYSIN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.956633333333336,
+        "lon": -87.30170277777778
+      },
+      "name": "LYSIN"
+    },
+    {
+      "ident": "MACES",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.003680555555555,
+        "lon": -86.72295
+      },
+      "name": "MACES"
+    },
+    {
+      "ident": "MADII",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.30096388888889,
+        "lon": -88.31381388888889
+      },
+      "name": "MADII"
+    },
+    {
+      "ident": "MAGOO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.024924999999996,
+        "lon": -90.76183333333333
+      },
+      "name": "MAGOO"
+    },
+    {
+      "ident": "MAKKI",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.44451944444444,
+        "lon": -85.55656388888889
+      },
+      "name": "MAKKI"
+    },
+    {
+      "ident": "MAROC",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.73701111111111,
+        "lon": -89.3746361111111
+      },
+      "name": "MAROC"
+    },
+    {
+      "ident": "MB",
+      "kind": "ndb",
+      "position": {
+        "lat": 44.27076388888889,
+        "lon": -86.14274722222223
+      },
+      "name": "JEPOT",
+      "frequencyMhz": 254
+    },
+    {
+      "ident": "MCDEE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.55166666666666,
+        "lon": -90.91555555555556
+      },
+      "name": "MCDEE"
+    },
+    {
+      "ident": "MCW",
+      "kind": "vor",
+      "position": {
+        "lat": 43.09475833333334,
+        "lon": -93.32987222222222
+      },
+      "name": "MASON CITY",
+      "frequencyMhz": 114.9
+    },
+    {
+      "ident": "MEGGZ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.52341111111111,
+        "lon": -86.39573611111112
+      },
+      "name": "MEGGZ"
+    },
+    {
+      "ident": "MEMAW",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96568333333334,
+        "lon": -87.51205833333333
+      },
+      "name": "MEMAW"
+    },
+    {
+      "ident": "MEOWW",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.983802777777775,
+        "lon": -88.04203888888888
+      },
+      "name": "MEOWW"
+    },
+    {
+      "ident": "MIETH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98798333333333,
+        "lon": -88.16120555555555
+      },
+      "name": "MIETH"
+    },
+    {
+      "ident": "MIGGS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.08505,
+        "lon": -90.44838611111112
+      },
+      "name": "MIGGS"
+    },
+    {
+      "ident": "MINCE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.162324999999996,
+        "lon": -87.06418888888889
+      },
+      "name": "MINCE"
+    },
+    {
+      "ident": "MITEE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.70158888888889,
+        "lon": -90.27944166666667
+      },
+      "name": "MITEE"
+    },
+    {
+      "ident": "MKITA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.4,
+        "lon": -86.69277777777778
+      },
+      "name": "MKITA"
+    },
+    {
+      "ident": "MLSEN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.93865833333333,
+        "lon": -88.44162777777778
+      },
+      "name": "MLSEN"
+    },
+    {
+      "ident": "MMEGG",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.18375833333333,
+        "lon": -88.63388055555556
+      },
+      "name": "MMEGG"
+    },
+    {
+      "ident": "MONKZ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.88433055555556,
+        "lon": -87.80179722222222
+      },
+      "name": "MONKZ"
+    },
+    {
+      "ident": "MOOPS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.65747777777778,
+        "lon": -88.89251666666668
+      },
+      "name": "MOOPS"
+    },
+    {
+      "ident": "MOPER",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.431261111111105,
+        "lon": -87.78677777777777
+      },
+      "name": "MOPER"
+    },
+    {
+      "ident": "MOTRR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.358491666666666,
+        "lon": -88.502875
+      },
+      "name": "MOTRR"
+    },
+    {
+      "ident": "MOTTT",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96835277777778,
+        "lon": -87.30165555555556
+      },
+      "name": "MOTTT"
+    },
+    {
+      "ident": "MRRFF",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98789444444444,
+        "lon": -87.58230277777777
+      },
+      "name": "MRRFF"
+    },
+    {
+      "ident": "MSN",
+      "kind": "vor",
+      "position": {
+        "lat": 43.14483611111111,
+        "lon": -89.33969722222221
+      },
+      "name": "MADISON",
+      "frequencyMhz": 108.6
+    },
+    {
+      "ident": "MT",
+      "kind": "ndb",
+      "position": {
+        "lat": 44.19972222222222,
+        "lon": -87.70222222222222
+      },
+      "name": "MAWOC",
+      "frequencyMhz": 362
+    },
+    {
+      "ident": "MUELL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98756111111111,
+        "lon": -88.30155833333333
+      },
+      "name": "MUELL"
+    },
+    {
+      "ident": "MUSKY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.15328611111111,
+        "lon": -86.93712500000001
+      },
+      "name": "MUSKY"
+    },
+    {
+      "ident": "MYRRS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.523894444444444,
+        "lon": -92.05992499999999
+      },
+      "name": "MYRRS"
+    },
+    {
+      "ident": "MYTCH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.74028888888889,
+        "lon": -89.73623055555555
+      },
+      "name": "MYTCH"
+    },
+    {
+      "ident": "MZV",
+      "kind": "vor",
+      "position": {
+        "lat": 41.32092222222222,
+        "lon": -90.6382138888889
+      },
+      "name": "MOLINE",
+      "frequencyMhz": 114.4
+    },
+    {
+      "ident": "MZZ",
+      "kind": "vor",
+      "position": {
+        "lat": 40.49333055555556,
+        "lon": -85.67925000000001
+      },
+      "name": "MARION",
+      "frequencyMhz": 108.6
+    },
+    {
+      "ident": "NANEE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.867447222222225,
+        "lon": -88.84043333333332
+      },
+      "name": "NANEE"
+    },
+    {
+      "ident": "NAPER",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.824219444444445,
+        "lon": -88.05202777777778
+      },
+      "name": "NAPER"
+    },
+    {
+      "ident": "NCHLS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98679166666667,
+        "lon": -87.30160277777777
+      },
+      "name": "NCHLS"
+    },
+    {
+      "ident": "NEWRK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.566125,
+        "lon": -88.57111944444443
+      },
+      "name": "NEWRK"
+    },
+    {
+      "ident": "NOLEN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.19133055555555,
+        "lon": -87.68125277777779
+      },
+      "name": "NOLEN"
+    },
+    {
+      "ident": "NOLNN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.234375,
+        "lon": -84.63666944444445
+      },
+      "name": "NOLNN"
+    },
+    {
+      "ident": "NORDL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.986608333333336,
+        "lon": -88.51208055555556
+      },
+      "name": "NORDL"
+    },
+    {
+      "ident": "NORIS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.61289166666667,
+        "lon": -90.16007222222223
+      },
+      "name": "NORIS"
+    },
+    {
+      "ident": "NRMAH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98238333333334,
+        "lon": -87.30165277777778
+      },
+      "name": "NRMAH"
+    },
+    {
+      "ident": "NUNWS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.91861111111111,
+        "lon": -88.96083888888889
+      },
+      "name": "NUNWS"
+    },
+    {
+      "ident": "NYLEN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.86666666666667,
+        "lon": -85.81666666666666
+      },
+      "name": "NYLEN"
+    },
+    {
+      "ident": "OBK",
+      "kind": "vor",
+      "position": {
+        "lat": 42.22137777777778,
+        "lon": -87.95166944444445
+      },
+      "name": "NORTHBROOK",
+      "frequencyMhz": 113
+    },
+    {
+      "ident": "OBSTR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.695055555555555,
+        "lon": -85.21486944444445
+      },
+      "name": "OBSTR"
+    },
+    {
+      "ident": "OCCHO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.158113888888884,
+        "lon": -89.41644722222223
+      },
+      "name": "OCCHO"
+    },
+    {
+      "ident": "ODAXY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.63357222222222,
+        "lon": -83.20450833333334
+      },
+      "name": "ODAXY"
+    },
+    {
+      "ident": "OHHMY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.88138888888889,
+        "lon": -91.75833333333334
+      },
+      "name": "OHHMY"
+    },
+    {
+      "ident": "OLCYK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.540191666666665,
+        "lon": -87.6044611111111
+      },
+      "name": "OLCYK"
+    },
+    {
+      "ident": "OLK",
+      "kind": "vor",
+      "position": {
+        "lat": 41.24690833333334,
+        "lon": -85.49739722222222
+      },
+      "name": "WEBSTER LAKE",
+      "frequencyMhz": 110.4
+    },
+    {
+      "ident": "OLLGA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.94136666666666,
+        "lon": -88.37149444444444
+      },
+      "name": "OLLGA"
+    },
+    {
+      "ident": "OSH",
+      "kind": "vor",
+      "position": {
+        "lat": 43.990430555555555,
+        "lon": -88.55593333333333
+      },
+      "name": "OSHKOSH",
+      "frequencyMhz": 116.75
+    },
+    {
+      "ident": "OVETE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.854222222222226,
+        "lon": -87.68788055555557
+      },
+      "name": "OVETE"
+    },
+    {
+      "ident": "OZZEY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.399166666666666,
+        "lon": -86.93350000000001
+      },
+      "name": "OZZEY"
+    },
+    {
+      "ident": "PADDE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.28583333333333,
+        "lon": -84.47444444444444
+      },
+      "name": "PADDE"
+    },
+    {
+      "ident": "PAITN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.561030555555554,
+        "lon": -86.72260555555556
+      },
+      "name": "PAITN"
+    },
+    {
+      "ident": "PANGG",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.52500833333333,
+        "lon": -86.07233055555555
+      },
+      "name": "PANGG"
+    },
+    {
+      "ident": "PAPPI",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.26997222222222,
+        "lon": -87.60720277777777
+      },
+      "name": "PAPPI"
+    },
+    {
+      "ident": "PEALE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.99318888888889,
+        "lon": -89.47300555555556
+      },
+      "name": "PEALE"
+    },
+    {
+      "ident": "PECOK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.00768611111111,
+        "lon": -85.72075277777778
+      },
+      "name": "PECOK"
+    },
+    {
+      "ident": "PEPAW",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96443333333334,
+        "lon": -88.30135555555556
+      },
+      "name": "PEPAW"
+    },
+    {
+      "ident": "PETAH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.88551666666667,
+        "lon": -88.15005833333333
+      },
+      "name": "PETAH"
+    },
+    {
+      "ident": "PHEEB",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.26411944444445,
+        "lon": -89.27334444444445
+      },
+      "name": "PHEEB"
+    },
+    {
+      "ident": "PHRLY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.724161111111115,
+        "lon": -87.52381111111112
+      },
+      "name": "PHRLY"
+    },
+    {
+      "ident": "PI",
+      "kind": "ndb",
+      "position": {
+        "lat": 40.60561944444444,
+        "lon": -89.59325
+      },
+      "name": "TUNGG",
+      "frequencyMhz": 356
+    },
+    {
+      "ident": "PIA",
+      "kind": "vor",
+      "position": {
+        "lat": 40.68006944444444,
+        "lon": -89.79275277777778
+      },
+      "name": "PEORIA",
+      "frequencyMhz": 115.2
+    },
+    {
+      "ident": "PINKK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.83173888888889,
+        "lon": -87.69459722222223
+      },
+      "name": "PINKK"
+    },
+    {
+      "ident": "PIRPL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.28449166666667,
+        "lon": -87.77499166666666
+      },
+      "name": "PIRPL"
+    },
+    {
+      "ident": "PKACH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.58031666666667,
+        "lon": -88.1317111111111
+      },
+      "name": "PKACH"
+    },
+    {
+      "ident": "PLAIN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.77775277777778,
+        "lon": -85.206675
+      },
+      "name": "PLAIN"
+    },
+    {
+      "ident": "PNTAC",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.822025000000004,
+        "lon": -88.73366666666666
+      },
+      "name": "PNTAC"
+    },
+    {
+      "ident": "PONCC",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.95736111111111,
+        "lon": -87.79598055555556
+      },
+      "name": "PONCC"
+    },
+    {
+      "ident": "POOGY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.39817222222222,
+        "lon": -89.14365277777779
+      },
+      "name": "POOGY"
+    },
+    {
+      "ident": "POSSM",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.87466111111111,
+        "lon": -88.275175
+      },
+      "name": "POSSM"
+    },
+    {
+      "ident": "POSTS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.3,
+        "lon": -85.03333333333333
+      },
+      "name": "POSTS"
+    },
+    {
+      "ident": "PRADY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.97813333333333,
+        "lon": -86.75973611111111
+      },
+      "name": "PRADY"
+    },
+    {
+      "ident": "PRATT",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96805833333333,
+        "lon": -88.23145833333334
+      },
+      "name": "PRATT"
+    },
+    {
+      "ident": "PRISE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.535555555555554,
+        "lon": -86.78138888888888
+      },
+      "name": "PRISE"
+    },
+    {
+      "ident": "PRONK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.178266666666666,
+        "lon": -85.47733611111111
+      },
+      "name": "PRONK"
+    },
+    {
+      "ident": "PURTY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.13865555555555,
+        "lon": -89.72117222222222
+      },
+      "name": "PURTY"
+    },
+    {
+      "ident": "RAGSS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.72445277777778,
+        "lon": -89.10676111111111
+      },
+      "name": "RAGSS"
+    },
+    {
+      "ident": "RAHNN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.58018333333334,
+        "lon": -88.33811666666666
+      },
+      "name": "RAHNN"
+    },
+    {
+      "ident": "RAYYY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.965447222222224,
+        "lon": -88.04205277777777
+      },
+      "name": "RAYYY"
+    },
+    {
+      "ident": "RBS",
+      "kind": "vor",
+      "position": {
+        "lat": 40.58170277777778,
+        "lon": -88.16426666666668
+      },
+      "name": "ROBERTS",
+      "frequencyMhz": 116.8
+    },
+    {
+      "ident": "REKKS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.89850555555555,
+        "lon": -87.96431666666668
+      },
+      "name": "REKKS"
+    },
+    {
+      "ident": "RHIVR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.64595555555555,
+        "lon": -86.27059722222222
+      },
+      "name": "RHIVR"
+    },
+    {
+      "ident": "RICKV",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96859444444445,
+        "lon": -87.37178888888889
+      },
+      "name": "RICKV"
+    },
+    {
+      "ident": "RIDGE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.05823888888889,
+        "lon": -87.82920555555555
+      },
+      "name": "RIDGE"
+    },
+    {
+      "ident": "RINNO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.80543333333333,
+        "lon": -88.09337777777777
+      },
+      "name": "RINNO"
+    },
+    {
+      "ident": "RIPPR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.983272222222226,
+        "lon": -87.51216388888889
+      },
+      "name": "RIPPR"
+    },
+    {
+      "ident": "ROCSE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96895277777778,
+        "lon": -87.51206666666667
+      },
+      "name": "ROCSE"
+    },
+    {
+      "ident": "ROD",
+      "kind": "vor",
+      "position": {
+        "lat": 40.2878,
+        "lon": -84.04309722222222
+      },
+      "name": "ROSEWOOD",
+      "frequencyMhz": 117.5
+    },
+    {
+      "ident": "ROYKO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.019999999999996,
+        "lon": -85.88333333333334
+      },
+      "name": "ROYKO"
+    },
+    {
+      "ident": "RREGY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.87392777777778,
+        "lon": -87.48975
+      },
+      "name": "RREGY"
+    },
+    {
+      "ident": "RRUDA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96505277777778,
+        "lon": -88.16130555555556
+      },
+      "name": "RRUDA"
+    },
+    {
+      "ident": "RUBYY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.017719444444445,
+        "lon": -84.58783888888888
+      },
+      "name": "RUBYY"
+    },
+    {
+      "ident": "RUNTS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.714108333333336,
+        "lon": -87.65241944444445
+      },
+      "name": "RUNTS"
+    },
+    {
+      "ident": "RYELY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.03333333333333,
+        "lon": -89.9725
+      },
+      "name": "RYELY"
+    },
+    {
+      "ident": "RYV",
+      "kind": "ndb",
+      "position": {
+        "lat": 43.17367222222222,
+        "lon": -88.72528055555556
+      },
+      "name": "ROCK RIVER",
+      "frequencyMhz": 371
+    },
+    {
+      "ident": "RZUKO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96579444444445,
+        "lon": -87.58220277777778
+      },
+      "name": "RZUKO"
+    },
+    {
+      "ident": "SAAYY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.52706666666666,
+        "lon": -91.42904722222222
+      },
+      "name": "SAAYY"
+    },
+    {
+      "ident": "SB",
+      "kind": "ndb",
+      "position": {
+        "lat": 41.70563888888889,
+        "lon": -86.21898333333334
+      },
+      "name": "MISHA",
+      "frequencyMhz": 341
+    },
+    {
+      "ident": "SEIKA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.965872222222224,
+        "lon": -87.779925
+      },
+      "name": "SEIKA"
+    },
+    {
+      "ident": "SG",
+      "kind": "ndb",
+      "position": {
+        "lat": 44.398519444444446,
+        "lon": -88.13275833333333
+      },
+      "name": "DEPRE",
+      "frequencyMhz": 332
+    },
+    {
+      "ident": "SHAIN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.64361111111111,
+        "lon": -89.13583333333334
+      },
+      "name": "SHAIN"
+    },
+    {
+      "ident": "SHARN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96476388888889,
+        "lon": -88.23144722222223
+      },
+      "name": "SHARN"
+    },
+    {
+      "ident": "SHB",
+      "kind": "vor",
+      "position": {
+        "lat": 39.63254166666667,
+        "lon": -85.82431666666666
+      },
+      "name": "SHELBYVILLE",
+      "frequencyMhz": 116.15
+    },
+    {
+      "ident": "SHIKY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.19444444444444,
+        "lon": -88.41805555555555
+      },
+      "name": "SHIKY"
+    },
+    {
+      "ident": "SIBER",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.134680555555555,
+        "lon": -90.39267777777779
+      },
+      "name": "SIBER"
+    },
+    {
+      "ident": "SIBLY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.00275555555555,
+        "lon": -87.79508055555556
+      },
+      "name": "SIBLY"
+    },
+    {
+      "ident": "SIKLR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98728611111111,
+        "lon": -88.37173333333332
+      },
+      "name": "SIKLR"
+    },
+    {
+      "ident": "SLLAP",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.45008333333334,
+        "lon": -84.93883055555555
+      },
+      "name": "SLLAP"
+    },
+    {
+      "ident": "SMUUV",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.466325000000005,
+        "lon": -86.127325
+      },
+      "name": "SMUUV"
+    },
+    {
+      "ident": "SNKPT",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.237211111111115,
+        "lon": -85.394225
+      },
+      "name": "SNKPT"
+    },
+    {
+      "ident": "SNTOE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.965336111111114,
+        "lon": -87.37178055555555
+      },
+      "name": "SNTOE"
+    },
+    {
+      "ident": "SOOLU",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.196374999999996,
+        "lon": -88.14769444444445
+      },
+      "name": "SOOLU"
+    },
+    {
+      "ident": "SP",
+      "kind": "ndb",
+      "position": {
+        "lat": 39.77315,
+        "lon": -89.75986666666667
+      },
+      "name": "HUSKK",
+      "frequencyMhz": 382
+    },
+    {
+      "ident": "SPI",
+      "kind": "vor",
+      "position": {
+        "lat": 39.839733333333335,
+        "lon": -89.67773611111112
+      },
+      "name": "SPINNER",
+      "frequencyMhz": 112.7
+    },
+    {
+      "ident": "SSM",
+      "kind": "vor",
+      "position": {
+        "lat": 46.41211111111111,
+        "lon": -84.31487222222222
+      },
+      "name": "SAULT STE MARIE",
+      "frequencyMhz": 112.2
+    },
+    {
+      "ident": "STASH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.770855555555556,
+        "lon": -86.32314166666666
+      },
+      "name": "STASH"
+    },
+    {
+      "ident": "STKNY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.50678055555556,
+        "lon": -88.29044444444445
+      },
+      "name": "STKNY"
+    },
+    {
+      "ident": "STL",
+      "kind": "vor",
+      "position": {
+        "lat": 38.86072222222222,
+        "lon": -90.48235
+      },
+      "name": "ST LOUIS",
+      "frequencyMhz": 117.4
+    },
+    {
+      "ident": "STNLE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.47278888888889,
+        "lon": -89.40403888888889
+      },
+      "name": "STNLE"
+    },
+    {
+      "ident": "STRUK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.23435,
+        "lon": -90.30597222222222
+      },
+      "name": "STRUK"
+    },
+    {
+      "ident": "STYLE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.77397222222222,
+        "lon": -86.80838333333332
+      },
+      "name": "STYLE"
+    },
+    {
+      "ident": "SUZYQ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.01473611111111,
+        "lon": -92.17443611111112
+      },
+      "name": "SUZYQ"
+    },
+    {
+      "ident": "SWIIS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.525058333333334,
+        "lon": -87.5095
+      },
+      "name": "SWIIS"
+    },
+    {
+      "ident": "SYSCO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.967725,
+        "lon": -88.30136666666667
+      },
+      "name": "SYSCO"
+    },
+    {
+      "ident": "SYZ",
+      "kind": "ndb",
+      "position": {
+        "lat": 39.40652222222222,
+        "lon": -88.84355555555555
+      },
+      "name": "SHELBYVILLE",
+      "frequencyMhz": 365
+    },
+    {
+      "ident": "TACTT",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.85022777777778,
+        "lon": -87.43799166666668
+      },
+      "name": "TACTT"
+    },
+    {
+      "ident": "TEDDY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.41965555555555,
+        "lon": -88.64627777777778
+      },
+      "name": "TEDDY"
+    },
+    {
+      "ident": "TEEOO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.85767222222222,
+        "lon": -90.71717777777778
+      },
+      "name": "TEEOO"
+    },
+    {
+      "ident": "TILMN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.495575,
+        "lon": -87.82876944444445
+      },
+      "name": "TILMN"
+    },
+    {
+      "ident": "TINLY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.555299999999995,
+        "lon": -87.84932222222221
+      },
+      "name": "TINLY"
+    },
+    {
+      "ident": "TMRAA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.274325,
+        "lon": -88.79391666666666
+      },
+      "name": "TMRAA"
+    },
+    {
+      "ident": "TOLCA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.14706666666667,
+        "lon": -89.12021666666666
+      },
+      "name": "TOLCA"
+    },
+    {
+      "ident": "TONIE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.88371388888889,
+        "lon": -87.49076388888889
+      },
+      "name": "TONIE"
+    },
+    {
+      "ident": "TORIO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.24908611111111,
+        "lon": -86.8760361111111
+      },
+      "name": "TORIO"
+    },
+    {
+      "ident": "TOWNE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.88736111111111,
+        "lon": -86.62736666666666
+      },
+      "name": "TOWNE"
+    },
+    {
+      "ident": "TRICH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.20942777777778,
+        "lon": -88.80755277777777
+      },
+      "name": "TRICH"
+    },
+    {
+      "ident": "TRIDE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.46650833333334,
+        "lon": -89.19935277777778
+      },
+      "name": "TRIDE"
+    },
+    {
+      "ident": "TROLY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.694541666666666,
+        "lon": -86.05419166666667
+      },
+      "name": "TROLY"
+    },
+    {
+      "ident": "TRTLL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.37056388888889,
+        "lon": -88.6116111111111
+      },
+      "name": "TRTLL"
+    },
+    {
+      "ident": "TRYXI",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.002430555555556,
+        "lon": -88.23156944444445
+      },
+      "name": "TRYXI"
+    },
+    {
+      "ident": "TTH",
+      "kind": "vor",
+      "position": {
+        "lat": 39.48894166666667,
+        "lon": -87.2490138888889
+      },
+      "name": "TERRE HAUTE",
+      "frequencyMhz": 115.3
+    },
+    {
+      "ident": "TUBEZ",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.18091944444444,
+        "lon": -87.70080277777778
+      },
+      "name": "TUBEZ"
+    },
+    {
+      "ident": "TUURN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.75447777777778,
+        "lon": -87.75268611111112
+      },
+      "name": "TUURN"
+    },
+    {
+      "ident": "TVC",
+      "kind": "vor",
+      "position": {
+        "lat": 44.66791666666666,
+        "lon": -85.5500111111111
+      },
+      "name": "TRAVERSE CITY",
+      "frequencyMhz": 114.6
+    },
+    {
+      "ident": "UFDUH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.709975,
+        "lon": -85.79638055555556
+      },
+      "name": "UFDUH"
+    },
+    {
+      "ident": "UG",
+      "kind": "ndb",
+      "position": {
+        "lat": 42.46389444444445,
+        "lon": -87.80135555555556
+      },
+      "name": "WAUKE",
+      "frequencyMhz": 379
+    },
+    {
+      "ident": "UGGLY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.178713888888886,
+        "lon": -90.91830833333334
+      },
+      "name": "UGGLY"
+    },
+    {
+      "ident": "UKUNE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.158344444444445,
+        "lon": -88.19906111111112
+      },
+      "name": "UKUNE"
+    },
+    {
+      "ident": "UNBAR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.04838055555555,
+        "lon": -85.21309166666667
+      },
+      "name": "UNBAR"
+    },
+    {
+      "ident": "VEECK",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.125277777777775,
+        "lon": -86.61916666666666
+      },
+      "name": "VEECK"
+    },
+    {
+      "ident": "VHP",
+      "kind": "vor",
+      "position": {
+        "lat": 39.814730555555556,
+        "lon": -86.36749999999999
+      },
+      "name": "BRICKYARD",
+      "frequencyMhz": 116.3
+    },
+    {
+      "ident": "VIIKS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 44.27972222222222,
+        "lon": -87.12722222222222
+      },
+      "name": "VIIKS"
+    },
+    {
+      "ident": "VIKNG",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.96601944444445,
+        "lon": -91.54325
+      },
+      "name": "VIKNG"
+    },
+    {
+      "ident": "VINCA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 40.34534722222222,
+        "lon": -89.82351944444444
+      },
+      "name": "VINCA"
+    },
+    {
+      "ident": "VINYY",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.001275,
+        "lon": -87.30134722222222
+      },
+      "name": "VINYY"
+    },
+    {
+      "ident": "VIO",
+      "kind": "vor",
+      "position": {
+        "lat": 42.78671666666666,
+        "lon": -85.49707222222223
+      },
+      "name": "VICTORY",
+      "frequencyMhz": 115.95
+    },
+    {
+      "ident": "VNDER",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.00190277777778,
+        "lon": -88.37175555555555
+      },
+      "name": "VNDER"
+    },
+    {
+      "ident": "VOGLR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.94499999999999,
+        "lon": -86.91861111111112
+      },
+      "name": "VOGLR"
+    },
+    {
+      "ident": "VORIN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.548002777777775,
+        "lon": -89.33637499999999
+      },
+      "name": "VORIN"
+    },
+    {
+      "ident": "VP",
+      "kind": "ndb",
+      "position": {
+        "lat": 41.45122777777778,
+        "lon": -86.87732222222222
+      },
+      "name": "SEDLY",
+      "frequencyMhz": 212
+    },
+    {
+      "ident": "VULCN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.09176111111111,
+        "lon": -87.79417222222222
+      },
+      "name": "VULCN"
+    },
+    {
+      "ident": "WADLL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.760222222222225,
+        "lon": -87.62917499999999
+      },
+      "name": "WADLL"
+    },
+    {
+      "ident": "WASCO",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.98289444444445,
+        "lon": -88.37172222222222
+      },
+      "name": "WASCO"
+    },
+    {
+      "ident": "WATSN",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.283452777777775,
+        "lon": -86.0353361111111
+      },
+      "name": "WATSN"
+    },
+    {
+      "ident": "WAVIE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96906666666667,
+        "lon": -87.5822111111111
+      },
+      "name": "WAVIE"
+    },
+    {
+      "ident": "WELCM",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.0513,
+        "lon": -91.27038055555555
+      },
+      "name": "WELCM"
+    },
+    {
+      "ident": "WELEV",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.002177777777774,
+        "lon": -87.51186666666666
+      },
+      "name": "WELEV"
+    },
+    {
+      "ident": "WELTS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.00637777777778,
+        "lon": -91.77281944444444
+      },
+      "name": "WELTS"
+    },
+    {
+      "ident": "WHETT",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.160177777777776,
+        "lon": -86.58414722222221
+      },
+      "name": "WHETT"
+    },
+    {
+      "ident": "WILLT",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.96915833333333,
+        "lon": -87.77883333333334
+      },
+      "name": "WILLT"
+    },
+    {
+      "ident": "WLDBL",
+      "kind": "waypoint",
+      "position": {
+        "lat": 39.59243611111111,
+        "lon": -88.62755555555555
+      },
+      "name": "WLDBL"
+    },
+    {
+      "ident": "WLTER",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.68649722222222,
+        "lon": -86.05109444444444
+      },
+      "name": "WLTER"
+    },
+    {
+      "ident": "WNNRS",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.54561111111111,
+        "lon": -87.8607611111111
+      },
+      "name": "WNNRS"
+    },
+    {
+      "ident": "WYNDE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.455758333333335,
+        "lon": -87.110175
+      },
+      "name": "WYNDE"
+    },
+    {
+      "ident": "YOLUR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.15053611111111,
+        "lon": -86.62344999999999
+      },
+      "name": "YOLUR"
+    },
+    {
+      "ident": "ZANDI",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.82834166666667,
+        "lon": -88.24088055555556
+      },
+      "name": "ZANDI"
+    },
+    {
+      "ident": "ZANLA",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.189722222222215,
+        "lon": -84.84638888888888
+      },
+      "name": "ZANLA"
+    },
+    {
+      "ident": "ZENAH",
+      "kind": "waypoint",
+      "position": {
+        "lat": 42.00277777777778,
+        "lon": -88.037375
+      },
+      "name": "ZENAH"
+    },
+    {
+      "ident": "ZIINE",
+      "kind": "waypoint",
+      "position": {
+        "lat": 41.76976944444444,
+        "lon": -86.30742222222221
+      },
+      "name": "ZIINE"
+    },
+    {
+      "ident": "ZZIPR",
+      "kind": "waypoint",
+      "position": {
+        "lat": 43.18583333333333,
+        "lon": -91.65916666666668
+      },
+      "name": "ZZIPR"
+    }
+  ],
+  "holds": [
+    {
+      "fix": "BAGEL",
+      "inboundCourseDeg": 276,
+      "turn": "left",
+      "legNm": 8,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 24000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BENKY",
+      "inboundCourseDeg": 65,
+      "turn": "right",
+      "legNm": 9,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 23000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BENNR",
+      "inboundCourseDeg": 93,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 15000,
+      "maxAltitudeFt": 37000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BFORD",
+      "inboundCourseDeg": 69,
+      "turn": "right",
+      "legNm": 11,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 22000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BHAWK",
+      "inboundCourseDeg": 93,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 7000,
+      "maxAltitudeFt": 26000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BITTR",
+      "inboundCourseDeg": 193,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "BLUTO",
+      "inboundCourseDeg": 261,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 8000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "BRIBE",
+      "inboundCourseDeg": 109,
+      "turn": "right",
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 33000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "CARVR",
+      "inboundCourseDeg": 278,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 30000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "CASHN",
+      "inboundCourseDeg": 54,
+      "turn": "left",
+      "legNm": 15,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 39000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "CHDRR",
+      "inboundCourseDeg": 150,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 18000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "CHUMP",
+      "inboundCourseDeg": 143,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 17000,
+      "maxAltitudeFt": 24000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "COTON",
+      "inboundCourseDeg": 98,
+      "turn": "left",
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 37000,
+      "chart": "ENROUTE HIGH"
+    },
+    {
+      "fix": "CSTLO",
+      "inboundCourseDeg": 196,
+      "turn": "right",
+      "legNm": 12,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 32000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "DEERE",
+      "inboundCourseDeg": 277,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 8000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "EDENS",
+      "inboundCourseDeg": 88,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 19000,
+      "maxAltitudeFt": 23000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "ENDEE",
+      "inboundCourseDeg": 30,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 10000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "FAALZ",
+      "inboundCourseDeg": 90,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 21000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "FARGO",
+      "inboundCourseDeg": 34,
+      "turn": "right",
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 33000,
+      "chart": "ENROUTE HIGH"
+    },
+    {
+      "fix": "FISSK",
+      "inboundCourseDeg": 291,
+      "turn": "right",
+      "legNm": 8,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 11000,
+      "maxAltitudeFt": 18000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "FRIDG",
+      "inboundCourseDeg": 347,
+      "turn": "left",
+      "legNm": 8,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 31000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "FYTTE",
+      "inboundCourseDeg": 103,
+      "turn": "left",
+      "legNm": 7,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 7000,
+      "maxAltitudeFt": 26000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "GAULT",
+      "inboundCourseDeg": 196,
+      "turn": "right",
+      "legNm": 12,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 32000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "GRABL",
+      "inboundCourseDeg": 304,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 8000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "GROOV",
+      "inboundCourseDeg": 356,
+      "turn": "right",
+      "legNm": 12,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 39000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HALIE",
+      "inboundCourseDeg": 297,
+      "turn": "left",
+      "legNm": 8,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 7000,
+      "maxAltitudeFt": 31000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HAUPO",
+      "inboundCourseDeg": 282,
+      "turn": "left",
+      "legNm": 8,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 7000,
+      "maxAltitudeFt": 31000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "HUNKA",
+      "inboundCourseDeg": 185,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "IROCK",
+      "inboundCourseDeg": 273,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3400,
+      "maxAltitudeFt": 10000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "JILLZ",
+      "inboundCourseDeg": 64,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 10000,
+      "maxAltitudeFt": 16000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "JODEE",
+      "inboundCourseDeg": 197,
+      "turn": "right",
+      "legNm": 12,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 32000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "KAMBL",
+      "inboundCourseDeg": 87,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 28000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "KAYYS",
+      "inboundCourseDeg": 266,
+      "turn": "right",
+      "legNm": 12,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 32000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "KRENA",
+      "inboundCourseDeg": 109,
+      "turn": "left",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2900,
+      "maxAltitudeFt": 17500,
+      "chart": "STAR"
+    },
+    {
+      "fix": "LAIRD",
+      "inboundCourseDeg": 314,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 10000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "LLVSS",
+      "inboundCourseDeg": 73,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 19000,
+      "maxAltitudeFt": 26000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "LOAMY",
+      "inboundCourseDeg": 68,
+      "turn": "right",
+      "legNm": 12,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "LYNNI",
+      "inboundCourseDeg": 151,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "MAGOO",
+      "inboundCourseDeg": 39,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 35000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "MAROC",
+      "inboundCourseDeg": 44,
+      "turn": "left",
+      "legNm": 12,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "MCDEE",
+      "inboundCourseDeg": 53,
+      "turn": "left",
+      "legNm": 16,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 39000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "MKITA",
+      "inboundCourseDeg": 300,
+      "turn": "left",
+      "legNm": 8,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 7000,
+      "maxAltitudeFt": 31000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "MMEGG",
+      "inboundCourseDeg": 30,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 7000,
+      "maxAltitudeFt": 10000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "NANEE",
+      "inboundCourseDeg": 30,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 14000,
+      "maxAltitudeFt": 16000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "NYLEN",
+      "inboundCourseDeg": 347,
+      "turn": "left",
+      "legNm": 8,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "OVETE",
+      "inboundCourseDeg": 189,
+      "turn": "right",
+      "legNm": 16,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 21000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "OZZEY",
+      "inboundCourseDeg": 323,
+      "turn": "left",
+      "legNm": 8,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 3400,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PAITN",
+      "inboundCourseDeg": 259,
+      "turn": "right",
+      "legNm": 9,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 17500,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PANGG",
+      "inboundCourseDeg": 276,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 10000,
+      "maxAltitudeFt": 20000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "PECOK",
+      "inboundCourseDeg": 194,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 28000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "POOGY",
+      "inboundCourseDeg": 40,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 22000,
+      "maxAltitudeFt": 27000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "RYELY",
+      "inboundCourseDeg": 69,
+      "turn": "right",
+      "legNm": 12,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 2400,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "SIBER",
+      "inboundCourseDeg": 133,
+      "turn": "left",
+      "legNm": 7,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 30000,
+      "chart": "ENROUTE HIGH"
+    },
+    {
+      "fix": "STASH",
+      "inboundCourseDeg": 270,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 10000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "SUZYQ",
+      "inboundCourseDeg": 89,
+      "turn": "left",
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "SWIIS",
+      "inboundCourseDeg": 180,
+      "turn": "right",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "TEDDY",
+      "inboundCourseDeg": 109,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 2900,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "TRIDE",
+      "inboundCourseDeg": 46,
+      "turn": "right",
+      "legNm": 9,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "TRTLL",
+      "inboundCourseDeg": 45,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 5000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "UKUNE",
+      "inboundCourseDeg": 142,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 8000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "VEECK",
+      "inboundCourseDeg": 284,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "WASCO",
+      "inboundCourseDeg": 127,
+      "turn": "right",
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 4000,
+      "maxAltitudeFt": 8000,
+      "chart": "IAP"
+    },
+    {
+      "fix": "WATSN",
+      "inboundCourseDeg": 279,
+      "turn": "left",
+      "legNm": 8,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 9000,
+      "maxAltitudeFt": 31000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "WELTS",
+      "inboundCourseDeg": 39,
+      "turn": "left",
+      "legNm": 16,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 24000,
+      "maxAltitudeFt": 45000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "WLTER",
+      "inboundCourseDeg": 259,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 28000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "WYNDE",
+      "inboundCourseDeg": 253,
+      "turn": "right",
+      "legNm": 9,
+      "maxSpeedKts": 200,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 17500,
+      "chart": "STAR"
+    },
+    {
+      "fix": "ZANDI",
+      "inboundCourseDeg": 196,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 230,
+      "minAltitudeFt": 6000,
+      "maxAltitudeFt": 14000,
+      "chart": "STAR"
+    },
+    {
+      "fix": "ZZIPR",
+      "inboundCourseDeg": 118,
+      "turn": "left",
+      "legNm": 10,
+      "maxSpeedKts": 265,
+      "minAltitudeFt": 18000,
+      "maxAltitudeFt": 45000,
+      "chart": "ENROUTE HIGH"
+    }
+  ]
+}

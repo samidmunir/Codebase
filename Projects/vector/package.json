@@ -1,0 +1,57 @@
+{
+  "name": "vector",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "concurrently -n server,client -c cyan,magenta \"npm run dev -w @vector/server\" \"npm run dev -w @vector/client\"",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc --noEmit -p .",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test -c e2e/playwright.config.ts",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test",
+    "admin": "tsx apps/server/src/cli/admin.ts",
+    "results:backfill": "tsx apps/server/src/cli/backfill-results.ts",
+    "admin:grant": "npm run admin -- grant",
+    "admin:revoke": "npm run admin -- revoke",
+    "admin:list": "npm run admin -- list",
+    "admin:prod": "node apps/server/dist/cli/admin.js",
+    "migrate": "node scripts/migrate.js",
+    "migrate:up": "npm run migrate -- up",
+    "migrate:down": "npm run migrate -- down",
+    "migrate:create": "npm run migrate -- create",
+    "sim:demo": "tsx scripts/sim-demo.ts",
+    "data:airspace": "tsx scripts/data/build-airspace.ts",
+    "data:new-york": "tsx scripts/data/build-airspace.ts new-york",
+    "data:chicago": "tsx scripts/data/build-airspace.ts chicago",
+    "data:dallas": "tsx scripts/data/build-airspace.ts dallas",
+    "data:preview": "tsx scripts/data/preview.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.3",
+    "concurrently": "^10.0.5",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "fflate": "^0.8.3",
+    "globals": "^17.12.0",
+    "playwright": "^1.63.0",
+    "prettier": "^3.9.9",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.2"
+  }
+}

@@ -1,0 +1,9 @@
+# Raw downloads for data build scripts (reproducible, large)
+data/.cache/
+
+# End-to-end test output
+test-results/
+playwright-report/
+
+# The root .gitignore ignores site/ (generated docs); Vector's src/site folders are source.
+!**/src/site/

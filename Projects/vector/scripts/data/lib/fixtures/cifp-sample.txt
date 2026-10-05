@@ -1,0 +1,23 @@
+SUSAP KJFKK6AJFK     0     145YHN40382374W073464329W013000013         1800018000C    MNAR    JOHN F KENNEDY INTL           303921912
+SUSAP KJFKK6GRW04L   0120790440 N40372318W073470505         -0028300012046057200IIHIQ1                                     308531709
+SUSAP KJFKK6GRW22L   0084002240 N40384285W073451750         -0028300012000053200IIIWY3                                     308572308
+SUSAP KJFKK6IIIWY3   011090RW22LN40372749W0734616412238N40383293W0734519980477 09600452300W01305300013                     308622308
+SUSAP KJFKK6CROSLY K60    C     N40474997W073380868                       W0127     NAR           ROSLY                    304402504
+SUSAEAENRT   CAMRN K60    C   B N40010229W073513981                       W0124     NAR           CAMRN                    301322605
+SUSAD        DPK   K6011770VDLW N40473036W073181324    N40473036W073181324W0120001171     NARDEER PARK                     251632407
+SUSAP KJFKK6ECAMRN52ALL   010SIE  K6D 0V       IF                                             18000                        304832506
+SUSAP KJFKK6ECAMRN52ALL   020BOTONK6PC0E       TF                                                                          304842506
+SUSAP KJFKK6ECAMRN52ALL   030HOGGSK6EA0E       TF                                                                          304852506
+SUSAP KJFKK6ECAMRN52ALL   040PANZEK6EA0E       TF                                                                          304862506
+SUSAP KJFKK6ECAMRN52ALL   050KARRSK6EA0E       TF                                                                          304872506
+SUSAP KJFKK6ECAMRN52ALL   060CAMRNK6EA0EE      TF                                                                          304882506
+SUSAP KJFKK6FI22L  I      010ROSLYK6PC0E  I    IF IIWYK6      04380121        PI  J 030000180018000                 0 NS   306231808
+SUSAP KJFKK6FI22L  I      020ZALPOK6PC0E  F    CF IIWYK6      0438006922400052PI  H 0180001800            JFK   K6D 0 NS   306241912
+SUSAP KJFKK6FI22L  I      030RW22LK6PG0GY M    CF IIWYK6      0438001522400055PI    00065             -300          0 NS   306251912
+SUSAP KJFKK6FI22L  I      040         0  M     CA                     2238        + 00500                           0 NS   306261808
+SUSAP KJFKK6FI22L  I      050CHANTK6PC0EY      CF JFK K6      1900019019000190D   + 03000                           0 NS   306272209
+SUSAP KJFKK6FI22L  I      060CHANTK6PC0EE  R   HM                     0100T010    + 03000                           0 NS   306281310
+SUSAP KLGAK6DTNNIS64RW13  010         0        VI                     1341                    18000                        408121507
+SUSAP KLGAK6DTNNIS64RW13  020JUTESK6PC0E       CF LGA K6      0910005205000039D   + 03000          220               -     408131507
+SUSAP KLGAK6DTNNIS64RW13  030TNNISK6PC0EY      TF                                 + 05000                                  408141507
+SUSAP KLGAK6DTNNIS64RW13  040TNNISK6PC0EE      FM LGA K6      064500950450    D                                            408151507

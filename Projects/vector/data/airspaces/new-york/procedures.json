@@ -1,0 +1,5398 @@
+{
+  "schemaVersion": 1,
+  "arrivals": [
+    {
+      "id": "BRAND1",
+      "airport": "KEWR",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "DQO",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "DQO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RUUTH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "SHLBK",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SHLBK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LOUIE",
+              "altitude": {
+                "type": "at",
+                "ft": 13000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BACKY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ODESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DQO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RUUTH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "SWANN",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SWANN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "GATBY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KERNO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ODESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DQO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RUUTH",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04L",
+            "04R",
+            "11",
+            "22L",
+            "22R",
+            "29"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "RUUTH",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WNDYL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BRAND",
+              "altitude": {
+                "type": "at",
+                "ft": 7000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KORRY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WATJA",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "WATJA",
+              "courseDeg": 60.8,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "FLOSI4",
+      "airport": "KEWR",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "BAF",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "BAF",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BOWAN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WIGAN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TALCO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WEETS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HELON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "GEE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "GEE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "EXTOL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KODEY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HNK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HELON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "HANAA",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "HANAA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ALB",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ACOVE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TALCO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WEETS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HELON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "HNK",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "HNK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HELON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "NELIE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "NELIE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "IGN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04L",
+            "04R",
+            "11",
+            "22L",
+            "22R",
+            "29"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "FLOSI",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CRANK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SHAFF",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SAX",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PHLBO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HOKIR",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "VM",
+              "courseDeg": 180,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "FQM3",
+      "airport": "KEWR",
+      "rnav": false,
+      "enrouteTransitions": [
+        {
+          "name": "SLT",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SLT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FQM",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04L",
+            "04R",
+            "11",
+            "22L",
+            "22R",
+            "29"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "FQM",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MEGSS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAYED",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RACKI",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PENNS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SWEET",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "VM",
+              "courseDeg": 122,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "PENNS2",
+      "airport": "KEWR",
+      "rnav": false,
+      "enrouteTransitions": [
+        {
+          "name": "FQM",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "FQM",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAYED",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RACKI",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PENNS",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "LVZ",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "LVZ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RACKI",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PENNS",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04L",
+            "04R",
+            "11",
+            "22L",
+            "22R",
+            "29"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PENNS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SWEET",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "PHLBO4",
+      "airport": "KEWR",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "GVE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "GVE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BAILZ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PALEO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FUBRR",
+              "altitude": {
+                "type": "at",
+                "ft": 27000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DQO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 20000
+              },
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "HYTRA",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "HYTRA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SWANN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DQO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 20000
+              },
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "QUART",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "QUART",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HURLE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LOOPR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HVNNN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BAILZ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PALEO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FUBRR",
+              "altitude": {
+                "type": "at",
+                "ft": 27000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DQO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 20000
+              },
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "SWANN",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SWANN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DQO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 20000
+              },
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04L",
+            "04R",
+            "11",
+            "22L",
+            "22R",
+            "29"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "DQO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 20000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "STEFE",
+              "altitude": {
+                "type": "between",
+                "minFt": 13000,
+                "maxFt": 17000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SOMTO",
+              "altitude": {
+                "type": "at",
+                "ft": 11000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ARD",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DYLIN",
+              "altitude": {
+                "type": "at",
+                "ft": 8000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MERSR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "METRO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MARRT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PHLBO",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "PHLBO",
+              "courseDeg": 24.5,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "SHAFF7",
+      "airport": "KEWR",
+      "rnav": false,
+      "enrouteTransitions": [
+        {
+          "name": "ALB",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ALB",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ACOVE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TALCO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WEETS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HELON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "BAF",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "BAF",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BOWAN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WIGAN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TALCO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WEETS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HELON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "GEE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "GEE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "EXTOL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KODEY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HNK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HELON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "HNK",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "HNK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HELON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "IGN",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "IGN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FLOSI",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04L",
+            "04R",
+            "11",
+            "22L",
+            "22R",
+            "29"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "FLOSI",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CRANK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SHAFF",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SAX",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "CAMRN5",
+      "airport": "KJFK",
+      "rnav": false,
+      "enrouteTransitions": [],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04L",
+            "04R",
+            "13L",
+            "13R",
+            "22L",
+            "22R",
+            "31L",
+            "31R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SIE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BOTON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HOGGS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PANZE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KARRS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CAMRN",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "PARCH4",
+      "airport": "KJFK",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "ENE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ENE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ASPEN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PVD",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TRAIT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PARCH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "PLYMM",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PLYMM",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PVD",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TRAIT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PARCH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "PVD",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PVD",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TRAIT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PARCH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "SEY",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SEY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PARCH",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PARCH",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CCC",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ROBER",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": [
+        {
+          "name": "RW04B",
+          "runways": [
+            "04L",
+            "04R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ROBER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "JFK",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "VM",
+              "courseDeg": 277.9,
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "RW13B",
+          "runways": [
+            "13L",
+            "13R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ROBER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "JFK",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "VM",
+              "courseDeg": 277.9,
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "RW22B",
+          "runways": [
+            "22L",
+            "22R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ROBER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CRAIL",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "CRAIL",
+              "courseDeg": 283.5,
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "RW31B",
+          "runways": [
+            "31L",
+            "31R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ROBER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "JFK",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "VM",
+              "courseDeg": 277.9,
+              "flyover": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PAWLN1",
+      "airport": "KJFK",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "ALB",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ALB",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ATHOS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PAWLN",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "ATHOS",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ATHOS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PAWLN",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "DANZI",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "DANZI",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PETER",
+              "altitude": {
+                "type": "atOrBelow",
+                "ft": 17000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ATHOS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PAWLN",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "RAHKS",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "RAHKS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PETER",
+              "altitude": {
+                "type": "atOrBelow",
+                "ft": 17000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ATHOS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PAWLN",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04L",
+            "04R",
+            "13L",
+            "13R",
+            "22L",
+            "22R",
+            "31L",
+            "31R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PAWLN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DEEDE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LOVES",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "EEGOR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BELTT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DPK",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "DPK",
+              "courseDeg": 234.6,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "PUCKY1",
+      "airport": "KJFK",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "ARRKK",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ARRKK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PRNCE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "YODAA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FUUEL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DOORE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PUCKY",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "JEWLR",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "JEWLR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MEMMS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KODEY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ARRKK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PRNCE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "YODAA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FUUEL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DOORE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PUCKY",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "MEMMS",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "MEMMS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KODEY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ARRKK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PRNCE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "YODAA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FUUEL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DOORE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PUCKY",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "PONCT",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PONCT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ZAVIL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "YODAA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FUUEL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DOORE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PUCKY",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "WLKES",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "WLKES",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "JENNO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HARTY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "NWTON",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PUCKY",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "YODAA",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "YODAA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FUUEL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DOORE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PUCKY",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04L",
+            "04R",
+            "13L",
+            "13R",
+            "22L",
+            "22R",
+            "31L",
+            "31R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PUCKY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VADDR",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "VADDR",
+              "courseDeg": 135.7,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "APPLE3",
+      "airport": "KLGA",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "SHLBK",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SHLBK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LOUIE",
+              "altitude": {
+                "type": "at",
+                "ft": 13000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BACKY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ODESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DQO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RUUTH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "SWANN",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SWANN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "GATBY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KERNO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ODESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DQO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RUUTH",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04",
+            "13",
+            "22",
+            "31"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "RUUTH",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WNDYL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BRAND",
+              "altitude": {
+                "type": "at",
+                "ft": 8000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KORRY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DEPDY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TYKES",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MINKS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "JERZY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RENUE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "APPLE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PROUD",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "PROUD",
+              "courseDeg": 44.9,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "MIP4",
+      "airport": "KLGA",
+      "rnav": false,
+      "enrouteTransitions": [
+        {
+          "name": "ETG",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ETG",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MIP",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "PSB",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PSB",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MIP",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "SFK",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SFK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MIP",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04",
+            "13",
+            "22",
+            "31"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "MIP",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MARRC",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BILEY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VIBES",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FJC",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LIZZI",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BEUTY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HARLM",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DREMS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "APPLE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PROUD",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "NOBBI1",
+      "airport": "KLGA",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "ALB",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ALB",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "WIGAN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TRESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CASSH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "BAF",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "BAF",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PAWLN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CASSH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "CTR",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "CTR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PAWLN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CASSH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "DANZI",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "DANZI",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PETER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CYPER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TRESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CASSH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "RAHKS",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "RAHKS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PETER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CYPER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TRESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CASSH",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "TRESA",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "TRESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CASSH",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04",
+            "13",
+            "22",
+            "31"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "CASSH",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "NOBBI",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BIZEX",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RYMES",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAARP",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CRALY",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "CRALY",
+              "courseDeg": 224.2,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "PROUD2",
+      "airport": "KLGA",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "GVE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "GVE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ZUNAR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HYTRA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PRNCZ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RIDGY",
+              "altitude": {
+                "type": "at",
+                "ft": 27000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ENO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 24000
+              },
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "HURTS",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "HURTS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "GROKK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HYTRA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PRNCZ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RIDGY",
+              "altitude": {
+                "type": "at",
+                "ft": 27000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ENO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 24000
+              },
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "HYTRA",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "HYTRA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PRNCZ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RIDGY",
+              "altitude": {
+                "type": "at",
+                "ft": 27000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ENO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 24000
+              },
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "SPEAK",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SPEAK",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ENO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 24000
+              },
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04",
+            "13",
+            "22",
+            "31"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ENO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 24000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SKIPY",
+              "altitude": {
+                "type": "between",
+                "minFt": 19000,
+                "maxFt": 22000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BESSI",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 17000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "EDJER",
+              "altitude": {
+                "type": "between",
+                "minFt": 13000,
+                "maxFt": 17000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DAVYS",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 13000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HOLEY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BRAND",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 11000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KORRY",
+              "altitude": {
+                "type": "at",
+                "ft": 10000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DEPDY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TYKES",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "MINKS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "JERZY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RENUE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "APPLE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PROUD",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "PROUD",
+              "courseDeg": 44.9,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    },
+    {
+      "id": "VADDR1",
+      "airport": "KLGA",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "ALB",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "ALB",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "STOTT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PAWLN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "IGN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VALRE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BASYE",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "NELIE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "NELIE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CAMBR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TNKRR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VALRE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BASYE",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "PAWLN",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PAWLN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "IGN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VALRE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BASYE",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "RAHKS",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "RAHKS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PETER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CYPER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TRESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "IGN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VALRE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BASYE",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "TRESA",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "TRESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "IGN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VALRE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BASYE",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "VAAPE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "VAAPE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "NABOR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RAHKS",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PETER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CYPER",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TRESA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "IGN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VALRE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BASYE",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "ALL",
+          "runways": [
+            "04",
+            "13",
+            "22",
+            "31"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "BASYE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAARP",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CRALY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VADDR",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "VADDR",
+              "courseDeg": 224.1,
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": []
+    }
+  ],
+  "departures": [
+    {
+      "id": "PORTT4",
+      "airport": "KEWR",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "BIGGY",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PORTT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RIETA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SBJ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BIGGY",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "ELIOT",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PORTT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SIRLY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "FENLY",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ELIOT",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "LANNA",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PORTT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RIETA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SBJ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LANNA",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "PARKE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PORTT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RIETA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SBJ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PARKE",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [],
+      "runwayTransitions": [
+        {
+          "name": "RW22B",
+          "runways": [
+            "22L",
+            "22R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VA",
+              "courseDeg": 218.8,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 518
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "DF",
+              "fix": "BAGGA",
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 220
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "PORTT",
+              "flyover": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DEEZZ6",
+      "airport": "KJFK",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "CANDR",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "HEERO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KURNL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CANDR",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "TOWIN",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "HEERO",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KURNL",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CANDR",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TOWIN",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [
+        {
+          "name": "",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "DEEZZ",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HEERO",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "runwayTransitions": [
+        {
+          "name": "RW04L",
+          "runways": [
+            "04L"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VA",
+              "courseDeg": 43.8,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 520
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "DF",
+              "fix": "PONAE",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "VM",
+              "courseDeg": 99,
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "RW04R",
+          "runways": [
+            "04R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VA",
+              "courseDeg": 43.8,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 520
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "VM",
+              "courseDeg": 99,
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "RW31B",
+          "runways": [
+            "31L",
+            "31R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VA",
+              "courseDeg": 313.8,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 520
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "DF",
+              "fix": "SKORR",
+              "turnDirection": "left",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 210
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CESID",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 250
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "YNKEE",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "YNKEE",
+              "courseDeg": 187,
+              "flyover": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SKORR6",
+      "airport": "KJFK",
+      "rnav": true,
+      "enrouteTransitions": [
+        {
+          "name": "RNGRR",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SKORR",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 210
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "METSS",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 250
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "RNGRR",
+              "flyover": false
+            }
+          ]
+        },
+        {
+          "name": "YNKEE",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "SKORR",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 210
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CESID",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 250
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "YNKEE",
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "commonRoutes": [],
+      "runwayTransitions": [
+        {
+          "name": "RW31B",
+          "runways": [
+            "31L",
+            "31R"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VA",
+              "courseDeg": 313.8,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 520
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "DF",
+              "fix": "SKORR",
+              "turnDirection": "left",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 210
+              },
+              "flyover": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "GLDMN8",
+      "airport": "KLGA",
+      "rnav": true,
+      "enrouteTransitions": [],
+      "commonRoutes": [],
+      "runwayTransitions": [
+        {
+          "name": "RW13",
+          "runways": [
+            "13"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VI",
+              "courseDeg": 134.1,
+              "flyover": false
+            },
+            {
+              "pathTerminator": "CF",
+              "fix": "KIWIE",
+              "courseDeg": 179,
+              "distanceNm": 3.2,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VOBOZ",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 220
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "GLDMN",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "GLDMN",
+              "courseDeg": 335,
+              "flyover": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "HOPEA3",
+      "airport": "KLGA",
+      "rnav": true,
+      "enrouteTransitions": [],
+      "commonRoutes": [],
+      "runwayTransitions": [
+        {
+          "name": "RW22",
+          "runways": [
+            "22"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VI",
+              "courseDeg": 224.1,
+              "flyover": false
+            },
+            {
+              "pathTerminator": "CF",
+              "fix": "HOPEA",
+              "courseDeg": 189.1,
+              "distanceNm": 3.4,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 220
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CRI",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 5000
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 230
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ASALT",
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "ASALT",
+              "courseDeg": 224,
+              "flyover": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "JUTES4",
+      "airport": "KLGA",
+      "rnav": true,
+      "enrouteTransitions": [],
+      "commonRoutes": [],
+      "runwayTransitions": [
+        {
+          "name": "RW22",
+          "runways": [
+            "22"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VA",
+              "courseDeg": 224.1,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 540
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "DF",
+              "fix": "JUTES",
+              "turnDirection": "left",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 220
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TNNIS",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 5000
+              },
+              "flyover": true
+            },
+            {
+              "pathTerminator": "VM",
+              "courseDeg": 45,
+              "flyover": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NTHNS6",
+      "airport": "KLGA",
+      "rnav": true,
+      "enrouteTransitions": [],
+      "commonRoutes": [],
+      "runwayTransitions": [
+        {
+          "name": "RW13",
+          "runways": [
+            "13"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VI",
+              "courseDeg": 134.1,
+              "flyover": false
+            },
+            {
+              "pathTerminator": "CF",
+              "fix": "KIWIE",
+              "courseDeg": 179,
+              "distanceNm": 3.2,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2500
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 220
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "NTHNS",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 220
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CNRSE",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 5000
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 230
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ASALT",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "ASALT",
+              "courseDeg": 224,
+              "flyover": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TNNIS6",
+      "airport": "KLGA",
+      "rnav": true,
+      "enrouteTransitions": [],
+      "commonRoutes": [],
+      "runwayTransitions": [
+        {
+          "name": "RW13",
+          "runways": [
+            "13"
+          ],
+          "legs": [
+            {
+              "pathTerminator": "VI",
+              "courseDeg": 134.1,
+              "flyover": false
+            },
+            {
+              "pathTerminator": "CF",
+              "fix": "JUTES",
+              "courseDeg": 50,
+              "distanceNm": 3.9,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 220
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TNNIS",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 5000
+              },
+              "flyover": true
+            },
+            {
+              "pathTerminator": "FM",
+              "fix": "TNNIS",
+              "courseDeg": 45,
+              "flyover": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "approaches": [
+    {
+      "id": "I04LY",
+      "airport": "KEWR",
+      "runway": "04L",
+      "variant": "Y",
+      "localizer": "IEWR",
+      "transitions": [],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "CHESA",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "glideslopeInterceptFt": 1300,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "RODII",
+          "courseDeg": 39,
+          "distanceNm": 2.1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1300
+          },
+          "glideslopeInterceptFt": 1300,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "04L",
+          "courseDeg": 39,
+          "distanceNm": 3.8,
+          "altitude": {
+            "type": "at",
+            "ft": 67
+          },
+          "verticalAngleDeg": -3.1,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 38.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 520
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "DF",
+          "fix": "TYNIE",
+          "turnDirection": "right",
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "NEBTE",
+          "altitude": {
+            "type": "atOrBelow",
+            "ft": 2000
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "FLYRS",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "FLYRS",
+          "courseDeg": 313.5,
+          "turnDirection": "left",
+          "distanceNm": 4,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I04LZ",
+      "airport": "KEWR",
+      "runway": "04L",
+      "variant": "Z",
+      "localizer": "IEWR",
+      "transitions": [
+        {
+          "name": "KILMA",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "KILMA",
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "EMBAY",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2800
+              },
+              "flyover": false
+            }
+          ]
+        }
+      ],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "EMBAY",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2800
+          },
+          "glideslopeInterceptFt": 2000,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "HOWYA",
+          "courseDeg": 39,
+          "distanceNm": 5.1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "glideslopeInterceptFt": 2000,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "04L",
+          "courseDeg": 39,
+          "distanceNm": 5.9,
+          "altitude": {
+            "type": "at",
+            "ft": 67
+          },
+          "verticalAngleDeg": -3.1,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 38.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 520
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "DF",
+          "fix": "TYNIE",
+          "turnDirection": "right",
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "NEBTE",
+          "altitude": {
+            "type": "atOrBelow",
+            "ft": 2000
+          },
+          "speed": {
+            "type": "atOrBelow",
+            "kts": 210
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "FLYRS",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "FLYRS",
+          "courseDeg": 313.5,
+          "turnDirection": "left",
+          "distanceNm": 4,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I04R",
+      "airport": "KEWR",
+      "runway": "04R",
+      "localizer": "IEZA",
+      "transitions": [
+        {
+          "name": "KILMA",
+          "legs": [
+            {
+              "pathTerminator": "FC",
+              "fix": "KILMA",
+              "courseDeg": 85.2,
+              "distanceNm": 4,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2800
+              },
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "CF",
+              "fix": "GRITY",
+              "courseDeg": 85.2,
+              "distanceNm": 2,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2800
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        }
+      ],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "GRITY",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2800
+          },
+          "glideslopeInterceptFt": 1700,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "DOOIN",
+          "courseDeg": 39,
+          "distanceNm": 5.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1700
+          },
+          "glideslopeInterceptFt": 1700,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "04R",
+          "courseDeg": 39,
+          "distanceNm": 5.2,
+          "altitude": {
+            "type": "at",
+            "ft": 66
+          },
+          "verticalAngleDeg": -2.95,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 38.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 560
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "DF",
+          "fix": "TYNIE",
+          "turnDirection": "right",
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "NEBTE",
+          "altitude": {
+            "type": "atOrBelow",
+            "ft": 2000
+          },
+          "speed": {
+            "type": "atOrBelow",
+            "kts": 210
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "FLYRS",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "FLYRS",
+          "courseDeg": 313.5,
+          "turnDirection": "left",
+          "distanceNm": 4,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I11",
+      "airport": "KEWR",
+      "runway": "11",
+      "localizer": "IGPR",
+      "transitions": [],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "JARIT",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1600
+          },
+          "glideslopeInterceptFt": 1600,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "JEENO",
+          "courseDeg": 107,
+          "distanceNm": 4.7,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1600
+          },
+          "glideslopeInterceptFt": 1600,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "11",
+          "courseDeg": 107,
+          "distanceNm": 4.8,
+          "altitude": {
+            "type": "at",
+            "ft": 75
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "DF",
+          "fix": "ROOSO",
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "JKLNE",
+          "speed": {
+            "type": "atOrBelow",
+            "kts": 230
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "JEFFB",
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "RAATO",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "RAATO",
+          "courseDeg": 90,
+          "turnDirection": "left",
+          "distanceNm": 4,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I22L",
+      "airport": "KEWR",
+      "runway": "22L",
+      "localizer": "ILSQ",
+      "transitions": [
+        {
+          "name": "PATRN",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PATRN",
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "IZEKO",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 210
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        }
+      ],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "IZEKO",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "glideslopeInterceptFt": 1500,
+          "speed": {
+            "type": "atOrBelow",
+            "kts": 210
+          },
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "GIMEE",
+          "courseDeg": 219,
+          "distanceNm": 1.6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2500
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "ZAVPI",
+          "courseDeg": 219,
+          "distanceNm": 1.6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "BUZZD",
+          "courseDeg": 219,
+          "distanceNm": 1.6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1500
+          },
+          "glideslopeInterceptFt": 1500,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "22L",
+          "courseDeg": 219,
+          "distanceNm": 4.5,
+          "altitude": {
+            "type": "at",
+            "ft": 53
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 218.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 500
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "VI",
+          "courseDeg": 225,
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "KILMA",
+          "courseDeg": 248.8,
+          "distanceNm": 6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "KILMA",
+          "courseDeg": 68.8,
+          "turnDirection": "right",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I22R",
+      "airport": "KEWR",
+      "runway": "22R",
+      "localizer": "IJNN",
+      "transitions": [
+        {
+          "name": "PATRN",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "PATRN",
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "AGNSS",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 210
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        }
+      ],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "AGNSS",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "glideslopeInterceptFt": 1500,
+          "speed": {
+            "type": "atOrBelow",
+            "kts": 210
+          },
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "VERDE",
+          "courseDeg": 219,
+          "distanceNm": 1.6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2500
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "TIPPS",
+          "courseDeg": 219,
+          "distanceNm": 1.6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "TALTE",
+          "courseDeg": 219,
+          "distanceNm": 1.6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1500
+          },
+          "glideslopeInterceptFt": 1500,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "22R",
+          "courseDeg": 219,
+          "distanceNm": 4.4,
+          "altitude": {
+            "type": "at",
+            "ft": 57
+          },
+          "verticalAngleDeg": -3.1,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "VI",
+          "courseDeg": 219,
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "KILMA",
+          "courseDeg": 248.8,
+          "distanceNm": 7.7,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "KILMA",
+          "courseDeg": 68.8,
+          "turnDirection": "right",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I04L",
+      "airport": "KJFK",
+      "runway": "04L",
+      "localizer": "IHIQ",
+      "transitions": [],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "AROKE",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "glideslopeInterceptFt": 1500,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "KRSTL",
+          "courseDeg": 44,
+          "distanceNm": 6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1500
+          },
+          "glideslopeInterceptFt": 1500,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "04L",
+          "courseDeg": 44,
+          "distanceNm": 4.5,
+          "altitude": {
+            "type": "at",
+            "ft": 69
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 43.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "DUFFY",
+          "courseDeg": 62,
+          "distanceNm": 12,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "DUFFY",
+          "courseDeg": 242,
+          "turnDirection": "left",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I04R",
+      "airport": "KJFK",
+      "runway": "04R",
+      "localizer": "IJFK",
+      "transitions": [],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "ZETAL",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "glideslopeInterceptFt": 1500,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "EBBEE",
+          "courseDeg": 44,
+          "distanceNm": 4.9,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1500
+          },
+          "glideslopeInterceptFt": 1500,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "04R",
+          "courseDeg": 44,
+          "distanceNm": 4.5,
+          "altitude": {
+            "type": "at",
+            "ft": 65
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 43.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 800
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "VI",
+          "courseDeg": 99,
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "DPK",
+          "courseDeg": 41,
+          "distanceNm": 8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 4000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "DPK",
+          "courseDeg": 258.1,
+          "turnDirection": "left",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 4000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I13L",
+      "airport": "KJFK",
+      "runway": "13L",
+      "localizer": "ITLK",
+      "transitions": [
+        {
+          "name": "BUZON",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "BUZON",
+              "altitude": {
+                "type": "at",
+                "ft": 2900
+              },
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TELEX",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2100
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        },
+        {
+          "name": "COVIR",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "COVIR",
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "KMCHI",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2900
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BUZON",
+              "altitude": {
+                "type": "at",
+                "ft": 2900
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TELEX",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2100
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        },
+        {
+          "name": "KMCHI",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "KMCHI",
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BUZON",
+              "altitude": {
+                "type": "at",
+                "ft": 2900
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TELEX",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2100
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        }
+      ],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "TELEX",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2100
+          },
+          "glideslopeInterceptFt": 1500,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "CAXUN",
+          "courseDeg": 134,
+          "distanceNm": 2,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1500
+          },
+          "glideslopeInterceptFt": 1500,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "13L",
+          "courseDeg": 134,
+          "distanceNm": 4.5,
+          "altitude": {
+            "type": "at",
+            "ft": 71
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 133.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 600
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "DF",
+          "fix": "DPK",
+          "turnDirection": "left",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 4000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "DPK",
+          "courseDeg": 258.1,
+          "turnDirection": "left",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 4000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I22L",
+      "airport": "KJFK",
+      "runway": "22L",
+      "localizer": "IIWY",
+      "transitions": [
+        {
+          "name": "CIMBL",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "CIMBL",
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAIRR",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 14000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CEEGL",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 10000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TAPPR",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 8000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DETGY",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 7000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAUPT",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 6000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LEFER",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ROSLY",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "flyover": true,
+              "role": "if"
+            }
+          ]
+        },
+        {
+          "name": "DPK",
+          "legs": [
+            {
+              "pathTerminator": "FC",
+              "fix": "DPK",
+              "courseDeg": 283.4,
+              "distanceNm": 13.1,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "CF",
+              "fix": "ROSLY",
+              "courseDeg": 283.4,
+              "distanceNm": 2,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        },
+        {
+          "name": "NRTON",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "NRTON",
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SAJUL",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 10000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DETGY",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 7000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAUPT",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 6000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LEFER",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ROSLY",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "flyover": true,
+              "role": "if"
+            }
+          ]
+        }
+      ],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "ROSLY",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "glideslopeInterceptFt": 1800,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "ZALPO",
+          "courseDeg": 224,
+          "distanceNm": 5.2,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1800
+          },
+          "glideslopeInterceptFt": 1800,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "22L",
+          "courseDeg": 224,
+          "distanceNm": 5.5,
+          "altitude": {
+            "type": "at",
+            "ft": 65
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 223.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 500
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "CHANT",
+          "courseDeg": 190,
+          "distanceNm": 19,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "CHANT",
+          "courseDeg": 10,
+          "turnDirection": "right",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I22R",
+      "airport": "KJFK",
+      "runway": "22R",
+      "localizer": "IJOC",
+      "transitions": [
+        {
+          "name": "CIMBL",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "CIMBL",
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAIRR",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 14000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CEEGL",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 10000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "TAPPR",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 8000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DETGY",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 7000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAUPT",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 6000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LEFER",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CORVT",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        },
+        {
+          "name": "NRTON",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "NRTON",
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "SAJUL",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 10000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "DETGY",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 7000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "HAUPT",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 6000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "LEFER",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "CORVT",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        }
+      ],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "CORVT",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "glideslopeInterceptFt": 1900,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "MATTR",
+          "courseDeg": 221,
+          "distanceNm": 5,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1900
+          },
+          "glideslopeInterceptFt": 1900,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "22R",
+          "courseDeg": 221,
+          "distanceNm": 5.7,
+          "altitude": {
+            "type": "at",
+            "ft": 72
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 221.2,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "CHANT",
+          "courseDeg": 190,
+          "distanceNm": 16,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 4000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "CHANT",
+          "courseDeg": 10,
+          "turnDirection": "right",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 4000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I31L",
+      "airport": "KJFK",
+      "runway": "31L",
+      "localizer": "IMOH",
+      "transitions": [
+        {
+          "name": "CHANT",
+          "legs": [
+            {
+              "pathTerminator": "FC",
+              "fix": "CHANT",
+              "courseDeg": 48.2,
+              "distanceNm": 13.8,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2000
+              },
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "CF",
+              "fix": "ZACHS",
+              "courseDeg": 48.2,
+              "distanceNm": 2,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2000
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        },
+        {
+          "name": "DPK",
+          "legs": [
+            {
+              "pathTerminator": "FC",
+              "fix": "DPK",
+              "courseDeg": 228,
+              "distanceNm": 17.5,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2000
+              },
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "CF",
+              "fix": "ZACHS",
+              "courseDeg": 228,
+              "distanceNm": 2,
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 2000
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        }
+      ],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "ZACHS",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "glideslopeInterceptFt": 1800,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "MEALS",
+          "courseDeg": 314,
+          "distanceNm": 6.7,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1800
+          },
+          "glideslopeInterceptFt": 1800,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "31L",
+          "courseDeg": 314,
+          "distanceNm": 5.4,
+          "altitude": {
+            "type": "at",
+            "ft": 71
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 313.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 500
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "CHANT",
+          "courseDeg": 190,
+          "turnDirection": "left",
+          "distanceNm": 16,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "CHANT",
+          "courseDeg": 10,
+          "turnDirection": "right",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I31R",
+      "airport": "KJFK",
+      "runway": "31R",
+      "localizer": "IRTH",
+      "transitions": [],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "CATOD",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "glideslopeInterceptFt": 1900,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "MALDE",
+          "courseDeg": 314,
+          "distanceNm": 2.6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "ZULAB",
+          "courseDeg": 314,
+          "distanceNm": 3.7,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1900
+          },
+          "glideslopeInterceptFt": 1900,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "31R",
+          "courseDeg": 314,
+          "distanceNm": 5.7,
+          "altitude": {
+            "type": "at",
+            "ft": 55
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 313.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1800
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "MOVFA",
+          "courseDeg": 207.4,
+          "turnDirection": "left",
+          "distanceNm": 30,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 4000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "MOVFA",
+          "courseDeg": 207.4,
+          "turnDirection": "left",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 4000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I04",
+      "airport": "KLGA",
+      "runway": "04",
+      "localizer": "ILGA",
+      "transitions": [
+        {
+          "name": "GGREG",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "GGREG",
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 240
+              },
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "ZARID",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VADDR",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "JACIE",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "NECOL",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4000
+              },
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 200
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "VARAZ",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 4000
+              },
+              "flyover": false
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BENNG",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        },
+        {
+          "name": "VARAZ",
+          "legs": [
+            {
+              "pathTerminator": "IF",
+              "fix": "VARAZ",
+              "speed": {
+                "type": "atOrBelow",
+                "kts": 200
+              },
+              "flyover": false,
+              "role": "iaf"
+            },
+            {
+              "pathTerminator": "TF",
+              "fix": "BENNG",
+              "altitude": {
+                "type": "atOrAbove",
+                "ft": 3000
+              },
+              "flyover": false,
+              "role": "if"
+            }
+          ]
+        }
+      ],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "BENNG",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "glideslopeInterceptFt": 1700,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "RAHEL",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1800
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "TF",
+          "fix": "DNNIS",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1700
+          },
+          "glideslopeInterceptFt": 1700,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "04",
+          "courseDeg": 44,
+          "distanceNm": 4.9,
+          "altitude": {
+            "type": "at",
+            "ft": 75
+          },
+          "verticalAngleDeg": -3.14,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CF",
+          "fix": "GREKO",
+          "courseDeg": 42.8,
+          "distanceNm": 6.8,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "GREKO",
+          "courseDeg": 222.8,
+          "turnDirection": "left",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I13",
+      "airport": "KLGA",
+      "runway": "13",
+      "localizer": "IGDI",
+      "transitions": [],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "PAYMI",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2800
+          },
+          "glideslopeInterceptFt": 1900,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "STEED",
+          "courseDeg": 134,
+          "distanceNm": 3.2,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1900
+          },
+          "glideslopeInterceptFt": 1900,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "13",
+          "courseDeg": 134,
+          "distanceNm": 5.5,
+          "altitude": {
+            "type": "at",
+            "ft": 61
+          },
+          "verticalAngleDeg": -3.1,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CA",
+          "courseDeg": 134.1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 800
+          },
+          "flyover": false
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "GREKO",
+          "courseDeg": 42.8,
+          "turnDirection": "left",
+          "distanceNm": 6,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "GREKO",
+          "courseDeg": 222.8,
+          "turnDirection": "left",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 2000
+          },
+          "flyover": false
+        }
+      ]
+    },
+    {
+      "id": "I22",
+      "airport": "KLGA",
+      "runway": "22",
+      "localizer": "IURD",
+      "transitions": [],
+      "final": [
+        {
+          "pathTerminator": "IF",
+          "fix": "YOMAN",
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "glideslopeInterceptFt": 1900,
+          "flyover": false,
+          "role": "if"
+        },
+        {
+          "pathTerminator": "CF",
+          "fix": "GREKO",
+          "courseDeg": 224,
+          "distanceNm": 5.1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 1900
+          },
+          "glideslopeInterceptFt": 1900,
+          "flyover": false,
+          "role": "faf"
+        },
+        {
+          "pathTerminator": "CF",
+          "runway": "22",
+          "courseDeg": 224,
+          "distanceNm": 5.7,
+          "altitude": {
+            "type": "at",
+            "ft": 63
+          },
+          "verticalAngleDeg": -3,
+          "flyover": true,
+          "role": "map"
+        }
+      ],
+      "missedApproach": [
+        {
+          "pathTerminator": "CF",
+          "fix": "PROUD",
+          "courseDeg": 225,
+          "distanceNm": 11,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": true
+        },
+        {
+          "pathTerminator": "HM",
+          "fix": "PROUD",
+          "courseDeg": 45,
+          "turnDirection": "left",
+          "holdMinutes": 1,
+          "altitude": {
+            "type": "atOrAbove",
+            "ft": 3000
+          },
+          "flyover": false
+        }
+      ]
+    }
+  ]
+}

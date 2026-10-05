@@ -1,0 +1,1253 @@
+{
+  "schemaVersion": 1,
+  "notes": "Curated operations profile. Runway configurations are common real-world New York flows, and airline and destination weights approximate each airport's real traffic. Not FAA-published data. cityPositions are the airports' reference points, for trip lengths and cruise levels. Runway configurations are in order of preference; dual configurations come first and are used when the wind is within limits on every runway in them. windRegimes approximate the region's typical surface winds (fractions of time, magnetic), for random weather.",
+  "departureGates": {
+    "north": [
+      "GAYEL",
+      "HAAYS",
+      "COATE"
+    ],
+    "northeast": [
+      "MERIT",
+      "GREKI",
+      "BDR"
+    ],
+    "transatlantic": [
+      "BETTE",
+      "HAPIE"
+    ],
+    "south": [
+      "WAVEY",
+      "SHIPP"
+    ],
+    "southwest": [
+      "WHITE",
+      "DIXIE"
+    ],
+    "west": [
+      "BIGGY",
+      "LANNA",
+      "PARKE",
+      "ZIMMZ",
+      "ELIOT",
+      "NEWEL"
+    ]
+  },
+  "airports": {
+    "KJFK": {
+      "initialAltitudeFt": 5000,
+      "runwayConfigs": [
+        {
+          "id": "22s-dual",
+          "arrivals": [
+            "22L",
+            "22R"
+          ],
+          "departures": [
+            "22R",
+            "31L"
+          ]
+        },
+        {
+          "id": "22s",
+          "arrivals": [
+            "22L"
+          ],
+          "departures": [
+            "22R"
+          ]
+        },
+        {
+          "id": "31s-dual",
+          "arrivals": [
+            "31R",
+            "31L"
+          ],
+          "departures": [
+            "31L"
+          ]
+        },
+        {
+          "id": "31s",
+          "arrivals": [
+            "31R"
+          ],
+          "departures": [
+            "31L"
+          ]
+        },
+        {
+          "id": "13s-dual",
+          "arrivals": [
+            "13L",
+            "22L"
+          ],
+          "departures": [
+            "13R"
+          ]
+        },
+        {
+          "id": "13s",
+          "arrivals": [
+            "13L"
+          ],
+          "departures": [
+            "13R"
+          ]
+        },
+        {
+          "id": "4s-dual",
+          "arrivals": [
+            "04R",
+            "04L"
+          ],
+          "departures": [
+            "04L"
+          ]
+        },
+        {
+          "id": "4s",
+          "arrivals": [
+            "04R"
+          ],
+          "departures": [
+            "04L"
+          ]
+        }
+      ],
+      "airlines": [
+        {
+          "icao": "JBU",
+          "weight": 28,
+          "types": [
+            "A320",
+            "A321",
+            "A21N",
+            "BCS3"
+          ]
+        },
+        {
+          "icao": "DAL",
+          "weight": 20,
+          "types": [
+            "A321",
+            "B739",
+            "B752",
+            "B763",
+            "A333",
+            "A339",
+            "A359"
+          ]
+        },
+        {
+          "icao": "AAL",
+          "weight": 13,
+          "types": [
+            "A321",
+            "B738",
+            "B772",
+            "B77W",
+            "B789"
+          ]
+        },
+        {
+          "icao": "EDV",
+          "weight": 9,
+          "types": [
+            "CRJ9"
+          ]
+        },
+        {
+          "icao": "RPA",
+          "weight": 7,
+          "types": [
+            "E175"
+          ]
+        },
+        {
+          "icao": "BAW",
+          "weight": 5,
+          "types": [
+            "B772",
+            "B77W",
+            "B789",
+            "A35K"
+          ],
+          "destinations": [
+            "EGLL"
+          ]
+        },
+        {
+          "icao": "UAL",
+          "weight": 4,
+          "types": [
+            "B752",
+            "B763"
+          ]
+        },
+        {
+          "icao": "ASA",
+          "weight": 4,
+          "types": [
+            "B739",
+            "B39M"
+          ],
+          "destinations": [
+            "KSEA",
+            "KSFO",
+            "KLAX",
+            "KPDX"
+          ]
+        },
+        {
+          "icao": "VIR",
+          "weight": 3,
+          "types": [
+            "B789",
+            "A339",
+            "A35K"
+          ],
+          "destinations": [
+            "EGLL"
+          ]
+        },
+        {
+          "icao": "AFR",
+          "weight": 3,
+          "types": [
+            "B77W",
+            "A359"
+          ],
+          "destinations": [
+            "LFPG"
+          ]
+        },
+        {
+          "icao": "DLH",
+          "weight": 2,
+          "types": [
+            "B748",
+            "A333"
+          ],
+          "destinations": [
+            "EDDF",
+            "EDDM"
+          ]
+        },
+        {
+          "icao": "KLM",
+          "weight": 2,
+          "types": [
+            "B772",
+            "B789",
+            "A333"
+          ],
+          "destinations": [
+            "EHAM"
+          ]
+        },
+        {
+          "icao": "IBE",
+          "weight": 1,
+          "types": [
+            "A333",
+            "A359"
+          ],
+          "destinations": [
+            "LEMD"
+          ]
+        },
+        {
+          "icao": "UAE",
+          "weight": 2,
+          "types": [
+            "A388",
+            "B77W"
+          ],
+          "destinations": [
+            "OMDB"
+          ]
+        },
+        {
+          "icao": "QTR",
+          "weight": 1,
+          "types": [
+            "B77W",
+            "A35K"
+          ],
+          "destinations": [
+            "OTHH"
+          ]
+        }
+      ],
+      "destinations": [
+        {
+          "icao": "KLAX",
+          "weight": 8,
+          "gate": "west"
+        },
+        {
+          "icao": "KSFO",
+          "weight": 6,
+          "gate": "west"
+        },
+        {
+          "icao": "KSEA",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KLAS",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KPHX",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KORD",
+          "weight": 6,
+          "gate": "west"
+        },
+        {
+          "icao": "KDEN",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KATL",
+          "weight": 5,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KCLT",
+          "weight": 4,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KDCA",
+          "weight": 3,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KRDU",
+          "weight": 3,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KMIA",
+          "weight": 6,
+          "gate": "south"
+        },
+        {
+          "icao": "KFLL",
+          "weight": 5,
+          "gate": "south"
+        },
+        {
+          "icao": "KMCO",
+          "weight": 6,
+          "gate": "south"
+        },
+        {
+          "icao": "TJSJ",
+          "weight": 4,
+          "gate": "south"
+        },
+        {
+          "icao": "KBOS",
+          "weight": 6,
+          "gate": "northeast"
+        },
+        {
+          "icao": "KBUF",
+          "weight": 3,
+          "gate": "north"
+        },
+        {
+          "icao": "KSYR",
+          "weight": 2,
+          "gate": "north"
+        },
+        {
+          "icao": "CYYZ",
+          "weight": 2,
+          "gate": "north"
+        },
+        {
+          "icao": "EGLL",
+          "weight": 5,
+          "gate": "transatlantic",
+          "airlines": [
+            "BAW",
+            "VIR",
+            "AAL",
+            "DAL",
+            "JBU"
+          ]
+        },
+        {
+          "icao": "LFPG",
+          "weight": 3,
+          "gate": "transatlantic",
+          "airlines": [
+            "AFR",
+            "DAL",
+            "AAL",
+            "JBU"
+          ]
+        },
+        {
+          "icao": "EDDF",
+          "weight": 2,
+          "gate": "transatlantic",
+          "airlines": [
+            "DLH"
+          ]
+        },
+        {
+          "icao": "EDDM",
+          "weight": 1,
+          "gate": "transatlantic",
+          "airlines": [
+            "DLH"
+          ]
+        },
+        {
+          "icao": "EHAM",
+          "weight": 3,
+          "gate": "transatlantic",
+          "airlines": [
+            "KLM",
+            "DAL",
+            "JBU"
+          ]
+        },
+        {
+          "icao": "LEMD",
+          "weight": 2,
+          "gate": "transatlantic",
+          "airlines": [
+            "IBE",
+            "AAL",
+            "DAL",
+            "JBU"
+          ]
+        },
+        {
+          "icao": "OMDB",
+          "weight": 2,
+          "gate": "transatlantic",
+          "airlines": [
+            "UAE"
+          ]
+        },
+        {
+          "icao": "OTHH",
+          "weight": 1,
+          "gate": "transatlantic",
+          "airlines": [
+            "QTR"
+          ]
+        },
+        {
+          "icao": "KPDX",
+          "weight": 1,
+          "gate": "west"
+        }
+      ]
+    },
+    "KLGA": {
+      "initialAltitudeFt": 5000,
+      "runwayConfigs": [
+        {
+          "id": "22-13",
+          "arrivals": [
+            "22"
+          ],
+          "departures": [
+            "13"
+          ]
+        },
+        {
+          "id": "04-13",
+          "arrivals": [
+            "04"
+          ],
+          "departures": [
+            "13"
+          ]
+        },
+        {
+          "id": "04-31",
+          "arrivals": [
+            "04"
+          ],
+          "departures": [
+            "31"
+          ]
+        },
+        {
+          "id": "13-04",
+          "arrivals": [
+            "13"
+          ],
+          "departures": [
+            "04"
+          ]
+        },
+        {
+          "id": "22-31",
+          "arrivals": [
+            "22"
+          ],
+          "departures": [
+            "31"
+          ]
+        }
+      ],
+      "airlines": [
+        {
+          "icao": "DAL",
+          "weight": 26,
+          "types": [
+            "A321",
+            "A21N",
+            "B739",
+            "BCS1",
+            "BCS3"
+          ]
+        },
+        {
+          "icao": "AAL",
+          "weight": 18,
+          "types": [
+            "A321",
+            "A21N",
+            "B738"
+          ]
+        },
+        {
+          "icao": "RPA",
+          "weight": 12,
+          "types": [
+            "E175"
+          ]
+        },
+        {
+          "icao": "EDV",
+          "weight": 12,
+          "types": [
+            "CRJ9"
+          ]
+        },
+        {
+          "icao": "UAL",
+          "weight": 9,
+          "types": [
+            "B738",
+            "B739",
+            "B38M"
+          ]
+        },
+        {
+          "icao": "SWA",
+          "weight": 6,
+          "types": [
+            "B737",
+            "B738",
+            "B38M"
+          ],
+          "destinations": [
+            "KMDW",
+            "KBNA",
+            "KDEN",
+            "KHOU",
+            "KATL",
+            "KMCO"
+          ]
+        },
+        {
+          "icao": "JBU",
+          "weight": 6,
+          "types": [
+            "A320",
+            "BCS3"
+          ]
+        },
+        {
+          "icao": "ENY",
+          "weight": 5,
+          "types": [
+            "E175"
+          ]
+        },
+        {
+          "icao": "JIA",
+          "weight": 5,
+          "types": [
+            "CRJ9"
+          ]
+        },
+        {
+          "icao": "SKW",
+          "weight": 4,
+          "types": [
+            "E175"
+          ]
+        },
+        {
+          "icao": "FFT",
+          "weight": 3,
+          "types": [
+            "A20N",
+            "A21N"
+          ],
+          "destinations": [
+            "KDEN",
+            "KMCO",
+            "KATL",
+            "KMIA",
+            "KFLL"
+          ]
+        },
+        {
+          "icao": "ACA",
+          "weight": 3,
+          "types": [
+            "BCS3"
+          ],
+          "destinations": [
+            "CYYZ",
+            "CYUL"
+          ]
+        }
+      ],
+      "destinations": [
+        {
+          "icao": "KORD",
+          "weight": 8,
+          "gate": "west"
+        },
+        {
+          "icao": "KDTW",
+          "weight": 4,
+          "gate": "west"
+        },
+        {
+          "icao": "KMSP",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KDEN",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KDFW",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KPIT",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KATL",
+          "weight": 8,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KCLT",
+          "weight": 6,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KDCA",
+          "weight": 6,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KRDU",
+          "weight": 4,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KMIA",
+          "weight": 5,
+          "gate": "south"
+        },
+        {
+          "icao": "KFLL",
+          "weight": 4,
+          "gate": "south"
+        },
+        {
+          "icao": "KMCO",
+          "weight": 5,
+          "gate": "south"
+        },
+        {
+          "icao": "KBOS",
+          "weight": 7,
+          "gate": "northeast"
+        },
+        {
+          "icao": "KPWM",
+          "weight": 2,
+          "gate": "northeast"
+        },
+        {
+          "icao": "KBUF",
+          "weight": 3,
+          "gate": "north"
+        },
+        {
+          "icao": "KROC",
+          "weight": 2,
+          "gate": "north"
+        },
+        {
+          "icao": "CYYZ",
+          "weight": 2,
+          "gate": "north"
+        },
+        {
+          "icao": "KMDW",
+          "weight": 3,
+          "gate": "west",
+          "airlines": [
+            "SWA"
+          ]
+        },
+        {
+          "icao": "KBNA",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KHOU",
+          "weight": 1,
+          "gate": "west",
+          "airlines": [
+            "SWA"
+          ]
+        },
+        {
+          "icao": "CYUL",
+          "weight": 2,
+          "gate": "north",
+          "airlines": [
+            "ACA",
+            "EDV"
+          ]
+        }
+      ]
+    },
+    "KEWR": {
+      "initialAltitudeFt": 5000,
+      "runwayConfigs": [
+        {
+          "id": "22s",
+          "arrivals": [
+            "22L"
+          ],
+          "departures": [
+            "22R"
+          ]
+        },
+        {
+          "id": "4s",
+          "arrivals": [
+            "04R"
+          ],
+          "departures": [
+            "04L"
+          ]
+        },
+        {
+          "id": "11-04",
+          "arrivals": [
+            "11"
+          ],
+          "departures": [
+            "04L"
+          ]
+        }
+      ],
+      "airlines": [
+        {
+          "icao": "UAL",
+          "weight": 52,
+          "types": [
+            "B738",
+            "B739",
+            "B38M",
+            "B39M",
+            "B752",
+            "B763",
+            "B772",
+            "B789",
+            "B78X",
+            "B77W"
+          ]
+        },
+        {
+          "icao": "RPA",
+          "weight": 10,
+          "types": [
+            "E175"
+          ]
+        },
+        {
+          "icao": "SKW",
+          "weight": 7,
+          "types": [
+            "E175"
+          ]
+        },
+        {
+          "icao": "DAL",
+          "weight": 8,
+          "types": [
+            "A321",
+            "B739"
+          ]
+        },
+        {
+          "icao": "AAL",
+          "weight": 7,
+          "types": [
+            "A321",
+            "B738"
+          ]
+        },
+        {
+          "icao": "JBU",
+          "weight": 6,
+          "types": [
+            "A320",
+            "BCS3"
+          ]
+        },
+        {
+          "icao": "EDV",
+          "weight": 3,
+          "types": [
+            "CRJ9"
+          ]
+        },
+        {
+          "icao": "ASA",
+          "weight": 2,
+          "types": [
+            "B739",
+            "B39M"
+          ],
+          "destinations": [
+            "KSEA",
+            "KSFO"
+          ]
+        },
+        {
+          "icao": "FDX",
+          "weight": 3,
+          "types": [
+            "B763",
+            "B77L"
+          ],
+          "destinations": [
+            "KMEM",
+            "KIND"
+          ]
+        },
+        {
+          "icao": "UPS",
+          "weight": 2,
+          "types": [
+            "B752",
+            "B763"
+          ],
+          "destinations": [
+            "KSDF"
+          ]
+        },
+        {
+          "icao": "BAW",
+          "weight": 3,
+          "types": [
+            "B772",
+            "B77W"
+          ],
+          "destinations": [
+            "EGLL"
+          ]
+        },
+        {
+          "icao": "TAP",
+          "weight": 1,
+          "types": [
+            "A21N",
+            "A339"
+          ],
+          "destinations": [
+            "LPPT"
+          ]
+        }
+      ],
+      "destinations": [
+        {
+          "icao": "KLAX",
+          "weight": 8,
+          "gate": "west"
+        },
+        {
+          "icao": "KSFO",
+          "weight": 6,
+          "gate": "west"
+        },
+        {
+          "icao": "KSEA",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KLAS",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KPHX",
+          "weight": 3,
+          "gate": "west"
+        },
+        {
+          "icao": "KORD",
+          "weight": 6,
+          "gate": "west"
+        },
+        {
+          "icao": "KDEN",
+          "weight": 5,
+          "gate": "west"
+        },
+        {
+          "icao": "KIAH",
+          "weight": 4,
+          "gate": "west"
+        },
+        {
+          "icao": "KATL",
+          "weight": 4,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KCLT",
+          "weight": 3,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KDCA",
+          "weight": 3,
+          "gate": "southwest"
+        },
+        {
+          "icao": "KMIA",
+          "weight": 4,
+          "gate": "south"
+        },
+        {
+          "icao": "KFLL",
+          "weight": 4,
+          "gate": "south"
+        },
+        {
+          "icao": "KMCO",
+          "weight": 5,
+          "gate": "south"
+        },
+        {
+          "icao": "TJSJ",
+          "weight": 2,
+          "gate": "south"
+        },
+        {
+          "icao": "KBOS",
+          "weight": 5,
+          "gate": "northeast"
+        },
+        {
+          "icao": "KBUF",
+          "weight": 2,
+          "gate": "north"
+        },
+        {
+          "icao": "CYYZ",
+          "weight": 2,
+          "gate": "north"
+        },
+        {
+          "icao": "EGLL",
+          "weight": 4,
+          "gate": "transatlantic",
+          "airlines": [
+            "BAW",
+            "UAL"
+          ]
+        },
+        {
+          "icao": "EDDF",
+          "weight": 2,
+          "gate": "transatlantic",
+          "airlines": [
+            "UAL"
+          ]
+        },
+        {
+          "icao": "LPPT",
+          "weight": 1,
+          "gate": "transatlantic",
+          "airlines": [
+            "TAP",
+            "UAL"
+          ]
+        },
+        {
+          "icao": "KMEM",
+          "weight": 2,
+          "gate": "west",
+          "airlines": [
+            "FDX"
+          ]
+        },
+        {
+          "icao": "KIND",
+          "weight": 1,
+          "gate": "west",
+          "airlines": [
+            "FDX",
+            "UAL"
+          ]
+        },
+        {
+          "icao": "KSDF",
+          "weight": 1,
+          "gate": "west",
+          "airlines": [
+            "UPS"
+          ]
+        }
+      ]
+    }
+  },
+  "cityPositions": {
+    "CYUL": {
+      "lat": 45.4706,
+      "lon": -73.7408
+    },
+    "CYYZ": {
+      "lat": 43.6772,
+      "lon": -79.6306
+    },
+    "EDDF": {
+      "lat": 50.0333,
+      "lon": 8.5706
+    },
+    "EDDM": {
+      "lat": 48.3538,
+      "lon": 11.7861
+    },
+    "EGLL": {
+      "lat": 51.47,
+      "lon": -0.4543
+    },
+    "EHAM": {
+      "lat": 52.3086,
+      "lon": 4.7639
+    },
+    "KATL": {
+      "lat": 33.6367,
+      "lon": -84.4281
+    },
+    "KBNA": {
+      "lat": 36.1245,
+      "lon": -86.6782
+    },
+    "KBOS": {
+      "lat": 42.3643,
+      "lon": -71.0052
+    },
+    "KBUF": {
+      "lat": 42.9405,
+      "lon": -78.7322
+    },
+    "KCLT": {
+      "lat": 35.214,
+      "lon": -80.9431
+    },
+    "KDCA": {
+      "lat": 38.8521,
+      "lon": -77.0377
+    },
+    "KDEN": {
+      "lat": 39.8561,
+      "lon": -104.6737
+    },
+    "KDFW": {
+      "lat": 32.8998,
+      "lon": -97.0403
+    },
+    "KDTW": {
+      "lat": 42.2124,
+      "lon": -83.3534
+    },
+    "KFLL": {
+      "lat": 26.0726,
+      "lon": -80.1527
+    },
+    "KHOU": {
+      "lat": 29.6454,
+      "lon": -95.2789
+    },
+    "KIAH": {
+      "lat": 29.9844,
+      "lon": -95.3414
+    },
+    "KIND": {
+      "lat": 39.7173,
+      "lon": -86.2944
+    },
+    "KLAS": {
+      "lat": 36.084,
+      "lon": -115.1537
+    },
+    "KLAX": {
+      "lat": 33.9416,
+      "lon": -118.4085
+    },
+    "KMCO": {
+      "lat": 28.4312,
+      "lon": -81.3081
+    },
+    "KMDW": {
+      "lat": 41.7868,
+      "lon": -87.7522
+    },
+    "KMEM": {
+      "lat": 35.0424,
+      "lon": -89.9767
+    },
+    "KMIA": {
+      "lat": 25.7959,
+      "lon": -80.287
+    },
+    "KMSP": {
+      "lat": 44.8848,
+      "lon": -93.2223
+    },
+    "KORD": {
+      "lat": 41.9742,
+      "lon": -87.9073
+    },
+    "KPDX": {
+      "lat": 45.5887,
+      "lon": -122.5975
+    },
+    "KPHX": {
+      "lat": 33.4342,
+      "lon": -112.0116
+    },
+    "KPIT": {
+      "lat": 40.4915,
+      "lon": -80.2329
+    },
+    "KPWM": {
+      "lat": 43.6462,
+      "lon": -70.3093
+    },
+    "KRDU": {
+      "lat": 35.8801,
+      "lon": -78.788
+    },
+    "KROC": {
+      "lat": 43.1189,
+      "lon": -77.6724
+    },
+    "KSDF": {
+      "lat": 38.1744,
+      "lon": -85.736
+    },
+    "KSEA": {
+      "lat": 47.4502,
+      "lon": -122.3088
+    },
+    "KSFO": {
+      "lat": 37.6213,
+      "lon": -122.379
+    },
+    "KSYR": {
+      "lat": 43.1112,
+      "lon": -76.1063
+    },
+    "LEMD": {
+      "lat": 40.4719,
+      "lon": -3.5626
+    },
+    "LFPG": {
+      "lat": 49.0097,
+      "lon": 2.5479
+    },
+    "LPPT": {
+      "lat": 38.7813,
+      "lon": -9.1359
+    },
+    "OMDB": {
+      "lat": 25.2528,
+      "lon": 55.3644
+    },
+    "OTHH": {
+      "lat": 25.2731,
+      "lon": 51.6081
+    },
+    "TJSJ": {
+      "lat": 18.4394,
+      "lon": -66.0018
+    }
+  },
+  "windRegimes": [
+    {
+      "weight": 0.3,
+      "fromDeg": 190,
+      "toDeg": 240
+    },
+    {
+      "weight": 0.28,
+      "fromDeg": 280,
+      "toDeg": 330
+    },
+    {
+      "weight": 0.14,
+      "fromDeg": 20,
+      "toDeg": 70
+    },
+    {
+      "weight": 0.1,
+      "fromDeg": 250,
+      "toDeg": 280
+    },
+    {
+      "weight": 0.1,
+      "fromDeg": 110,
+      "toDeg": 170
+    },
+    {
+      "weight": 0.08,
+      "fromDeg": 0,
+      "toDeg": 360
+    }
+  ]
+}

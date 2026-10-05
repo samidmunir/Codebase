@@ -1,0 +1,50 @@
+{
+  "/": {
+    "title": "Vector · Air traffic control on real airspace",
+    "description": "Vector is an air traffic control simulator for the radar room: New York, Chicago and Dallas–Fort Worth, built from real FAA data, with live weather and realistic pilots."
+  },
+  "/airspaces": {
+    "title": "Airspaces · Vector",
+    "description": "New York (N90), Chicago (C90) and Dallas–Fort Worth (D10): real TRACONs built from FAA data."
+  },
+  "/airspaces/new-york": {
+    "title": "New York (N90) · Vector",
+    "description": "Kennedy, LaGuardia and Newark: work the New York TRACON on real FAA procedures."
+  },
+  "/airspaces/chicago": {
+    "title": "Chicago (C90) · Vector",
+    "description": "O’Hare and Midway: triple approaches in west or east flow, on real FAA procedures."
+  },
+  "/airspaces/dallas": {
+    "title": "Dallas–Fort Worth (D10) · Vector",
+    "description": "DFW and Love Field: four arrival runways and RNAV SIDs, on real FAA procedures."
+  },
+  "/records": {
+    "title": "Records · Vector",
+    "description": "The best controllers on Vector: career RP, best sessions, landings, safety and on-time records, from verified sessions only."
+  },
+  "/guide": {
+    "title": "Controller’s Handbook · Vector",
+    "description": "Everything Vector does, the rules it enforces, and how to work arrivals, departures and overflights."
+  },
+  "/news": {
+    "title": "News · Vector",
+    "description": "Release notes and announcements from Vector."
+  },
+  "/community": {
+    "title": "Community · Vector",
+    "description": "Talk controlling with other Vector pilots: techniques, airspaces, bug reports and feature requests."
+  },
+  "/about": {
+    "title": "About · Vector",
+    "description": "What Vector is, where its data comes from, and what it isn’t."
+  },
+  "/terms": {
+    "title": "Terms of use · Vector",
+    "description": "The terms for using Vector."
+  },
+  "/privacy": {
+    "title": "Privacy · Vector",
+    "description": "What Vector stores about you, and why."
+  }
+}

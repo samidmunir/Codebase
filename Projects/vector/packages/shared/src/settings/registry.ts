@@ -1,0 +1,1143 @@
+import { setting, type SettingsRegistry, type SettingsValues } from './definitions';
+
+/**
+ * Bump when a stored setting is renamed or changes meaning, and add a
+ * migration. Adding or removing settings needs no bump: stored settings are
+ * resolved leniently (new keys get defaults, unknown keys are dropped).
+ */
+export const SETTINGS_VERSION = 1;
+
+/** Preferences saved to the player's account. They apply to every session. */
+export const USER_SETTINGS = {
+  // ---- Display -------------------------------------------------------------
+  'display.brightness': setting.number({
+    category: 'display',
+    label: 'Scope brightness',
+    description: 'Overall brightness of the radar scope.',
+    min: 20,
+    max: 100,
+    step: 5,
+    unit: '%',
+    default: 100,
+  }),
+  'display.dataBlockStyle': setting.select({
+    category: 'display',
+    label: 'Data block style',
+    description:
+      'Expanded: callsign, altitude with the full speed, then type and destination. STARS: the real two-line format, speed in tens of knots, time-shared with type and destination.',
+    options: [
+      { value: 'expanded', label: 'Expanded' },
+      { value: 'stars', label: 'STARS' },
+    ],
+    default: 'expanded',
+  }),
+  'display.dataBlockSpeed': setting.select({
+    category: 'display',
+    label: 'Data block speed',
+    description:
+      'Indicated airspeed is what the pilot flies and what speed restrictions and your speed assignments use. Ground speed is the speed over the ground (the real scope shows this); it reads higher at altitude.',
+    options: [
+      { value: 'indicated', label: 'Indicated airspeed (IAS)' },
+      { value: 'ground', label: 'Ground speed' },
+    ],
+    default: 'indicated',
+  }),
+  'display.dimClearedApproaches': setting.boolean({
+    category: 'display',
+    label: 'Dim aircraft cleared for the ILS',
+    description:
+      'Draw aircraft cleared for an approach faded, so the traffic that still needs you stands out. Selected, hovered and conflicting aircraft are drawn at full strength.',
+    default: true,
+  }),
+  'display.clearedApproachOpacity': setting.number({
+    category: 'display',
+    label: 'Cleared approach opacity',
+    description: 'How strongly aircraft cleared for the ILS are drawn when dimmed.',
+    min: 15,
+    max: 90,
+    step: 5,
+    unit: '%',
+    default: 45,
+  }),
+  'display.dataBlockFontSize': setting.number({
+    category: 'display',
+    label: 'Data block font size',
+    description: 'Text size of aircraft data blocks.',
+    min: 10,
+    max: 20,
+    step: 1,
+    unit: 'px',
+    default: 13,
+  }),
+  'display.scopeRangeNm': setting.number({
+    category: 'display',
+    label: 'Scope range',
+    description:
+      'How far from the center the scope shows when it opens or is recentered (the whole region at the maximum).',
+    min: 30,
+    max: 150,
+    step: 10,
+    unit: 'NM',
+    default: 150,
+  }),
+  'display.historyTrailLength': setting.number({
+    category: 'display',
+    label: 'History trail length',
+    description: 'Number of previous radar positions shown behind each target.',
+    min: 0,
+    max: 20,
+    step: 1,
+    default: 8,
+  }),
+  'display.leaderLineLength': setting.number({
+    category: 'display',
+    label: 'Leader line length',
+    description: 'Length of the line connecting a target to its data block.',
+    min: 0,
+    max: 7,
+    step: 1,
+    default: 2,
+  }),
+  'display.autoPlaceDataBlocks': setting.boolean({
+    category: 'display',
+    label: 'Keep data blocks apart',
+    description:
+      'Automatically move data blocks to a clear side of their target when they would overlap. Blocks you place yourself stay where you put them.',
+    default: true,
+  }),
+  'display.heatTrail': setting.boolean({
+    category: 'display',
+    label: 'Heat trail',
+    description:
+      'Draw each aircraft’s whole path since it entered your airspace, colored as a heat map (in addition to the short history trail).',
+    default: true,
+  }),
+  'display.heatTrailColorBy': setting.select({
+    category: 'display',
+    label: 'Heat trail colors',
+    description:
+      'Age: hot where the aircraft is now, cooling toward where it entered. Altitude: hot low, cool high. Speed: hot fast, cool slow.',
+    options: [
+      { value: 'age', label: 'Age' },
+      { value: 'altitude', label: 'Altitude' },
+      { value: 'speed', label: 'Speed' },
+    ],
+    default: 'age',
+  }),
+  'display.heatTrailLengthMin': setting.select({
+    category: 'display',
+    label: 'Heat trail length',
+    description:
+      'How much of each path to keep. The oldest part fades out smoothly; “Whole path” keeps everything since the aircraft entered.',
+    options: [
+      { value: 5, label: '5 min' },
+      { value: 10, label: '10 min' },
+      { value: 20, label: '20 min' },
+      { value: 30, label: '30 min' },
+      { value: 0, label: 'Whole path' },
+    ],
+    default: 20,
+  }),
+  'display.heatTrailAircraft': setting.select({
+    category: 'display',
+    label: 'Heat trails for',
+    description: 'Every aircraft on the scope, or only the one you have selected.',
+    options: [
+      { value: 'all', label: 'All aircraft' },
+      { value: 'selected', label: 'Selected' },
+    ],
+    default: 'all',
+  }),
+  'display.heatTrailOpacity': setting.number({
+    category: 'display',
+    label: 'Heat trail opacity',
+    description: 'How strongly heat trails are drawn.',
+    min: 10,
+    max: 100,
+    step: 5,
+    unit: '%',
+    default: 55,
+  }),
+  'display.headingVector': setting.boolean({
+    category: 'display',
+    label: 'Heading vector',
+    description: 'Show a short line from each target in the direction it is heading.',
+    default: true,
+  }),
+  'display.rangeRings': setting.boolean({
+    category: 'display',
+    label: 'Range rings',
+    description: 'Show range rings around the scope center.',
+    default: true,
+  }),
+  'display.rangeRingSpacingNm': setting.select({
+    category: 'display',
+    label: 'Range ring spacing',
+    description: 'Distance between range rings.',
+    options: [
+      { value: 5, label: '5 NM' },
+      { value: 10, label: '10 NM' },
+      { value: 20, label: '20 NM' },
+    ],
+    default: 10,
+  }),
+  'display.sweepEffect': setting.boolean({
+    category: 'display',
+    label: 'Radar sweep effect',
+    description: 'Show the animated radar sweep.',
+    default: true,
+  }),
+  'display.uiAnimations': setting.select({
+    category: 'display',
+    label: 'UI animations',
+    description: 'Amount of motion in menus and transitions.',
+    options: [
+      { value: 'full', label: 'Full' },
+      { value: 'reduced', label: 'Reduced' },
+      { value: 'off', label: 'Off' },
+    ],
+    default: 'full',
+  }),
+  'display.color.mapLines': setting.color({
+    category: 'display',
+    label: 'Map line color',
+    description: 'Color of video map lines.',
+    default: '#2c5b4b',
+  }),
+  'display.color.arrivals': setting.color({
+    category: 'display',
+    label: 'Arrival color',
+    description: 'Color of arrivals you control (targets, trails and data blocks).',
+    default: '#4cf2a0',
+  }),
+  'display.color.departures': setting.color({
+    category: 'display',
+    label: 'Departure color',
+    description: 'Color of departures you control (targets, trails and data blocks).',
+    default: '#62b8ff',
+  }),
+  'display.color.transits': setting.color({
+    category: 'display',
+    label: 'Overflight color',
+    description: 'Color of overflights you control (targets, trails and data blocks).',
+    default: '#d49bff',
+  }),
+
+  // ---- Map layers ----------------------------------------------------------
+  'map.runways': setting.boolean({
+    category: 'map',
+    label: 'Runways',
+    description: 'Show airport runways.',
+    default: true,
+  }),
+  'map.airportLabels': setting.boolean({
+    category: 'map',
+    label: 'Airport labels',
+    description: 'Show airport identifiers.',
+    default: true,
+  }),
+  'map.finalApproachCourses': setting.boolean({
+    category: 'map',
+    label: 'Final approach courses',
+    description: 'Show extended centerlines for active runways.',
+    default: true,
+  }),
+  'map.fixes': setting.boolean({
+    category: 'map',
+    label: 'Fixes',
+    description: 'Show navigation fixes and their names.',
+    default: true,
+  }),
+  'map.classB': setting.boolean({
+    category: 'map',
+    label: 'Class B airspace',
+    description: 'Show Class B airspace boundaries in the region.',
+    default: true,
+  }),
+  'map.classC': setting.boolean({
+    category: 'map',
+    label: 'Class C airspace',
+    description: 'Show Class C airspace around airports in the region.',
+    default: false,
+  }),
+  'map.airwaysHigh': setting.boolean({
+    category: 'map',
+    label: 'Jet and Q routes',
+    description: 'Show high-altitude airways (at and above FL180).',
+    default: false,
+  }),
+  'map.airwaysLow': setting.boolean({
+    category: 'map',
+    label: 'Victor and T routes',
+    description: 'Show low-altitude airways (below FL180).',
+    default: false,
+  }),
+  'map.otherAirports': setting.boolean({
+    category: 'map',
+    label: 'Other airports',
+    description: 'Show the region’s other airports and their runways, for orientation.',
+    default: true,
+  }),
+  'map.traconBoundary': setting.boolean({
+    category: 'map',
+    label: 'TRACON boundary',
+    description:
+      'Show the TRACON’s own airspace (the approach/departure area, such as N90 in New York), traced from its MVA chart. Beyond it is Center airspace, which you also work here.',
+    default: true,
+  }),
+  'map.artccBoundaries': setting.boolean({
+    category: 'map',
+    label: 'Center boundaries',
+    description: 'Show where the region’s Center meets its neighboring Centers (high altitude).',
+    default: true,
+  }),
+  'map.sectorBoundary': setting.boolean({
+    category: 'map',
+    label: 'Your airspace boundary',
+    description:
+      'Show the edge of the airspace you control in this session (the dashed circle, 150 NM around the airports). Aircraft enter and leave across it.',
+    default: true,
+  }),
+  'map.geography': setting.boolean({
+    category: 'map',
+    label: 'Coastline and rivers',
+    description: 'Show coastlines, shorelines and major rivers.',
+    default: true,
+  }),
+  'map.minimumVectoringAltitudes': setting.boolean({
+    category: 'map',
+    label: 'Minimum vectoring altitudes',
+    description: 'Show TRACON MVA sectors and their minimum altitudes.',
+    default: false,
+  }),
+  'map.radarSites': setting.boolean({
+    category: 'map',
+    label: 'Radar sites',
+    description:
+      'Show the terminal radars that feed the scope and their 60 NM range. Low aircraft far from them drop out of coverage and coast.',
+    default: false,
+  }),
+  'map.minimumIfrAltitudes': setting.boolean({
+    category: 'map',
+    label: 'Minimum IFR altitudes',
+    description: 'Show Center MIA sectors, which apply outside the TRACON’s MVA chart.',
+    default: false,
+  }),
+  'map.basemap': setting.boolean({
+    category: 'map',
+    label: 'Real-world map',
+    description: 'Show a real map (terrain, roads, cities) underneath the radar display.',
+    default: false,
+  }),
+  'map.basemapOpacity': setting.number({
+    category: 'map',
+    label: 'Real-world map opacity',
+    description: 'How strongly the real-world map shows through.',
+    min: 5,
+    max: 100,
+    step: 5,
+    unit: '%',
+    default: 35,
+  }),
+
+  // ---- Audio ---------------------------------------------------------------
+  'audio.masterVolume': setting.number({
+    category: 'audio',
+    label: 'Master volume',
+    description: 'Overall volume of all sounds.',
+    min: 0,
+    max: 100,
+    step: 5,
+    unit: '%',
+    default: 70,
+  }),
+  'audio.conflictAlert': setting.boolean({
+    category: 'audio',
+    label: 'Conflict Alert sound',
+    description: 'Play an alert tone when aircraft are in conflict.',
+    default: true,
+  }),
+  'audio.uiSounds': setting.boolean({
+    category: 'audio',
+    label: 'Interface sounds',
+    description: 'Play subtle sounds for menus and selections.',
+    default: true,
+  }),
+
+  // ---- Controls ------------------------------------------------------------
+  'controls.zoomSensitivity': setting.number({
+    category: 'controls',
+    label: 'Zoom sensitivity',
+    description: 'How fast the scroll wheel or trackpad zooms the scope.',
+    min: 0.25,
+    max: 3,
+    step: 0.25,
+    unit: 'x',
+    default: 1,
+  }),
+  'controls.ctrlClickDirectTo': setting.boolean({
+    category: 'controls',
+    label: 'Ctrl-click a fix for direct-to',
+    description:
+      'With an aircraft selected, Ctrl-click (Cmd-click on a Mac) a fix on the scope to send the aircraft direct to it. Holding Ctrl highlights the fix under the cursor.',
+    default: true,
+  }),
+  'controls.directToRingNm': setting.select({
+    category: 'controls',
+    label: 'Direct-to distance rings',
+    description:
+      'The direct-to list groups fixes into rings of this width around the aircraft, alphabetical within each ring.',
+    options: [
+      { value: 5, label: '5 NM' },
+      { value: 10, label: '10 NM' },
+      { value: 20, label: '20 NM' },
+    ],
+    default: 10,
+  }),
+  'controls.keys.togglePause': setting.keybinding({
+    category: 'controls',
+    label: 'Pause / resume',
+    description: 'Pause or resume the simulation.',
+    default: 'Space',
+  }),
+  'controls.keys.simSpeedUp': setting.keybinding({
+    category: 'controls',
+    label: 'Increase sim speed',
+    description: 'Switch to the next faster sim speed.',
+    default: 'Period',
+  }),
+  'controls.keys.simSpeedDown': setting.keybinding({
+    category: 'controls',
+    label: 'Decrease sim speed',
+    description: 'Switch to the next slower sim speed.',
+    default: 'Comma',
+  }),
+  'controls.keys.zoomIn': setting.keybinding({
+    category: 'controls',
+    label: 'Zoom in',
+    description: 'Zoom the scope in.',
+    default: 'Equal',
+  }),
+  'controls.keys.zoomOut': setting.keybinding({
+    category: 'controls',
+    label: 'Zoom out',
+    description: 'Zoom the scope out.',
+    default: 'Minus',
+  }),
+  'controls.keys.centerScope': setting.keybinding({
+    category: 'controls',
+    label: 'Center scope',
+    description: 'Recenter the scope on the airspace.',
+    default: 'KeyC',
+  }),
+  'controls.keys.toggleCommsLog': setting.keybinding({
+    category: 'controls',
+    label: 'Toggle comms log',
+    description: 'Show or hide the communications log.',
+    default: 'KeyL',
+  }),
+  'controls.keys.toggleDepartureQueue': setting.keybinding({
+    category: 'controls',
+    label: 'Toggle departure queues',
+    description: 'Show or hide the departure queue panel.',
+    default: 'KeyQ',
+  }),
+  'controls.keys.toggleMapLayers': setting.keybinding({
+    category: 'controls',
+    label: 'Map layers',
+    description: 'Open the map layers panel.',
+    default: 'KeyM',
+  }),
+  'controls.keys.toggleTraffic': setting.keybinding({
+    category: 'controls',
+    label: 'Traffic panel',
+    description: 'Open the traffic panel to tune arrival, departure and transit rates.',
+    default: 'KeyT',
+  }),
+  'controls.keys.toggleScore': setting.keybinding({
+    category: 'controls',
+    label: 'RP panel',
+    description: 'Show or hide your RP total and how it was earned.',
+    default: 'KeyR',
+  }),
+  'controls.keys.openHelp': setting.keybinding({
+    category: 'controls',
+    label: 'Quick reference',
+    description: 'Show symbols, colors, controls and how to work each kind of flight.',
+    default: 'Shift+Slash',
+  }),
+  'controls.keys.openSettings': setting.keybinding({
+    category: 'controls',
+    label: 'Open settings',
+    description: 'Open the settings screen.',
+    default: 'KeyO',
+  }),
+  'controls.keys.saveSession': setting.keybinding({
+    category: 'controls',
+    label: 'Save session',
+    description: 'Save the session (the sim pauses first).',
+    default: 'Shift+KeyS',
+  }),
+  'controls.keys.closeMenu': setting.keybinding({
+    category: 'controls',
+    label: 'Close menu',
+    description: 'Close the open menu or panel.',
+    default: 'Escape',
+  }),
+} satisfies SettingsRegistry;
+
+/** Gameplay and realism settings, chosen when a session is created and saved with it. */
+export const SESSION_SETTINGS = {
+  // ---- Traffic (difficulty presets set these together) ---------------------
+  'traffic.arrivalRatePerHour': setting.number({
+    category: 'traffic',
+    label: 'Arrival rate',
+    description: 'Arrivals per hour into each airport.',
+    min: 0,
+    max: 40,
+    step: 1,
+    unit: '/hr per airport',
+    default: 10,
+  }),
+  'traffic.departureRatePerHour': setting.number({
+    category: 'traffic',
+    label: 'Departure rate',
+    description: 'Departures per hour from each airport.',
+    min: 0,
+    max: 40,
+    step: 1,
+    unit: '/hr per airport',
+    default: 10,
+  }),
+  'traffic.maxDepartureQueue': setting.number({
+    category: 'traffic',
+    label: 'Max departure queue',
+    description:
+      'Departures that can wait at each airport. When full, new departures are held at the gate.',
+    min: 1,
+    max: 20,
+    step: 1,
+    default: 5,
+  }),
+  'traffic.transitRatePerHour': setting.number({
+    category: 'traffic',
+    label: 'Transit rate',
+    description:
+      'Overflights per hour crossing the airspace without landing. Hand them to Center before they leave.',
+    min: 0,
+    max: 20,
+    step: 1,
+    unit: '/hr',
+    default: 4,
+  }),
+  'traffic.fleetMix': setting.select({
+    category: 'traffic',
+    label: 'Airline and aircraft mix',
+    description:
+      "Realistic follows each airport's real traffic. Varied mixes in more airlines and types.",
+    options: [
+      { value: 'realistic', label: 'Realistic' },
+      { value: 'varied', label: 'Varied' },
+    ],
+    default: 'realistic',
+  }),
+
+  // ---- Weather -------------------------------------------------------------
+  'weather.windMode': setting.select({
+    category: 'weather',
+    label: 'Wind',
+    description:
+      'Live uses the real current weather (METARs from aviationweather.gov), updated during the session. Random generates realistic wind for the region. Manual uses the values below.',
+    options: [
+      { value: 'live', label: 'Live (real weather)' },
+      { value: 'random', label: 'Random (realistic)' },
+      { value: 'manual', label: 'Manual' },
+    ],
+    default: 'live',
+  }),
+  'weather.livePollMin': setting.number({
+    category: 'weather',
+    label: 'Live weather updates',
+    description:
+      'How often live weather is checked for a new report. Airports issue one about hourly, and special reports when the weather changes.',
+    min: 1,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 5,
+  }),
+  'weather.manualWindDirectionDeg': setting.number({
+    category: 'weather',
+    label: 'Manual wind direction',
+    description: 'Direction the wind blows from (magnetic). Used when wind is Manual.',
+    min: 10,
+    max: 360,
+    step: 10,
+    unit: '°',
+    default: 310,
+  }),
+  'weather.manualWindSpeedKts': setting.number({
+    category: 'weather',
+    label: 'Manual wind speed',
+    description: 'Wind speed. Used when wind is Manual.',
+    min: 0,
+    max: 40,
+    step: 1,
+    unit: 'kts',
+    default: 12,
+  }),
+  'weather.manualWindGustKts': setting.number({
+    category: 'weather',
+    label: 'Manual wind gusts',
+    description:
+      'Peak gusts, used when wind is Manual. 0 for none; gusts are only reported at least 10 kt above the steady wind. Crosswind limits are judged at the gust.',
+    min: 0,
+    max: 60,
+    step: 1,
+    unit: 'kts',
+    default: 0,
+  }),
+  'weather.windVariation': setting.select({
+    category: 'weather',
+    label: 'Wind variation',
+    description:
+      'How much the wind drifts during a session, around its starting value. Slight: up to 20° and 4 kt. Moderate: up to 40° and 8 kt.',
+    options: [
+      { value: 'off', label: 'Off (steady)' },
+      { value: 'slight', label: 'Slight' },
+      { value: 'moderate', label: 'Moderate' },
+    ],
+    default: 'slight',
+  }),
+  'weather.windVariationPeriodMin': setting.number({
+    category: 'weather',
+    label: 'Wind change pace',
+    description: 'About how long one swing of the wind takes. Shorter is more changeable.',
+    min: 5,
+    max: 60,
+    step: 5,
+    unit: 'min',
+    default: 20,
+  }),
+  'weather.runwayChanges': setting.boolean({
+    category: 'weather',
+    label: 'Change runways when the wind shifts',
+    description:
+      'When the wind puts the runways in use over the tailwind or crosswind limit, the airport announces a runway change and switches after the notice time. Runways you picked yourself are kept.',
+    default: true,
+  }),
+  'weather.runwayChangeNoticeMin': setting.number({
+    category: 'weather',
+    label: 'Runway change notice',
+    description:
+      'How long before a runway change it is announced, so you can plan the arrivals already on their way.',
+    min: 0,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 10,
+  }),
+  'weather.maxTailwindKts': setting.number({
+    category: 'weather',
+    label: 'Max tailwind for active runways',
+    description: 'Runways with more tailwind than this are not used.',
+    min: 0,
+    max: 15,
+    step: 1,
+    unit: 'kts',
+    default: 5,
+  }),
+  'weather.maxCrosswindKts': setting.number({
+    category: 'weather',
+    label: 'Max crosswind for active runways',
+    description: 'Runways with more crosswind than this are not used.',
+    min: 10,
+    max: 35,
+    step: 1,
+    unit: 'kts',
+    default: 20,
+  }),
+
+  // ---- Separation ----------------------------------------------------------
+  'separation.lateralNm': setting.number({
+    category: 'separation',
+    label: 'Lateral separation',
+    description: 'Minimum horizontal distance between aircraft near the radar (terminal area).',
+    min: 2.5,
+    max: 10,
+    step: 0.5,
+    unit: 'NM',
+    default: 3,
+  }),
+  'separation.enrouteLateralNm': setting.number({
+    category: 'separation',
+    label: 'En route lateral separation',
+    description:
+      'Minimum horizontal distance where either aircraft is beyond the terminal area (farther from the radar).',
+    min: 3,
+    max: 10,
+    step: 0.5,
+    unit: 'NM',
+    default: 5,
+  }),
+  'separation.terminalRangeNm': setting.number({
+    category: 'separation',
+    label: 'Terminal area range',
+    description: 'Within this distance of the radar site, the terminal lateral separation applies.',
+    min: 20,
+    max: 60,
+    step: 5,
+    unit: 'NM',
+    default: 40,
+  }),
+  'separation.verticalFt': setting.number({
+    category: 'separation',
+    label: 'Vertical separation',
+    description: 'Minimum vertical distance between aircraft.',
+    min: 500,
+    max: 2000,
+    step: 100,
+    unit: 'ft',
+    default: 1000,
+  }),
+  'separation.wakeTurbulence': setting.boolean({
+    category: 'separation',
+    label: 'Wake turbulence spacing on final',
+    description:
+      'Aircraft following a heavier one on the same approach need more than the radar minimum behind it: 4–6 NM behind a heavy, 4–5 NM behind a B757, 4–8 NM behind a super, and 4 NM for a small behind a large (FAA 7110.65).',
+    default: true,
+  }),
+  'separation.conflictAlertLookaheadSec': setting.number({
+    category: 'separation',
+    label: 'Conflict Alert look-ahead',
+    description:
+      'How far ahead Conflict Alert predicts a loss of separation. 0 alerts only on actual losses.',
+    min: 0,
+    max: 120,
+    step: 5,
+    unit: 's',
+    default: 40,
+  }),
+
+  // ---- Radar ---------------------------------------------------------------
+  'radar.sweepIntervalSec': setting.number({
+    category: 'radar',
+    label: 'Terminal radar rotation',
+    description:
+      'How often each terminal radar (ASR) sweeps and updates the targets it covers. Real ASRs turn about every 4.8 s.',
+    min: 1,
+    max: 12,
+    step: 0.1,
+    unit: 's',
+    default: 4.8,
+  }),
+  'radar.coverage': setting.select({
+    category: 'radar',
+    label: 'Radar coverage',
+    description:
+      'Realistic: aircraft show only where a radar covers them (terminal radars within range and line of sight, long-range radar above its floor), and coast elsewhere. Everywhere: one radar sees the whole region.',
+    options: [
+      { value: 'realistic', label: 'Realistic' },
+      { value: 'everywhere', label: 'Everywhere' },
+    ],
+    default: 'realistic',
+  }),
+  'radar.enrouteFloorFt': setting.number({
+    category: 'radar',
+    label: 'Long-range radar floor',
+    description:
+      'Long-range (en route) radar covers the whole region at and above this altitude. Below it, aircraft need a terminal radar.',
+    min: 0,
+    max: 18_000,
+    step: 500,
+    unit: 'ft',
+    default: 6_000,
+  }),
+  'radar.enrouteIntervalSec': setting.number({
+    category: 'radar',
+    label: 'Long-range radar rotation',
+    description: 'How often long-range radar updates the targets only it covers (about 12 s).',
+    min: 4,
+    max: 24,
+    step: 0.5,
+    unit: 's',
+    default: 12,
+  }),
+
+  // ---- Pilots --------------------------------------------------------------
+  'pilots.responseDelaySec': setting.range({
+    category: 'pilots',
+    label: 'Pilot response delay',
+    description:
+      'How long pilots take to start following an instruction (random within this range).',
+    min: 0,
+    max: 15,
+    step: 0.5,
+    unit: 's',
+    default: [2, 6],
+  }),
+  'pilots.readbackDetail': setting.select({
+    category: 'pilots',
+    label: 'Readback detail',
+    description: 'How completely pilots read back instructions.',
+    options: [
+      { value: 'full', label: 'Full' },
+      { value: 'brief', label: 'Brief' },
+    ],
+    default: 'full',
+  }),
+
+  // ---- Departures ----------------------------------------------------------
+  'departures.radarContactAltitudeFt': setting.number({
+    category: 'departures',
+    label: 'Radar contact altitude',
+    description: 'Altitude at which Tower transfers departures to you.',
+    min: 500,
+    max: 3000,
+    step: 100,
+    unit: 'ft',
+    default: 1500,
+  }),
+
+  // ---- Approaches ----------------------------------------------------------
+  'approaches.maxInterceptAngleDeg': setting.number({
+    category: 'approaches',
+    label: 'Max intercept angle',
+    description: 'Largest angle to the localizer at which a pilot accepts the approach.',
+    min: 10,
+    max: 90,
+    step: 5,
+    unit: '°',
+    default: 60,
+  }),
+  'approaches.interceptDistanceNm': setting.range({
+    category: 'approaches',
+    label: 'Intercept distance',
+    description: 'Distance from the runway within which a pilot accepts the approach.',
+    min: 3,
+    max: 30,
+    step: 1,
+    unit: 'NM',
+    default: [5, 25],
+  }),
+  'approaches.stabilizedGateFt': setting.number({
+    category: 'approaches',
+    label: 'Stabilized approach gate',
+    description:
+      'Height above the runway by which an approach must be stabilized, or the aircraft goes around.',
+    min: 500,
+    max: 1500,
+    step: 100,
+    unit: 'ft',
+    default: 1000,
+  }),
+  'approaches.goArounds': setting.boolean({
+    category: 'approaches',
+    label: 'Automatic go-arounds',
+    description: 'Aircraft go around when an approach is not stabilized.',
+    default: true,
+  }),
+  'approaches.showEligibility': setting.boolean({
+    category: 'approaches',
+    label: 'Show approach eligibility',
+    description:
+      'Player aid: show in the command menu whether an aircraft can accept the approach.',
+    default: false,
+  }),
+
+  // ---- Scoring (RP) ------------------------------------------------------------
+  'scoring.landingRp': setting.number({
+    category: 'scoring',
+    label: 'Landing',
+    description: 'RP for each arrival that lands.',
+    min: 0,
+    max: 500,
+    step: 5,
+    unit: 'RP',
+    default: 100,
+  }),
+  'scoring.departureHandoffRp': setting.number({
+    category: 'scoring',
+    label: 'Departure handed off',
+    description:
+      'RP for each departure Center accepts before it leaves your airspace (bonuses below come on top).',
+    min: 0,
+    max: 500,
+    step: 5,
+    unit: 'RP',
+    default: 40,
+  }),
+  'scoring.requestedLevelBonusRp': setting.number({
+    category: 'scoring',
+    label: 'Requested level bonus',
+    description:
+      'Extra RP when a departure or overflight is handed off cleared to its requested cruise level.',
+    min: 0,
+    max: 500,
+    step: 5,
+    unit: 'RP',
+    default: 30,
+  }),
+  'scoring.routeFlownBonusRp': setting.number({
+    category: 'scoring',
+    label: 'Route flown bonus',
+    description:
+      'Extra RP when a departure passed its departure gate fix, or an overflight its exit fix, before the handoff.',
+    min: 0,
+    max: 500,
+    step: 5,
+    unit: 'RP',
+    default: 30,
+  }),
+  'scoring.transitHandoffRp': setting.number({
+    category: 'scoring',
+    label: 'Overflight handed off',
+    description:
+      'RP for each overflight Center accepts before it leaves your airspace (bonuses below come on top).',
+    min: 0,
+    max: 500,
+    step: 5,
+    unit: 'RP',
+    default: 30,
+  }),
+  'scoring.timing': setting.boolean({
+    category: 'scoring',
+    label: 'Target times',
+    description:
+      'Give every flight a target time to land by (arrivals) or be handed to Center by (departures and overflights): its unimpeded flight time along its route plus an allowance for sequencing. On time earns RP; late costs RP.',
+    default: true,
+  }),
+  'scoring.onTimeRp': setting.number({
+    category: 'scoring',
+    label: 'On-time bonus',
+    description: 'RP for landing or handing off a flight by its target time.',
+    min: 0,
+    max: 200,
+    step: 5,
+    unit: 'RP',
+    default: 20,
+  }),
+  'scoring.lateRpPerMin': setting.number({
+    category: 'scoring',
+    label: 'Late, per minute',
+    description:
+      'RP lost for each minute (or part) a flight lands or is handed off after its target time.',
+    min: 0,
+    max: 50,
+    step: 1,
+    unit: 'RP',
+    default: 5,
+  }),
+  'scoring.lateMaxRp': setting.number({
+    category: 'scoring',
+    label: 'Most lost for lateness',
+    description: 'The most RP a single flight can lose for being late.',
+    min: 0,
+    max: 500,
+    step: 10,
+    unit: 'RP',
+    default: 60,
+  }),
+  'scoring.arrivalAllowanceMin': setting.number({
+    category: 'scoring',
+    label: 'Arrival allowance',
+    description:
+      'Time added to an arrival’s unimpeded flight time for vectors and sequencing to the runway.',
+    min: 0,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 10,
+  }),
+  'scoring.departureAllowanceMin': setting.number({
+    category: 'scoring',
+    label: 'Departure allowance',
+    description: 'Time added to a departure’s unimpeded time from radar contact to the handoff.',
+    min: 0,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 3,
+  }),
+  'scoring.transitAllowanceMin': setting.number({
+    category: 'scoring',
+    label: 'Overflight allowance',
+    description: 'Time added to an overflight’s unimpeded time from entering to the handoff.',
+    min: 0,
+    max: 30,
+    step: 1,
+    unit: 'min',
+    default: 3,
+  }),
+  'scoring.timingAllowancePct': setting.number({
+    category: 'scoring',
+    label: 'Allowance on flight time',
+    description:
+      'Extra time given in proportion to the unimpeded flight time, on top of the allowances above.',
+    min: 0,
+    max: 50,
+    step: 5,
+    unit: '%',
+    default: 10,
+  }),
+  'scoring.separationLossRp': setting.number({
+    category: 'scoring',
+    label: 'Loss of separation',
+    description:
+      'RP lost for a loss of separation, up to double the closer the aircraft got. Only losses closer than the penalty distance count.',
+    min: 0,
+    max: 1000,
+    step: 10,
+    unit: 'RP',
+    default: 150,
+  }),
+  'scoring.wakeLossRp': setting.number({
+    category: 'scoring',
+    label: 'Wake turbulence spacing lost',
+    description:
+      'RP lost when an aircraft on final gets closer behind a heavier one than wake spacing allows, up to double the shorter the spacing. Closing inside the radar minimum counts as a loss of separation instead.',
+    min: 0,
+    max: 1000,
+    step: 10,
+    unit: 'RP',
+    default: 80,
+  }),
+  'scoring.penaltyMaxLateralNm': setting.number({
+    category: 'scoring',
+    label: 'Separation penalty distance',
+    description:
+      'Losses of separation are only penalized when the aircraft come closer than this (never at 5 NM or more by default).',
+    min: 1,
+    max: 10,
+    step: 0.5,
+    unit: 'NM',
+    default: 5,
+  }),
+  'scoring.nearMidAirRp': setting.number({
+    category: 'scoring',
+    label: 'Near midair collision',
+    description:
+      'RP lost when two aircraft come within the near-miss distance and 500 ft (instead of the loss of separation penalty).',
+    min: 0,
+    max: 5000,
+    step: 50,
+    unit: 'RP',
+    default: 1000,
+  }),
+  'scoring.nearMidAirNm': setting.number({
+    category: 'scoring',
+    label: 'Near-miss distance',
+    description: 'Aircraft closer than this and within 500 ft are a near midair collision.',
+    min: 0.2,
+    max: 2,
+    step: 0.1,
+    unit: 'NM',
+    default: 0.5,
+  }),
+  'scoring.goAroundRp': setting.number({
+    category: 'scoring',
+    label: 'Go-around',
+    description: 'RP lost when an approach isn’t stabilized and the aircraft goes around.',
+    min: 0,
+    max: 500,
+    step: 5,
+    unit: 'RP',
+    default: 25,
+  }),
+  'scoring.leftWithoutHandoffRp': setting.number({
+    category: 'scoring',
+    label: 'Left without a handoff',
+    description: 'RP lost when one of your aircraft leaves the airspace without being handed off.',
+    min: 0,
+    max: 500,
+    step: 5,
+    unit: 'RP',
+    default: 100,
+  }),
+
+  // ---- Center (computer controller) ------------------------------------------
+  'center.automation': setting.boolean({
+    category: 'center',
+    label: 'Center flies handed-off traffic',
+    description:
+      'After a handoff, Center climbs or descends the aircraft to its requested level and routes it along its flight plan toward its destination.',
+    default: true,
+  }),
+  'center.resolveConflicts': setting.boolean({
+    category: 'center',
+    label: 'Center separates its traffic',
+    description: 'Center changes levels to keep aircraft it controls apart from each other.',
+    default: true,
+  }),
+  'center.handoffWindowNm': setting.number({
+    category: 'center',
+    label: 'Handoff window',
+    description:
+      'Center accepts a departure or overflight only within this distance of where it will leave the TRACON’s airspace.',
+    min: 5,
+    max: 60,
+    step: 5,
+    unit: 'NM',
+    default: 20,
+  }),
+  'center.handoffMinimumEastboundFt': setting.number({
+    category: 'center',
+    label: 'Minimum handoff altitude, eastbound',
+    description:
+      'Center accepts an eastbound flight (magnetic course 000–179) only at or above this altitude, and never below the FAA minimum IFR altitude where it is and where it leaves.',
+    min: 0,
+    max: 24_000,
+    step: 1_000,
+    unit: 'ft',
+    default: 17_000,
+  }),
+  'center.handoffMinimumWestboundFt': setting.number({
+    category: 'center',
+    label: 'Minimum handoff altitude, westbound',
+    description:
+      'Center accepts a westbound flight (magnetic course 180–359) only at or above this altitude, and never below the FAA minimum IFR altitude where it is and where it leaves.',
+    min: 0,
+    max: 24_000,
+    step: 1_000,
+    unit: 'ft',
+    default: 18_000,
+  }),
+  'center.conflictLookaheadSec': setting.number({
+    category: 'center',
+    label: 'Center conflict look-ahead',
+    description: 'How far ahead Center looks for conflicts between its aircraft.',
+    min: 60,
+    max: 300,
+    step: 30,
+    unit: 's',
+    default: 120,
+  }),
+
+  // ---- Sim -----------------------------------------------------------------
+  'sim.availableSpeeds': setting.multiSelect({
+    category: 'sim',
+    label: 'Available sim speeds',
+    description: 'Sim speeds you can switch between.',
+    options: [
+      { value: 1, label: '1x' },
+      { value: 2, label: '2x' },
+      { value: 4, label: '4x' },
+      { value: 8, label: '8x' },
+    ],
+    default: [1, 2, 4],
+  }),
+} satisfies SettingsRegistry;
+
+export type UserSettings = SettingsValues<typeof USER_SETTINGS>;
+export type SessionSettings = SettingsValues<typeof SESSION_SETTINGS>;
+
+export const SETTINGS_REGISTRIES = {
+  user: USER_SETTINGS,
+  session: SESSION_SETTINGS,
+} as const;
+
+export type SettingsScope = keyof typeof SETTINGS_REGISTRIES;
+
+export type SettingsFor<S extends SettingsScope> = S extends 'user'
+  ? UserSettings
+  : SessionSettings;

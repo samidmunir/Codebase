@@ -1,0 +1,395 @@
+import { defaultSettings, type SessionSettings } from '@vector/shared';
+import { describe, expect, it } from 'vitest';
+import { headingDifference } from '../math/angles';
+import { isHemisphericLevel } from '../traffic/cruise-levels';
+import { bearingTrue, distanceNm, type LatLon } from '../math/geo';
+import { airlines, newYork, performance } from '../testing/fixtures';
+import type { SimEvent } from './events';
+import { parseSnapshot } from '../snapshot/snapshot';
+import { SimEngine } from './sim-engine';
+
+function createEngine(overrides: Partial<SessionSettings> = {}, seed = 5) {
+  return SimEngine.create({
+    performance,
+    world: { magneticVariationDeg: newYork.airspace.magneticVariationDeg },
+    seed,
+    startTimeUtc: '2026-09-26T14:00:00Z',
+    settings: {
+      ...defaultSettings('session'),
+      'traffic.arrivalRatePerHour': 0,
+      'traffic.departureRatePerHour': 0,
+      ...overrides,
+    },
+    airspace: newYork,
+    airlines,
+  });
+}
+
+const run = (engine: SimEngine, seconds: number) => {
+  for (let i = 0; i < seconds; i++) engine.step();
+};
+
+const countTransits = (engine: SimEngine, seconds: number) => {
+  let entered = 0;
+  const unsubscribe = engine.subscribe((event) => event.type === 'transitEntered' && entered++);
+  run(engine, seconds);
+  unsubscribe();
+  return entered;
+};
+
+describe('transits', () => {
+  it('cross the airspace at altitude, direct to an exit fix on the far side', () => {
+    const engine = createEngine({ 'traffic.transitRatePerHour': 12 });
+    const entered: Extract<SimEvent, { type: 'transitEntered' }>[] = [];
+    const navigation: unknown[] = [];
+    const entries: LatLon[] = [];
+    const headings: number[] = [];
+    engine.subscribe((event) => {
+      if (event.type !== 'transitEntered') return;
+      entered.push(event);
+      const transit = engine.getAircraft(event.aircraftId)!;
+      navigation.push(transit.navigation);
+      headings.push(transit.headingDeg);
+      entries.push(transit.position);
+    });
+    run(engine, 1_800);
+
+    expect(entered.length).toBeGreaterThan(2);
+    const { center } = newYork.airspace;
+    entered.forEach((event, i) =>
+      expect(navigation[i]).toMatchObject({ mode: 'direct', fix: event.exitFix }),
+    );
+    for (const [i, event] of entered.entries()) {
+      const transit = engine.getAircraft(event.aircraftId);
+      if (transit) expect(isHemisphericLevel(transit.altitudeFt, headings[i]!)).toBe(true);
+    }
+    for (const event of entered) {
+      const transit = engine.getAircraft(event.aircraftId);
+      if (!transit) continue;
+      expect(transit.phase).toBe('enroute');
+      expect(transit.owner).toBe('N90');
+      // At the level they filed, which suits the direction they cross in.
+      expect(transit.altitudeFt).toBeGreaterThanOrEqual(16_000);
+      expect(transit.altitudeFt).toBeLessThanOrEqual(41_000);
+      expect(transit.flightPlan.requestedAltitudeFt).toBe(transit.altitudeFt);
+      expect(newYork.airspace.airports).not.toContain(transit.flightPlan.destination);
+      expect(transit.flightPlan.route).toEqual([event.exitFix]);
+    }
+    const first = { position: entries[0]! };
+    const exit = newYork.fix(entered[0]!.exitFix)!;
+    // It entered on the opposite side from its exit.
+    const turn = headingDifference(
+      bearingTrue(center, first.position),
+      bearingTrue(center, exit.position),
+    );
+    expect(Math.abs(turn)).toBeGreaterThan(90);
+    expect(distanceNm(center, first.position)).toBeLessThan(newYork.boundaryRadiusNm);
+    // Transits check in at their cruising level.
+    expect(engine.comms.some((c) => /^New York Center, .*, flight level/.test(c.text))).toBe(true);
+  });
+
+  it('follows the transit rate setting', () => {
+    expect(countTransits(createEngine({ 'traffic.transitRatePerHour': 0 }), 3_600)).toBe(0);
+    expect(countTransits(createEngine({ 'traffic.transitRatePerHour': 3 }), 3_600)).toBeLessThan(
+      countTransits(createEngine({ 'traffic.transitRatePerHour': 15 }), 3_600),
+    );
+  });
+});
+
+describe('in-session traffic tuning', () => {
+  it('changes rates mid-session and reschedules the next spawn', () => {
+    const engine = createEngine({ 'traffic.transitRatePerHour': 0 });
+    expect(countTransits(engine, 1_800)).toBe(0);
+    expect(engine.updateTrafficSettings({ 'traffic.transitRatePerHour': 20 })).toEqual({
+      ok: true,
+    });
+    expect(engine.settings['traffic.transitRatePerHour']).toBe(20);
+    expect(countTransits(engine, 1_800)).toBeGreaterThan(3);
+  });
+
+  it('turns arrivals and departures on and off', () => {
+    const engine = createEngine();
+    let arrivals = 0;
+    engine.subscribe((event) => event.type === 'arrivalEntered' && arrivals++);
+    run(engine, 1_200);
+    expect(arrivals).toBe(0);
+    engine.updateTrafficSettings({
+      'traffic.arrivalRatePerHour': 20,
+      'traffic.maxDepartureQueue': 2,
+    });
+    run(engine, 1_800);
+    expect(arrivals).toBeGreaterThan(3);
+    expect(engine.settings['traffic.maxDepartureQueue']).toBe(2);
+  });
+
+  it('rejects settings that cannot change in a session, and out-of-range values', () => {
+    const engine = createEngine();
+    const before = { ...engine.settings };
+    expect(engine.updateTrafficSettings({ 'weather.windMode': 'manual' } as never)).toMatchObject({
+      ok: false,
+    });
+    expect(engine.updateTrafficSettings({ 'traffic.arrivalRatePerHour': 500 })).toMatchObject({
+      ok: false,
+    });
+    expect(engine.settings).toEqual(before);
+  });
+
+  it('keeps tuned rates in the snapshot', () => {
+    const engine = createEngine();
+    engine.updateTrafficSettings({ 'traffic.transitRatePerHour': 9 });
+    const restored = SimEngine.fromSnapshot(engine.toSnapshot(), performance, {
+      airspace: newYork,
+      airlines,
+    });
+    expect(restored.settings['traffic.transitRatePerHour']).toBe(9);
+    run(engine, 900);
+    run(restored, 900);
+    expect(restored.toSnapshot()).toEqual(engine.toSnapshot());
+  });
+});
+
+describe('traffic rates of zero', () => {
+  it('keep the session savable (no out-of-range spawn times) and resume when raised', () => {
+    const engine = createEngine({ 'traffic.transitRatePerHour': 5 });
+    run(engine, 60);
+    engine.updateTrafficSettings({
+      'traffic.transitRatePerHour': 0,
+      'traffic.arrivalRatePerHour': 0,
+      'traffic.departureRatePerHour': 0,
+    });
+    run(engine, 600);
+    const snapshot = JSON.parse(JSON.stringify(engine.toSnapshot()));
+    expect(() => parseSnapshot(snapshot)).not.toThrow();
+    engine.updateTrafficSettings({ 'traffic.transitRatePerHour': 20 });
+    expect(countTransits(engine, 1_800)).toBeGreaterThan(3);
+  });
+});
+
+describe('flying the route', () => {
+  it('sends an overflight on toward its destination once past its exit fix', () => {
+    const engine = createEngine({ 'traffic.transitRatePerHour': 20 });
+    let checked = false;
+    engine.subscribe((event) => {
+      if (event.type !== 'fixPassed' || checked) return;
+      const transit = engine.getAircraft(event.aircraftId);
+      if (!transit || transit.flightPlan.route[0] !== event.fix) return;
+      checked = true;
+    });
+    for (let t = 0; t < 3_600 && !checked; t++) engine.step();
+    expect(checked).toBe(true);
+    const flown = engine
+      .listAircraft()
+      .filter((a) => engine.routeFlown(a.id) && a.navigation.mode === 'direct');
+    expect(flown.length).toBeGreaterThan(0);
+    for (const a of flown) {
+      expect(a.navigation).toMatchObject({ mode: 'direct', fix: a.flightPlan.destination });
+    }
+  });
+});
+
+describe('wind over a session', () => {
+  it('drifts slightly around the starting wind, and resumes exactly from a save', () => {
+    const engine = createEngine(
+      { 'weather.windMode': 'random', 'weather.windVariation': 'slight' },
+      11,
+    );
+    const start = { ...engine.winds };
+    const seen = new Set<string>();
+    let changes = 0;
+    engine.subscribe((event) => event.type === 'windChanged' && changes++);
+    for (let minute = 0; minute < 120; minute++) {
+      run(engine, 60);
+      seen.add(JSON.stringify(engine.winds));
+      for (const [airport, wind] of Object.entries(engine.winds)) {
+        const base = start[airport]!;
+        expect(Math.abs(wind.speedKts - base.speedKts)).toBeLessThanOrEqual(4);
+      }
+    }
+    expect(changes).toBeGreaterThan(3);
+    expect(seen.size).toBeGreaterThan(3);
+    expect(engine.regionalWind).toBeDefined();
+
+    const restored = SimEngine.fromSnapshot(
+      JSON.parse(JSON.stringify(engine.toSnapshot())),
+      performance,
+      { airspace: newYork, airlines },
+    );
+    run(engine, 1_800);
+    run(restored, 1_800);
+    expect(restored.winds).toEqual(engine.winds);
+  });
+
+  it('stays steady when variation is off', () => {
+    const engine = createEngine({ 'weather.windVariation': 'off' }, 11);
+    const start = JSON.stringify(engine.winds);
+    run(engine, 3_600);
+    expect(JSON.stringify(engine.winds)).toBe(start);
+  });
+});
+
+describe('runway changes', () => {
+  // Tight limits and a changeable wind, so the runways stop suiting it within a few hours.
+  const changeable = {
+    'weather.windMode': 'random',
+    'weather.windVariation': 'moderate',
+    'weather.windVariationPeriodMin': 10,
+    'weather.maxTailwindKts': 0,
+    'weather.maxCrosswindKts': 12,
+    'weather.runwayChangeNoticeMin': 10,
+  } as const;
+
+  it('announces a change when the wind no longer suits the runways, then makes it', () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 40 && checked < 3; seed++) {
+      const engine = createEngine(changeable, seed);
+      const planned: Extract<SimEvent, { type: 'runwayChangePlanned' }>[] = [];
+      const changed: Extract<SimEvent, { type: 'runwayChanged' }>[] = [];
+      engine.subscribe((event) => {
+        if (event.type === 'runwayChangePlanned') planned.push(event);
+        if (event.type === 'runwayChanged') changed.push(event);
+      });
+      for (let t = 0; t < 6 * 3_600 && changed.length === 0; t++) engine.step();
+      if (changed.length === 0) continue;
+      checked++;
+      const [plan] = planned;
+      const [change] = changed;
+      expect(change!.airport).toBe(plan!.airport);
+      expect(change!.runways.configId).toBe(plan!.runways.configId);
+      // After the notice (10 minutes), and the airport now uses the new runways.
+      expect(engine.tick).toBe(plan!.atTick);
+      expect(engine.activeRunways[plan!.airport]!.configId).toBe(plan!.runways.configId);
+      expect(engine.pendingRunwayChanges[plan!.airport]).toBeUndefined();
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
+  it('keeps runways the player chose, and never changes with the setting off', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const off = createEngine({ ...changeable, 'weather.runwayChanges': false }, seed);
+      const start = JSON.stringify(off.activeRunways);
+      run(off, 4 * 3_600);
+      expect(JSON.stringify(off.activeRunways)).toBe(start);
+    }
+    const chosen = SimEngine.create({
+      performance,
+      world: { magneticVariationDeg: newYork.airspace.magneticVariationDeg },
+      seed: 3,
+      startTimeUtc: '2026-09-26T14:00:00Z',
+      settings: {
+        ...defaultSettings('session'),
+        ...changeable,
+        'traffic.arrivalRatePerHour': 0,
+        'traffic.departureRatePerHour': 0,
+      },
+      airspace: newYork,
+      airlines,
+      runwayConfigs: { KJFK: newYork.traffic.airports.KJFK!.runwayConfigs.at(-1)!.id },
+    });
+    const jfk = chosen.activeRunways.KJFK!.configId;
+    run(chosen, 4 * 3_600);
+    expect(chosen.activeRunways.KJFK!.configId).toBe(jfk);
+  });
+});
+
+describe('target times', () => {
+  /** Runs until a transit enters, returning its id. */
+  function withTransit(overrides: Partial<SessionSettings> = {}) {
+    const engine = createEngine({ 'traffic.transitRatePerHour': 20, ...overrides }, 3);
+    let id: string | undefined;
+    engine.subscribe((event) => {
+      if (event.type === 'transitEntered' && !id) id = event.aircraftId;
+    });
+    for (let t = 0; t < 3_600 && !id; t++) engine.step();
+    return { engine, id: id! };
+  }
+  const handOff = (engine: SimEngine, id: string) => {
+    const aircraft = engine.getAircraft(id)!;
+    const center = newYork.centers.find((c) => c.id === 'ZNY')!;
+    return engine.issueInstruction(id, [
+      {
+        type: 'handoff',
+        to: center.id,
+        facility: center.callsign,
+        frequencyMhz: center.sites[0]!.frequencies[0]!.frequencyMhz,
+      },
+    ]).ok
+      ? true
+      : aircraft;
+  };
+  const runUntilHandedOff = (engine: SimEngine, id: string, fromTick: number) => {
+    for (let t = 0; t < 3_600; t++) {
+      if (engine.tick >= fromTick && engine.getAircraft(id)?.owner === 'N90') handOff(engine, id);
+      engine.step();
+      if (engine.getAircraft(id)?.owner !== 'N90') return;
+    }
+  };
+
+  it('gives each flight a target time when it becomes yours, and rewards finishing on time', () => {
+    const { engine, id } = withTransit();
+    const timer = engine.flightTimer(id)!;
+    expect(timer).toMatchObject({ kind: 'transit' });
+    expect(timer.targetTick).toBeGreaterThan(timer.startTick + 3 * 60);
+    runUntilHandedOff(engine, id, 0);
+    const event = engine.score.events.find((e) => e.kind === 'onTime')!;
+    expect(event).toMatchObject({ rp: 20 });
+    expect(event.detail).toMatch(/^handed off in \d+:\d\d, \d+:\d\d ahead of target$/);
+    expect(engine.flightTimer(id)).toBeUndefined();
+    expect(engine.timingStats.transit).toMatchObject({ count: 1, onTime: 1 });
+  });
+
+  it('takes RP for each minute late, and averages the time taken', () => {
+    const { engine, id } = withTransit({
+      'scoring.transitAllowanceMin': 0,
+      'scoring.timingAllowancePct': 0,
+      'pilots.responseDelaySec': [1, 1],
+    });
+    const timer = engine.flightTimer(id)!;
+    // Hold on to it until 2½ minutes past its target.
+    runUntilHandedOff(engine, id, timer.targetTick + 150);
+    const event = engine.score.events.find((e) => e.kind === 'late')!;
+    const [, minutes, seconds] = /^handed off (\d+):(\d\d) late/.exec(event.detail)!;
+    const lateSec = Number(minutes) * 60 + Number(seconds);
+    expect(lateSec).toBeGreaterThanOrEqual(150);
+    expect(event.rp).toBe(-5 * Math.ceil(lateSec / 60));
+    const stats = engine.timingStats.transit!;
+    expect(stats).toMatchObject({ count: 1, onTime: 0 });
+    expect(stats.totalSec).toBeGreaterThan(stats.totalTargetSec);
+  });
+
+  it('times departures from radar contact and arrivals from when they enter', () => {
+    const engine = createEngine(
+      { 'traffic.arrivalRatePerHour': 10, 'traffic.departureRatePerHour': 10 },
+      8,
+    );
+    for (let t = 0; t < 1_800; t++) {
+      for (const entry of engine.departureQueue)
+        if (entry.status === 'waiting' && engine.tick >= entry.readyAtTick)
+          engine.releaseDeparture(entry.id, engine.activeRunways[entry.airport]!.departures[0]!);
+      engine.step();
+    }
+    const timed = engine.listAircraft().filter((a) => engine.flightTimer(a.id));
+    const kinds = new Set(timed.map((a) => engine.flightTimer(a.id)!.kind));
+    expect(kinds).toContain('arrival');
+    expect(kinds).toContain('departure');
+    // Departures still with Tower have no target time yet.
+    for (const aircraft of engine.listAircraft())
+      if (aircraft.owner.endsWith('_TWR') && aircraft.phase === 'departure')
+        expect(engine.flightTimer(aircraft.id)).toBeUndefined();
+    // A departure's target allows at least its climb to the handoff altitude.
+    const departure = timed.find((a) => engine.flightTimer(a.id)!.kind === 'departure')!;
+    const timer = engine.flightTimer(departure.id)!;
+    expect((timer.targetTick - timer.startTick) / 60).toBeGreaterThan(6);
+  });
+
+  it('gives no target times with the setting off, and keeps them in saved sessions', () => {
+    const off = withTransit({ 'scoring.timing': false });
+    expect(off.engine.flightTimer(off.id)).toBeUndefined();
+    const { engine, id } = withTransit();
+    const restored = SimEngine.fromSnapshot(
+      JSON.parse(JSON.stringify(engine.toSnapshot())),
+      performance,
+      { airspace: newYork, airlines },
+    );
+    expect(restored.flightTimer(id)).toEqual(engine.flightTimer(id));
+  });
+});

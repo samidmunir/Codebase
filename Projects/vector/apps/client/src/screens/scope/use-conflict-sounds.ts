@@ -1,0 +1,55 @@
+import { useEffect } from 'react';
+import { alertSounds, uiSounds } from '../../audio/alert-sounds';
+import { userSettings } from '../../settings/user-settings-store';
+import type { ScopeSession } from '../../sim/scope-session';
+
+/** Repeats the loss-of-separation tone this often while a loss continues. */
+const REPEAT_MS = 4_000;
+
+/** Plays Conflict Alert tones: once for a new predicted conflict, repeatedly while separation is lost. */
+export function useConflictSounds(session: ScopeSession): void {
+  useEffect(() => {
+    const enabled = () => userSettings.get()['audio.conflictAlert'];
+    const volume = () => userSettings.get()['audio.masterVolume'];
+
+    const unsubscribe = session.engine.subscribe((event) => {
+      if (!enabled()) return;
+      // Wake spacing gets the softer tone once; radar losses the full alarm.
+      if (event.type === 'separationLost')
+        (event.violation.wake ? alertSounds.predicted : alertSounds.loss)(volume());
+      else if (event.type === 'conflictStarted' && event.conflict.kind === 'predicted')
+        alertSounds.predicted(volume());
+    });
+    const timer = window.setInterval(() => {
+      const losing = session.engine.conflicts.some(
+        (conflict) => conflict.kind === 'loss' && !conflict.wake,
+      );
+      if (losing && enabled() && !session.engine.paused) alertSounds.loss(volume());
+    }, REPEAT_MS);
+
+    return () => {
+      unsubscribe();
+      window.clearInterval(timer);
+    };
+  }, [session]);
+}
+
+/** Plays a soft blip when the player transmits an instruction or clears a departure. */
+export function useInterfaceSounds(session: ScopeSession): void {
+  useEffect(
+    () =>
+      session.engine.subscribe((event) => {
+        const settings = userSettings.get();
+        if (!settings['audio.uiSounds']) return;
+        if (event.type === 'instructionIssued' || event.type === 'departureReleased')
+          uiSounds.transmit(settings['audio.masterVolume']);
+      }),
+    [session],
+  );
+}
+
+/** A tick when an aircraft is selected. */
+export function playSelectSound(): void {
+  const settings = userSettings.get();
+  if (settings['audio.uiSounds']) uiSounds.select(settings['audio.masterVolume']);
+}

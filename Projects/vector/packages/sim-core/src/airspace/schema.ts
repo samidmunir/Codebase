@@ -1,0 +1,428 @@
+import { z } from 'zod';
+
+// Schema for an airspace pack: the data files in data/airspaces/<id>/.
+// Built from FAA and US Census sources by scripts/data (see its README).
+
+export const AIRSPACE_SCHEMA_VERSION = 1;
+
+const latLonSchema = z.object({
+  lat: z.number().min(-90).max(90),
+  lon: z.number().min(-180).max(180),
+});
+
+/** Compact [lon, lat] coordinate, used for map geometry. */
+const pointSchema = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]);
+const lineSchema = z.array(pointSchema).min(2);
+const ringSchema = z.array(pointSchema).min(4);
+
+const headingSchema = z.number().min(0).max(360);
+
+// ---- Procedures ------------------------------------------------------------
+
+export const altitudeConstraintSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('at'), ft: z.number() }),
+  z.object({ type: z.literal('atOrAbove'), ft: z.number() }),
+  z.object({ type: z.literal('atOrBelow'), ft: z.number() }),
+  z.object({ type: z.literal('between'), minFt: z.number(), maxFt: z.number() }),
+]);
+
+export type AltitudeConstraint = z.infer<typeof altitudeConstraintSchema>;
+
+export const speedConstraintSchema = z.object({
+  type: z.enum(['at', 'atOrAbove', 'atOrBelow']),
+  kts: z.number().positive(),
+});
+
+export type SpeedConstraint = z.infer<typeof speedConstraintSchema>;
+
+/** ARINC 424 path terminators. */
+export const pathTerminatorSchema = z.enum([
+  'IF', // initial fix
+  'TF', // track to fix
+  'CF', // course to fix
+  'DF', // direct to fix
+  'RF', // radius-to-fix arc
+  'AF', // DME arc to fix
+  'CA', // course to altitude
+  'CD', // course to DME distance
+  'CI', // course to intercept
+  'CR', // course to radial
+  'FA', // fix to altitude
+  'FC', // track from fix for a distance
+  'FD', // track from fix to DME distance
+  'FM', // from fix, manual termination (expect vectors)
+  'VA', // heading to altitude
+  'VD', // heading to DME distance
+  'VI', // heading to intercept
+  'VM', // heading, manual termination (expect vectors)
+  'VR', // heading to radial
+  'PI', // procedure turn
+  'HA', // hold to altitude
+  'HF', // hold, single circuit
+  'HM', // hold, manual termination
+]);
+
+export type PathTerminator = z.infer<typeof pathTerminatorSchema>;
+
+export const procedureLegSchema = z.object({
+  pathTerminator: pathTerminatorSchema,
+  /** Navdata fix ident. */
+  fix: z.string().optional(),
+  /** Runway id when the leg terminates at a runway threshold. */
+  runway: z.string().optional(),
+  /** Magnetic course or heading. */
+  courseDeg: headingSchema.optional(),
+  turnDirection: z.enum(['left', 'right']).optional(),
+  distanceNm: z.number().nonnegative().optional(),
+  holdMinutes: z.number().positive().optional(),
+  altitude: altitudeConstraintSchema.optional(),
+  glideslopeInterceptFt: z.number().optional(),
+  speed: speedConstraintSchema.optional(),
+  verticalAngleDeg: z.number().optional(),
+  flyover: z.boolean(),
+  role: z.enum(['iaf', 'if', 'faf', 'map']).optional(),
+});
+
+export type ProcedureLeg = z.infer<typeof procedureLegSchema>;
+
+const routeSegmentSchema = z.object({
+  /** Transition name: an entry/exit fix, 'RW04B', 'ALL', ... */
+  name: z.string(),
+  /** Runways this segment applies to (runway transitions and runway-specific common routes). */
+  runways: z.array(z.string()).optional(),
+  legs: z.array(procedureLegSchema).min(1),
+});
+
+export type RouteSegment = z.infer<typeof routeSegmentSchema>;
+
+/**
+ * A STAR or SID. Arrivals fly enroute transition -> common route -> runway
+ * transition; departures fly runway transition -> common route -> enroute transition.
+ */
+export const terminalProcedureSchema = z.object({
+  id: z.string(),
+  airport: z.string(),
+  rnav: z.boolean(),
+  enrouteTransitions: z.array(routeSegmentSchema),
+  commonRoutes: z.array(routeSegmentSchema),
+  runwayTransitions: z.array(routeSegmentSchema),
+});
+
+export type TerminalProcedure = z.infer<typeof terminalProcedureSchema>;
+
+export const ilsApproachSchema = z.object({
+  /** CIFP id, e.g. 'I22L', 'I04LY'. */
+  id: z.string(),
+  airport: z.string(),
+  runway: z.string(),
+  /** Letter for multiple ILS approaches to one runway ('Y', 'Z'). */
+  variant: z.string().optional(),
+  localizer: z.string(),
+  transitions: z.array(routeSegmentSchema),
+  final: z.array(procedureLegSchema).min(1),
+  missedApproach: z.array(procedureLegSchema),
+});
+
+export type IlsApproach = z.infer<typeof ilsApproachSchema>;
+
+export const proceduresFileSchema = z.object({
+  schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
+  arrivals: z.array(terminalProcedureSchema),
+  departures: z.array(terminalProcedureSchema),
+  approaches: z.array(ilsApproachSchema),
+});
+
+// ---- Airports ----------------------------------------------------------------
+
+export const runwaySchema = z.object({
+  /** '04L' */
+  id: z.string().regex(/^(0[1-9]|[12]\d|3[0-6])[LRC]?$/),
+  oppositeId: z.string(),
+  /** Landing threshold point (after any displacement). */
+  threshold: latLonSchema,
+  thresholdElevationFt: z.number(),
+  displacedThresholdFt: z.number().min(0),
+  lengthFt: z.number().positive(),
+  widthFt: z.number().positive(),
+  magneticHeadingDeg: headingSchema,
+  /** True course from this threshold to the opposite threshold. */
+  trueHeadingDeg: headingSchema,
+  towerFrequencyMhz: z.number(),
+  ils: z
+    .object({
+      ident: z.string(),
+      frequencyMhz: z.number(),
+      category: z.string(),
+      /** Localizer course, magnetic. */
+      courseDeg: headingSchema,
+      localizerPosition: latLonSchema,
+      glideslopeAngleDeg: z.number().positive(),
+      thresholdCrossingHeightFt: z.number().optional(),
+    })
+    .optional(),
+});
+
+export type Runway = z.infer<typeof runwaySchema>;
+
+export const airportSchema = z.object({
+  icao: z.string().regex(/^[A-Z0-9]{4}$/),
+  name: z.string(),
+  position: latLonSchema,
+  elevationFt: z.number(),
+  magneticVariationDeg: z.number(),
+  /** Radio name of the tower, e.g. 'Kennedy Tower'. */
+  towerCallsign: z.string(),
+  runways: z.array(runwaySchema).min(1),
+});
+
+export type Airport = z.infer<typeof airportSchema>;
+
+export const airportsFileSchema = z.object({
+  schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
+  airports: z.array(airportSchema).min(1),
+});
+
+// ---- Navdata -----------------------------------------------------------------
+
+export const fixSchema = z.object({
+  ident: z.string().min(2).max(5),
+  kind: z.enum(['waypoint', 'vor', 'ndb']),
+  position: latLonSchema,
+  name: z.string().optional(),
+  frequencyMhz: z.number().optional(),
+});
+
+export type Fix = z.infer<typeof fixSchema>;
+
+/** A published holding pattern (FAA NASR), as charted on a STAR, enroute chart or approach. */
+export const holdSchema = z.object({
+  fix: z.string().min(2).max(5),
+  /** Magnetic course flown inbound to the fix. */
+  inboundCourseDeg: z.number().min(0).max(360),
+  turn: z.enum(['left', 'right']),
+  /** Leg length for distance-based (RNAV or DME) holds; others are timed. */
+  legNm: z.number().positive().optional(),
+  /** Published maximum holding speed, where one is given. */
+  maxSpeedKts: z.number().positive().optional(),
+  /** Altitudes the hold is published for. */
+  minAltitudeFt: z.number().min(0).optional(),
+  maxAltitudeFt: z.number().min(0).optional(),
+  /** Where it is charted: 'STAR', 'ENROUTE HIGH', 'ENROUTE LOW', 'IAP', ... */
+  chart: z.string(),
+});
+
+export type Hold = z.infer<typeof holdSchema>;
+
+export const navdataFileSchema = z.object({
+  schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
+  fixes: z.array(fixSchema),
+  /** Published holds, at most one per fix. */
+  holds: z.array(holdSchema).default([]),
+});
+
+// ---- Video map -----------------------------------------------------------------
+
+const controlledAirspaceAreaSchema = z.object({
+  /** Airspace name, e.g. 'NEW YORK' or 'PHILADELPHIA'. */
+  name: z.string().optional(),
+  floorFt: z.number().min(0),
+  ceilingFt: z.number().positive(),
+  ring: ringSchema,
+});
+
+export const videoMapFileSchema = z.object({
+  schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
+  shoreline: z.array(lineSchema),
+  classB: z.array(controlledAirspaceAreaSchema),
+  classC: z.array(controlledAirspaceAreaSchema).default([]),
+  minimumVectoringAltitudes: z.array(
+    z.object({
+      name: z.string(),
+      /**
+       * 'mva': a TRACON minimum vectoring altitude sector. 'mia': a Center
+       * minimum IFR altitude sector, used where no MVA sector applies.
+       */
+      kind: z.enum(['mva', 'mia']).default('mva'),
+      minimumAltitudeFt: z.number().positive(),
+      exterior: ringSchema,
+      holes: z.array(ringSchema),
+    }),
+  ),
+  /** Jet and Q routes (high) and Victor and T routes (low), as drawn lines. */
+  airways: z
+    .array(z.object({ id: z.string(), level: z.enum(['high', 'low']), line: lineSchema }))
+    .default([]),
+  /** Other airports in the region, for orientation (not controlled in the session). */
+  airports: z
+    .array(
+      z.object({
+        icao: z.string(),
+        name: z.string(),
+        position: latLonSchema,
+        runways: z.array(z.tuple([pointSchema, pointSchema])),
+      }),
+    )
+    .default([]),
+  /** The TRACON's own airspace, traced from its minimum vectoring altitude chart. */
+  traconBoundary: z
+    .object({ name: z.string(), lines: z.array(lineSchema) })
+    .default({ name: '', lines: [] }),
+  /** Air route traffic control center boundaries. */
+  artccBoundaries: z
+    .array(z.object({ artcc: z.string(), level: z.enum(['low', 'high']), ring: ringSchema }))
+    .default([]),
+});
+
+export type VideoMap = z.infer<typeof videoMapFileSchema>;
+
+// ---- Traffic and operations -------------------------------------------------------
+
+export const runwayConfigSchema = z.object({
+  id: z.string(),
+  arrivals: z.array(z.string()).min(1),
+  departures: z.array(z.string()).min(1),
+});
+
+export type RunwayConfig = z.infer<typeof runwayConfigSchema>;
+
+export const airportTrafficSchema = z.object({
+  /** Altitude departures climb to after takeoff. */
+  initialAltitudeFt: z.number().positive(),
+  /** Runway configurations in order of preference; the best one for the wind is used. */
+  runwayConfigs: z.array(runwayConfigSchema).min(1),
+  airlines: z
+    .array(
+      z.object({
+        icao: z.string(),
+        weight: z.number().positive(),
+        types: z.array(z.string()).min(1),
+        /** Destinations this airline serves from the airport; any destination if omitted. */
+        destinations: z.array(z.string()).min(1).optional(),
+      }),
+    )
+    .min(1),
+  destinations: z
+    .array(
+      z.object({
+        icao: z.string(),
+        weight: z.number().positive(),
+        gate: z.string(),
+        /** Airlines that fly there from the airport; any airline if omitted. */
+        airlines: z.array(z.string()).min(1).optional(),
+      }),
+    )
+    .min(1),
+});
+
+export type AirportTraffic = z.infer<typeof airportTrafficSchema>;
+
+export const trafficFileSchema = z.object({
+  schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
+  notes: z.string().optional(),
+  /** Departure gates (exit directions) and their fixes. */
+  departureGates: z.record(z.string(), z.array(z.string()).min(1)),
+  airports: z.record(z.string(), airportTrafficSchema),
+  /** Where origin and destination cities are, for trip lengths and cruise levels. */
+  cityPositions: z.record(z.string(), latLonSchema).default({}),
+  /** The region's typical surface winds, for random weather (magnetic directions). */
+  windRegimes: z
+    .array(
+      z.object({
+        weight: z.number().positive(),
+        fromDeg: z.number().min(0).max(360),
+        toDeg: z.number().min(0).max(360),
+      }),
+    )
+    .min(1)
+    .optional(),
+});
+
+export type TrafficProfile = z.infer<typeof trafficFileSchema>;
+
+/** Airlines: radio names and flight number ranges (data/airlines/airlines.json). */
+export const airlinesFileSchema = z.object({
+  schemaVersion: z.literal(1),
+  airlines: z.array(
+    z.object({
+      icao: z.string().regex(/^[A-Z]{3}$/),
+      name: z.string(),
+      telephony: z.string(),
+      flightNumbers: z.tuple([z.number().int().positive(), z.number().int().positive()]),
+    }),
+  ),
+});
+
+export type AirlinesFile = z.infer<typeof airlinesFileSchema>;
+export type Airline = AirlinesFile['airlines'][number];
+
+// ---- Airspace ----------------------------------------------------------------
+
+export const centerSiteSchema = z.object({
+  name: z.string(),
+  position: latLonSchema,
+  frequencies: z
+    .array(z.object({ frequencyMhz: z.number(), altitude: z.enum(['low', 'high', 'low/high']) }))
+    .min(1),
+});
+
+const centerControllerSchema = z.object({
+  id: z.string(),
+  callsign: z.string(),
+  sites: z.array(centerSiteSchema).min(1),
+});
+
+export type CenterController = z.infer<typeof centerControllerSchema>;
+
+export const airspaceFileSchema = z.object({
+  schemaVersion: z.literal(AIRSPACE_SCHEMA_VERSION),
+  id: z.string().regex(/^[a-z0-9-]+$/),
+  name: z.string(),
+  facility: z.string(),
+  description: z.string(),
+  center: latLonSchema,
+  magneticVariationDeg: z.number(),
+  /** The radar that feeds the scope. Targets update as its beam sweeps past them. */
+  radar: z.object({
+    name: z.string(),
+    position: latLonSchema,
+    rangeNm: z.number().positive(),
+  }),
+  /**
+   * Terminal radars (ASRs) whose coverage feeds the scope, with the primary
+   * one above. Beyond them, long-range radar coverage is modeled by session
+   * settings (an altitude floor and update rate).
+   */
+  radars: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        kind: z.enum(['asr']),
+        position: latLonSchema,
+        antennaElevationFt: z.number(),
+        rangeNm: z.number().positive(),
+      }),
+    )
+    .default([]),
+  /** Area the player controls. Arrivals enter and departures leave across it. */
+  boundary: z.object({ ring: ringSchema, ceilingFt: z.number().positive() }),
+  /** Altitudes at and above this are flight levels (18,000 ft in the United States). */
+  transitionAltitudeFt: z.number().positive().default(18_000),
+  airports: z.array(z.string()).min(1),
+  controllers: z.object({
+    approach: z.object({
+      id: z.string(),
+      approachCallsign: z.string(),
+      departureCallsign: z.string(),
+    }),
+    /** The Center that owns the surrounding airspace. */
+    center: centerControllerSchema,
+    /** Neighboring Centers aircraft can be handed to where they leave into their airspace. */
+    adjacentCenters: z.array(centerControllerSchema).default([]),
+  }),
+  sources: z.array(
+    z.object({ name: z.string(), url: z.string(), edition: z.string(), usedFor: z.string() }),
+  ),
+});
+
+export type AirspaceFile = z.infer<typeof airspaceFileSchema>;
