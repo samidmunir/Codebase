@@ -68,6 +68,7 @@ export function accountService(users: UsersRepository, signIns: SessionsReposito
         handle: user.handle,
         handleGenerated: user.handleGenerated,
         displayName: user.displayName,
+        profilePublic: user.profilePublic,
         handleChangeableAt:
           allowed && allowed.getTime() > Date.now() ? allowed.toISOString() : null,
         createdAt: user.createdAt.toISOString(),
@@ -95,6 +96,7 @@ export function accountService(users: UsersRepository, signIns: SessionsReposito
       await users.update(userId, {
         ...(changes.handle !== undefined ? { handle: changes.handle } : {}),
         ...(changes.displayName !== undefined ? { displayName: changes.displayName } : {}),
+        ...(changes.profilePublic !== undefined ? { profilePublic: changes.profilePublic } : {}),
       });
       return this.get(userId);
     },

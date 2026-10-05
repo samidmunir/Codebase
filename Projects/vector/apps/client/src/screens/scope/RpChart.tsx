@@ -22,10 +22,23 @@ function niceStep(span: number, count: number): number {
 export function RpChart({
   points,
   durationSec,
+  formatX = formatDuration,
+  minSpan = 60,
+  subject = 'the session',
+  xHeading = 'Time',
 }: {
-  /** [seconds since the start, RP total after the change]. */
+  /** [x (seconds since the start by default), RP total after the change]. */
   points: readonly (readonly [number, number])[];
+  /** Where the x axis ends. */
   durationSec: number;
+  /** Labels a point on the x axis (sim time by default). */
+  formatX?: (x: number) => string;
+  /** The smallest x span drawn. */
+  minSpan?: number;
+  /** What the RP is over, for screen readers ("the session", "the career"). */
+  subject?: string;
+  /** The x column's heading in the table view. */
+  xHeading?: string;
 }) {
   const series = useMemo(() => {
     const steps: [number, number][] = [
@@ -35,7 +48,7 @@ export function RpChart({
     return steps;
   }, [points]);
   const last = series.at(-1)!;
-  const endSec = Math.max(durationSec, last[0], 60);
+  const endSec = Math.max(durationSec, last[0], minSpan);
   const values = series.map(([, rp]) => rp);
   const step = niceStep(Math.max(...values, 0) - Math.min(...values, 0), 4);
   const yMin = Math.floor(Math.min(0, ...values) / step) * step;
@@ -76,14 +89,14 @@ export function RpChart({
     setFocus(next);
   };
 
-  const timeLabel = (sec: number) => formatDuration(sec);
+  const timeLabel = formatX;
   return (
     <figure className="rp-chart">
       <div
         className="rp-chart__plot"
         tabIndex={0}
         role="img"
-        aria-label={`RP over the session: ${formatRp(last[1])} after ${timeLabel(endSec)}. Use the arrow keys to read values.`}
+        aria-label={`RP over ${subject}: ${formatRp(last[1])} after ${timeLabel(endSec)}. Use the arrow keys to read values.`}
         onKeyDown={onKey}
         onFocus={() => setFocus((f) => f ?? endSec)}
         onBlur={() => setFocus(undefined)}
@@ -164,7 +177,7 @@ export function RpChart({
         <table>
           <thead>
             <tr>
-              <th scope="col">Time</th>
+              <th scope="col">{xHeading}</th>
               <th scope="col">RP</th>
             </tr>
           </thead>

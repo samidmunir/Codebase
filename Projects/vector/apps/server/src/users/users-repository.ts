@@ -18,6 +18,8 @@ export interface UserRecord {
   role: UserRole;
   disabledAt: Date | null;
   createdAt: Date;
+  /** Others can see this pilot's profile and results. */
+  profilePublic: boolean;
 }
 
 interface UserRow {
@@ -31,10 +33,11 @@ interface UserRow {
   role: UserRole;
   disabled_at: Date | null;
   created_at: Date;
+  profile_public: boolean;
 }
 
 const COLUMNS =
-  'id, email, handle, handle_generated, handle_changed_at, display_name, password_hash, role, disabled_at, created_at';
+  'id, email, handle, handle_generated, handle_changed_at, display_name, password_hash, role, disabled_at, created_at, profile_public';
 
 const toRecord = (row: UserRow): UserRecord => ({
   id: row.id,
@@ -47,6 +50,7 @@ const toRecord = (row: UserRow): UserRecord => ({
   role: row.role,
   disabledAt: row.disabled_at,
   createdAt: row.created_at,
+  profilePublic: row.profile_public,
 });
 
 interface AdminUserRow {
@@ -71,7 +75,8 @@ const ADMIN_USER_SELECT = `
        WHERE a.user_id = u.id AND a.revoked_at IS NULL AND a.rotated_at IS NULL
          AND a.expires_at > now()) AS active_sign_ins,
     (SELECT count(*)::int FROM saved_sessions s WHERE s.user_id = u.id) AS saved_sessions,
-    (SELECT coalesce(sum(s.rp), 0)::float FROM saved_sessions s WHERE s.user_id = u.id) AS career_rp
+    (SELECT coalesce(sum(r.rp), 0)::float FROM session_results r
+       WHERE r.user_id = u.id AND NOT r.hidden) AS career_rp
   FROM users u`;
 
 const toAdminUser = (row: AdminUserRow): AdminUser => ({
@@ -233,6 +238,7 @@ export function usersRepository(db: Database) {
         passwordHash?: string;
         role?: UserRole;
         disabled?: boolean;
+        profilePublic?: boolean;
       },
     ): Promise<UserRecord> {
       const before = await this.findById(id);
@@ -258,6 +264,7 @@ export function usersRepository(db: Database) {
       if (changes.displayName !== undefined) set('display_name', changes.displayName);
       if (changes.passwordHash !== undefined) set('password_hash', changes.passwordHash);
       if (changes.role !== undefined) set('role', changes.role);
+      if (changes.profilePublic !== undefined) set('profile_public', changes.profilePublic);
       if (changes.disabled !== undefined)
         sets.push(
           changes.disabled ? 'disabled_at = coalesce(disabled_at, now())' : 'disabled_at = NULL',

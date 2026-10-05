@@ -5,6 +5,7 @@ import {
   type MetarObservation,
   type SessionDifficulty,
   type SessionSettings,
+  airspaceIdSchema,
 } from '@vector/shared';
 import {
   SimEngine,
@@ -17,6 +18,7 @@ import {
   type Wind,
 } from '@vector/sim-core';
 import { airlines, performanceCatalog } from '../airspaces/registry';
+import { recordResult } from '../api/results-api';
 import { radarSensors } from '../scope/radar-coverage';
 import { RadarTracker } from '../scope/radar-tracker';
 
@@ -114,6 +116,7 @@ export class ScopeSession {
         settings: origin.settings,
         airspace: pack,
         airlines,
+        sessionId: crypto.randomUUID(),
         ...(origin.runwayConfigs ? { runwayConfigs: origin.runwayConfigs } : {}),
         ...(origin.liveWeather ? { liveWeather: origin.liveWeather } : {}),
       });
@@ -158,6 +161,37 @@ export class ScopeSession {
   /** The full simulation state, for saving. */
   toSnapshot(): SimSnapshot {
     return this.engine.toSnapshot();
+  }
+
+  /** The tick last recorded as this session's result, and whether a recording is under way. */
+  private recordedTick = -1;
+  private recording: Promise<void> | undefined;
+
+  /**
+   * Records how the session stands as its result in the pilot's career (when it has
+   * moved on since last time). Failures are quiet: the next recording catches up.
+   */
+  recordResult(): Promise<void> {
+    const sessionId = this.engine.replay?.sessionId;
+    const airspaceId = airspaceIdSchema.safeParse(this.pack.airspace.id);
+    if (!sessionId || !airspaceId.success || this.engine.tick === this.recordedTick)
+      return this.recording ?? Promise.resolve();
+    this.recording ??= (async () => {
+      const tick = this.engine.tick;
+      try {
+        await recordResult(sessionId, {
+          airspaceId: airspaceId.data,
+          difficulty: this.difficulty,
+          snapshot: this.engine.toSnapshot(),
+        });
+        this.recordedTick = tick;
+      } catch {
+        // Offline or signed out: try again next time.
+      } finally {
+        this.recording = undefined;
+      }
+    })();
+    return this.recording;
   }
 
   /** Records the saved session this one now belongs to (later saves can overwrite it). */

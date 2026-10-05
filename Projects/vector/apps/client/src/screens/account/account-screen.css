@@ -114,3 +114,30 @@
     padding: var(--space-4);
   }
 }
+
+.account-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.account-check input {
+  margin-top: 3px;
+  accent-color: var(--color-target);
+}
+
+.account-check > span {
+  display: grid;
+  gap: 2px;
+}
+
+.account-check > span > span {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.account-check a {
+  color: var(--color-target);
+}

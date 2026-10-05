@@ -138,6 +138,9 @@ export function ScopeScreen() {
   return <Scope session={state.session} />;
 }
 
+/** How often a running session's result is recorded. */
+const RESULT_RECORD_INTERVAL_MS = 2 * 60_000;
+
 /** How long the "Saved" confirmation shows. */
 const TOAST_MS = 3_000;
 
@@ -162,7 +165,20 @@ function Scope({ session }: { session: ScopeSession }) {
     if (!debrief) wasPausedRef.current = session.engine.paused;
     session.pause();
     setDebrief(reason);
+    void session.recordResult();
   };
+
+  // The session's result goes into the pilot's career as it goes on, and on leaving.
+  useEffect(() => {
+    const timer = setInterval(() => void session.recordResult(), RESULT_RECORD_INTERVAL_MS);
+    const onHide = () => void session.recordResult();
+    window.addEventListener('pagehide', onHide);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('pagehide', onHide);
+      void session.recordResult();
+    };
+  }, [session]);
   const closeDebrief = () => {
     setDebrief(undefined);
     if (!wasPausedRef.current) session.togglePause();

@@ -61,7 +61,7 @@ Three layouts, chosen by route:
 | `/play`                    | Today's start screen: airspaces, saved sessions, career summary. Signed-in visitors to `/` see the landing with a "Play" button. |
 | `/setup/:id`, `/scope/:id` | Unchanged (full screen).                                                                                                         |
 | `/me`                      | Your profile: the public view plus private details.                                                                              |
-| `/me/sessions/:id`         | A finished session's overview: the debrief, kept for good.                                                                       |
+| `/results/:id`             | A finished session's overview: the debrief, kept for good (public when its pilot's profile is).                                  |
 | `/account`                 | Handle, display name, email (re-verified), password, privacy, sign out other devices, delete your account.                       |
 | `/settings`                | Simulator settings (existing).                                                                                                   |
 | `/admin`                   | Existing, plus Records (hide a result), Community (reports, moderation), News (write posts).                                     |
@@ -137,7 +137,7 @@ A resumed session continues the same result rather than starting a new one.
 - **Charts:** career RP over time; RP and on-time rate by airspace.
 - **History:** every result, newest first, with airspace, difficulty, duration, RP
   and flights; each opens the session overview.
-- **Session overview** (`/me/sessions/:id`, and public on public profiles): the
+- **Session overview** (`/results/:id`, public when the profile is): the
   debrief as it was (RP chart, timing table, flights by kind, every RP event),
   plus whether the result is verified.
 

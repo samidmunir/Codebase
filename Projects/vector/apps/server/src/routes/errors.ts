@@ -17,6 +17,8 @@ import {
 import { ForbiddenError, UnauthorizedError } from '../auth/authenticate';
 import { SavedSessionLimitError, SavedSessionNotFoundError } from '../sessions/sessions-repository';
 import { EmailTakenError, HandleTakenError, UserNotFoundError } from '../users/users-repository';
+import { ResultNotFoundError } from '../results/results-repository';
+import { InvalidResultError } from '../results/results-service';
 import { WeatherUnavailableError } from '../weather/metar-service';
 import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
@@ -72,6 +74,12 @@ export function errorHandler(
     return reply.code(403).send(body('forbidden', error.message));
   if (error instanceof AdminGuardError)
     return reply.code(409).send(body('admin_guard', error.message));
+  if (error instanceof ResultNotFoundError)
+    return reply.code(404).send(body('result_not_found', error.message));
+  if (error instanceof InvalidResultError) {
+    request.log.warn({ detail: error.detail.slice(0, 2_000) }, 'rejected a session result');
+    return reply.code(400).send(body('invalid_result', error.message));
+  }
   if (error instanceof UserNotFoundError)
     return reply.code(404).send(body('user_not_found', error.message));
   if (error instanceof AirspaceNotFoundError)
