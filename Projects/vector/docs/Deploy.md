@@ -11,10 +11,10 @@ time. The plan behind it is in `ReleaseV4.md`.
 - **Two environments** on [Render](https://render.com), each a web service and a
   Postgres database, described in `render.yaml`:
 
-  | Environment | Deploys from     | Address (example)     |
-  | ----------- | ---------------- | --------------------- |
-  | Staging     | `vector/develop` | `staging.your-domain` |
-  | Production  | `main`           | `your-domain`         |
+  | Environment | Deploys from     | Address                 |
+  | ----------- | ---------------- | ----------------------- |
+  | Staging     | `vector/develop` | `staging.vectorsim.net` |
+  | Production  | `main`           | `vectorsim.net`         |
 
 - **Every push** runs GitHub Actions (`.github/workflows/vector.yml` at the repository
   root): format, lint, types, unit and integration tests, the build, the end-to-end
@@ -31,12 +31,14 @@ don't need it.
 
 ## Setting it up (once)
 
-You'll need accounts with Render, Resend and a domain registrar (Cloudflare is
-recommended for the domain's DNS). None of the steps put secrets in the repository.
+You'll need accounts with Render, Resend and a domain registrar. Vector's domain,
+`vectorsim.net`, is registered with Squarespace and uses Squarespace's DNS. None of the
+steps put secrets in the repository.
 
 ### 1. Domain
 
-1. Buy a domain (any registrar), and move its DNS to Cloudflare (free plan).
+1. Buy a domain (any registrar). Its own DNS is fine (Squarespace's works); moving it
+   to Cloudflare is optional.
 2. You'll add records for it in steps 3 and 4.
 
 ### 2. Render
@@ -47,18 +49,32 @@ recommended for the domain's DNS). None of the steps put secrets in the reposito
    `Projects/vector/render.yaml`.
 3. Render shows the two databases and two web services. Fill in the values it asks for
    (the ones marked `sync: false`):
-   - `CLIENT_ORIGIN`: the site's address, e.g. `https://your-domain` (production) and
-     `https://staging.your-domain` (staging). Email links are built from it.
-   - `RESEND_API_KEY` and `EMAIL_FROM`: from step 4 (you can come back to these).
+   - `CLIENT_ORIGIN`: the site's address, e.g. `https://vectorsim.net` (production) and
+     `https://staging.vectorsim.net` (staging). It's only used to build email links,
+     so it can be the domain before the domain is set up.
+   - `EMAIL_DELIVERY`: `log` until Resend is set up (step 4), then `resend`. The server
+     won't start with `resend` and no `RESEND_API_KEY`.
+   - `RESEND_API_KEY` and `EMAIL_FROM`: from step 4 (leave them empty until then).
 4. **Apply.** Render creates the databases, builds the image and deploys. `JWT_SECRET`
    is generated for you, separately for each environment.
+5. Production builds from `main`, so its first deploy fails until the first release
+   (merging `vector/develop` into `main`). That's expected.
 
 ### 3. The address
 
-For each web service, in Render: **Settings → Custom Domains → Add**, and enter
-`your-domain` (production) or `staging.your-domain` (staging). Render shows a CNAME
-target; in Cloudflare, add that **CNAME** record. Render issues the HTTPS certificate
-itself within a few minutes.
+For each web service, in Render: **Settings → Custom Domains → Add**, and enter the
+address. Render shows the record to add; add it in the domain's DNS (Squarespace:
+**Domains → the domain → DNS → Custom records → Add record**), then **Verify** in
+Render. It issues the HTTPS certificate itself within a few minutes.
+
+| Address                 | Service           | Record                                              |
+| ----------------------- | ----------------- | --------------------------------------------------- |
+| `staging.vectorsim.net` | vector-staging    | CNAME `staging` → the service's `onrender.com` host |
+| `vectorsim.net`         | vector-production | A `@` → the IP Render shows                         |
+| `www.vectorsim.net`     | vector-production | CNAME `www` → the service's `onrender.com` host     |
+
+Squarespace adds default records (A records on `@` and a `www` CNAME, for its parking
+page): delete those before adding production's.
 
 - If you turn on Cloudflare's proxy (the orange cloud) for a record, set SSL/TLS to
   **Full (strict)** in Cloudflare and change that service's `TRUST_PROXY` to `2`
@@ -68,13 +84,15 @@ itself within a few minutes.
 ### 4. Email (Resend)
 
 1. In Resend: **Domains → Add**, enter your domain, and add the DNS records it lists
-   (SPF, DKIM and the return path) in Cloudflare. Wait for it to show **Verified**.
+   (SPF, DKIM and the return path) in the domain's DNS. Wait for it to show
+   **Verified**.
 2. **API Keys → Create** (sending access only), and put it in both services'
    `RESEND_API_KEY` in Render.
-3. Set `EMAIL_FROM` to an address on your domain, e.g. `Vector <hello@your-domain>`.
+3. Set `EMAIL_FROM` to an address on your domain, e.g. `Vector <hello@vectorsim.net>`,
+   and `EMAIL_DELIVERY` to `resend`.
 
-Until Resend is set up, choose `EMAIL_DELIVERY=log` for a service: emails go to its
-log instead (Render → the service → Logs), which is fine for a first look.
+Until then, `EMAIL_DELIVERY=log` sends emails to the service's log instead (Render →
+the service → Logs), which is fine for a first look.
 
 ### 5. The first admin
 

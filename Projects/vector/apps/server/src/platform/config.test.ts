@@ -28,6 +28,16 @@ describe('loadConfig', () => {
     ).toThrow(/JWT_SECRET must be at least 32 characters/);
   });
 
+  it('drops a trailing slash from CLIENT_ORIGIN, so links don’t get a double slash', () => {
+    const config = loadConfig({
+      DATABASE_URL: 'postgres://localhost/vector',
+      JWT_SECRET: SECRET,
+      CLIENT_ORIGIN: 'https://staging.vector.example/',
+    });
+
+    expect(config.CLIENT_ORIGIN).toBe('https://staging.vector.example');
+  });
+
   it('coerces PORT from a string', () => {
     const config = loadConfig({
       DATABASE_URL: 'postgres://localhost/vector',

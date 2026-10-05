@@ -9,7 +9,11 @@ const configSchema = z.object({
   HOST: z.string().default('127.0.0.1'),
   PORT: z.coerce.number().int().positive().default(4000),
   DATABASE_URL: z.url(),
-  CLIENT_ORIGIN: z.url().default('http://localhost:5173'),
+  /** The site's address, for links in emails (a trailing slash is dropped). */
+  CLIENT_ORIGIN: z
+    .url()
+    .default('http://localhost:5173')
+    .transform((url) => url.replace(/\/+$/, '')),
   /** Secret for signing access tokens. Use a long random value; never commit it. */
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   ACCESS_TOKEN_MINUTES: z.coerce.number().int().positive().default(15),

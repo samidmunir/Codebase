@@ -42,8 +42,10 @@ services:
         sync: false # e.g. https://staging.your-domain.example
       - key: TRUST_PROXY
         value: '1'
+      # Asked for when the blueprint is created, then set in the dashboard: log (to the
+      # service's logs) until Resend is set up, then resend. Never reset by a sync.
       - key: EMAIL_DELIVERY
-        value: resend
+        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
@@ -76,8 +78,10 @@ services:
         sync: false # e.g. https://your-domain.example
       - key: TRUST_PROXY
         value: '1'
+      # Asked for when the blueprint is created, then set in the dashboard: log (to the
+      # service's logs) until Resend is set up, then resend. Never reset by a sync.
       - key: EMAIL_DELIVERY
-        value: resend
+        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
