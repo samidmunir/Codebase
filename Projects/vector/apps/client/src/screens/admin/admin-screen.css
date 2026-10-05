@@ -1007,3 +1007,107 @@ a.admin-user-link {
 a.admin-user-link:hover .admin-user-link__name {
   color: var(--color-target);
 }
+
+/* ---- Community content ---------------------------------------------------------------- */
+
+.admin-community {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.admin-community__sections {
+  justify-self: start;
+}
+
+.admin-segmented button[aria-current='page'] {
+  color: #04120c;
+  font-weight: 600;
+  background: var(--color-target);
+}
+
+.admin-post-body {
+  max-height: 160px;
+  overflow: auto;
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.88rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+}
+
+.admin-post-edit {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.admin-post-edit textarea {
+  min-height: 140px;
+  font: inherit;
+  resize: vertical;
+}
+
+.admin-categories {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-categories li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}
+
+.admin-categories__order {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-categories__order button {
+  padding: 0 6px;
+  color: var(--color-text-muted);
+  font: inherit;
+  background: none;
+  border: 1px solid var(--color-surface-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.admin-categories__order button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.admin-categories__delete {
+  grid-column: 2 / -1;
+}
+
+.admin-category-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-post-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-post-list a,
+.admin-categories a {
+  color: var(--color-target);
+  font-weight: 500;
+  text-decoration: none;
+}

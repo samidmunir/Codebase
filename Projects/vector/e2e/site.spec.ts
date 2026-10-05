@@ -64,6 +64,8 @@ test('the sign-in pages help: tabs keep where you were going, and passwords can 
     .getByRole('link', { name: 'Create account' })
     .click();
   await expect(page).toHaveURL(/\/register\?next=%2Frecords$/);
+  // The URL changes a moment before the form does: wait for the new one.
+  await expect(page.getByRole('heading', { name: 'Take the frequency' })).toBeVisible();
 
   const password = page.getByLabel('Password', { exact: true });
   await password.fill('abc');

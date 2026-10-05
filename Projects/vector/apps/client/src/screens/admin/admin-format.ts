@@ -22,6 +22,10 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'news.create': 'Wrote a news post',
   'news.update': 'Edited a news post',
   'news.delete': 'Deleted a news post',
+  'forum.createCategory': 'Created a category',
+  'forum.updateCategory': 'Changed a category',
+  'forum.deleteCategory': 'Deleted a category',
+  'forum.editPost': 'Edited a community post',
   'forum.hidePost': 'Hid a community post',
   'forum.showPost': 'Showed a community post again',
   'forum.deletePost': 'Deleted a community post',
@@ -41,6 +45,12 @@ const describeChange = (key: string, value: unknown): string => {
   if (key === 'published') return value ? 'published' : 'unpublished';
   if (key === 'pinned') return value ? 'pinned' : 'unpinned';
   if (key === 'device') return String(value);
+  if (key === 'before') return 'previous text kept';
+  if (key === 'threadsMoved') return `${String(value)} thread${value === 1 ? '' : 's'} moved`;
+  if (key === 'to') return `to ${String(value)}`;
+  if (key === 'moved') return `moved ${String(value)}`;
+  if (key === 'adminOnly') return value ? 'admins start threads' : 'anyone starts threads';
+  if (key === 'id') return String(value);
   if (key === 'ip') return String(value);
   if (key === 'profilePublic') return value ? 'profile public' : 'profile private';
   if (key === 'showOnRecords') return value ? 'on the records' : 'off the records';

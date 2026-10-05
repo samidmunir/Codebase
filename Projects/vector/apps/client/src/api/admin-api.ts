@@ -24,6 +24,9 @@ import {
   adminBulkResultSchema,
   type AdminBulkRequest,
   type AdminBulkResult,
+  adminSavedSessionListSchema,
+  type AdminSavedSessionList,
+  type AdminSavedSessionQuery,
 } from '@vector/shared';
 import { apiDownload, apiRequest } from './api-client';
 
@@ -153,3 +156,23 @@ export const setPostingSuspension = (
     method: 'POST',
     body: JSON.stringify({ postingSuspension }),
   });
+
+export async function bulkHideAdminResults(ids: string[], hidden: boolean): Promise<void> {
+  await apiRequest('/admin/results/bulk', {
+    method: 'POST',
+    body: JSON.stringify({ ids, hidden }),
+  });
+}
+
+export async function listAdminSavedSessions(
+  query: AdminSavedSessionQuery,
+): Promise<AdminSavedSessionList> {
+  const params = new URLSearchParams(
+    Object.entries(query)
+      .filter(([, value]) => value !== undefined && value !== '')
+      .map(([key, value]) => [key, String(value)]),
+  );
+  return adminSavedSessionListSchema.parse(
+    await apiRequest(`/admin/sessions?${params.toString()}`),
+  );
+}

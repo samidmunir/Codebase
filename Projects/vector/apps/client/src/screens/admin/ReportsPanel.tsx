@@ -14,7 +14,7 @@ import { Markdown } from '../../components/Markdown';
 import { errorMessage, formatAgo } from './admin-format';
 
 /** Reported community posts, oldest first, and what to do about each. */
-export function CommunityTab() {
+export function ReportsPanel() {
   const [reports, setReports] = useState<ForumReport[] | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const [notice, setNotice] = useState<string | undefined>(undefined);
