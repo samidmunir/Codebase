@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { buildApp } from './app';
 import { outboxMailer, resendMailer, type Mailer } from './email/mailer';
 import { loadConfig } from './platform/config';
@@ -29,6 +30,15 @@ const app = buildApp(
       },
       email: { ...(mailer ? { mailer } : {}), appUrl: config.CLIENT_ORIGIN },
     },
+    // Production serves the built client too (from the image's apps/client/dist).
+    ...(config.CLIENT_DIR || config.NODE_ENV === 'production'
+      ? {
+          client: {
+            dir: config.CLIENT_DIR ?? fileURLToPath(new URL('../../client/dist', import.meta.url)),
+            hsts: config.NODE_ENV === 'production',
+          },
+        }
+      : {}),
   },
   {
     logger: { level: config.LOG_LEVEL },

@@ -1,0 +1,102 @@
+# Vector: checks, the build and the end-to-end tests on every push and pull request
+# that touches Projects/vector, then the Docker image. Render deploys only once these
+# pass (render.yaml: autoDeployTrigger checksPass).
+name: Vector
+
+on:
+  push:
+    branches: [main, 'vector/**']
+    paths: ['Projects/vector/**', '.github/workflows/vector.yml']
+  pull_request:
+    paths: ['Projects/vector/**', '.github/workflows/vector.yml']
+
+concurrency:
+  group: vector-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: Projects/vector
+
+jobs:
+  check:
+    name: Checks and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: vector
+          POSTGRES_PASSWORD: vector
+          POSTGRES_DB: vector_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U vector" --health-interval 5s --health-timeout 5s
+          --health-retries 10
+    env:
+      # A throwaway database and secret for CI only.
+      DATABASE_URL: postgres://vector:vector@localhost:5432/vector_test
+      TEST_DATABASE_URL: postgres://vector:vector@localhost:5432/vector_test
+      JWT_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: Projects/vector/package-lock.json
+      - run: npm ci
+      - run: npm run migrate:up -- --test
+      - run: npm run check
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e -- --project chromium --project webkit
+      - name: Keep the end-to-end traces when something fails
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-results
+          path: Projects/vector/test-results/e2e
+          retention-days: 7
+
+  image:
+    name: Docker image
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: vector
+          POSTGRES_PASSWORD: vector
+          POSTGRES_DB: vector
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U vector" --health-interval 5s --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the image (Render builds it again from the same Dockerfile)
+        run: docker build -t vector:ci .
+      - name: Migrate as a deploy does, then start it and check it answers
+        env:
+          VECTOR_ENV: >-
+            -e NODE_ENV=production
+            -e DATABASE_URL=postgres://vector:vector@127.0.0.1:5432/vector
+            -e JWT_SECRET=ci-only-secret-not-used-anywhere-else-0123456789
+            -e CLIENT_ORIGIN=https://vector.example -e EMAIL_DELIVERY=log
+        run: |
+          docker run --rm --network host $VECTOR_ENV vector:ci npm run migrate:up
+          docker run -d --name vector --network host $VECTOR_ENV vector:ci
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:4000/api/health/ready && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:4000/api/health/ready
+          curl -sf http://127.0.0.1:4000/about | grep -q '<title>About · Vector</title>'
+          curl -sf http://127.0.0.1:4000/api/site
+      - name: Server log
+        if: always()
+        run: docker logs vector || true

@@ -25,6 +25,11 @@ const configSchema = z.object({
    * (X-Forwarded-For). 0 (default): use the connection's address.
    */
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  /**
+   * The built client to serve (production does by default, from apps/client/dist).
+   * Unset in development, where Vite serves it.
+   */
+  CLIENT_DIR: z.string().min(1).optional(),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   /**
    * Where emails go: `resend` sends them; `log` writes them to the server log;
@@ -49,6 +54,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error(`Invalid server configuration:\n${z.prettifyError(result.error)}`);
   }
   const config = result.data;
+  if (config.NODE_ENV === 'production') {
+    if (config.JWT_SECRET.startsWith('change-me'))
+      throw new Error('Invalid server configuration: set JWT_SECRET to a long random value');
+    if (!config.CLIENT_ORIGIN.startsWith('https://'))
+      throw new Error(
+        'Invalid server configuration: CLIENT_ORIGIN must be the site’s https:// address',
+      );
+  }
   const delivery = config.EMAIL_DELIVERY ?? (config.NODE_ENV === 'production' ? 'resend' : 'log');
   if (delivery === 'resend' && !config.RESEND_API_KEY)
     throw new Error('Invalid server configuration: set RESEND_API_KEY to send email');
