@@ -13,7 +13,7 @@
 
 .setup-screen__bar,
 .setup-screen__layout {
-  width: min(1080px, 100%);
+  width: var(--page-inline);
   margin: 0 auto;
 }
 

@@ -411,3 +411,94 @@
 .play-news .latest-news__list {
   grid-template-columns: 1fr;
 }
+
+/* ---- The play hub: wide, airspaces across the page ------------------------------------ */
+
+.play-page {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--space-8);
+}
+
+.play-page__glow {
+  position: absolute;
+  inset: -40px -10% auto;
+  z-index: -1;
+  height: 420px;
+  pointer-events: none;
+  background: radial-gradient(ellipse 50% 70% at 20% 0%, rgba(76, 242, 160, 0.09), transparent 70%);
+}
+
+.play-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.play-page__header h1 {
+  margin: var(--space-2) 0;
+  font-size: clamp(2rem, 3.6vw, 3.4rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.play-page__header .site-page__lede {
+  margin: 0;
+}
+
+.play-airspaces {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.play-airspaces .airspace-card {
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto 1fr auto;
+  align-items: start;
+  gap: var(--space-2) var(--space-3);
+  min-height: 230px;
+  padding: var(--space-6);
+}
+
+.play-airspaces .airspace-card__facility {
+  grid-row: 1 / span 2;
+}
+
+.play-airspaces .airspace-card__name {
+  font-size: 1.3rem;
+}
+
+.play-airspaces .airspace-card__pitch {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.play-airspaces .airspace-card__action {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  align-self: end;
+}
+
+.play-page__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  align-items: start;
+  gap: var(--space-8);
+}
+
+.play-page__columns > .play-news:only-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  .play-page__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

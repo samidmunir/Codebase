@@ -1,5 +1,5 @@
 .records-page {
-  width: min(960px, 100%);
+  width: var(--page-inline);
 }
 
 .records-boards {

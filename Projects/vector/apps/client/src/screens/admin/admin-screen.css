@@ -12,7 +12,7 @@
 .admin-screen__bar,
 .admin-tabs,
 .admin-screen__panel {
-  width: min(1240px, 100%);
+  width: var(--page-inline);
   margin: 0 auto;
 }
 
