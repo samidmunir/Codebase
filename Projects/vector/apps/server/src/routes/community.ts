@@ -29,6 +29,16 @@ const pageQuery = z.object({ offset: z.coerce.number().int().min(0).max(1_000_00
 const actor = (request: FastifyRequest) => ({
   id: request.account!.id,
   email: request.account!.email,
+  role: request.account!.role,
+});
+
+const handleParams = z.object({ handle: z.string().min(1).max(40) });
+const suspensionSchema = z.object({
+  postingSuspension: z.union([
+    z.number().int().min(1).max(365),
+    z.literal('forever'),
+    z.literal('lift'),
+  ]),
 });
 
 /** The community forum: reading is public, posting needs a verified account. */
@@ -41,7 +51,8 @@ export async function communityRoutes(app: FastifyInstance, options: CommunityRo
     preHandler: authenticate.user,
     config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
   };
-  const admin = { preHandler: authenticate.admin };
+  // Moderators and admins.
+  const admin = { preHandler: authenticate.staff };
 
   app.get('/community', optional, async (request) => forum.overview(request.userId));
 
@@ -140,5 +151,12 @@ export async function communityRoutes(app: FastifyInstance, options: CommunityRo
   app.delete('/admin/community/threads/:id', admin, async (request, reply) => {
     await forum.deleteThread(actor(request), idParams.parse(request.params).id);
     return reply.code(204).send();
+  });
+
+  /** Suspend a pilot from posting (or lift it), by handle, from the community side. */
+  app.post('/admin/community/users/:handle/suspension', admin, async (request) => {
+    const { handle } = handleParams.parse(request.params);
+    const { postingSuspension } = suspensionSchema.parse(request.body);
+    return forum.setSuspension(actor(request), handle, postingSuspension);
   });
 }

@@ -53,7 +53,8 @@ export const handleSchema = z
   );
 
 /** A player, or an admin who can also manage users and airspaces. */
-export const USER_ROLES = ['player', 'admin'] as const;
+/** Moderators look after the community; admins can do everything. */
+export const USER_ROLES = ['player', 'moderator', 'admin'] as const;
 export const userRoleSchema = z.enum(USER_ROLES);
 export type UserRole = z.infer<typeof userRoleSchema>;
 

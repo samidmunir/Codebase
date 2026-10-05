@@ -1,9 +1,11 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { PASSWORD_MIN_LENGTH, type Account } from '@vector/shared';
+import { PASSWORD_MIN_LENGTH, type Account, type SignIn } from '@vector/shared';
 import {
   changePassword,
   deleteAccount,
+  endSignIn,
+  listSignIns,
   getAccount,
   signOutOtherDevices,
   updateProfile,
@@ -13,7 +15,7 @@ import { cancelEmailChange, changeEmail, sendVerificationEmail } from '../../api
 import { auth } from '../../auth/auth-store';
 import { HandleField } from '../../components/HandleField';
 import { useHandleAvailability } from '../../components/use-handle-availability';
-import { formatDate } from '../admin/admin-format';
+import { formatAgo, formatDate } from '../admin/admin-format';
 import { usePageMeta } from '../../site/page-meta';
 import './account-screen.css';
 
@@ -67,10 +69,7 @@ export function AccountScreen() {
           <ProfileSection key={account.id} account={account} onChanged={changed} />
           <EmailSection account={account} onChanged={() => void getAccount().then(setAccount)} />
           <PasswordSection />
-          <DevicesSection
-            activeSignIns={account.activeSignIns}
-            onChanged={() => void getAccount().then(setAccount)}
-          />
+          <DevicesSection onChanged={() => void getAccount().then(setAccount)} />
           <DeleteSection handle={account.handle} />
         </div>
       )}
@@ -437,21 +436,28 @@ function PasswordSection() {
   );
 }
 
-function DevicesSection({
-  activeSignIns,
-  onChanged,
-}: {
-  activeSignIns: number;
-  onChanged: () => void;
-}) {
+function DevicesSection({ onChanged }: { onChanged: () => void }) {
+  const [signIns, setSignIns] = useState<SignIn[] | undefined>(undefined);
   const [status, setStatus] = useState<Status>(undefined);
   const [busy, setBusy] = useState(false);
-  const others = Math.max(0, activeSignIns - 1);
-  const signOut = async () => {
+  const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    listSignIns()
+      .then((list) => !cancelled && setSignIns(list.signIns))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [reload]);
+
+  const run = async (action: () => Promise<unknown>, done: string) => {
     setBusy(true);
     try {
-      await signOutOtherDevices();
-      setStatus({ tone: 'ok', text: 'Signed out everywhere else.' });
+      await action();
+      setStatus({ tone: 'ok', text: done });
+      setReload((n) => n + 1);
       onChanged();
     } catch (caught) {
       setStatus({ tone: 'alert', text: failure(caught)?.message ?? "Couldn't reach the server." });
@@ -459,22 +465,52 @@ function DevicesSection({
       setBusy(false);
     }
   };
+  const others = (signIns ?? []).filter((signIn) => !signIn.current);
+
   return (
     <Section
       title="Devices"
-      description={
-        others === 0
-          ? 'You’re signed in on this device only.'
-          : `You’re signed in on this device and ${others} other${others === 1 ? '' : 's'}.`
-      }
+      description="Where you’re signed in. Don’t recognize one? Sign it out and change your password."
     >
+      {signIns && (
+        <ul className="account-devices">
+          {signIns.map((signIn) => (
+            <li key={signIn.id}>
+              <span>
+                <strong>{signIn.device}</strong>
+                {signIn.current && (
+                  <span className="account-badge" data-tone="ok">
+                    This device
+                  </span>
+                )}
+                <span className="account-field__hint">
+                  {signIn.ip ?? 'No IP address'} · signed in {formatDate(signIn.signedInAt)} ·
+                  active {formatAgo(signIn.lastUsedAt)}
+                </span>
+              </span>
+              {!signIn.current && (
+                <button
+                  type="button"
+                  className="site-button"
+                  disabled={busy}
+                  onClick={() =>
+                    void run(() => endSignIn(signIn.id), `Signed out ${signIn.device}.`)
+                  }
+                >
+                  Sign out
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
       <StatusLine status={status} />
       <div className="account-form__actions account-form__actions--start">
         <button
           type="button"
           className="site-button"
-          disabled={busy || others === 0}
-          onClick={() => void signOut()}
+          disabled={busy || others.length === 0}
+          onClick={() => void run(signOutOtherDevices, 'Signed out everywhere else.')}
         >
           Sign out other devices
         </button>

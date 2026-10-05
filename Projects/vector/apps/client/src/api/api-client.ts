@@ -133,3 +133,15 @@ export async function apiRequest<T>(
   if (!response.ok) throw await parseError(response);
   return (response.status === 204 ? undefined : await response.json()) as T;
 }
+
+/** A file from the API (e.g. a CSV export), with the access token, refreshing once if needed. */
+export async function apiDownload(path: string, retried = false): Promise<Blob> {
+  const response = await fetch(`/api${path}`, {
+    credentials: 'same-origin',
+    headers: accessToken ? { authorization: `Bearer ${accessToken}` } : {},
+  });
+  if (response.status === 401 && !retried && (await refreshSession()))
+    return apiDownload(path, true);
+  if (!response.ok) throw await parseError(response);
+  return response.blob();
+}

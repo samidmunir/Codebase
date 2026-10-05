@@ -38,6 +38,10 @@ test('an admin manages users and airspaces, and every change is logged', async (
   await openFromMenu(page, 'Admin');
   await expect(page.getByRole('heading', { name: 'Administration' })).toBeVisible();
   await expect(page.locator('.admin-tile', { hasText: 'Admins' })).toBeVisible();
+  // Their own sign-in shows the device it's on.
+  await page.goto('/account');
+  await expect(page.getByRole('region', { name: 'Devices' })).toContainText('This device');
+  await page.goto('/admin');
 
   // Create an account, then edit, disable and delete it.
   await page.getByRole('button', { name: 'Users' }).click();
@@ -50,17 +54,32 @@ test('an admin manages users and airspaces, and every change is logged', async (
   await form.getByLabel('Password', { exact: true }).fill('a long enough password');
   await form.getByRole('button', { name: 'Create user' }).click();
 
-  const panel = page.getByRole('complementary', { name: `Manage ${created}` });
-  await expect(panel).toBeVisible();
-  const details = panel.getByRole('form', { name: 'Account details' });
+  // The new account opens on its own page.
+  await expect(page).toHaveURL(/\/admin\/users\/[0-9a-f-]+$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Night Shift' })).toBeVisible();
+  const details = page.getByRole('form', { name: 'Account details' });
   await details.getByLabel('Display name').fill('Day Shift');
   await details.getByRole('button', { name: 'Save changes' }).click();
-  await expect(panel.getByRole('heading', { name: 'Day Shift' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Day Shift' })).toBeVisible();
 
-  await panel.getByRole('button', { name: 'Disable account' }).click();
-  await expect(panel.locator('.admin-pill', { hasText: 'Disabled' })).toBeVisible();
+  await page.getByRole('button', { name: 'Disable account' }).click();
+  await expect(page.locator('.admin-pill', { hasText: 'Disabled' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'History' })).toContainText('Edited account');
+  await page.getByRole('link', { name: 'Users' }).first().click();
   await page.getByLabel('Search users').fill('day shift');
   await expect(page.locator('.admin-table tbody tr')).toHaveCount(1);
+
+  // Several at once: select it and mark its email verified.
+  await page.getByRole('checkbox', { name: `Select ${created}` }).check();
+  await page
+    .getByRole('toolbar', { name: 'Selected users' })
+    .getByRole('button', { name: 'Mark email verified' })
+    .click();
+  await expect(page.getByText('Mark email verified: done for 1')).toBeVisible();
+  // And the list as a spreadsheet.
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export CSV' }).click();
+  expect((await download).suggestedFilename()).toMatch(/^vector-users-\d{4}-\d{2}-\d{2}\.csv$/);
 
   // Close Chicago: the start screen shows it closed.
   await page.getByRole('button', { name: 'Airspaces' }).click();
@@ -80,11 +99,11 @@ test('an admin manages users and airspaces, and every change is logged', async (
   await expect(page.getByRole('switch', { name: 'Chicago open to players' })).toBeChecked();
   await page.goto('/admin?tab=users');
   await page.getByLabel('Search users').fill(created);
-  await page.getByRole('button', { name: new RegExp(created) }).click();
-  await panel.getByRole('button', { name: 'Delete account…' }).click();
-  await panel.getByLabel('Type the email to confirm').fill(created);
-  await panel.getByRole('button', { name: 'Delete permanently' }).click();
-  await expect(panel).toHaveCount(0);
+  await page.getByRole('link', { name: new RegExp(created) }).click();
+  await page.getByRole('button', { name: 'Delete account…' }).click();
+  await page.getByLabel('Type the email to confirm').fill(created);
+  await page.getByRole('button', { name: 'Delete permanently' }).click();
+  await expect(page).toHaveURL(/\/admin\?tab=users$/);
 
   await page.getByRole('button', { name: 'Activity' }).click();
   const log = page.locator('.admin-table tbody');
@@ -93,7 +112,34 @@ test('an admin manages users and airspaces, and every change is logged', async (
     'Edited account',
     'Changed airspace',
     'Deleted account',
+    'Exported users',
     'Made admin',
   ])
     await expect(log).toContainText(action);
+});
+
+test('a moderator sees the community tools, and nothing else', async ({ page }) => {
+  const email = await registerPilot(page);
+  // Admins grant the role from a user's page; here it's set directly in the test database
+  // (ending their sign-ins, as a role change does).
+  execFileSync(
+    'psql',
+    [
+      process.env.TEST_DATABASE_URL!,
+      '-qtAc',
+      `UPDATE users SET role = 'moderator' WHERE email = '${email}';
+       UPDATE auth_sessions SET revoked_at = now()
+         WHERE user_id = (SELECT id FROM users WHERE email = '${email}')`,
+    ],
+    { stdio: 'pipe' },
+  );
+  await signIn(page, email);
+  await openFromMenu(page, 'Moderation');
+  await expect(page.getByRole('heading', { name: 'Moderation' })).toBeVisible();
+  const tabs = page.getByRole('navigation', { name: 'Administration' }).getByRole('button');
+  await expect(tabs).toHaveText(['Community']);
+  await expect(page.getByText('No open reports.')).toBeVisible();
+  await page.goto('/admin?tab=users');
+  await expect(page.getByRole('heading', { name: 'Moderation' })).toBeVisible();
+  await expect(page.getByLabel('Search users')).toHaveCount(0);
 });

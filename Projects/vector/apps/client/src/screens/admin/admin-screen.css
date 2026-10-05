@@ -817,3 +817,193 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
   gap: var(--space-3);
 }
+
+/* ---- One user's page ------------------------------------------------------------------ */
+
+.admin-user {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+}
+
+.admin-crumbs {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.admin-crumbs a,
+.admin-user__header a,
+.admin-posts a {
+  color: var(--color-target);
+  text-decoration: none;
+}
+
+.admin-user__header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  background:
+    radial-gradient(ellipse 60% 120% at 0% 0%, rgba(76, 242, 160, 0.07), transparent 60%),
+    var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+}
+
+.admin-user__header h1 {
+  margin: 0 0 var(--space-1);
+  font-size: 1.6rem;
+}
+
+.admin-user__header p {
+  margin: 0;
+}
+
+.admin-user__avatar {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  color: var(--color-target);
+  font-size: 1.3rem;
+  font-weight: 700;
+  background: rgba(76, 242, 160, 0.12);
+  border-radius: 50%;
+}
+
+.admin-user__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3) !important;
+}
+
+.admin-user__numbers {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+}
+
+.admin-user__numbers dt {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.admin-user__numbers dd {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.admin-user__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+  align-items: start;
+  gap: var(--space-3);
+}
+
+.admin-user__card[data-wide] {
+  grid-column: 1 / -1;
+}
+
+.admin-user__card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-user__card .admin-section {
+  padding: 0;
+  border: 0;
+}
+
+.admin-user__subhead {
+  margin: var(--space-2) 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-signins,
+.admin-posts {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-signins li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--color-surface-border);
+}
+
+.admin-posts li {
+  font-size: 0.88rem;
+}
+
+.admin-posts p {
+  margin: 2px 0 0;
+  color: var(--color-text-muted);
+}
+
+/* ---- Bulk actions --------------------------------------------------------------------- */
+
+.admin-table__check {
+  width: 32px;
+}
+
+.admin-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(76, 242, 160, 0.05);
+  border: 1px solid rgba(76, 242, 160, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.admin-bulk strong {
+  margin-right: var(--space-2);
+}
+
+.admin-bulk__failures {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-4);
+}
+
+@media (max-width: 900px) {
+  .admin-user__header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .admin-user__numbers {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+/* The card already says "Details". */
+.admin-user__card form[aria-label='Account details'] > h3 {
+  display: none;
+}
+
+.admin-table a,
+a.admin-user-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.admin-table td a:not(.admin-user-link) {
+  color: var(--color-target);
+}
+
+a.admin-user-link:hover .admin-user-link__name {
+  color: var(--color-target);
+}

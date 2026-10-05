@@ -6,6 +6,7 @@ import { accountService } from './account/account-service';
 import { adminService } from './admin/admin-service';
 import { auditRepository } from './admin/audit-repository';
 import { statsRepository } from './admin/stats-repository';
+import { userDetailRepository } from './admin/user-detail-repository';
 import { airspacesRepository } from './airspaces/airspaces-repository';
 import { authService, type AuthConfig } from './auth/auth-service';
 import { authenticator } from './auth/authenticate';
@@ -67,6 +68,8 @@ declare module 'fastify' {
   interface FastifyInstance {
     /** Verifies session results by replaying them (start it once the server is listening). */
     verifier?: Verifier;
+    /** Hourly tidying: forgetting the devices of sign-ins that have run out. */
+    housekeeping?: { start(): void; stop(): void };
   }
 }
 
@@ -109,6 +112,22 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         });
         const sendVerification = (userId: string) =>
           emails.sendVerification(userId, { ignoreCooldown: true });
+        let housekeepingTimer: ReturnType<typeof setInterval> | undefined;
+        const tidy = () =>
+          void signIns
+            .forgetEndedDevices()
+            .catch((error: unknown) => app.log.error({ err: error }, 'housekeeping failed'));
+        app.decorate('housekeeping', {
+          start() {
+            tidy();
+            housekeepingTimer ??= setInterval(tidy, 3_600_000);
+          },
+          stop() {
+            clearInterval(housekeepingTimer);
+            housekeepingTimer = undefined;
+          },
+        });
+        app.addHook('onClose', () => app.housekeeping?.stop());
         const auth = authService(users, signIns, authConfig);
         const authenticate = authenticator(authConfig.jwtSecret, users);
         await api.register(authRoutes, {
@@ -118,6 +137,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           secureCookies,
           signInRateLimit,
           onRegistered: sendVerification,
+          signIns,
         });
         await api.register(emailRoutes, { emails, authenticate, rateLimit: signInRateLimit });
         await api.register(settingsRoutes, { settings: settingsRepository(db), authenticate });
@@ -161,6 +181,9 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
             results: resultsRepo,
             verifier,
             sendVerification,
+            sendPasswordReset: (userId) => emails.sendPasswordReset(userId),
+            details: userDetailRepository(db),
+            pendingEmail: (userId) => emailTokens.pendingEmail(userId),
           }),
           authenticate,
         });

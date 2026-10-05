@@ -21,8 +21,11 @@ import {
   adminStatsSchema,
   type AdminStats,
   type StatsRange,
+  adminBulkResultSchema,
+  type AdminBulkRequest,
+  type AdminBulkResult,
 } from '@vector/shared';
-import { apiRequest } from './api-client';
+import { apiDownload, apiRequest } from './api-client';
 
 // The administration API (/api/admin). The server checks the admin role on every request.
 
@@ -111,3 +114,42 @@ export async function setAdminResultHidden(id: string, hidden: boolean): Promise
 export async function reverifyAdminResult(id: string): Promise<void> {
   await apiRequest(`/admin/results/${encodeURIComponent(id)}/verify`, { method: 'POST' });
 }
+
+export const endAdminSignIn = (userId: string, signInId: string) =>
+  apiRequest<void>(`/admin/users/${userId}/sign-ins/${signInId}`, { method: 'DELETE' });
+
+export const sendAdminPasswordReset = (userId: string) =>
+  apiRequest<void>(`/admin/users/${userId}/send-reset`, { method: 'POST' });
+
+export const sendAdminVerification = (userId: string) =>
+  apiRequest<void>(`/admin/users/${userId}/send-verification`, { method: 'POST' });
+
+export async function bulkAdminUsers(request: AdminBulkRequest): Promise<AdminBulkResult> {
+  return adminBulkResultSchema.parse(
+    await apiRequest('/admin/users/bulk', { method: 'POST', body: JSON.stringify(request) }),
+  );
+}
+
+/** Downloads the users matching the filters as a CSV file. */
+export async function exportAdminUsers(query: Omit<AdminUserListQuery, 'offset' | 'limit'>) {
+  const params = new URLSearchParams(
+    Object.entries(query).filter((entry): entry is [string, string] => Boolean(entry[1])),
+  );
+  const blob = await apiDownload(`/admin/users/export.csv?${params.toString()}`);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `vector-users-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1_000);
+}
+
+/** Suspends a pilot from posting, or lifts it (moderators and admins). */
+export const setPostingSuspension = (
+  handle: string,
+  postingSuspension: number | 'forever' | 'lift',
+) =>
+  apiRequest<unknown>(`/admin/community/users/${encodeURIComponent(handle)}/suspension`, {
+    method: 'POST',
+    body: JSON.stringify({ postingSuspension }),
+  });

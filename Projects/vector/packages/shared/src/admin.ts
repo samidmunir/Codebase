@@ -8,6 +8,7 @@ import {
 } from './auth';
 import { verificationSchema } from './results';
 import { savedSessionSummarySchema, sessionDifficultySchema } from './sessions';
+import { signInSchema } from './sign-ins';
 
 // Administration API contracts (/api/admin), shared by the server and client.
 
@@ -51,9 +52,46 @@ export const adminUserListQuerySchema = z.object({
 });
 export type AdminUserListQuery = z.input<typeof adminUserListQuerySchema>;
 
+/** Everything about one user, for their admin page. */
 export const adminUserDetailSchema = z.object({
-  user: adminUserSchema,
+  user: adminUserSchema.extend({
+    profilePublic: z.boolean(),
+    showOnRecords: z.boolean(),
+    /** When they may next change their handle (null: now). */
+    handleChangeableAt: z.iso.datetime().nullable(),
+    pendingEmail: z.string().nullable(),
+  }),
   sessions: z.array(savedSessionSummarySchema),
+  signIns: z.array(signInSchema),
+  results: z.object({
+    total: z.number().int().min(0),
+    recent: z.array(
+      z.object({
+        id: z.uuid(),
+        airspaceId: z.string(),
+        difficulty: sessionDifficultySchema.nullable(),
+        rp: z.number(),
+        simTimeSec: z.number(),
+        verification: verificationSchema,
+        hidden: z.boolean(),
+        playedAt: z.iso.datetime(),
+      }),
+    ),
+  }),
+  posts: z.object({
+    total: z.number().int().min(0),
+    recent: z.array(
+      z.object({
+        id: z.number().int(),
+        threadId: z.number().int(),
+        threadTitle: z.string(),
+        excerpt: z.string(),
+        hidden: z.boolean(),
+        createdAt: z.iso.datetime(),
+      }),
+    ),
+  }),
+  history: z.array(z.lazy(() => auditEntrySchema)),
 });
 export type AdminUserDetail = z.infer<typeof adminUserDetailSchema>;
 
@@ -79,6 +117,10 @@ export const adminUpdateUserRequestSchema = z
     disabled: z.boolean(),
     /** Mark the email verified (or not) without a link, e.g. for an account an admin set up. */
     emailVerified: z.boolean(),
+    profilePublic: z.boolean(),
+    showOnRecords: z.boolean(),
+    /** Let them change their handle again now, whenever they last did. */
+    liftHandleLimit: z.literal(true),
     /** Suspend from posting in the community for some days or for good, or lift it. */
     postingSuspension: z.union([
       z.number().int().min(1).max(365),
@@ -112,6 +154,10 @@ export const AUDIT_ACTIONS = [
   'user.delete',
   'user.signOut',
   'user.sessionDelete',
+  'user.endSignIn',
+  'user.sendReset',
+  'user.sendVerification',
+  'user.export',
   'airspace.update',
   'result.hide',
   'result.show',
@@ -191,3 +237,28 @@ export type AdminResultList = z.infer<typeof adminResultListSchema>;
 
 export const adminUpdateResultRequestSchema = z.object({ hidden: z.boolean() });
 export type AdminUpdateResultRequest = z.input<typeof adminUpdateResultRequestSchema>;
+
+// ---- Bulk actions and export ---------------------------------------------------------
+
+export const ADMIN_BULK_ACTIONS = [
+  'disable',
+  'enable',
+  'signOut',
+  'verifyEmail',
+  'suspendPosting',
+  'liftSuspension',
+  'delete',
+] as const;
+export const adminBulkRequestSchema = z.object({
+  ids: z.array(z.uuid()).min(1).max(200),
+  action: z.enum(ADMIN_BULK_ACTIONS),
+});
+export type AdminBulkRequest = z.input<typeof adminBulkRequestSchema>;
+export type AdminBulkAction = (typeof ADMIN_BULK_ACTIONS)[number];
+
+export const adminBulkResultSchema = z.object({
+  done: z.number().int().min(0),
+  /** Users it couldn't be done to, and why (e.g. yourself, or the last admin). */
+  failed: z.array(z.object({ id: z.uuid(), email: z.string(), reason: z.string() })),
+});
+export type AdminBulkResult = z.infer<typeof adminBulkResultSchema>;

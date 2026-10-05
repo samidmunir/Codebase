@@ -27,6 +27,8 @@ if (!url) {
   process.exit(1);
 }
 
+const ROLE_NAMES = { admin: 'an admin', moderator: 'a moderator', player: 'a player' } as const;
+
 const db = createDatabase(url);
 const users = usersRepository(db);
 const audit = auditRepository(db);
@@ -47,7 +49,7 @@ try {
     } else {
       const role = command === 'grant' ? 'admin' : 'player';
       if (user.role === role) {
-        console.log(`${email} is already ${role === 'admin' ? 'an admin' : 'a player'}.`);
+        console.log(`${email} is already ${ROLE_NAMES[role]}.`);
       } else {
         await users.update(user.id, { role });
         // A role change ends the account's sign-ins, so the new role applies everywhere.
@@ -57,9 +59,7 @@ try {
           command === 'grant' ? 'admin.grant' : 'admin.revoke',
           email,
         );
-        console.log(
-          `${email} is now ${role === 'admin' ? 'an admin' : 'a player'}. Sign in again to use it.`,
-        );
+        console.log(`${email} is now ${ROLE_NAMES[role]}. Sign in again to use it.`);
       }
     }
   } else {

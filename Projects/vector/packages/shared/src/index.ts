@@ -10,5 +10,6 @@ export * from './news';
 export * from './records';
 export * from './results';
 export * from './settings';
+export * from './sign-ins';
 export * from './sessions';
 export * from './weather';

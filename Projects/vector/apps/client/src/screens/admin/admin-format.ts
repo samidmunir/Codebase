@@ -1,4 +1,4 @@
-import type { AuditEntry } from '@vector/shared';
+import type { AuditEntry, UserRole } from '@vector/shared';
 import { ApiRequestError } from '../../api/api-client';
 
 // Wording for the admin pages.
@@ -10,6 +10,10 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'user.update': 'Edited account',
   'user.delete': 'Deleted account',
   'user.signOut': 'Signed out everywhere',
+  'user.endSignIn': 'Ended a sign-in',
+  'user.sendReset': 'Sent a password reset',
+  'user.sendVerification': 'Sent a verification link',
+  'user.export': 'Exported users',
   'user.sessionDelete': 'Deleted a saved session',
   'airspace.update': 'Changed airspace',
   'result.hide': 'Hid a session result',
@@ -36,6 +40,13 @@ const describeChange = (key: string, value: unknown): string => {
   if (key === 'enabled') return value ? 'opened' : 'closed';
   if (key === 'published') return value ? 'published' : 'unpublished';
   if (key === 'pinned') return value ? 'pinned' : 'unpinned';
+  if (key === 'device') return String(value);
+  if (key === 'ip') return String(value);
+  if (key === 'profilePublic') return value ? 'profile public' : 'profile private';
+  if (key === 'showOnRecords') return value ? 'on the records' : 'off the records';
+  if (key === 'handleLimit') return 'handle limit lifted';
+  if (key === 'search') return `matching “${String(value)}”`;
+  if (key === 'status') return `${String(value)} only`;
   if (key === 'locked') return value ? 'locked' : 'unlocked';
   if (key === 'post') return `post ${String(value)}`;
   if (key === 'thread') return `thread ${String(value)}`;
@@ -75,3 +86,10 @@ export function auditDetails(entry: AuditEntry): string {
 export function errorMessage(error: unknown): string {
   return error instanceof ApiRequestError ? error.message : "Couldn't reach the server. Try again.";
 }
+
+/** What each role is called. */
+export const ROLE_LABELS: Record<UserRole, string> = {
+  player: 'Player',
+  moderator: 'Moderator',
+  admin: 'Admin',
+};

@@ -44,3 +44,22 @@ and control over everything players and staff touch.
 
 Deleted accounts take their sign-ins and results with them, so history counts only
 pilots who still have accounts; signups count accounts that still exist.
+
+## Built so far
+
+- **Dashboard** (milestone 1): Admin → Dashboard; `GET /api/admin/stats`.
+- **Users and sign-ins** (milestone 2):
+  - Roles are `player`, `moderator` and `admin`. Moderators get the Community tab
+    (reports, hiding and deleting posts, thread tools) and can suspend players from
+    posting (`POST /api/admin/community/users/:handle/suspension`); every other admin
+    route is for admins.
+  - A sign-in is a family of refresh-token rows (`auth_sessions.family_id`); each live
+    row keeps its device's User-Agent and IP, cleared when the row is replaced or
+    revoked, and hourly for rows that expired. Set `TRUST_PROXY` behind a proxy.
+  - `/admin/users/:id` is a page per user: details, password, email (send a link,
+    mark verified, send a reset), privacy, handle limit, sign-ins with device and IP
+    (end any one), access, posting suspension, career (hide results), posts, saved
+    sessions, and history (`admin_audit_log.target_user_id`).
+  - The users list selects users for bulk actions (`POST /api/admin/users/bulk`) and
+    exports the filtered list as CSV (`GET /api/admin/users/export.csv`, logged).
+  - Pilots see their own devices on the Account page and can sign out any one.

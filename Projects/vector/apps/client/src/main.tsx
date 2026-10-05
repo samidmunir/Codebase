@@ -31,6 +31,7 @@ import { CategoryScreen } from './screens/community/CategoryScreen';
 import { CommunityScreen } from './screens/community/CommunityScreen';
 import { NewThreadScreen } from './screens/community/NewThreadScreen';
 import { ThreadScreen } from './screens/community/ThreadScreen';
+import { AdminUserScreen } from './screens/admin/AdminUserScreen';
 import { SiteLayout } from './site/SiteLayout';
 import './styles/global.css';
 
@@ -63,6 +64,7 @@ const router = createBrowserRouter([
       { path: '/news/:slug', element: <NewsPostScreen /> },
       { path: '/settings', element: signedIn(<SettingsScreen />) },
       { path: '/admin', element: signedIn(<AdminScreen />) },
+      { path: '/admin/users/:id', element: signedIn(<AdminUserScreen />) },
       { path: '*', element: <NotFoundScreen /> },
     ],
   },

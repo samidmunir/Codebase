@@ -21,7 +21,11 @@ import {
 } from '@vector/shared';
 import type { Actor } from '../admin/admin-service';
 import type { AuditRepository } from '../admin/audit-repository';
-import type { UserRecord, UsersRepository } from '../users/users-repository';
+import {
+  UserNotFoundError,
+  type UserRecord,
+  type UsersRepository,
+} from '../users/users-repository';
 import {
   ForumCategoryNotFoundError,
   publicPost,
@@ -66,6 +70,8 @@ export class OpeningPostError extends Error {
 
 const HOUR_MS = 3_600_000;
 
+const isStaffRole = (role: UserRecord['role']) => role === 'admin' || role === 'moderator';
+
 const summary = (thread: ThreadRecord): ForumThreadSummary => ({
   id: thread.id,
   slug: thread.slug,
@@ -107,7 +113,9 @@ export function forumService(deps: {
   ): Promise<ForumPosting> {
     if (!user) return { allowed: false, reason: 'signedOut' };
     const isAdmin = user.role === 'admin';
-    if (!user.emailVerifiedAt && !isAdmin) return { allowed: false, reason: 'unverified' };
+    // Staff (moderators and admins) can post anywhere they moderate, without new-poster limits.
+    const isStaff = isStaffRole(user.role);
+    if (!user.emailVerifiedAt && !isStaff) return { allowed: false, reason: 'unverified' };
     const suspended = suspension(user);
     if (suspended)
       return {
@@ -115,10 +123,10 @@ export function forumService(deps: {
         reason: 'suspended',
         until: suspended === 'forever' ? null : suspended.toISOString(),
       };
-    if (where.locked && !isAdmin) return { allowed: false, reason: 'locked' };
+    if (where.locked && !isStaff) return { allowed: false, reason: 'locked' };
     if (where.adminOnly && !isAdmin) return { allowed: false, reason: 'adminOnly' };
     const { total } = await forum.postCounts(user.id);
-    return { allowed: true, newPoster: !isAdmin && total < FORUM_NEW_POSTER_POSTS };
+    return { allowed: true, newPoster: !isStaff && total < FORUM_NEW_POSTER_POSTS };
   }
 
   const REFUSALS: Record<Extract<ForumPosting, { allowed: false }>['reason'], string> = {
@@ -145,7 +153,7 @@ export function forumService(deps: {
           : 'You’re suspended from posting';
       throw new ForumPostingError(reason, message);
     }
-    if (user.role === 'admin') return;
+    if (isStaffRole(user.role)) return;
     const counts = await forum.postCounts(user.id);
     const newAccount = user.createdAt.getTime() > Date.now() - FORUM_NEW_ACCOUNT_DAYS * 86_400_000;
     const limit = newAccount ? FORUM_POSTS_PER_HOUR.newAccount : FORUM_POSTS_PER_HOUR.regular;
@@ -209,7 +217,7 @@ export function forumService(deps: {
       });
       await forum.markRead(id, viewerId);
       const editableUntil = editableSince();
-      const showHidden = viewer?.role === 'admin';
+      const showHidden = viewer !== undefined && isStaffRole(viewer.role);
       return {
         thread: {
           ...summary(thread),
@@ -271,7 +279,7 @@ export function forumService(deps: {
       const suspended = suspension(user);
       if (suspended) throw new ForumPostingError('suspended', 'You’re suspended from posting');
       if (
-        user.role !== 'admin' &&
+        !isStaffRole(user.role) &&
         (await forum.postCounts(userId)).total < FORUM_NEW_POSTER_POSTS &&
         EXTERNAL_LINK_PATTERN.test(body) &&
         !EXTERNAL_LINK_PATTERN.test(post.body)
@@ -325,12 +333,18 @@ export function forumService(deps: {
       const post = await forum.post(postId);
       await forum.setHidden(postId, hidden, actor.id);
       const reports = hidden ? await forum.resolveReports(postId, actor.id, 'hidden') : 0;
-      await audit.record(actor, hidden ? 'forum.hidePost' : 'forum.showPost', excerpt(post.body), {
-        post: postId,
-        thread: post.threadId,
-        ...(post.author ? { author: post.author.handle } : {}),
-        ...(reports ? { reports } : {}),
-      });
+      await audit.record(
+        actor,
+        hidden ? 'forum.hidePost' : 'forum.showPost',
+        excerpt(post.body),
+        {
+          post: postId,
+          thread: post.threadId,
+          ...(post.author ? { author: post.author.handle } : {}),
+          ...(reports ? { reports } : {}),
+        },
+        post.authorId,
+      );
     },
 
     async deletePost(actor: Actor, postId: number): Promise<void> {
@@ -338,10 +352,13 @@ export function forumService(deps: {
       if (post.opening) throw new OpeningPostError();
       await forum.resolveReports(postId, actor.id, 'deleted');
       await forum.deletePost(postId);
-      await audit.record(actor, 'forum.deletePost', excerpt(post.body), {
-        thread: post.threadId,
-        ...(post.author ? { author: post.author.handle } : {}),
-      });
+      await audit.record(
+        actor,
+        'forum.deletePost',
+        excerpt(post.body),
+        { thread: post.threadId, ...(post.author ? { author: post.author.handle } : {}) },
+        post.authorId,
+      );
     },
 
     async updateThread(actor: Actor, id: number, changes: ModerateThreadRequest): Promise<void> {
@@ -367,6 +384,39 @@ export function forumService(deps: {
         replies: thread.replies,
         ...(thread.author ? { author: thread.author.handle } : {}),
       });
+    },
+
+    /**
+     * Suspends a pilot from posting, or lifts it (moderators and admins). Moderators
+     * can only suspend players; nobody can suspend themselves.
+     */
+    async setSuspension(
+      actor: Actor & { role: UserRecord['role'] },
+      handle: string,
+      suspension: number | 'forever' | 'lift',
+    ): Promise<{ postingSuspendedUntil: string | 'forever' | null }> {
+      const user = await users.findByHandle(handle);
+      if (!user) throw new UserNotFoundError();
+      if (user.id === actor.id) throw new ForumEditError('You can’t suspend yourself');
+      if (actor.role !== 'admin' && user.role !== 'player')
+        throw new ForumEditError('Only an admin can suspend staff');
+      const until =
+        suspension === 'lift'
+          ? null
+          : suspension === 'forever'
+            ? ('forever' as const)
+            : new Date(Date.now() + suspension * 86_400_000);
+      await users.update(user.id, { postingSuspendedUntil: until });
+      await audit.record(
+        actor,
+        'user.update',
+        user.email,
+        { postingSuspension: typeof suspension === 'number' ? `${suspension} days` : suspension },
+        user.id,
+      );
+      return {
+        postingSuspendedUntil: until === null || until === 'forever' ? until : until.toISOString(),
+      };
     },
   };
 }

@@ -1,27 +1,46 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router';
 import {
   ADMIN_USERS_PAGE_SIZE,
   PASSWORD_MIN_LENGTH,
+  type AdminBulkAction,
+  type AdminBulkResult,
   type AdminUser,
   type UserRole,
 } from '@vector/shared';
-import { createAdminUser, listAdminUsers } from '../../api/admin-api';
+import {
+  bulkAdminUsers,
+  createAdminUser,
+  exportAdminUsers,
+  listAdminUsers,
+} from '../../api/admin-api';
 import { formatRp } from '../scope/score-format';
-import { errorMessage, formatAgo, formatDate } from './admin-format';
-import { UserPanel } from './UserPanel';
+import { ROLE_LABELS, errorMessage, formatAgo, formatDate } from './admin-format';
 
 type Filters = { q: string; role: '' | UserRole; status: '' | 'active' | 'disabled' };
 
-/** Every account: search and filter, open one to manage it, or create one. */
-export function UsersTab({
-  selectedId,
-  onSelect,
-  currentUserId,
-}: {
-  selectedId: string | undefined;
-  onSelect: (id: string | undefined) => void;
-  currentUserId: string;
-}) {
+/** The bulk actions, how they read, and which need a second thought. */
+const BULK: { action: AdminBulkAction; label: string; confirm?: string }[] = [
+  { action: 'verifyEmail', label: 'Mark email verified' },
+  { action: 'signOut', label: 'Sign out everywhere' },
+  { action: 'suspendPosting', label: 'Suspend posting 7 days' },
+  { action: 'liftSuspension', label: 'Lift posting suspension' },
+  {
+    action: 'disable',
+    label: 'Disable',
+    confirm: 'Disable {n}? They’ll be signed out and can’t sign in.',
+  },
+  { action: 'enable', label: 'Re-enable' },
+  {
+    action: 'delete',
+    label: 'Delete',
+    confirm: 'Delete {n} and everything they saved? This can’t be undone.',
+  },
+];
+
+/** Every account: search and filter, act on several at once, export, or create one. */
+export function UsersTab({ currentUserId }: { currentUserId: string }) {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<Filters>({ q: '', role: '', status: '' });
   const [query, setQuery] = useState(filters);
   const [offset, setOffset] = useState(0);
@@ -29,6 +48,9 @@ export function UsersTab({
   const [error, setError] = useState<string | undefined>(undefined);
   const [creating, setCreating] = useState(false);
   const [reload, setReload] = useState(0);
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
+  const [bulkResult, setBulkResult] = useState<{ label: string; result: AdminBulkResult }>();
+  const [busy, setBusy] = useState(false);
   const refresh = useCallback(() => setReload((n) => n + 1), []);
 
   // Search as you type, a moment after typing stops.
@@ -39,6 +61,12 @@ export function UsersTab({
     }, 250);
     return () => clearTimeout(timer);
   }, [filters]);
+
+  const filterQuery = {
+    ...(query.q ? { q: query.q } : {}),
+    ...(query.role ? { role: query.role } : {}),
+    ...(query.status ? { status: query.status } : {}),
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -61,9 +89,35 @@ export function UsersTab({
   }, [query, offset, reload]);
 
   const lastShown = Math.min(offset + ADMIN_USERS_PAGE_SIZE, list?.total ?? 0);
+  const shownIds = list?.users.map((user) => user.id) ?? [];
+  const allShown = shownIds.length > 0 && shownIds.every((id) => selected.has(id));
+  const toggle = (id: string) =>
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const runBulk = async (option: (typeof BULK)[number]) => {
+    const count = `${selected.size} user${selected.size === 1 ? '' : 's'}`;
+    if (option.confirm && !window.confirm(option.confirm.replace('{n}', count))) return;
+    setBusy(true);
+    setError(undefined);
+    try {
+      const result = await bulkAdminUsers({ ids: [...selected], action: option.action });
+      setBulkResult({ label: option.label, result });
+      setSelected(new Set(result.failed.map((failure) => failure.id)));
+      refresh();
+    } catch (caught) {
+      setError(errorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <div className="admin-users" data-detail={selectedId ? 'open' : undefined}>
+    <div className="admin-users">
       <section className="admin-users__list">
         <div className="admin-toolbar">
           <input
@@ -84,6 +138,7 @@ export function UsersTab({
           >
             <option value="">All roles</option>
             <option value="player">Players</option>
+            <option value="moderator">Moderators</option>
             <option value="admin">Admins</option>
           </select>
           <select
@@ -100,6 +155,19 @@ export function UsersTab({
           </select>
           <button
             type="button"
+            className="admin-button"
+            disabled={busy}
+            title="Everyone matching these filters, as a spreadsheet. Exports are logged."
+            onClick={() =>
+              void exportAdminUsers(filterQuery).catch((caught: unknown) =>
+                setError(errorMessage(caught)),
+              )
+            }
+          >
+            Export CSV
+          </button>
+          <button
+            type="button"
             className="admin-button admin-button--primary"
             onClick={() => setCreating(true)}
           >
@@ -107,13 +175,52 @@ export function UsersTab({
           </button>
         </div>
 
+        {selected.size > 0 && (
+          <div className="admin-bulk" role="toolbar" aria-label="Selected users">
+            <strong>{selected.size} selected</strong>
+            {BULK.map((option) => (
+              <button
+                key={option.action}
+                type="button"
+                className={`admin-button${option.confirm ? ' admin-button--caution' : ''}`}
+                disabled={busy}
+                onClick={() => void runBulk(option)}
+              >
+                {option.label}
+              </button>
+            ))}
+            <button type="button" className="admin-link" onClick={() => setSelected(new Set())}>
+              Clear
+            </button>
+          </div>
+        )}
+        {bulkResult && (
+          <div
+            className={bulkResult.result.failed.length ? 'admin-error' : 'admin-notice'}
+            role="status"
+          >
+            {bulkResult.label}: done for {bulkResult.result.done}
+            {bulkResult.result.failed.length > 0 && (
+              <>
+                , not for {bulkResult.result.failed.length} (still selected):
+                <ul className="admin-bulk__failures">
+                  {bulkResult.result.failed.map((failure) => (
+                    <li key={failure.id}>
+                      {failure.email}: {failure.reason}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
+
         {creating && (
           <CreateUserForm
             onCancel={() => setCreating(false)}
             onCreated={(user) => {
               setCreating(false);
-              refresh();
-              onSelect(user.id);
+              void navigate(`/admin/users/${user.id}`);
             }}
           />
         )}
@@ -132,6 +239,23 @@ export function UsersTab({
             <table className="admin-table">
               <thead>
                 <tr>
+                  <th className="admin-table__check">
+                    <input
+                      type="checkbox"
+                      aria-label="Select everyone shown"
+                      checked={allShown}
+                      onChange={() =>
+                        setSelected((current) => {
+                          const next = new Set(current);
+                          for (const id of shownIds) {
+                            if (allShown) next.delete(id);
+                            else next.add(id);
+                          }
+                          return next;
+                        })
+                      }
+                    />
+                  </th>
                   <th>User</th>
                   <th>Role</th>
                   <th>Joined</th>
@@ -144,15 +268,19 @@ export function UsersTab({
                 {list.users.map((user) => (
                   <tr
                     key={user.id}
-                    aria-selected={user.id === selectedId}
+                    aria-selected={selected.has(user.id)}
                     data-disabled={user.disabledAt ? 'true' : undefined}
                   >
+                    <td className="admin-table__check">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${user.email}`}
+                        checked={selected.has(user.id)}
+                        onChange={() => toggle(user.id)}
+                      />
+                    </td>
                     <td>
-                      <button
-                        type="button"
-                        className="admin-user-link"
-                        onClick={() => onSelect(user.id)}
-                      >
+                      <Link className="admin-user-link" to={`/admin/users/${user.id}`}>
                         <span className="admin-user-link__name">
                           {user.displayName}
                           {user.id === currentUserId && <span className="admin-muted"> (you)</span>}
@@ -160,15 +288,16 @@ export function UsersTab({
                         <span className="admin-user-link__email">
                           @{user.handle} · {user.email}
                         </span>
-                      </button>
+                      </Link>
                     </td>
                     <td>
                       <span
                         className="admin-pill"
-                        data-tone={user.role === 'admin' ? 'ok' : undefined}
+                        data-tone={user.role === 'player' ? undefined : 'ok'}
                       >
-                        {user.role === 'admin' ? 'Admin' : 'Player'}
+                        {ROLE_LABELS[user.role]}
                       </span>
+                      {!user.emailVerified && <span className="admin-pill">Unverified</span>}
                       {user.disabledAt && (
                         <span className="admin-pill" data-tone="alert">
                           Disabled
@@ -209,16 +338,6 @@ export function UsersTab({
           </div>
         )}
       </section>
-
-      {selectedId && (
-        <UserPanel
-          key={selectedId}
-          userId={selectedId}
-          isSelf={selectedId === currentUserId}
-          onClose={() => onSelect(undefined)}
-          onChanged={refresh}
-        />
-      )}
     </div>
   );
 }
@@ -325,6 +444,7 @@ function CreateUserForm({
             onChange={(event) => setForm({ ...form, role: event.target.value as UserRole })}
           >
             <option value="player">Player</option>
+            <option value="moderator">Moderator</option>
             <option value="admin">Admin</option>
           </select>
         </label>
