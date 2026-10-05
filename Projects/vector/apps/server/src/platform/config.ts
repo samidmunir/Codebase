@@ -20,6 +20,11 @@ const configSchema = z.object({
   RESULT_VERIFY_SETTLE_SEC: z.coerce.number().min(0).default(180),
   /** How often the verifier looks for results to check. */
   RESULT_VERIFY_POLL_MS: z.coerce.number().int().positive().default(15_000),
+  /**
+   * Behind a proxy or load balancer, how many hops to trust for the client's IP
+   * (X-Forwarded-For). 0 (default): use the connection's address.
+   */
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   /**
    * Where emails go: `resend` sends them; `log` writes them to the server log;

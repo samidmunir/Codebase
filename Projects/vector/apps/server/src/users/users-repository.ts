@@ -270,6 +270,8 @@ export function usersRepository(db: Database) {
         emailVerified?: boolean;
         /** Suspend from posting until then, for good, or lift it (null). */
         postingSuspendedUntil?: Date | 'forever' | null;
+        /** Let them change their handle again now. */
+        liftHandleLimit?: boolean;
         profilePublic?: boolean;
         showOnRecords?: boolean;
       },
@@ -307,6 +309,7 @@ export function usersRepository(db: Database) {
         if (newHandle) sets.push('handle_changed_at = now()');
       }
       if (changes.displayName !== undefined) set('display_name', changes.displayName);
+      if (changes.liftHandleLimit) sets.push('handle_changed_at = NULL');
       if (changes.postingSuspendedUntil !== undefined)
         set(
           'posting_suspended_until',

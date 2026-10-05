@@ -6,6 +6,8 @@ import {
   adminUpdateAirspaceRequestSchema,
   adminUpdateUserRequestSchema,
   adminUserListQuerySchema,
+  adminBulkRequestSchema,
+  type AdminBulkResult,
   statsQuerySchema,
   type AdminStats,
   type AdminAirspace,
@@ -85,6 +87,45 @@ export async function adminRoutes(app: FastifyInstance, options: AdminRouteOptio
   app.post('/admin/users/:id/sign-out', { preHandler }, async (request, reply) => {
     await admin.signOutEverywhere(actor(request), userId(request));
     return reply.code(204).send();
+  });
+
+  /** Ends one sign-in (one device). */
+  app.delete('/admin/users/:id/sign-ins/:signInId', { preHandler }, async (request, reply) => {
+    const parsed = z.object({ id: z.uuid(), signInId: z.uuid() }).safeParse(request.params);
+    if (!parsed.success) throw new UserNotFoundError();
+    await admin.endSignIn(actor(request), parsed.data.id, parsed.data.signInId);
+    return reply.code(204).send();
+  });
+
+  app.post('/admin/users/:id/send-reset', { preHandler }, async (request, reply) => {
+    await admin.sendPasswordReset(actor(request), userId(request));
+    return reply.code(204).send();
+  });
+
+  app.post('/admin/users/:id/send-verification', { preHandler }, async (request, reply) => {
+    await admin.sendVerificationEmail(actor(request), userId(request));
+    return reply.code(204).send();
+  });
+
+  app.post('/admin/users/bulk', { preHandler }, async (request): Promise<AdminBulkResult> => {
+    const { ids, action } = adminBulkRequestSchema.parse(request.body);
+    return admin.bulk(actor(request), ids, action);
+  });
+
+  /** The users matching the list's filters, as a CSV file. */
+  app.get('/admin/users/export.csv', { preHandler }, async (request, reply) => {
+    const { q, role, status } = adminUserListQuerySchema.parse(request.query);
+    const csv = await admin.exportCsv(actor(request), {
+      ...(q ? { q } : {}),
+      ...(role ? { role } : {}),
+      ...(status ? { status } : {}),
+    });
+    const date = new Date().toISOString().slice(0, 10);
+    return reply
+      .header('content-type', 'text/csv; charset=utf-8')
+      .header('content-disposition', `attachment; filename="vector-users-${date}.csv"`)
+      .header('cache-control', 'no-store')
+      .send(csv);
   });
 
   app.delete('/admin/users/:id/sessions/:sessionId', { preHandler }, async (request, reply) => {

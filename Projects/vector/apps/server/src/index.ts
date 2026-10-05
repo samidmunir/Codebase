@@ -30,7 +30,13 @@ const app = buildApp(
       email: { ...(mailer ? { mailer } : {}), appUrl: config.CLIENT_ORIGIN },
     },
   },
-  { logger: { level: config.LOG_LEVEL } },
+  {
+    logger: { level: config.LOG_LEVEL },
+    // Trust the nearest TRUST_PROXY hops' X-Forwarded-For for the client's IP.
+    ...(config.TRUST_PROXY > 0
+      ? { trustProxy: (_address: string, hop: number) => hop < config.TRUST_PROXY }
+      : {}),
+  },
 );
 
 async function shutdown(signal: string) {
@@ -46,6 +52,7 @@ process.once('SIGTERM', () => void shutdown('SIGTERM'));
 try {
   await app.listen({ host: config.HOST, port: config.PORT });
   app.verifier?.start();
+  app.housekeeping?.start();
 } catch (error) {
   app.log.error(error);
   await db.end();

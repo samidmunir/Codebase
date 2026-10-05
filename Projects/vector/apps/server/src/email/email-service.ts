@@ -140,6 +140,13 @@ export function emailService(deps: EmailServiceDeps) {
       deliver(resetPasswordMessage(user.email, user.displayName, await link(user.id, 'reset')));
     },
 
+    /** Emails a reset link to an account, at an admin's request (no cooldown). */
+    async sendPasswordReset(userId: string): Promise<void> {
+      const user = await users.findById(userId);
+      if (!user) throw new UserNotFoundError();
+      deliver(resetPasswordMessage(user.email, user.displayName, await link(user.id, 'reset')));
+    },
+
     /** Sets a new password from a reset link, and signs out everywhere. */
     async resetPassword(token: string, password: string): Promise<void> {
       const { user } = await consume(token, 'reset');

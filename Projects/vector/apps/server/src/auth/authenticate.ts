@@ -22,7 +22,7 @@ export class UnauthorizedError extends Error {
 /** Signed in, but not allowed (an admin route for a player). */
 export class ForbiddenError extends Error {
   constructor() {
-    super('Only administrators can do that');
+    super('You don’t have permission to do that');
     this.name = 'ForbiddenError';
   }
 }
@@ -36,6 +36,8 @@ export interface Authenticator {
   optional: PreHandler;
   /** As `user`, and the account must be an admin. */
   admin: PreHandler;
+  /** As `user`, and the account must be staff: a moderator or an admin. */
+  staff: PreHandler;
 }
 
 /**
@@ -67,6 +69,11 @@ export function authenticator(jwtSecret: string, users: UsersRepository): Authen
     async admin(request, reply) {
       await user(request, reply);
       if (request.account?.role !== 'admin') throw new ForbiddenError();
+    },
+    async staff(request, reply) {
+      await user(request, reply);
+      if (request.account?.role !== 'admin' && request.account?.role !== 'moderator')
+        throw new ForbiddenError();
     },
   };
 }

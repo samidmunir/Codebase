@@ -1,7 +1,7 @@
 import type { AuthResponse, AuthUser } from '@vector/shared';
 import type { UserRecord, UsersRepository } from '../users/users-repository';
 import { DUMMY_PASSWORD_HASH, hashPassword, verifyPassword } from './passwords';
-import type { SessionsRepository } from './sessions-repository';
+import type { ClientInfo, SessionsRepository } from './sessions-repository';
 import { createAccessToken, hashRefreshToken, newRefreshToken } from './tokens';
 
 export interface AuthConfig {
@@ -60,10 +60,17 @@ export function authService(
   sessions: SessionsRepository,
   config: AuthConfig,
 ) {
-  async function signIn(user: UserRecord): Promise<SignedIn> {
+  async function signIn(
+    user: UserRecord,
+    client: ClientInfo | undefined,
+    familyId?: string,
+  ): Promise<SignedIn> {
     const refresh = newRefreshToken();
     const refreshTokenExpiresAt = new Date(Date.now() + config.refreshTokenDays * 86_400_000);
-    await sessions.create(user.id, refresh.hash, refreshTokenExpiresAt);
+    await sessions.create(user.id, refresh.hash, refreshTokenExpiresAt, {
+      ...(familyId ? { familyId } : {}),
+      ...(client ? { client } : {}),
+    });
     const access = await createAccessToken(user.id, config.jwtSecret, config.accessTokenMinutes);
     return {
       user: toAuthUser(user),
@@ -75,33 +82,39 @@ export function authService(
   }
 
   return {
-    async register(input: {
-      email: string;
-      handle: string;
-      password: string;
-      displayName: string;
-    }): Promise<SignedIn> {
+    async register(
+      input: {
+        email: string;
+        handle: string;
+        password: string;
+        displayName: string;
+      },
+      client?: ClientInfo,
+    ): Promise<SignedIn> {
       const user = await users.create({
         email: input.email,
         handle: input.handle,
         displayName: input.displayName,
         passwordHash: await hashPassword(input.password),
       });
-      return signIn(user);
+      return signIn(user, client);
     },
 
-    async login(input: { email: string; password: string }): Promise<SignedIn> {
+    async login(
+      input: { email: string; password: string },
+      client?: ClientInfo,
+    ): Promise<SignedIn> {
       const user = await users.findByEmail(input.email);
       // Always verify a hash, so response time doesn't reveal whether the account exists.
       const valid = await verifyPassword(input.password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
       if (!user || !valid) throw new InvalidCredentialsError();
       // Only once the password is right, so this doesn't reveal which emails have accounts.
       if (user.disabledAt) throw new AccountDisabledError();
-      return signIn(user);
+      return signIn(user, client);
     },
 
     /** Exchanges a refresh token for new tokens, rotating the refresh token. */
-    async refresh(refreshToken: string | undefined): Promise<SignedIn> {
+    async refresh(refreshToken: string | undefined, client?: ClientInfo): Promise<SignedIn> {
       if (!refreshToken) throw new InvalidSessionError('missing');
       const session = await sessions.findByTokenHash(hashRefreshToken(refreshToken));
       if (!session) throw new InvalidSessionError('missing');
@@ -118,7 +131,8 @@ export function authService(
 
       const user = await users.findById(session.userId);
       if (!user || user.disabledAt) throw new InvalidSessionError('revoked');
-      return signIn(user);
+      // The same sign-in carries on, from wherever the device is now.
+      return signIn(user, client, session.familyId);
     },
 
     async logout(refreshToken: string | undefined): Promise<void> {
