@@ -53,7 +53,11 @@ export function AirspaceScreen() {
   return (
     <div className="airspace-page">
       <section className="airspace-hero">
-        <LiveScope airspaceId={entry.id} label={`A live Vector session in ${entry.name}`} />
+        <LiveScope
+          airspaceId={entry.id}
+          label={`A live Vector session in ${entry.name}`}
+          warmUpMinutes={15}
+        />
         <div className="airspace-hero__shade" aria-hidden="true" />
         <div className="airspace-hero__text">
           <p className="airspace-hero__facility">{entry.facility} TRACON</p>
