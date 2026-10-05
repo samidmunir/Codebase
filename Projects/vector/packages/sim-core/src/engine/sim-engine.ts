@@ -140,6 +140,7 @@ import {
   type SimState,
 } from '../snapshot/snapshot';
 import { cloneJson } from '../snapshot/clone';
+import { SIM_ENGINE_VERSION, type Replay, type ReplayInput } from '../snapshot/replay';
 import { DEFAULT_SIM_CONFIG, type SimConfig, type World } from './config';
 import type { SimEvent, SimEventListener } from './events';
 
@@ -161,6 +162,11 @@ export type CreateSimEngineOptions = {
   runwayConfigs?: Readonly<Record<string, string>>;
   /** Live wind mode: the current weather reports, so the session starts with the real wind. */
   liveWeather?: readonly LiveWeatherReport[];
+  /**
+   * Identifies the session for good (a saved and resumed session keeps it), e.g. a
+   * random UUID. Defaults to one made from the seed and start time.
+   */
+  sessionId?: string;
 } & OperationsContext;
 
 /** Static data for airport operations (wind, runways, departures). Not saved in snapshots. */
@@ -287,6 +293,22 @@ export class SimEngine {
         centerResolutions: {},
         score: emptyScoreState(),
         routeFixPassed: {},
+        replay: {
+          sessionId: options.sessionId ?? `seed-${options.seed}-${options.startTimeUtc}`,
+          engineVersion: SIM_ENGINE_VERSION,
+          start: cloneJson({
+            seed: options.seed,
+            startTimeUtc: new Date(options.startTimeUtc).toISOString(),
+            world: options.world,
+            config: options.config ?? DEFAULT_SIM_CONFIG,
+            settings: options.settings ?? defaultSettings('session'),
+            playerId:
+              options.playerId ?? options.airspace?.airspace.controllers.approach.id ?? 'N90',
+            runwayConfigs: { ...(options.runwayConfigs ?? {}) },
+            liveWeather: [...(options.liveWeather ?? [])],
+          }),
+          inputs: [],
+        },
       },
       options,
     );
@@ -306,6 +328,16 @@ export class SimEngine {
     const { state } = parseSnapshot(snapshot);
     for (const aircraft of state.aircraft) performance.get(aircraft.aircraftType);
     return new SimEngine(performance, state, context);
+  }
+
+  /** The session's start and inputs so far (undefined for sessions saved before replays). */
+  get replay(): Readonly<Replay> | undefined {
+    return this.state.replay;
+  }
+
+  /** Records an input the player gave, for replaying the session. */
+  private recordInput(input: ReplayInput): void {
+    this.state.replay?.inputs.push(cloneJson(input));
   }
 
   toSnapshot(): SimSnapshot {
@@ -788,6 +820,17 @@ export class SimEngine {
    * following it after a response delay (from the session settings).
    */
   issueInstruction(aircraftId: string, commands: readonly AtcCommand[]): ValidationResult {
+    const tick = this.state.tick;
+    const result = this.transmitInstruction(aircraftId, commands);
+    if (result.ok)
+      this.recordInput({ type: 'instruction', tick, aircraftId, commands: [...commands] });
+    return result;
+  }
+
+  private transmitInstruction(
+    aircraftId: string,
+    commands: readonly AtcCommand[],
+  ): ValidationResult {
     const check = this.checkInstruction(aircraftId, commands);
     if (!check.ok) return check;
     const aircraft = this.getAircraft(aircraftId)!;
@@ -1294,6 +1337,15 @@ export class SimEngine {
   updateTrafficSettings(
     patch: Partial<Pick<SessionSettings, InSessionTrafficKey>>,
   ): ValidationResult {
+    const tick = this.state.tick;
+    const result = this.changeTrafficSettings(patch);
+    if (result.ok) this.recordInput({ type: 'traffic', tick, patch: { ...patch } });
+    return result;
+  }
+
+  private changeTrafficSettings(
+    patch: Partial<Pick<SessionSettings, InSessionTrafficKey>>,
+  ): ValidationResult {
     const keys = Object.keys(patch);
     const unsupported = keys.filter(
       (key) => !(IN_SESSION_TRAFFIC_KEYS as readonly string[]).includes(key),
@@ -1779,6 +1831,13 @@ export class SimEngine {
    * input, saved with the session like the rest of its state.
    */
   applyLiveWeather(reports: readonly LiveWeatherReport[]): ValidationResult {
+    const tick = this.state.tick;
+    const result = this.takeLiveWeather(reports);
+    if (result.ok) this.recordInput({ type: 'liveWeather', tick, reports: [...reports] });
+    return result;
+  }
+
+  private takeLiveWeather(reports: readonly LiveWeatherReport[]): ValidationResult {
     const operations = this.state.operations;
     const pack = this.airspace;
     if (!operations || !pack) return { ok: false, reason: 'No airspace' };
@@ -1957,6 +2016,13 @@ export class SimEngine {
    * pilot reads back, lines up, and takes off once the runway is free.
    */
   releaseDeparture(entryId: string, runway: string): ValidationResult {
+    const tick = this.state.tick;
+    const result = this.clearForTakeoff(entryId, runway);
+    if (result.ok) this.recordInput({ type: 'release', tick, entryId, runway });
+    return result;
+  }
+
+  private clearForTakeoff(entryId: string, runway: string): ValidationResult {
     const check = this.checkRelease(entryId, runway);
     if (!check.ok) return check;
     if (!this.airspace) return { ok: false, reason: 'No airspace loaded' };

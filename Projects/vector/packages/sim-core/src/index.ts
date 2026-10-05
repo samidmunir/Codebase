@@ -22,6 +22,8 @@ export * from './performance/performance';
 export * from './random/seeded-random';
 export * from './separation/separation';
 export * from './snapshot/snapshot';
+export * from './snapshot/replay';
+export * from './engine/replay-session';
 export * from './traffic/arrival-route';
 export * from './traffic/departure-procedure';
 export * from './traffic/operations';

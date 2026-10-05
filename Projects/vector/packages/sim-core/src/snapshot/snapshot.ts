@@ -7,6 +7,7 @@ import { atcCommandSchema } from '../commands/commands';
 import { separationStateSchema } from '../separation/separation';
 import { operationsStateSchema } from '../traffic/operations';
 import { simConfigSchema, worldSchema } from '../engine/config';
+import { replaySchema } from './replay';
 
 /**
  * Increment when the snapshot shape changes, and add a migration from the
@@ -84,6 +85,11 @@ export const simStateSchema = z.object({
     .default({}),
   /** Each aircraft's path since it became the player's traffic, by aircraft id. */
   tracks: z.record(z.string(), z.array(trackPointSchema)).default({}),
+  /**
+   * How the session started and every input since, for replaying it. Missing in
+   * sessions saved before replays existed (their results can't be verified).
+   */
+  replay: replaySchema.optional(),
 });
 
 export type SimState = z.infer<typeof simStateSchema>;
