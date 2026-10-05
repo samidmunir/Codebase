@@ -1,168 +1,48 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
-import type { ForumReport } from '@vector/shared';
-import {
-  deletePost,
-  deleteThread,
-  dismissReport,
-  getReports,
-  setPostHidden,
-  threadPath,
-} from '../../api/community-api';
-import { setPostingSuspension } from '../../api/admin-api';
-import { Markdown } from '../../components/Markdown';
-import { errorMessage, formatAgo } from './admin-format';
+import { useSearchParams } from 'react-router';
+import { CategoriesPanel } from './CategoriesPanel';
+import { PostsPanel, ThreadsPanel } from './CommunityContent';
+import { ReportsPanel } from './ReportsPanel';
 
-/** Reported community posts, oldest first, and what to do about each. */
-export function CommunityTab() {
-  const [reports, setReports] = useState<ForumReport[] | undefined>(undefined);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [notice, setNotice] = useState<string | undefined>(undefined);
-  const [reload, setReload] = useState(0);
-  const [busy, setBusy] = useState(false);
+const SECTIONS = [
+  { id: 'reports', label: 'Reports' },
+  { id: 'threads', label: 'Threads' },
+  { id: 'posts', label: 'Posts' },
+  { id: 'categories', label: 'Categories', adminOnly: true },
+] as const;
+type Section = (typeof SECTIONS)[number]['id'];
 
-  useEffect(() => {
-    let cancelled = false;
-    getReports()
-      .then((list) => !cancelled && setReports(list.reports))
-      .catch((caught: unknown) => !cancelled && setError(errorMessage(caught)));
-    return () => {
-      cancelled = true;
-    };
-  }, [reload]);
-
-  const act = async (action: () => Promise<unknown>, done: string) => {
-    setBusy(true);
-    setError(undefined);
-    try {
-      await action();
-      setNotice(done);
-      setReload((n) => n + 1);
-    } catch (caught) {
-      setError(errorMessage(caught));
-    } finally {
-      setBusy(false);
-    }
+/** The community: reports first, then every thread and post, and (for admins) categories. */
+export function CommunityTab({ isAdmin }: { isAdmin: boolean }) {
+  const [params, setParams] = useSearchParams();
+  const sections = SECTIONS.filter((section) => isAdmin || !('adminOnly' in section));
+  const current: Section = sections.some((s) => s.id === params.get('section'))
+    ? (params.get('section') as Section)
+    : 'reports';
+  const open = (id: Section) => {
+    const next = new URLSearchParams(params);
+    if (id === 'reports') next.delete('section');
+    else next.set('section', id);
+    setParams(next);
   };
 
-  // One card per post, with every report on it.
-  const byPost = new Map<number, ForumReport[]>();
-  for (const report of reports ?? [])
-    byPost.set(report.post.id, [...(byPost.get(report.post.id) ?? []), report]);
-
   return (
-    <div className="admin-users__list">
-      <p className="admin-muted">
-        Reports from pilots. Hiding a post keeps it for the record but shows pilots that a moderator
-        hid it; suspend a pilot from posting on their page under Users.
-      </p>
-      {notice && (
-        <p className="admin-notice" role="status">
-          {notice}
-        </p>
-      )}
-      {error && (
-        <p className="admin-error" role="alert">
-          {error}
-        </p>
-      )}
-      {!reports ? (
-        <p className="admin-muted">Loading…</p>
-      ) : byPost.size === 0 ? (
-        <p className="admin-muted">No open reports.</p>
-      ) : (
-        [...byPost.values()].map((group) => {
-          const { post, thread } = group[0]!;
-          return (
-            <article
-              key={post.id}
-              className="admin-card admin-report"
-              aria-label={`Report on a post in ${thread.title}`}
-            >
-              <header className="admin-card__header">
-                <div>
-                  <h2>
-                    <Link to={`${threadPath(thread)}#post-${post.id}`}>{thread.title}</Link>
-                  </h2>
-                  <p className="admin-muted">
-                    {post.opening ? 'Opening post' : 'Reply'} by{' '}
-                    {post.author ? `@${post.author.handle}` : 'a deleted pilot'}
-                    {post.hidden && ' · hidden'}
-                  </p>
-                </div>
-              </header>
-              <div className="admin-report__post">
-                <Markdown source={post.body} allowHtml={false} />
-              </div>
-              <ul className="admin-report__reasons">
-                {group.map((report) => (
-                  <li key={report.id}>
-                    <strong>
-                      {report.reporter ? `@${report.reporter.handle}` : 'Deleted pilot'}
-                    </strong>{' '}
-                    <span className="admin-muted">{formatAgo(report.createdAt)}</span>:{' '}
-                    {report.reason}
-                  </li>
-                ))}
-              </ul>
-              <div className="admin-actions">
-                <button
-                  type="button"
-                  className="admin-button"
-                  disabled={busy}
-                  onClick={() => void act(() => dismissReport(group[0]!.id), 'Report dismissed.')}
-                >
-                  Dismiss
-                </button>
-                {!post.hidden && (
-                  <button
-                    type="button"
-                    className="admin-button admin-button--caution"
-                    disabled={busy}
-                    onClick={() => void act(() => setPostHidden(post.id, true), 'Post hidden.')}
-                  >
-                    Hide post
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="admin-button admin-button--caution"
-                  disabled={busy}
-                  onClick={() =>
-                    window.confirm(
-                      post.opening
-                        ? `Delete the thread “${thread.title}” and all its posts?`
-                        : 'Delete this post? This can’t be undone.',
-                    ) &&
-                    void act(
-                      () => (post.opening ? deleteThread(thread.id) : deletePost(post.id)),
-                      post.opening ? 'Thread deleted.' : 'Post deleted.',
-                    )
-                  }
-                >
-                  {post.opening ? 'Delete thread' : 'Delete post'}
-                </button>
-                {post.author && (
-                  <button
-                    type="button"
-                    className="admin-button admin-button--caution"
-                    disabled={busy}
-                    onClick={() =>
-                      window.confirm(`Suspend @${post.author!.handle} from posting for 7 days?`) &&
-                      void act(
-                        () => setPostingSuspension(post.author!.handle, 7),
-                        `@${post.author!.handle} can’t post for 7 days.`,
-                      )
-                    }
-                  >
-                    Suspend poster 7 days
-                  </button>
-                )}
-              </div>
-            </article>
-          );
-        })
-      )}
+    <div className="admin-community">
+      <nav className="admin-segmented admin-community__sections" aria-label="Community">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            aria-current={current === section.id ? 'page' : undefined}
+            onClick={() => open(section.id)}
+          >
+            {section.label}
+          </button>
+        ))}
+      </nav>
+      {current === 'reports' && <ReportsPanel />}
+      {current === 'threads' && <ThreadsPanel />}
+      {current === 'posts' && <PostsPanel />}
+      {current === 'categories' && isAdmin && <CategoriesPanel />}
     </div>
   );
 }

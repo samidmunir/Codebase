@@ -15,6 +15,14 @@ import {
   type ForumThreadList,
   type ModerateThreadRequest,
   type NewThreadRequest,
+  adminPostListSchema,
+  adminThreadListSchema,
+  type AdminPostList,
+  type AdminPostQuery,
+  type AdminThreadList,
+  type AdminThreadQuery,
+  type NewCategoryRequest,
+  type UpdateCategoryRequest,
 } from '@vector/shared';
 import { apiRequest } from './api-client';
 
@@ -79,3 +87,34 @@ export const deleteThread = (id: number) => send(`/admin/community/threads/${id}
 /** A thread's address. */
 export const threadPath = (thread: { id: number; slug: string }) =>
   `/community/t/${thread.id}/${thread.slug}`;
+
+// ---- Content (admins: categories; staff: every thread and post) ------------------------
+
+const queryString = (query: object) =>
+  new URLSearchParams(
+    Object.entries(query)
+      .filter(([, value]) => value !== undefined && value !== '')
+      .map(([key, value]) => [key, String(value)]),
+  ).toString();
+
+export const createCategory = (request: NewCategoryRequest) =>
+  send('/admin/community/categories', 'POST', request);
+export const updateCategory = (id: string, request: UpdateCategoryRequest) =>
+  send(`/admin/community/categories/${id}`, 'PATCH', request);
+export const deleteCategory = (id: string, moveTo?: string) =>
+  send(`/admin/community/categories/${id}`, 'DELETE', moveTo ? { moveTo } : {});
+
+export async function searchThreads(query: AdminThreadQuery): Promise<AdminThreadList> {
+  return adminThreadListSchema.parse(
+    await apiRequest(`/admin/community/threads?${queryString(query)}`),
+  );
+}
+
+export async function searchPosts(query: AdminPostQuery): Promise<AdminPostList> {
+  return adminPostListSchema.parse(
+    await apiRequest(`/admin/community/posts?${queryString(query)}`),
+  );
+}
+
+export const editAnyPost = (id: number, body: string) =>
+  send(`/admin/community/posts/${id}/body`, 'PUT', { body });

@@ -1,3 +1,4 @@
+import type { AdminSavedSessionList } from '@vector/shared';
 import type {
   SavedSession,
   SavedSessionSummary,
@@ -93,6 +94,71 @@ export function savedSessionsRepository(db: Database) {
     },
 
     // ---- Administration (any user's sessions) ---------------------------------------
+
+    /** Every user's saved sessions, newest first, with their owners and sizes. */
+    async adminList(query: {
+      q?: string | undefined;
+      airspace?: string | undefined;
+      offset: number;
+      limit: number;
+    }): Promise<AdminSavedSessionList> {
+      const where: string[] = [];
+      const params: unknown[] = [];
+      if (query.q) {
+        params.push(`%${query.q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
+        where.push(
+          `(s.name ILIKE $${params.length} OR u.handle ILIKE $${params.length} OR u.email ILIKE $${params.length})`,
+        );
+      }
+      if (query.airspace) {
+        params.push(query.airspace);
+        where.push(`s.airspace_id = $${params.length}`);
+      }
+      const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+      const from = `FROM saved_sessions s JOIN users u ON u.id = s.user_id ${clause}`;
+      const [{ rows }, totals] = await Promise.all([
+        db.query<{
+          id: string;
+          name: string;
+          airspace_id: string;
+          rp: number;
+          sim_time_sec: number;
+          bytes: number;
+          user_id: string;
+          handle: string;
+          email: string;
+          created_at: Date;
+          updated_at: Date;
+        }>(
+          `SELECT s.id, s.name, s.airspace_id, s.rp, s.sim_time_sec,
+             pg_column_size(s.snapshot)::int AS bytes, s.user_id, u.handle, u.email,
+             s.created_at, s.updated_at
+           ${from}
+           ORDER BY s.updated_at DESC, s.id
+           LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+          [...params, query.limit, query.offset],
+        ),
+        db.query<{ total: number; bytes: number }>(
+          `SELECT count(*)::int AS total, coalesce(sum(pg_column_size(s.snapshot)), 0)::bigint::int AS bytes ${from}`,
+          params,
+        ),
+      ]);
+      return {
+        total: totals.rows[0]!.total,
+        totalBytes: totals.rows[0]!.bytes,
+        sessions: rows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          airspaceId: row.airspace_id,
+          rp: row.rp,
+          simTimeSec: row.sim_time_sec,
+          bytes: row.bytes,
+          owner: { id: row.user_id, handle: row.handle, email: row.email },
+          createdAt: row.created_at.toISOString(),
+          updatedAt: row.updated_at.toISOString(),
+        })),
+      };
+    },
 
     /** Removes one of a user's sessions. Returns its name. */
     async adminDelete(userId: string, id: string): Promise<string> {

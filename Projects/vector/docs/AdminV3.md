@@ -63,3 +63,15 @@ pilots who still have accounts; signups count accounts that still exist.
   - The users list selects users for bulk actions (`POST /api/admin/users/bulk`) and
     exports the filtered list as CSV (`GET /api/admin/users/export.csv`, logged).
   - Pilots see their own devices on the Account page and can sign out any one.
+- **Site-wide content** (milestone 3):
+  - Admin → Community has Reports, Threads, Posts and Categories. Staff search every
+    thread (title, category, pinned or locked) and post (text, author, category,
+    reported, hidden or edited), and act on them there; staff can rewrite any post
+    (`PUT /api/admin/community/posts/:id/body`), which marks it edited and keeps the
+    old text in the log.
+  - Admins create, rename, describe, reorder and delete categories; a category with
+    threads is deleted by moving them to another first.
+  - Admin → Saved sessions lists every player's sessions with their owner and stored
+    size (`GET /api/admin/sessions`).
+  - Admin → Results filters by airspace and difficulty, sorts by RP, takes a pilot off
+    the records (or back on), and hides or shows several results at once.
