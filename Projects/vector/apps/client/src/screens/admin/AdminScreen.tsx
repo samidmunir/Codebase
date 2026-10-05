@@ -4,6 +4,7 @@ import { useGameControls } from '../../controls/use-game-controls';
 import { ActivityTab } from './ActivityTab';
 import { AirspacesTab } from './AirspacesTab';
 import { OverviewTab } from './OverviewTab';
+import { ResultsTab } from './ResultsTab';
 import { UsersTab } from './UsersTab';
 import './admin-screen.css';
 
@@ -11,6 +12,7 @@ const TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'users', label: 'Users' },
   { id: 'airspaces', label: 'Airspaces' },
+  { id: 'results', label: 'Results' },
   { id: 'activity', label: 'Activity' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
@@ -64,6 +66,7 @@ export function AdminScreen() {
           />
         )}
         {tab === 'airspaces' && <AirspacesTab />}
+        {tab === 'results' && <ResultsTab />}
         {tab === 'activity' && <ActivityTab />}
       </div>
     </div>

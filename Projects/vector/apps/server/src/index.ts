@@ -16,6 +16,11 @@ const app = buildApp(
         refreshTokenDays: config.REFRESH_TOKEN_DAYS,
       },
       secureCookies: config.NODE_ENV === 'production',
+      signInRateLimit: config.SIGN_IN_RATE_LIMIT,
+      verification: {
+        settleSec: config.RESULT_VERIFY_SETTLE_SEC,
+        pollMs: config.RESULT_VERIFY_POLL_MS,
+      },
     },
   },
   { logger: { level: config.LOG_LEVEL } },

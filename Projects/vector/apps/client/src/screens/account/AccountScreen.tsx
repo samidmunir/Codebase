@@ -112,13 +112,15 @@ function ProfileSection({
   const [handle, setHandle] = useState(account.handleGenerated ? '' : account.handle);
   const [displayName, setDisplayName] = useState(account.displayName);
   const [profilePublic, setProfilePublic] = useState(account.profilePublic);
+  const [showOnRecords, setShowOnRecords] = useState(account.showOnRecords);
   const [fields, setFields] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<Status>(undefined);
   const [busy, setBusy] = useState(false);
   const availability = useHandleAvailability(handle, account.handle);
   const handleChanged = handle.trim() !== '' && handle.trim() !== account.handle;
   const nameChanged = displayName.trim() !== account.displayName;
-  const privacyChanged = profilePublic !== account.profilePublic;
+  const privacyChanged =
+    profilePublic !== account.profilePublic || showOnRecords !== account.showOnRecords;
   const lockedUntil = account.handleChangeableAt;
 
   const submit = async (event: FormEvent) => {
@@ -131,7 +133,8 @@ function ProfileSection({
         await updateProfile({
           ...(handleChanged ? { handle: handle.trim() } : {}),
           ...(nameChanged ? { displayName: displayName.trim() } : {}),
-          ...(privacyChanged ? { profilePublic } : {}),
+          ...(profilePublic !== account.profilePublic ? { profilePublic } : {}),
+          ...(showOnRecords !== account.showOnRecords ? { showOnRecords } : {}),
         }),
       );
       setStatus({ tone: 'ok', text: 'Saved.' });
@@ -192,6 +195,20 @@ function ProfileSection({
               Anyone can see your career and sessions at{' '}
               <Link to={`/pilots/${account.handle}`}>/pilots/{account.handle}</Link>. Turned off,
               only you can.
+            </span>
+          </span>
+        </label>
+        <label className="account-check">
+          <input
+            type="checkbox"
+            checked={showOnRecords}
+            onChange={(event) => setShowOnRecords(event.target.checked)}
+          />
+          <span>
+            <strong>Show me on the records</strong>
+            <span>
+              Your verified sessions count on the <Link to="/records">leaderboards</Link> under your
+              handle (even with a private profile).
             </span>
           </span>
         </label>
