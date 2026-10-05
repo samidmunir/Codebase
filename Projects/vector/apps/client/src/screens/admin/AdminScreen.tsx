@@ -23,7 +23,13 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
-/** Administration: users, airspaces and the audit log. Only admins get here (the server checks too). */
+/** The tabs a moderator sees: the community, nothing else. */
+const MODERATOR_TABS: readonly TabId[] = ['community'];
+
+/**
+ * Administration: everything for admins; the community for moderators. Only staff
+ * get here (and the server checks every request too).
+ */
 export function AdminScreen() {
   usePageMeta({ title: 'Admin' });
   const auth = useAuth();
@@ -32,25 +38,30 @@ export function AdminScreen() {
   useGameControls({ closeMenu: () => void navigate('/play') });
 
   if (auth.status !== 'signedIn') return null;
-  if (auth.user.role !== 'admin') return <Navigate to="/play" replace />;
+  if (auth.user.role === 'player') return <Navigate to="/play" replace />;
+  // Old links to a user opened them in a panel; they have their own page now.
+  const linkedUser = params.get('user');
+  if (linkedUser) return <Navigate to={`/admin/users/${linkedUser}`} replace />;
 
-  const tab: TabId = TABS.some((t) => t.id === params.get('tab'))
+  const isAdmin = auth.user.role === 'admin';
+  const tabs = TABS.filter((t) => isAdmin || MODERATOR_TABS.includes(t.id));
+  const tab: TabId = tabs.some((t) => t.id === params.get('tab'))
     ? (params.get('tab') as TabId)
-    : 'overview';
+    : (tabs[0]?.id ?? 'community');
   const open = (next: TabId, extra: Record<string, string> = {}) =>
-    setParams({ ...(next === 'overview' ? {} : { tab: next }), ...extra });
+    setParams({ ...(next === tabs[0]?.id ? {} : { tab: next }), ...extra });
 
   return (
     <div className="admin-screen">
       <header className="admin-screen__bar">
-        <h1>Administration</h1>
+        <h1>{isAdmin ? 'Administration' : 'Moderation'}</h1>
         <span className="admin-screen__who">
           Signed in as <strong>{auth.user.email}</strong>
         </span>
       </header>
 
       <nav className="admin-tabs" aria-label="Administration">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -70,13 +81,7 @@ export function AdminScreen() {
             <OverviewTab onOpen={open} />
           </>
         )}
-        {tab === 'users' && (
-          <UsersTab
-            selectedId={params.get('user') ?? undefined}
-            onSelect={(id) => open('users', id ? { user: id } : {})}
-            currentUserId={auth.user.id}
-          />
-        )}
+        {tab === 'users' && <UsersTab currentUserId={auth.user.id} />}
         {tab === 'airspaces' && <AirspacesTab />}
         {tab === 'results' && <ResultsTab />}
         {tab === 'news' && <NewsTab />}

@@ -61,7 +61,7 @@ export function SiteLayout() {
             <AccountMenu
               handle={signedIn.handle}
               displayName={signedIn.displayName}
-              admin={signedIn.role === 'admin'}
+              staff={signedIn.role === 'player' ? undefined : signedIn.role}
             />
           ) : (
             <>
@@ -111,11 +111,12 @@ export function SiteLayout() {
 function AccountMenu({
   handle,
   displayName,
-  admin,
+  staff,
 }: {
   handle: string;
   displayName: string;
-  admin: boolean;
+  /** Their staff role, if they have one (the menu links to the admin pages). */
+  staff: 'moderator' | 'admin' | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const menu = useRef<HTMLDivElement>(null);
@@ -183,9 +184,9 @@ function AccountMenu({
           <Link role="menuitem" to="/settings">
             Settings
           </Link>
-          {admin && (
+          {staff && (
             <Link role="menuitem" to="/admin">
-              Admin
+              {staff === 'admin' ? 'Admin' : 'Moderation'}
             </Link>
           )}
           <button

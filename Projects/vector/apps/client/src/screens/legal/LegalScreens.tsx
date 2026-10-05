@@ -181,7 +181,9 @@ export function PrivacyScreen() {
         </li>
         <li>
           <strong>Signing in:</strong> a sign-in cookie on each device you use (only a hash of it is
-          stored), and when each was last used.
+          stored), when each was last used, and, while that sign-in lasts, the device’s browser and
+          IP address, so you can tell your devices apart and spot one that isn’t yours. They’re
+          erased when the sign-in ends.
         </li>
         <li>
           <strong>The community:</strong> what you post, when, any edits, the posts you mark useful,
@@ -212,12 +214,13 @@ export function PrivacyScreen() {
       </p>
       <h2>Who sees it</h2>
       <p>
-        Vector’s administrators can see account details to run the service and keep it fair, and
-        every administrative change is logged (the log keeps the email address an account had at the
-        time, even after the account is deleted). We don’t sell your data. Live weather comes from
-        the Aviation Weather Center through our server, so they never see you. The emails we send
-        you go through Resend, our email provider, which gets your address and the email to deliver
-        it. We only email you about your account: no newsletters or marketing.
+        Vector’s administrators can see account details (including your devices and their IP
+        addresses) to run the service and keep it fair; moderators see community posts and reports,
+        but not accounts. Every administrative change is logged (the log keeps the email address an
+        account had at the time, even after the account is deleted). We don’t sell your data. Live
+        weather comes from the Aviation Weather Center through our server, so they never see you.
+        The emails we send you go through Resend, our email provider, which gets your address and
+        the email to deliver it. We only email you about your account: no newsletters or marketing.
       </p>
       <h2>Cookies</h2>
       <p>

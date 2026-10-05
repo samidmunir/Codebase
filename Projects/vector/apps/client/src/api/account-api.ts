@@ -6,6 +6,8 @@ import {
   type DeleteAccountRequest,
   type HandleAvailability,
   type UpdateProfileRequest,
+  signInListSchema,
+  type SignInList,
 } from '@vector/shared';
 import { apiRequest } from './api-client';
 
@@ -38,3 +40,11 @@ export async function checkHandle(handle: string): Promise<HandleAvailability> {
   const response = await fetch(`/api/handles/${encodeURIComponent(handle)}`);
   return handleAvailabilitySchema.parse(await response.json());
 }
+
+/** Your sign-ins, one per device (this one marked). */
+export async function listSignIns(): Promise<SignInList> {
+  return signInListSchema.parse(await apiRequest('/auth/sign-ins'));
+}
+
+export const endSignIn = (id: string) =>
+  apiRequest<void>(`/auth/sign-ins/${id}`, { method: 'DELETE' });

@@ -22,6 +22,7 @@ import {
   setUseful,
   threadPath,
 } from '../../api/community-api';
+import { setPostingSuspension } from '../../api/admin-api';
 import { useAuth } from '../../auth/auth-store';
 import { Markdown } from '../../components/Markdown';
 import { refreshCommunityUnread } from '../../site/community-unread';
@@ -46,7 +47,8 @@ export function ThreadScreen() {
   const navigate = useNavigate();
   const auth = useAuth();
   const viewer = auth.status === 'signedIn' ? auth.user : undefined;
-  const isAdmin = viewer?.role === 'admin';
+  // Moderators and admins moderate threads.
+  const isAdmin = viewer?.role === 'admin' || viewer?.role === 'moderator';
   // Load as whoever is signed in (admins see hidden posts), once that's known.
   const viewerKey = auth.status === 'signedIn' ? auth.user.id : auth.status;
 
@@ -453,6 +455,23 @@ function PostView({
                   Delete
                 </button>
               )}
+              {post.author && !isOwn && (
+                <button
+                  type="button"
+                  className="forum-action forum-action--danger"
+                  onClick={() =>
+                    window.confirm(
+                      `Suspend @${post.author!.handle} from posting for 7 days? (Lift it from their page, or the Users tab.)`,
+                    ) &&
+                    void act(
+                      () => setPostingSuspension(post.author!.handle, 7),
+                      `@${post.author!.handle} can’t post for 7 days.`,
+                    )
+                  }
+                >
+                  Suspend poster
+                </button>
+              )}
             </>
           )}
         </footer>
@@ -461,7 +480,7 @@ function PostView({
   );
 }
 
-/** Pin, lock, move or delete a thread (admins). */
+/** Pin, lock, move or delete a thread (moderators and admins). */
 function ThreadTools({
   thread,
   onChanged,

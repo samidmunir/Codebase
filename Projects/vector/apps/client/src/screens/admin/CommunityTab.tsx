@@ -9,6 +9,7 @@ import {
   setPostHidden,
   threadPath,
 } from '../../api/community-api';
+import { setPostingSuspension } from '../../api/admin-api';
 import { Markdown } from '../../components/Markdown';
 import { errorMessage, formatAgo } from './admin-format';
 
@@ -141,6 +142,22 @@ export function CommunityTab() {
                 >
                   {post.opening ? 'Delete thread' : 'Delete post'}
                 </button>
+                {post.author && (
+                  <button
+                    type="button"
+                    className="admin-button admin-button--caution"
+                    disabled={busy}
+                    onClick={() =>
+                      window.confirm(`Suspend @${post.author!.handle} from posting for 7 days?`) &&
+                      void act(
+                        () => setPostingSuspension(post.author!.handle, 7),
+                        `@${post.author!.handle} can’t post for 7 days.`,
+                      )
+                    }
+                  >
+                    Suspend poster 7 days
+                  </button>
+                )}
               </div>
             </article>
           );

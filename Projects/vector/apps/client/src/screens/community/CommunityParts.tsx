@@ -25,6 +25,7 @@ export function AuthorName({ author }: { author: ForumAuthor }) {
       <Link to={`/pilots/${author.handle}`}>{author.displayName}</Link>{' '}
       <span className="forum-muted">@{author.handle}</span>
       {author.role === 'admin' && <span className="forum-badge">Vector team</span>}
+      {author.role === 'moderator' && <span className="forum-badge">Moderator</span>}
     </span>
   );
 }
