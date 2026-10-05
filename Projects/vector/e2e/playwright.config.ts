@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
+import { EMAIL_OUTBOX } from './outbox';
 
 // End-to-end tests run their own API server against the test database, and
 // their own client dev server, on ports that don't clash with `npm run dev`.
@@ -58,6 +59,9 @@ export default defineConfig({
         RESULT_VERIFY_POLL_MS: '1000',
         // Every test registers an account; don't let the sign-in limit get in the way.
         SIGN_IN_RATE_LIMIT: '1000',
+        // Emails are written to files, where the tests read their links.
+        EMAIL_DELIVERY: 'outbox',
+        EMAIL_OUTBOX_DIR: EMAIL_OUTBOX,
       },
       reuseExistingServer: false,
     },

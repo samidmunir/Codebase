@@ -236,6 +236,7 @@ function CreateUserForm({
     email: '',
     password: '',
     role: 'player' as UserRole,
+    sendVerification: true,
   });
   const [error, setError] = useState<
     { message: string; fields: Record<string, string> } | undefined
@@ -328,6 +329,14 @@ function CreateUserForm({
           </select>
         </label>
       </div>
+      <label className="admin-check">
+        <input
+          type="checkbox"
+          checked={form.sendVerification}
+          onChange={(event) => setForm({ ...form, sendVerification: event.target.checked })}
+        />
+        Send a link to verify their address
+      </label>
       {error && !Object.keys(error.fields).length && (
         <p className="admin-error" role="alert">
           {error.message}

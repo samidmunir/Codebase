@@ -125,3 +125,19 @@
   opacity: 0.6;
   cursor: default;
 }
+
+/* A link styled as the card's main button. */
+.auth-card__action {
+  display: inline-grid;
+  place-items: center;
+  text-decoration: none;
+}
+
+.auth-form__forgot {
+  justify-self: end;
+  margin-top: calc(var(--space-2) * -1);
+  color: var(--color-target);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+}

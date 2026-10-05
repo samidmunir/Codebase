@@ -22,6 +22,11 @@ import { SessionSetupScreen } from './screens/SessionSetupScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { DocumentSettings } from './settings/DocumentSettings';
 import { NotFoundScreen } from './site/NotFoundScreen';
+import {
+  EmailLinkScreen,
+  ForgotPasswordScreen,
+  ResetPasswordScreen,
+} from './screens/email/EmailScreens';
 import { SiteLayout } from './site/SiteLayout';
 import './styles/global.css';
 
@@ -69,6 +74,12 @@ const router = createBrowserRouter([
       </RedirectIfSignedIn>
     ),
   },
+  // Focused pages for emailed links (signed in or not).
+  { path: '/forgot-password', element: <ForgotPasswordScreen /> },
+  { path: '/reset-password', element: <ResetPasswordScreen /> },
+  { path: '/verify-email', element: <EmailLinkScreen kind="verify" /> },
+  { path: '/confirm-email', element: <EmailLinkScreen kind="confirm" /> },
+  { path: '/undo-email-change', element: <EmailLinkScreen kind="undo" /> },
   // Full screen: setting up a session, and the scope.
   { path: '/setup/:airspaceId', element: signedIn(<SessionSetupScreen />) },
   { path: '/scope/:airspaceId', element: signedIn(<ScopeScreen />) },

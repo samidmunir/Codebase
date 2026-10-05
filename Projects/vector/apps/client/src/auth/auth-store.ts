@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { AuthUser } from '@vector/shared';
+import { authUserSchema, type AuthUser } from '@vector/shared';
 import * as api from '../api/api-client';
 import { stopSettingsSync, syncUserSettings } from '../settings/user-settings-store';
 
@@ -53,6 +53,13 @@ export const auth = {
     handle: string,
   ): Promise<void> {
     await signedIn((await api.register(email, password, displayName, handle)).user);
+  },
+
+  /** Reloads the signed-in user from the server (after their email changes or is verified). */
+  async reload(): Promise<void> {
+    if (state.status !== 'signedIn') return;
+    const response = await api.apiRequest<{ user: unknown }>('/auth/me');
+    set({ status: 'signedIn', user: authUserSchema.parse(response.user) });
   },
 
   /** After the account page changes the handle or display name. */
