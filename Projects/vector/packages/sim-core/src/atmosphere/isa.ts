@@ -1,3 +1,4 @@
+import * as dmath from '../math/dmath';
 // International Standard Atmosphere (ISA), used to convert indicated to true airspeed.
 // v1 has no wind or non-standard temperature, so ground speed equals true airspeed.
 
@@ -12,11 +13,11 @@ export function densityRatio(altitudeFt: number): number {
   const altitude = Math.max(0, altitudeFt);
   if (altitude <= TROPOPAUSE_FT) {
     const theta = 1 - (LAPSE_RATE_K_PER_FT * altitude) / SEA_LEVEL_TEMPERATURE_K;
-    return theta ** DENSITY_EXPONENT;
+    return dmath.pow(theta, DENSITY_EXPONENT);
   }
   return (
     densityRatio(TROPOPAUSE_FT) *
-    Math.exp(-(altitude - TROPOPAUSE_FT) / STRATOSPHERE_SCALE_HEIGHT_FT)
+    dmath.exp(-(altitude - TROPOPAUSE_FT) / STRATOSPHERE_SCALE_HEIGHT_FT)
   );
 }
 

@@ -22,7 +22,8 @@ test('a session played goes into the career, with its overview; a private profil
   await expect(page.locator('.pilot-tile', { hasText: 'Sessions' })).toContainText('1');
   const row = page.locator('.result-row').first();
   await expect(row).toContainText('N90 New York');
-  await expect(row).toContainText('Checking');
+  // Checked by the server's replay a moment later.
+  await expect(row).toContainText(/Checking|Verified/);
   await row.click();
   await expect(page).toHaveURL(/\/results\/[0-9a-f-]+$/);
   await expect(page.getByRole('heading', { name: 'N90 New York' })).toBeVisible();

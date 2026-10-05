@@ -47,5 +47,51 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // The simulation must give the same results in every JavaScript engine, so its
+    // replays verify anywhere: engine-approximated math goes through math/dmath.ts.
+    files: ['packages/sim-core/src/**/*.ts'],
+    ignores: ['packages/sim-core/src/**/*.test.ts', 'packages/sim-core/src/math/dmath.ts'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        ...[
+          'sin',
+          'cos',
+          'tan',
+          'asin',
+          'acos',
+          'atan',
+          'atan2',
+          'exp',
+          'expm1',
+          'log',
+          'log1p',
+          'log2',
+          'log10',
+          'pow',
+          'hypot',
+          'cbrt',
+          'sinh',
+          'cosh',
+          'tanh',
+          'asinh',
+          'acosh',
+          'atanh',
+        ].map((property) => ({
+          object: 'Math',
+          property,
+          message: `Use dmath.${property} (math/dmath.ts): Math.${property} can differ between JavaScript engines.`,
+        })),
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "BinaryExpression[operator='**'], AssignmentExpression[operator='**=']",
+          message: 'Use dmath.pow: ** can differ between JavaScript engines.',
+        },
+      ],
+    },
+  },
   prettier,
 );

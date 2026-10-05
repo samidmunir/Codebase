@@ -102,8 +102,13 @@ function PublicProfile({ profile }: { profile: Extract<PilotProfile, { visibilit
     }
   };
 
-  const tiles = [
+  const tiles: { label: string; value: string; tone?: string | undefined; link?: string }[] = [
     { label: 'Career RP', value: formatRp(career.rp), tone: career.rp < 0 ? 'minus' : undefined },
+    {
+      label: 'Career rank',
+      value: profile.careerRank ? `#${profile.careerRank}` : '–',
+      link: '/records',
+    },
     { label: 'Sessions', value: career.sessions.toLocaleString('en-US') },
     { label: 'Time controlled', value: formatHours(career.simTimeSec) },
     { label: 'Landed', value: career.stats.arrivals.toLocaleString('en-US') },
@@ -150,7 +155,9 @@ function PublicProfile({ profile }: { profile: Extract<PilotProfile, { visibilit
         {tiles.map((tile) => (
           <div key={tile.label} className="pilot-tile">
             <dt>{tile.label}</dt>
-            <dd data-sign={tile.tone}>{tile.value}</dd>
+            <dd data-sign={tile.tone}>
+              {tile.link ? <Link to={tile.link}>{tile.value}</Link> : tile.value}
+            </dd>
           </div>
         ))}
       </dl>

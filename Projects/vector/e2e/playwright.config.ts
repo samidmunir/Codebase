@@ -22,11 +22,27 @@ export default defineConfig({
   reporter: [['list']],
   outputDir: '../test-results/e2e',
   use: {
-    ...devices['Desktop Chrome'],
     baseURL: `http://localhost:${WEB_PORT}`,
     viewport: { width: 1440, height: 900 },
     trace: 'retain-on-failure',
   },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    // Sessions played in other browsers' JavaScript engines must verify on the server too.
+    {
+      name: 'firefox',
+      testMatch: 'verification.spec.ts',
+      use: { ...devices['Desktop Firefox'], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      name: 'webkit',
+      testMatch: 'verification.spec.ts',
+      use: { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } },
+    },
+  ],
   webServer: [
     {
       command: 'npx tsx apps/server/src/index.ts',
@@ -37,6 +53,11 @@ export default defineConfig({
         DATABASE_URL: TEST_DATABASE_URL,
         CLIENT_ORIGIN: `http://localhost:${WEB_PORT}`,
         LOG_LEVEL: 'warn',
+        // Verify session results at once, so tests can see them verified.
+        RESULT_VERIFY_SETTLE_SEC: '0',
+        RESULT_VERIFY_POLL_MS: '1000',
+        // Every test registers an account; don't let the sign-in limit get in the way.
+        SIGN_IN_RATE_LIMIT: '1000',
       },
       reuseExistingServer: false,
     },

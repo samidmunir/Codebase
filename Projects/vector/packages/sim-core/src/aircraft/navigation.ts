@@ -8,6 +8,7 @@ import {
   type ResolvedLeg,
 } from './aircraft';
 import { turnRateDegPerSec, type FlightModelConfig } from './flight-model';
+import * as dmath from '../math/dmath';
 
 // Lateral and vertical guidance: flying direct to a fix and flying an ILS.
 // updateNavigation() runs before the flight model moves the aircraft (it sets
@@ -65,9 +66,9 @@ export function finalApproachGeometry(
   const distance = distanceNm(clearance.threshold, position);
   const offset = toRadians(headingDifference(outbound, bearingTrue(clearance.threshold, position)));
   return {
-    alongTrackNm: distance * Math.cos(offset),
+    alongTrackNm: distance * dmath.cos(offset),
     // Clockwise of outbound is left of course for an inbound pilot.
-    crossTrackNm: -distance * Math.sin(offset),
+    crossTrackNm: -distance * dmath.sin(offset),
     courseTrueDeg,
   };
 }
@@ -77,7 +78,7 @@ export function glidepathAltitudeFt(clearance: IlsClearance, alongTrackNm: numbe
   return (
     clearance.thresholdElevationFt +
     clearance.thresholdCrossingHeightFt +
-    Math.max(0, alongTrackNm) * FEET_PER_NM * Math.tan(toRadians(clearance.glideslopeDeg))
+    Math.max(0, alongTrackNm) * FEET_PER_NM * dmath.tan(toRadians(clearance.glideslopeDeg))
   );
 }
 
@@ -113,9 +114,9 @@ function flyToFix(
   if (offBearing <= INBOUND_BEARING_DEG) state.inbound = true;
 
   // The fix in the aircraft's frame (across toward it, ahead), from the center of the turn.
-  const across = distance * Math.sin(toRadians(offBearing));
-  const ahead = distance * Math.cos(toRadians(offBearing));
-  if (Math.hypot(across - turnRadiusNm, ahead) < turnRadiusNm) {
+  const across = distance * dmath.sin(toRadians(offBearing));
+  const ahead = distance * dmath.cos(toRadians(offBearing));
+  if (dmath.hypot(across - turnRadiusNm, ahead) < turnRadiusNm) {
     if (insideTurn === 'flyBy') return true;
     state.extending = true;
   } else if (state.extending && distance >= 2 * turnRadiusNm + EXTEND_MARGIN_NM)
@@ -144,7 +145,7 @@ export function turnAnticipationNm(
   if (change < 5 || change > MAX_ANTICIPATED_TURN_DEG) return 0;
   const tas = trueAirspeedKts(aircraft);
   const radius = tas / 3600 / toRadians(turnRateDegPerSec(tas, config));
-  return Math.min(radius * Math.tan(toRadians(change / 2)), 2 * radius);
+  return Math.min(radius * dmath.tan(toRadians(change / 2)), 2 * radius);
 }
 
 /** Sets the aircraft's targets from its navigation mode. Mutates `aircraft`. */
@@ -188,7 +189,7 @@ export function updateNavigation(
       trueAirspeedKts(aircraft) /
       3600 /
       toRadians(turnRateDegPerSec(trueAirspeedKts(aircraft), config));
-    const lead = turnRadiusNm * (1 - Math.cos(toRadians(interceptAngle))) + 0.05;
+    const lead = turnRadiusNm * (1 - dmath.cos(toRadians(interceptAngle))) + 0.05;
     // Like an autopilot, it also captures near the centerline when it has just crossed it
     // (cleared while still turning to its intercept heading, say), then corrects back.
     const window = closing ? lead : LOCALIZER_CAPTURE_WINDOW_NM;
@@ -235,7 +236,7 @@ export function updateNavigation(
     // final approach speed early enough to be stable at the gate.
     const gateNm =
       Math.max(0, stabilizedGateFt - clearance.thresholdCrossingHeightFt) /
-      (FEET_PER_NM * Math.tan(toRadians(clearance.glideslopeDeg)));
+      (FEET_PER_NM * dmath.tan(toRadians(clearance.glideslopeDeg)));
     const slowingNm =
       (Math.max(0, aircraft.iasKts - performance.speeds.final) / performance.decelerationKtPerSec) *
       (trueAirspeedKts(aircraft) / 3600);
@@ -415,7 +416,7 @@ function flyProcedure(
           bearingTrue(next.position, aircraft.position),
         ),
       );
-      const crossTrack = Math.abs(distanceNm(next.position, aircraft.position) * Math.sin(offset));
+      const crossTrack = Math.abs(distanceNm(next.position, aircraft.position) * dmath.sin(offset));
       if (crossTrack <= INTERCEPT_CAPTURE_NM) {
         advance();
         continue;
@@ -695,8 +696,8 @@ function flyHold(
   const bearing = toRadians(bearingTrue(hold.position, aircraft.position));
   const distance = distanceNm(hold.position, aircraft.position);
   // Position relative to the fix, along the inbound course (negative before the fix) and to its right.
-  const along = distance * Math.cos(bearing - courseTrue);
-  const right = distance * Math.sin(bearing - courseTrue);
+  const along = distance * dmath.cos(bearing - courseTrue);
+  const right = distance * dmath.sin(bearing - courseTrue);
   if (along >= -0.1) {
     events.fixPassed = hold.fix;
     hold.laps++;

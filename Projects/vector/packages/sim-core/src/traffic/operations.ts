@@ -14,6 +14,7 @@ import {
   windSchema,
   type Wind,
 } from '../weather/wind';
+import * as dmath from '../math/dmath';
 
 // Airport operations: wind, active runways and departure queues. Kept in the
 // sim state so saved sessions resume exactly.
@@ -244,7 +245,10 @@ export function airlineMix<T extends { weight: number }>(
   mix: FleetMix,
 ): T[] {
   return mix === 'varied'
-    ? airlines.map((airline) => ({ ...airline, weight: airline.weight ** VARIED_WEIGHT_EXPONENT }))
+    ? airlines.map((airline) => ({
+        ...airline,
+        weight: dmath.pow(airline.weight, VARIED_WEIGHT_EXPONENT),
+      }))
     : [...airlines];
 }
 

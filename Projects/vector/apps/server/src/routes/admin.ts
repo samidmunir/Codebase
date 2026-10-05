@@ -1,5 +1,8 @@
 import {
   adminCreateUserRequestSchema,
+  adminResultListQuerySchema,
+  adminUpdateResultRequestSchema,
+  type AdminResultList,
   adminUpdateAirspaceRequestSchema,
   adminUpdateUserRequestSchema,
   adminUserListQuerySchema,
@@ -18,6 +21,7 @@ import type { Authenticator } from '../auth/authenticate';
 import { UserNotFoundError } from '../users/users-repository';
 import { SavedSessionNotFoundError } from '../sessions/sessions-repository';
 import { AirspaceNotFoundError } from '../airspaces/airspaces-repository';
+import { ResultNotFoundError } from '../results/results-repository';
 
 export interface AdminRouteOptions {
   admin: AdminService;
@@ -91,6 +95,32 @@ export async function adminRoutes(app: FastifyInstance, options: AdminRouteOptio
     if (!parsed.success) throw new AirspaceNotFoundError();
     const { enabled } = adminUpdateAirspaceRequestSchema.parse(request.body);
     return admin.setAirspace(actor(request), parsed.data.id, enabled);
+  });
+
+  const resultId = (request: FastifyRequest) => {
+    const parsed = z.object({ id: z.uuid() }).safeParse(request.params);
+    if (!parsed.success) throw new ResultNotFoundError();
+    return parsed.data.id;
+  };
+
+  app.get('/admin/results', { preHandler }, async (request): Promise<AdminResultList> => {
+    const { hidden, ...query } = adminResultListQuerySchema.parse(request.query);
+    return admin.listResults({
+      ...query,
+      ...(hidden !== undefined ? { hidden: hidden === 'true' } : {}),
+    });
+  });
+
+  /** Hides a result from profiles and records, or shows it again. */
+  app.patch('/admin/results/:id', { preHandler }, async (request, reply) => {
+    const { hidden } = adminUpdateResultRequestSchema.parse(request.body);
+    await admin.setResultHidden(actor(request), resultId(request), hidden);
+    return reply.code(204).send();
+  });
+
+  app.post('/admin/results/:id/verify', { preHandler }, async (request, reply) => {
+    await admin.reverifyResult(actor(request), resultId(request));
+    return reply.code(202).send();
   });
 
   app.get('/admin/audit', { preHandler }, async (): Promise<AuditLog> => ({

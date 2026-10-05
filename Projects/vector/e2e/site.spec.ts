@@ -37,7 +37,7 @@ test('registers with a handle, edits the profile, and signs out from the menu', 
   await openFromMenu(page, 'Account');
   const profile = page.getByRole('region', { name: 'Profile' });
   const handle = `pilot_${Date.now().toString(36)}`;
-  await profile.getByLabel('Handle').fill(handle);
+  await profile.locator('input[name="handle"]').fill(handle);
   await expect(profile.getByText(`✓ ${handle} is free`)).toBeVisible();
   await profile.getByLabel('Display name').fill('Night Shift');
   await profile.getByRole('button', { name: 'Save profile' }).click();

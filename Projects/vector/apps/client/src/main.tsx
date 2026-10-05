@@ -10,6 +10,7 @@ import { LandingScreen } from './screens/landing/LandingScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { MyProfileRedirect, ProfileScreen } from './screens/pilots/ProfileScreen';
 import { ResultScreen } from './screens/pilots/ResultScreen';
+import { RecordsScreen } from './screens/records/RecordsScreen';
 import { ScopeScreen } from './screens/ScopeScreen';
 import { SessionSetupScreen } from './screens/SessionSetupScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
       { path: '/me', element: signedIn(<MyProfileRedirect />) },
       { path: '/pilots/:handle', element: <ProfileScreen /> },
       { path: '/results/:id', element: <ResultScreen /> },
+      { path: '/records', element: <RecordsScreen /> },
       { path: '/settings', element: signedIn(<SettingsScreen />) },
       { path: '/admin', element: signedIn(<AdminScreen />) },
       { path: '*', element: <NotFoundScreen /> },

@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { AtcCommand } from '../commands/commands';
 import { SeededRandom } from '../random/seeded-random';
 import { airlines, allAirspaces, performance } from '../testing/fixtures';
-import { replaySession } from './replay-session';
+import { parseSnapshot } from '../snapshot/snapshot';
+import { ReplayRunner, replaySession, stateFingerprint } from './replay-session';
 import { SimEngine } from './sim-engine';
 
 /**
@@ -108,6 +109,22 @@ describe.each(allAirspaces.map((pack) => [pack.airspace.name, pack] as const))(
       );
       expect(JSON.parse(JSON.stringify(tampered.toSnapshot()))).not.toEqual(
         JSON.parse(JSON.stringify(recorded)),
+      );
+
+      // The fingerprint the server compares: equal for the replay, run a little at a time,
+      // and equal whatever pause and speed the player used.
+      const runner = new ReplayRunner(replay, performance, context, recorded.state.tick);
+      let chunks = 0;
+      while (!runner.run(250)) chunks++;
+      expect(chunks).toBeGreaterThan(5);
+      const paused = parseSnapshot(JSON.parse(JSON.stringify(recorded))).state;
+      paused.paused = true;
+      paused.speed = 4;
+      expect(stateFingerprint(parseSnapshot(runner.engine.toSnapshot()).state)).toBe(
+        stateFingerprint(paused),
+      );
+      expect(stateFingerprint(parseSnapshot(tampered.toSnapshot()).state)).not.toBe(
+        stateFingerprint(paused),
       );
 
       // Same state, field for field (key order can differ after a resume's parse).

@@ -4,6 +4,7 @@ import { clamp, normalizeHeading, toRadians, turnDelta } from '../math/angles';
 import { destinationPoint, magneticToTrue } from '../math/geo';
 import { rateAtAltitude, type AircraftPerformance } from '../performance/performance';
 import { trueAirspeedKts, type AircraftState } from './aircraft';
+import * as dmath from '../math/dmath';
 
 export const flightModelConfigSchema = z.object({
   /** Standard-rate turn, degrees per second. */
@@ -45,7 +46,7 @@ export interface FlightStepResult {
 /** Turn rate for a true airspeed: standard rate, reduced when that would exceed the max bank angle. */
 export function turnRateDegPerSec(tasKts: number, config: FlightModelConfig): number {
   if (tasKts <= 0) return config.standardTurnRateDegPerSec;
-  const bankLimited = (TURN_RATE_CONSTANT * Math.tan(toRadians(config.maxBankDeg))) / tasKts;
+  const bankLimited = (TURN_RATE_CONSTANT * dmath.tan(toRadians(config.maxBankDeg))) / tasKts;
   return Math.min(config.standardTurnRateDegPerSec, bankLimited);
 }
 

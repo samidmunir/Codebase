@@ -16,6 +16,11 @@ const app = buildApp(
         refreshTokenDays: config.REFRESH_TOKEN_DAYS,
       },
       secureCookies: config.NODE_ENV === 'production',
+      signInRateLimit: config.SIGN_IN_RATE_LIMIT,
+      verification: {
+        settleSec: config.RESULT_VERIFY_SETTLE_SEC,
+        pollMs: config.RESULT_VERIFY_POLL_MS,
+      },
     },
   },
   { logger: { level: config.LOG_LEVEL } },
@@ -33,6 +38,7 @@ process.once('SIGTERM', () => void shutdown('SIGTERM'));
 
 try {
   await app.listen({ host: config.HOST, port: config.PORT });
+  app.verifier?.start();
 } catch (error) {
   app.log.error(error);
   await db.end();

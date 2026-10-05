@@ -180,6 +180,13 @@ itself.
   version: `unverifiable` (kept in the history, not on boards).
 - **Cost:** a busy hour replays in a few seconds of CPU, run outside the request
   in a queue with a concurrency limit.
+- **The same in every browser:** JavaScript leaves `Math.sin`, `Math.atan2`, `Math.exp`
+  and the like to each engine, which can differ in the last bit. sim-core uses its own
+  ports of fdlibm (`math/dmath.ts`) built only on operations IEEE 754 makes exact, and
+  ESLint forbids the Math versions there. End-to-end tests verify sessions played in
+  Chromium, WebKit and Firefox.
+- **Timing:** results are checked once their session has been quiet for
+  `RESULT_VERIFY_SETTLE_SEC` (180 s by default), polled every `RESULT_VERIFY_POLL_MS`.
 - **Bounds:** a log is at most a few thousand inputs (about 1 MB); bigger
   submissions are refused.
 

@@ -4,6 +4,7 @@ import { finalApproachGeometry, glidepathAltitudeFt } from '../aircraft/navigati
 import { DEFAULT_FLIGHT_MODEL_CONFIG, turnRateDegPerSec } from '../aircraft/flight-model';
 import { clamp, headingDifference, toDegrees, toRadians } from '../math/angles';
 import { rateAtAltitude, type AircraftPerformance } from '../performance/performance';
+import * as dmath from '../math/dmath';
 
 // Whether a pilot can accept an ILS clearance from where the aircraft is. A
 // pilot who can't replies "unable" with the reason.
@@ -55,7 +56,7 @@ const MIN_INTERCEPT_DEG = 3;
 export function distanceForHeightNm(clearance: IlsClearance, heightFt: number): number {
   return (
     Math.max(0, heightFt - clearance.thresholdCrossingHeightFt) /
-    (FEET_PER_NM * Math.tan(toRadians(clearance.glideslopeDeg)))
+    (FEET_PER_NM * dmath.tan(toRadians(clearance.glideslopeDeg)))
   );
 }
 
@@ -84,7 +85,7 @@ export function ilsEligibility(
   if (geometry.alongTrackNm > maxDistance)
     return reject('distance', 'too far out for the approach');
 
-  const offsetDeg = toDegrees(Math.atan2(Math.abs(geometry.crossTrackNm), geometry.alongTrackNm));
+  const offsetDeg = toDegrees(dmath.atan2(Math.abs(geometry.crossTrackNm), geometry.alongTrackNm));
   const coverage = geometry.alongTrackNm <= COVERAGE_NEAR_NM ? COVERAGE_NEAR_DEG : COVERAGE_FAR_DEG;
   if (offsetDeg > coverage) return reject('position', 'not in position for the localizer');
 
@@ -119,7 +120,7 @@ export function ilsEligibility(
       ? geometry.alongTrackNm
       : geometry.alongTrackNm -
         Math.abs(geometry.crossTrackNm) /
-          Math.tan(toRadians(Math.max(MIN_INTERCEPT_DEG, Math.abs(interceptAngle))))) - turnNm;
+          dmath.tan(toRadians(Math.max(MIN_INTERCEPT_DEG, Math.abs(interceptAngle))))) - turnNm;
   if (joinNm < minDistance) {
     return reject('distance', 'would join the localizer too close to the runway');
   }
@@ -132,7 +133,7 @@ export function ilsEligibility(
   // How much faster than the glidepath it can come down: its descent rate over its ground
   // speed, less the glidepath's own gradient (little at high speed, more when slow).
   const descentFtPerNm = (rateAtAltitude(performance.descentRate, aircraft.altitudeFt) * 60) / tas;
-  const glidepathFtPerNm = FEET_PER_NM * Math.tan(toRadians(clearance.glideslopeDeg));
+  const glidepathFtPerNm = FEET_PER_NM * dmath.tan(toRadians(clearance.glideslopeDeg));
   const spareFtPerNm = clamp(descentFtPerNm - glidepathFtPerNm, 0, MAX_FROM_ABOVE_FT_PER_NM);
   const allowedFt = Math.max(
     ABOVE_GLIDEPATH_FT,

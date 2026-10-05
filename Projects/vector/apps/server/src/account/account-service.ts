@@ -69,6 +69,7 @@ export function accountService(users: UsersRepository, signIns: SessionsReposito
         handleGenerated: user.handleGenerated,
         displayName: user.displayName,
         profilePublic: user.profilePublic,
+        showOnRecords: user.showOnRecords,
         handleChangeableAt:
           allowed && allowed.getTime() > Date.now() ? allowed.toISOString() : null,
         createdAt: user.createdAt.toISOString(),
@@ -97,6 +98,7 @@ export function accountService(users: UsersRepository, signIns: SessionsReposito
         ...(changes.handle !== undefined ? { handle: changes.handle } : {}),
         ...(changes.displayName !== undefined ? { displayName: changes.displayName } : {}),
         ...(changes.profilePublic !== undefined ? { profilePublic: changes.profilePublic } : {}),
+        ...(changes.showOnRecords !== undefined ? { showOnRecords: changes.showOnRecords } : {}),
       });
       return this.get(userId);
     },

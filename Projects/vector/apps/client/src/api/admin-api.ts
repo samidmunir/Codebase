@@ -1,5 +1,8 @@
 import {
   adminAirspaceListSchema,
+  adminResultListSchema,
+  type AdminResultList,
+  type AdminResultListQuery,
   adminAirspaceSchema,
   adminSummarySchema,
   adminUserDetailSchema,
@@ -82,4 +85,22 @@ export async function setAdminAirspace(id: string, enabled: boolean): Promise<Ad
 
 export async function getAuditLog(): Promise<AuditEntry[]> {
   return auditLogSchema.parse(await apiRequest('/admin/audit')).entries;
+}
+
+export async function listAdminResults(query: AdminResultListQuery = {}): Promise<AdminResultList> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query))
+    if (value !== undefined && value !== '') params.set(key, String(value));
+  return adminResultListSchema.parse(await apiRequest(`/admin/results?${params}`));
+}
+
+export async function setAdminResultHidden(id: string, hidden: boolean): Promise<void> {
+  await apiRequest(`/admin/results/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ hidden }),
+  });
+}
+
+export async function reverifyAdminResult(id: string): Promise<void> {
+  await apiRequest(`/admin/results/${encodeURIComponent(id)}/verify`, { method: 'POST' });
 }

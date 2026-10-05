@@ -270,3 +270,8 @@
 .result-report .debrief__stats {
   margin-bottom: var(--space-6);
 }
+
+.pilot-tile dd a {
+  color: var(--color-target);
+  text-decoration: none;
+}

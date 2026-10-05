@@ -1,4 +1,5 @@
 import { normalizeHeading, toDegrees, toRadians } from './angles';
+import * as dmath from './dmath';
 
 /** Mean Earth radius in nautical miles. */
 export const EARTH_RADIUS_NM = 3440.065;
@@ -14,8 +15,10 @@ export function distanceNm(a: LatLon, b: LatLon): number {
   const lat2 = toRadians(b.lat);
   const dLat = lat2 - lat1;
   const dLon = toRadians(b.lon - a.lon);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-  return 2 * EARTH_RADIUS_NM * Math.asin(Math.min(1, Math.sqrt(h)));
+  const h =
+    dmath.sin(dLat / 2) * dmath.sin(dLat / 2) +
+    dmath.cos(lat1) * dmath.cos(lat2) * dmath.sin(dLon / 2) * dmath.sin(dLon / 2);
+  return 2 * EARTH_RADIUS_NM * dmath.asin(Math.min(1, Math.sqrt(h)));
 }
 
 /** Initial true bearing from `a` to `b`, in degrees [0, 360). */
@@ -23,9 +26,9 @@ export function bearingTrue(a: LatLon, b: LatLon): number {
   const lat1 = toRadians(a.lat);
   const lat2 = toRadians(b.lat);
   const dLon = toRadians(b.lon - a.lon);
-  const y = Math.sin(dLon) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-  return normalizeHeading(toDegrees(Math.atan2(y, x)));
+  const y = dmath.sin(dLon) * dmath.cos(lat2);
+  const x = dmath.cos(lat1) * dmath.sin(lat2) - dmath.sin(lat1) * dmath.cos(lat2) * dmath.cos(dLon);
+  return normalizeHeading(toDegrees(dmath.atan2(y, x)));
 }
 
 /** The point reached by travelling `distance` NM from `origin` on a true bearing. */
@@ -35,14 +38,15 @@ export function destinationPoint(origin: LatLon, bearingTrueDeg: number, distanc
   const lat1 = toRadians(origin.lat);
   const lon1 = toRadians(origin.lon);
 
-  const lat2 = Math.asin(
-    Math.sin(lat1) * Math.cos(angular) + Math.cos(lat1) * Math.sin(angular) * Math.cos(bearing),
+  const lat2 = dmath.asin(
+    dmath.sin(lat1) * dmath.cos(angular) +
+      dmath.cos(lat1) * dmath.sin(angular) * dmath.cos(bearing),
   );
   const lon2 =
     lon1 +
-    Math.atan2(
-      Math.sin(bearing) * Math.sin(angular) * Math.cos(lat1),
-      Math.cos(angular) - Math.sin(lat1) * Math.sin(lat2),
+    dmath.atan2(
+      dmath.sin(bearing) * dmath.sin(angular) * dmath.cos(lat1),
+      dmath.cos(angular) - dmath.sin(lat1) * dmath.sin(lat2),
     );
 
   return { lat: toDegrees(lat2), lon: normalizeLongitude(toDegrees(lon2)) };

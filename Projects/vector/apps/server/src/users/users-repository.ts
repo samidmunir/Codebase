@@ -20,6 +20,8 @@ export interface UserRecord {
   createdAt: Date;
   /** Others can see this pilot's profile and results. */
   profilePublic: boolean;
+  /** Their verified results count on the leaderboards. */
+  showOnRecords: boolean;
 }
 
 interface UserRow {
@@ -34,10 +36,11 @@ interface UserRow {
   disabled_at: Date | null;
   created_at: Date;
   profile_public: boolean;
+  show_on_records: boolean;
 }
 
 const COLUMNS =
-  'id, email, handle, handle_generated, handle_changed_at, display_name, password_hash, role, disabled_at, created_at, profile_public';
+  'id, email, handle, handle_generated, handle_changed_at, display_name, password_hash, role, disabled_at, created_at, profile_public, show_on_records';
 
 const toRecord = (row: UserRow): UserRecord => ({
   id: row.id,
@@ -51,6 +54,7 @@ const toRecord = (row: UserRow): UserRecord => ({
   disabledAt: row.disabled_at,
   createdAt: row.created_at,
   profilePublic: row.profile_public,
+  showOnRecords: row.show_on_records,
 });
 
 interface AdminUserRow {
@@ -239,6 +243,7 @@ export function usersRepository(db: Database) {
         role?: UserRole;
         disabled?: boolean;
         profilePublic?: boolean;
+        showOnRecords?: boolean;
       },
     ): Promise<UserRecord> {
       const before = await this.findById(id);
@@ -265,6 +270,7 @@ export function usersRepository(db: Database) {
       if (changes.passwordHash !== undefined) set('password_hash', changes.passwordHash);
       if (changes.role !== undefined) set('role', changes.role);
       if (changes.profilePublic !== undefined) set('profile_public', changes.profilePublic);
+      if (changes.showOnRecords !== undefined) set('show_on_records', changes.showOnRecords);
       if (changes.disabled !== undefined)
         sets.push(
           changes.disabled ? 'disabled_at = coalesce(disabled_at, now())' : 'disabled_at = NULL',

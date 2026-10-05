@@ -10,6 +10,8 @@ import type {
   UserRole,
 } from '@vector/shared';
 import type { AirspacesRepository } from '../airspaces/airspaces-repository';
+import type { ResultsRepository } from '../results/results-repository';
+import type { Verifier } from '../results/verifier';
 import { hashPassword } from '../auth/passwords';
 import type { SessionsRepository } from '../auth/sessions-repository';
 import type { SavedSessionsRepository } from '../sessions/sessions-repository';
@@ -44,8 +46,10 @@ export function adminService(deps: {
   savedSessions: SavedSessionsRepository;
   airspaces: AirspacesRepository;
   audit: AuditRepository;
+  results: ResultsRepository;
+  verifier: Verifier;
 }) {
-  const { users, signIns, savedSessions, airspaces, audit } = deps;
+  const { users, signIns, savedSessions, airspaces, audit, results, verifier } = deps;
 
   /** There must always be an admin who can sign in. */
   async function keepAnAdmin(): Promise<void> {
@@ -170,6 +174,24 @@ export function adminService(deps: {
     },
 
     auditLog: () => audit.list(),
+
+    listResults: (query: Parameters<ResultsRepository['adminList']>[0]) => results.adminList(query),
+
+    async setResultHidden(actor: Actor, id: string, hidden: boolean): Promise<void> {
+      const handle = await results.setHidden(id, hidden);
+      await audit.record(actor, hidden ? 'result.hide' : 'result.show', `@${handle}`, {
+        result: id,
+      });
+    },
+
+    /** Checks a result again by replaying it (e.g. after a fix). */
+    async reverifyResult(actor: Actor, id: string): Promise<void> {
+      const handle = await results.handleOf(id);
+      if (!(await results.requeue(id)))
+        throw new AdminGuardError('That session has no replay, so it can’t be verified');
+      await audit.record(actor, 'result.reverify', `@${handle}`, { result: id });
+      void verifier.runOnce();
+    },
   };
 }
 

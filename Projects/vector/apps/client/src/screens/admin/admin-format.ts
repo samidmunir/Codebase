@@ -12,6 +12,9 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'user.signOut': 'Signed out everywhere',
   'user.sessionDelete': 'Deleted a saved session',
   'airspace.update': 'Changed airspace',
+  'result.hide': 'Hid a session result',
+  'result.show': 'Showed a session result',
+  'result.reverify': 'Checked a session result again',
   'admin.grant': 'Made admin',
   'admin.revoke': 'Removed admin',
 };
@@ -23,6 +26,7 @@ const describeChange = (key: string, value: unknown): string => {
   if (key === 'disabled') return value ? 'disabled' : 're-enabled';
   if (key === 'enabled') return value ? 'opened' : 'closed';
   if (key === 'session') return `“${String(value)}”`;
+  if (key === 'result') return `session ${String(value).slice(0, 8)}`;
   if (key === 'signIns') return `${String(value)} sign-in${value === 1 ? '' : 's'} ended`;
   if (value && typeof value === 'object' && 'from' in value && 'to' in value) {
     const change = value as { from: unknown; to: unknown };
