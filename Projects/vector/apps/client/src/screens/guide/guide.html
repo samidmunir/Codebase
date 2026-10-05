@@ -1,0 +1,1457 @@
+<!-- The Controller's Handbook: the sections of /guide. Trusted, hand-written HTML
+     (styled by guide.css); keep ids in step with guide-contents.html. -->
+<section id="basics">
+  <h2>The job</h2>
+  <p class="kicker">
+    You are the controller for a TRACON and its Center airspace 150 NM out, from the surface to
+    FL450: <b>New York</b> (N90: Kennedy, LaGuardia and Newark), <b>Chicago</b> (C90: O’Hare and
+    Midway) or <b>Dallas–Fort Worth</b> (D10: DFW and Love Field). They all work exactly the same
+    way; the examples in this handbook are from New York, and <a href="#chicago">Chicago</a> and
+    <a href="#dallas">Dallas–Fort Worth</a> have their own sections.
+  </p>
+  <p>
+    <b>Where your airspace is.</b> The dashed circle on the scope is the edge of everything you
+    control: 150 NM around the airports, surface to FL450. Inside it, the solid light-blue outline
+    labeled with the TRACON (<b>N90</b>, <b>C90</b> or <b>D10 TRACON</b>) is the real approach and
+    departure area, traced from the FAA’s minimum vectoring altitude chart for it. Beyond the TRACON
+    is the Center’s airspace (New York, Chicago or Fort Worth Center), which you also work in
+    Vector. Both are map layers you can turn off.
+  </p>
+  <p>Three kinds of traffic come your way, and each has a different goal:</p>
+  <div class="legend">
+    <div>
+      <span class="swatch" style="--c: var(--arrival)"></span
+      ><span
+        ><b>Arrivals</b> — descend them from cruise, sequence them and clear them for the ILS.</span
+      >
+    </div>
+    <div>
+      <span class="swatch" style="--c: var(--departure)"></span
+      ><span
+        ><b>Departures</b> — release them for takeoff, climb them to their requested level and hand
+        them to Center.</span
+      >
+    </div>
+    <div>
+      <span class="swatch" style="--c: var(--transit)"></span
+      ><span
+        ><b>Overflights</b> — keep them separated and hand them to Center before they leave.</span
+      >
+    </div>
+  </div>
+  <p>
+    Every aircraft is controlled through the command menus. There are no text commands, and the
+    keyboard only runs the game (pause, speed, panels, zoom), never an aircraft. Pilots read back
+    every instruction a few seconds after you send it, just as they would on a real frequency.
+  </p>
+  <p>
+    Everything is built on real data: FAA coded procedures (STARs, SIDs, ILS approaches and
+    airways), NASR frequencies and Center boundaries, the TRACONs’ minimum vectoring altitude
+    charts, Center minimum IFR altitudes, Class B and C airspace, and US Census shoreline.
+  </p>
+</section>
+
+<section id="start">
+  <h2>Starting a session</h2>
+  <p class="kicker">
+    Sign in, choose <b>New session</b> on an airspace’s card, and set the session up.
+  </p>
+  <h3>The setup screen</h3>
+  <ul class="plain">
+    <li>
+      <b>Traffic.</b> Pick Easy, Normal, Hard or Expert, then adjust arrival, departure and
+      overflight rates, the departure queue size and the airline mix. You can change traffic again
+      at any time during the session.
+    </li>
+    <li>
+      <b>Wind &amp; runways.</b> <b>Live</b> (the default) uses the real current weather at each of
+      your airports, shown with each airport’s report; Random wind is realistic for the region;
+      <b>New wind</b> rolls another day. Manual wind lets you set direction and speed. The preview
+      shows each airport’s wind and the runways it will use, and you can override the runway
+      configuration per airport (unsuitable choices are flagged).
+    </li>
+    <li>
+      <b>Rules &amp; realism.</b> Separation minima, approach criteria, pilot behavior, radar,
+      Center automation and RP values. The defaults are realistic; change them only if you want to.
+    </li>
+  </ul>
+  <p>
+    The session starts with about five minutes of traffic already flowing, so the scope isn’t empty.
+    Press <kbd>Space</kbd> to pause at any time, and use the
+    <span class="mono">1× 2× 4×</span> buttons (or <kbd>,</kbd> and <kbd>.</kbd>) to change sim
+    speed.
+  </p>
+</section>
+
+<section id="chicago">
+  <h2>Chicago</h2>
+  <p class="kicker">
+    C90, the Chicago TRACON: O’Hare and Midway, 15 NM apart beside Lake Michigan, with Chicago
+    Center around you. Everything in this handbook works the same way there.
+  </p>
+  <h3>O’Hare</h3>
+  <p>
+    Six parallel east–west runways and two diagonals, every one with an ILS but 04L. With a wind
+    from the west O’Hare runs a <b>triple west flow</b>, landing 27L, 28C and 27R and departing 28R
+    and 22L; from the east, the <b>east flow</b> lands 10C, 09R and 09L and departs 10L and 04L.
+    When the crosswind is too much on one of the three, it drops to two arrival runways; a strong
+    southwest or northeast wind puts it on the 22s or the 4s. Arrivals are spread across every
+    arrival runway in use, so you run two or three finals at once: keep each final’s traffic on its
+    own localizer and watch the spacing on each.
+  </p>
+  <p>
+    Its traffic is the United and American hubs, with their regional partners (SkyWest, Envoy,
+    Republic, PSA), Delta to its hubs, Alaska, Frontier and Air Canada, Aeromexico to Mexico City,
+    FedEx and UPS freighters, and long-haul carriers to their own hubs: British Airways and Virgin
+    Atlantic, Air France, Lufthansa, KLM, Swiss, Aer Lingus, LOT, Turkish, Qatar, Emirates, Air
+    India, and ANA and Japan Airlines to Tokyo.
+  </p>
+  <h3>Midway</h3>
+  <p>
+    Mostly Southwest 737s, with Delta and Endeavor to Delta’s hubs. Midway’s ILS runways are 31R,
+    13L and 04R. Its 22L has no ILS (real arrivals land there on an RNAV or visual approach, which
+    Vector doesn’t model), so in a southwest wind Midway lands 31R and departs 22L.
+  </p>
+  <h3>What’s different from New York</h3>
+  <ul class="plain">
+    <li>
+      <b>Arrivals descend via.</b> Eleven of Chicago’s 14 STARs publish altitude restrictions, some
+      with speeds (FYTTE7: STNLE 280 kt, CLSBY 270 kt, FYTTE at 11,000 ft and 250 kt), so most
+      arrivals check in “descending via” and fly them on their own until you give them an altitude.
+    </li>
+    <li>
+      <b>You vector every departure.</b> O’Hare’s and Midway’s real departure procedures are
+      radar-vector SIDs published only as text, so none are in the FAA’s coded data. Departures fly
+      runway heading to 5,000 ft and expect your vectors; left alone they turn toward their
+      departure gate. The gates are real navaids in each direction: Badger and West Bend (north),
+      Madison and Dells (northwest), Dubuque and Davenport (west), Peoria and Moline (southwest),
+      Roberts and Champaign (south), Boiler and Brickyard (southeast), Gipper, Webster Lake and Fort
+      Wayne (east) and Victory (northeast, for the Atlantic). They aren’t FAA-published gates;
+      several navaids Chicago departures once used have been decommissioned.
+    </li>
+    <li>
+      <b>Centers.</b> Chicago Center (ZAU) owns the airspace around you; Minneapolis, Kansas City,
+      Indianapolis and Cleveland Centers are beyond it.
+    </li>
+    <li>
+      <b>Radars.</b> The O’Hare and DuPage ASRs (C90’s own), plus Milwaukee, Rockford and South
+      Bend.
+    </li>
+    <li>
+      <b>Holds.</b> 68 published holds, 59 of them on the Chicago STARs, for example WYNDE (253°
+      inbound, right turns, 9 NM legs, 200 kt) and ENDEE (030° inbound, right turns, 10 NM legs, 200
+      kt).
+    </li>
+    <li>
+      <b>Terrain and lake.</b> O’Hare is at 680 ft, so minimum vectoring altitudes near the airports
+      are higher than around JFK (2,700–3,300 ft). The video map shows the Lake Michigan shore east
+      of the airports.
+    </li>
+    <li>
+      <b>Weather.</b> Live weather uses the O’Hare and Midway METARs. Random wind follows Chicago’s
+      typical pattern: mostly south to southwest, then west and northwest, and less often northeast
+      off the lake or southeast.
+    </li>
+  </ul>
+</section>
+
+<section id="dallas">
+  <h2>Dallas–Fort Worth</h2>
+  <p class="kicker">
+    D10, the Dallas/Fort Worth TRACON, on the radio as <b>Regional Approach</b> and
+    <b>Regional Departure</b>: DFW and Love Field, 10 NM apart, with Fort Worth Center around you.
+  </p>
+  <h3>DFW</h3>
+  <p>
+    Seven runways. In the usual <b>south flow</b> DFW lands on four at once (17C, 17L, 18R and the
+    diagonal 13R) and departs 17R and 18L; in <b>north flow</b> it lands 35C, 35R, 36L and 31R and
+    departs 35L and 36R. When the wind is too strong across some of them it drops to two arrival
+    runways, or to one diagonal in a strong southeast or northwest wind. The tower is split:
+    east-side runways (17C, 17L, 13L and their opposite ends) talk to Tower East on 126.55, the west
+    side to Tower West on 124.15, as in the FAA’s data.
+  </p>
+  <p>
+    DFW is American’s biggest hub, with Envoy, SkyWest and PSA flying for American Eagle, plus Delta
+    and United to their hubs, Frontier, Air Canada, Aeromexico and Volaris to Mexico, FedEx and UPS,
+    and long-haul carriers to their own hubs: British Airways (A380 and 777) to London, Qantas’s
+    A380 to Sydney, Emirates, Qatar, Lufthansa, Iberia, Japan Airlines and Korean Air.
+  </p>
+  <h3>Love Field</h3>
+  <p>
+    Southwest’s home, with Alaska to the West Coast and Delta to Atlanta and LaGuardia. Both of its
+    parallel runways have an ILS: it lands 13L and departs 13R, or lands 31R and departs 31L.
+  </p>
+  <h3>What’s different</h3>
+  <ul class="plain">
+    <li>
+      <b>Departures climb via their SIDs.</b> DFW and Love Field have 50 coded SIDs, most of them
+      RNAV with transitions for each runway. A departure takes off on the SID that leads to its gate
+      and checks in
+      <span class="mono">“Regional Departure, … climbing via the KATZZ three departure”</span>, so
+      you mostly let it fly, climb it higher, and keep it clear of the arrivals. The gates are fixes
+      on those SIDs: ZEMMA, EAKER and ADM north, MLC northeast, ZACHH and TRYTN east, FORCK, MRSSH
+      and BDDAY southeast, TORNN, ELLVR and WINDU south, ACT and HOARY southwest, ALIAN and WSTEX
+      west, HUDAD, HRPER and KATZZ northwest.
+    </li>
+    <li>
+      <b>Arrivals descend via.</b> 25 of the 32 STARs publish restrictions, many with speeds
+      (SEEVR4: SEEVR 13,000–16,000 ft at 270 kt, BRDJE at 250 kt, YAHBT at 6,000 ft and 230 kt).
+    </li>
+    <li>
+      <b>Four finals at once.</b> In south or north flow, arrivals are spread across four runways:
+      two parallels each side of the airport and the diagonal.
+    </li>
+    <li>
+      <b>Centers.</b> Fort Worth Center (ZFW) owns the airspace around you; Houston, Kansas City and
+      Memphis Centers are beyond it.
+    </li>
+    <li>
+      <b>Radars.</b> The DFW, Fort Worth naval air station and Greenville ASRs (D10’s own), plus
+      Waco and Longview.
+    </li>
+    <li>
+      <b>Holds.</b> 88 published holds, 66 of them on the STARs, for example SEEVR (225° inbound,
+      right turns, 10 NM legs, 230 kt) and BEREE (324° inbound, left turns, 10 NM legs, 230 kt).
+    </li>
+    <li>
+      <b>Weather.</b> Live weather uses the DFW and Love Field METARs. Random wind is mostly from
+      the south, with north winds behind fronts, and less often east or west.
+    </li>
+  </ul>
+</section>
+
+<section id="scope">
+  <h2>Reading the scope</h2>
+  <p class="kicker">
+    The scope is fed by the region’s real radars. Targets step forward each time a radar that covers
+    them sweeps past, rather than gliding, like a real scope.
+  </p>
+
+  <h3>Radar coverage</h3>
+  <ul class="plain">
+    <li>
+      <b>Terminal radars.</b> Five airport surveillance radars: JFK, Newark, Islip and White Plains
+      (the New York TRACON’s own) and Philadelphia. Each sweeps every 4.8 seconds, independently of
+      the others, and sees about 60 NM, less for low aircraft because of the curve of the earth.
+      Each draws its own sweep on the scope.
+    </li>
+    <li>
+      <b>Long-range radar</b> covers the whole region above 6,000 ft and updates every 12 seconds.
+    </li>
+    <li>
+      <b>Coasting.</b> Where no radar sees an aircraft (typically low and far from an airport), the
+      sim keeps flying it but the scope freezes it at its last position with a
+      <span class="mono">#</span> symbol and <span class="mono">CST</span> in its data block, until
+      coverage picks it up again.
+    </li>
+    <li>
+      Turn on <b>Radar sites</b> in Map layers to see each antenna and its range. Coverage can be
+      set to <b>Everywhere</b> on the setup screen if you prefer one radar that sees it all.
+    </li>
+  </ul>
+
+  <h3>Data blocks</h3>
+  <p>
+    Each aircraft you control carries a data block. The <b>Expanded</b> style (default) looks like
+    this:
+  </p>
+  <div class="blocks">
+    <figure class="block" style="--c: var(--departure); margin: 0">
+      <span class="dot"></span>
+      <div>DAL1601</div>
+      <div>116↑360 290</div>
+      <div class="dim">E175 ORD →MERIT</div>
+      <figcaption>
+        Departure climbing through 11,600 ft to FL360 at 290 kt indicated, flying to MERIT.
+      </figcaption>
+    </figure>
+    <figure class="block" style="--c: var(--arrival); margin: 0">
+      <span class="dot"></span>
+      <div>JBU2297</div>
+      <div>370 256</div>
+      <div class="dim">A321 JFK →PARCH</div>
+      <figcaption>
+        Arrival level at FL370, 256 kt indicated (about 450 kt over the ground), on the PARCH
+        arrival.
+      </figcaption>
+    </figure>
+  </div>
+  <ul class="plain">
+    <li><b>Line 1:</b> callsign.</li>
+    <li>
+      <b>Line 2:</b> altitude in hundreds of feet (<span class="mono">050</span> is 5,000 ft;
+      <span class="mono">350</span> is FL350), a trend arrow (<span class="mono">↑</span> climbing,
+      <span class="mono">↓</span> descending), the assigned altitude while it is changing level,
+      then the speed in knots. By default that is <b>indicated airspeed</b>, the speed the pilot
+      flies and the one speed restrictions and your speed assignments use. You can switch to
+      <b>ground speed</b> (what a real scope shows) under Settings → Display; it reads much higher
+      at altitude because the air is thinner (about 450 kt at FL370 for 256 kt indicated).
+    </li>
+    <li>
+      <b>Line 3:</b> aircraft type, destination, and where it is navigating (<span class="mono"
+        >→FIX</span
+      >
+      or <span class="mono">ILS22L</span>). Nothing is shown there when it is flying a heading.
+    </li>
+  </ul>
+  <p>
+    The <b>STARS</b> style is the real two-line format: speed in tens of knots, time-shared with
+    type and destination. Switch styles in Layers or Settings.
+  </p>
+  <p>
+    <b>Cleared for the ILS?</b> Its target and data block fade, so the traffic that still needs you
+    stands out. It is drawn at full strength again when you hover or select it, or when it is in a
+    conflict. The fade can be turned off or adjusted in Settings → Display.
+  </p>
+  <p>
+    Data blocks move themselves to a clear side of their target when they would overlap. To place
+    one yourself, use the 3×3 picker in the command panel; the center dot puts it back on automatic.
+  </p>
+
+  <h3>Colors</h3>
+  <div class="legend">
+    <div><span class="swatch" style="--c: var(--arrival)"></span><span>Your arrivals</span></div>
+    <div>
+      <span class="swatch" style="--c: var(--departure)"></span><span>Your departures</span>
+    </div>
+    <div><span class="swatch" style="--c: var(--transit)"></span><span>Your overflights</span></div>
+    <div>
+      <span class="swatch" style="--c: var(--unowned)"></span
+      ><span>Not yours: with a Tower, or handed to Center</span>
+    </div>
+    <div>
+      <span class="swatch" style="--c: var(--caution)"></span
+      ><span><b>CA</b> tag: a predicted conflict</span>
+    </div>
+    <div>
+      <span class="swatch" style="--c: var(--alert)"></span
+      ><span>Flashing red <b>CA</b>: separation is lost</span>
+    </div>
+  </div>
+  <p>The three traffic colors can be changed in Layers → Traffic colors.</p>
+
+  <h3>Trails and vectors</h3>
+  <ul class="plain">
+    <li>
+      <b>History trail:</b> the last 8 radar returns as fading dots behind each target (up to 20).
+    </li>
+    <li>
+      <b>Heat trail:</b> each aircraft’s path since it became your traffic, drawn as a heat-colored
+      line. Color it by <b>age</b> (hot where it is now), <b>altitude</b> (hot low, cool high) or
+      <b>speed</b> (hot fast). Choose how much to keep, from 5 minutes to the whole path; the oldest
+      part fades out.
+    </li>
+    <li><b>Heading vector:</b> a short line showing the direction each aircraft is pointing.</li>
+    <li>
+      <b>Selected route:</b> select an aircraft to see the route it is flying, in its own color.
+    </li>
+  </ul>
+
+  <h3>Tools</h3>
+  <ul class="plain">
+    <li>
+      Drag to pan; scroll, pinch or double-click to zoom smoothly around the cursor.
+      <kbd>C</kbd> recenters on the whole region (the default view size is a setting).
+    </li>
+    <li><b>Right-drag</b> to measure bearing and distance between two points.</li>
+    <li>The footer shows the cursor’s latitude and longitude.</li>
+  </ul>
+</section>
+
+<section id="instructions">
+  <h2>Giving instructions</h2>
+  <p class="kicker">
+    Click an aircraft (or its callsign in the radio log) to open its command panel. Build an
+    instruction from one or more tabs, then press <b>Transmit</b>.
+  </p>
+  <p>
+    Under the aircraft’s altitude, speed and heading, planning chips help you think ahead: for
+    arrivals, the distance to the airport and when to start down (turning amber when it’s time); for
+    departures and overflights, the requested level (with a check once you’ve cleared it) and which
+    Center they leave into, and how far that is.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Tab</th>
+          <th>What it does</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Heading</td>
+          <td>
+            Turn to a heading on the dial, left, right or the shortest way. A heading ends any
+            procedure or direct-to (radar vectors).
+          </td>
+        </tr>
+        <tr>
+          <td>Altitude</td>
+          <td>
+            Climb or descend, 2,000 ft up to the aircraft’s ceiling. Flight levels at and above
+            18,000 ft. The requested cruise level is marked <span class="mono">REQ</span>; levels
+            below the minimum vectoring altitude where the aircraft is are flagged.
+          </td>
+        </tr>
+        <tr>
+          <td>Descend via</td>
+          <td>
+            On the Altitude tab for an arrival on a STAR with published altitudes: fly the arrival’s
+            restrictions down to its bottom altitude. Assigning an altitude cancels them (speed
+            restrictions stay); Descend via gives them back.
+          </td>
+        </tr>
+        <tr>
+          <td>Climb via</td>
+          <td>
+            On the Altitude tab for a departure on its SID: fly the departure’s restrictions up to
+            the altitude it is cleared to. Pick an altitude as well for
+            <span class="mono"
+              >“climb via the PORTT four departure, except maintain flight level two three
+              zero”</span
+            >, which keeps the restrictions with a new top altitude. An altitude on its own cancels
+            them (speed restrictions stay).
+          </td>
+        </tr>
+        <tr>
+          <td>Speed</td>
+          <td>
+            Assign a speed in 10 kt steps (never above 250 kt below 10,000 ft), or resume normal
+            speed. An assigned speed overrides a procedure’s published speed limits; resuming normal
+            speed brings them back.
+          </td>
+        </tr>
+        <tr>
+          <td>Direct</td>
+          <td>
+            Fly direct to a fix. Fixes still ahead on its route come first, then the others in
+            distance rings. Hover a fix to highlight it on the scope with its bearing and distance.
+            Shortcut: with the aircraft selected, hold <kbd>Ctrl</kbd> (<kbd>⌘</kbd> on a Mac) and
+            click a fix on the scope; the fix under the cursor is highlighted while you hold it.
+          </td>
+        </tr>
+        <tr>
+          <td>Hold</td>
+          <td>
+            Hold at a fix: fixes on its route first, then nearby fixes with a published hold (<span
+              class="mono"
+              >PUB</span
+            >). Hold <b>as published</b> (<span class="mono"
+              >“hold at CAMRN as published, expect further clearance one four three two”</span
+            >) or as you describe it (inbound course and left or right turns), with an
+            expect-further-clearance time 5–30 minutes ahead. While it holds on its STAR or SID,
+            <b>Resume</b> sends it on along the procedure. See <a href="#holding">Holding</a>.
+          </td>
+        </tr>
+        <tr>
+          <td>Approach</td>
+          <td>
+            Clear an arrival for an ILS, runway in use first. See
+            <a href="#arrivals">Arrivals</a> for the rules.
+          </td>
+        </tr>
+        <tr>
+          <td>Handoff</td>
+          <td>Hand the aircraft to the Center it is leaving into, on the right frequency.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    You can combine tabs into one transmission, and it is read out in the order controllers say it
+    (lateral, vertical, speed, clearance, handoff):
+  </p>
+  <ul class="radio">
+    <li class="you">
+      <span class="who">N90</span
+      ><span
+        >JetBlue twenty-two ninety-seven, turn left heading two five zero, descend and maintain one
+        one thousand, reduce speed to two five zero knots.</span
+      >
+    </li>
+    <li>
+      <span class="who">JBU2297</span
+      ><span
+        >Left heading two five zero, descend and maintain one one thousand, reduce speed to two five
+        zero knots, JetBlue twenty-two ninety-seven.</span
+      >
+    </li>
+  </ul>
+  <p>
+    Pilots take 2–6 seconds to respond (a setting). The instruction shows as pending until they read
+    it back, and they only start turning, climbing or slowing after that.
+  </p>
+</section>
+
+<section id="arrivals">
+  <span class="flight-tag" style="--c: var(--arrival)">Arrivals</span>
+  <h2>Working arrivals</h2>
+  <p class="kicker">
+    Arrivals enter about 150 NM out on their STARs, at their cruise level or on a normal descent
+    profile. Descending, sequencing and landing them is your job.
+  </p>
+  <ol class="steps">
+    <li>
+      <div>
+        <b>Check-in.</b> The pilot calls you with their level and STAR, for example
+        <span class="mono"
+          >“New York Center, United seventeen twenty-five, flight level two eight zero, PARCH four
+          arrival, information Papa.”</span
+        >
+        High traffic calls Center; lower traffic calls Approach. Both are you. The letter is the
+        destination’s current ATIS (see <a href="#weather">Wind &amp; runways</a>).
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Descend via, or descend them.</b> On a STAR that publishes altitude restrictions,
+        arrivals check in <span class="mono">“…descending via the PROUD two arrival”</span> and fly
+        them on their own, like an airliner’s FMS: they stay up until the top of descent, descend to
+        meet each restriction at its fix, and level at the bottom (the last restriction). On other
+        STARs they hold their altitude until you descend them. A good rule is 3 NM of track for
+        every 1,000 ft to lose: from FL350 to 3,000 ft needs about 100 NM.
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Slow them down.</b> They slow to 250 kt by 10,000 ft on their own, descending more slowly
+        (or holding 10,000 ft) if you clear them down too fast to slow in time. Use speed control to
+        space them on final.
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Vector to the final.</b> Turn them onto an intercept heading for the localizer, at or
+        below the glideslope and above the minimum vectoring altitude.
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Clear the ILS.</b> Use the Approach tab. If the clearance doesn’t meet the criteria
+        below, the pilot replies <span class="mono">unable</span> with the reason, and still follows
+        the rest of the instruction. Once cleared, the aircraft fades on the scope.
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Tower takes over.</b> Once the aircraft is established on the localizer and glideslope,
+        it is handed to Tower automatically, slows for landing and lands.
+        <span class="plus">+100 RP.</span>
+      </div>
+    </li>
+  </ol>
+
+  <h3 id="holding">Holding</h3>
+  <p>
+    When arrivals bunch up, hold one. Pick a fix in the Hold tab: 83 published holds from the FAA’s
+    data are in Vector, 51 of them charted on the New York STARs (CAMRN: 041° inbound, left turns,
+    210 kt; BRAND: 060° inbound, right turns, 4 NM legs). The pilot flies to the fix and around a
+    racetrack:
+  </p>
+  <ul class="plain">
+    <li>
+      At the fix, a turn in the hold’s direction to the outbound heading (every entry is flown as a
+      direct entry), the outbound leg (1 minute at or below 14,000 ft, 1½ minutes above, or the
+      published distance), a turn back, and the inbound course tracked to the fix.
+    </li>
+    <li>
+      No faster than the published maximum or the standard holding speeds: 200 kt up to 6,000 ft,
+      230 kt to 14,000 ft, 265 kt above. Pilots slow down in the last 3 minutes before the fix.
+    </li>
+    <li>
+      At its expect-further-clearance time a pilot still holding calls:
+      <span class="mono"
+        >“…holding at CAMRN, we’re at our expect further clearance time, request further
+        clearance.”</span
+      >
+    </li>
+    <li>
+      A heading, a direct-to or an approach clearance takes it out of the hold. Held at a fix on its
+      STAR or SID, <b>Resume</b> continues the procedure from that fix; a hold stops a descent or
+      climb via the procedure where it is (descend via resumes with it).
+    </li>
+    <li>
+      The data block shows <span class="mono">HOLD CAMRN</span>; select the aircraft to see its
+      racetrack. Altitude and speed instructions work as usual while it holds, and the time spent
+      holding counts against its target time.
+    </li>
+  </ul>
+
+  <h3>STARs and their restrictions</h3>
+  <p>
+    Every STAR into JFK, LaGuardia and Newark in the FAA’s coded procedure data is in Vector, flown
+    fix by fix. Five of them publish altitude restrictions in that data, and those arrivals descend
+    via them:
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>STAR</th>
+          <th>Published restrictions (hundreds of feet)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">PROUD2 (LGA)</td>
+          <td class="mono">
+            RIDGY 270 · ENO 240+ · SKIPY 190–220 · BESSI 170+ · EDJER 130–170 · DAVYS 130+ · BRAND
+            110+ · KORRY 100
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">PHLBO4 (EWR)</td>
+          <td class="mono">FUBRR 270 · DQO 200+ · STEFE 130–170 · SOMTO 110 · DYLIN 080</td>
+        </tr>
+        <tr>
+          <td class="mono">BRAND1 (EWR)</td>
+          <td class="mono">LOUIE 130 · BRAND 070</td>
+        </tr>
+        <tr>
+          <td class="mono">APPLE3 (LGA)</td>
+          <td class="mono">LOUIE 130 · BRAND 080</td>
+        </tr>
+        <tr>
+          <td class="mono">PAWLN1 (JFK)</td>
+          <td class="mono">PETER 170-</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    <span class="mono">270</span> is cross at FL270, <span class="mono">240+</span> at or above,
+    <span class="mono">170-</span> at or below, <span class="mono">190–220</span> between. The
+    others (CAMRN5, PARCH4, PUCKY1, FLOSI4, VADDR1 and more) publish none, as in real life: their
+    altitudes are assigned by the controller, so you descend those arrivals yourself. Select an
+    aircraft to see its route’s restrictions next to each fix on the scope. None of the New York
+    STARs publishes a speed restriction; SIDs do (for example <span class="mono">≤220K</span> at
+    VOBOZ on the GLDMN8), and pilots slow ahead of them.
+  </p>
+
+  <h3>ILS acceptance criteria</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Rule (defaults)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Position</td>
+          <td>In front of the runway, within 25 NM of the threshold.</td>
+        </tr>
+        <tr>
+          <td>Localizer coverage</td>
+          <td>Within ±35° of the final course out to 18 NM, ±10° beyond.</td>
+        </tr>
+        <tr>
+          <td>Intercept angle</td>
+          <td>No more than 60° to the final course, and converging with it.</td>
+        </tr>
+        <tr>
+          <td>Join point</td>
+          <td>
+            On its heading, the aircraft must join the localizer at least 5 NM from the runway. An
+            aircraft still turning to its intercept heading is judged from where the turn will
+            actually bring it in.
+          </td>
+        </tr>
+        <tr>
+          <td>Altitude at the join</td>
+          <td>
+            Judged from the higher of its altitude and the altitude it is cleared to. At or below
+            the glideslope, or high enough only to get down to it before the gate: what the type can
+            descend at its speed beyond the glideslope’s own 318 ft per NM (little at 250 kt, more
+            when slow), never less than 300 ft. Not below the minimum vectoring altitude.
+          </td>
+        </tr>
+        <tr>
+          <td>Speed</td>
+          <td>
+            Able to slow from the join point to final approach speed before the stabilized-approach
+            gate.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Pilots judge a clearance from <b>where they will join the localizer</b> on their heading, not
+    from where they are when you clear them. An aircraft that joins above the glideslope descends to
+    capture it from above, as real crews do. Pilots judge the clearance <b>when you transmit it</b>,
+    with the rest of the instruction applied (an intercept heading given with it, say), so their
+    answer is always what the Approach tab showed; the tab’s indication includes the heading you are
+    giving.
+  </p>
+  <p>
+    <b>After the clearance.</b> Until it captures the localizer, a heading, altitude or speed you
+    give it is judged against the approach. If that instruction is what stops the approach working,
+    the pilot says so in the readback (<span class="mono"
+      >“…two five zero, unable ILS runway two two from there, too high for the approach”</span
+    >), the clearance is cancelled and the aircraft is back on your vectors; the command panel warns
+    you before you transmit. A cleared aircraft heading where it can no longer join the localizer
+    reports
+    <span class="mono">“unable to intercept the localizer on this heading, request vectors”</span>.
+    A heading given once it is on the localizer breaks off the approach, as you intend.
+  </p>
+  <p>
+    <b>Established</b> means on the localizer (captured within about 0.5 NM of the centerline, with
+    a lead turn when converging) and on the glideslope (captured from below, or from above as it
+    descends to it).
+  </p>
+  <p>
+    At 1,000 ft above the runway (the <b>stabilized-approach gate</b>) the aircraft must be
+    established, within 0.1 NM of the centerline, and no more than 10 kt above final approach speed.
+    If not, it goes around and says why: <span class="mono">not established on the localizer</span>,
+    <span class="mono">not established on the glideslope, 600 ft high</span>,
+    <span class="mono">too fast</span> or <span class="mono">not aligned with the runway</span>. It
+    flies the published missed approach and comes back to you (<span class="minus">−25 RP</span>).
+    Re-sequence it and clear it again.
+  </p>
+  <div class="note warn">
+    <b>Watch the MVA.</b> Near the airports, the TRACON’s minimum vectoring altitude chart applies;
+    farther out, the Center’s minimum IFR altitudes. Turn on either layer in Map layers to see the
+    sectors and their altitudes.
+  </div>
+</section>
+
+<section id="departures">
+  <span class="flight-tag" style="--c: var(--departure)">Departures</span>
+  <h2>Working departures</h2>
+  <p class="kicker">
+    Each airport has a departure queue. You choose when each flight goes, and on which runway.
+  </p>
+  <ol class="steps departures">
+    <li>
+      <div>
+        <b>Release.</b> In the Departures panel, pick an active departure runway for a waiting
+        flight. Tower clears it for takeoff; it lines up and rolls 30–50 seconds later. Takeoffs on
+        the same runway are spaced automatically.
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Climb-out.</b> It flies its SID toward its departure gate (or runway heading where no SID
+        serves the runway), climbing to the airport’s initial altitude. Pilots slow down ahead of
+        time for speed limits on the SID, so they reach each restricted fix at or below its speed.
+        Tower owns it until then.
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Radar contact.</b> Passing 1,500 ft it checks in with you and turns blue, for example
+        <span class="mono"
+          >“New York Departure, United two forty-seven, one thousand five hundred, climbing via the
+          PORTT four departure.”</span
+        >
+        Departures on a SID are cleared to <b>climb via</b> it, to the airport’s initial altitude:
+        they never climb above an “at or below” restriction before its fix, and meet “at or above”
+        ones by climbing normally (the New York SIDs publish only “at or above” restrictions, such
+        as KIWIE 025+ and VOBOZ 045+ on the GLDMN8). From here it is your traffic.
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Climb to the requested level.</b> Every departure files a cruise level for its trip
+        (<span class="mono">Requests FL360</span> in its command panel,
+        <span class="mono">REQ</span> in the altitude menu). Short hops file lower, long hauls
+        higher, and eastbound flights file odd levels (FL350) while westbound file even (FL360).
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Hand off to Center</b> within 20 NM of the N90 boundary, at or above 17,000 ft eastbound
+        or FL180 westbound. <span class="plus">+40 RP</span>, plus 30 for having flown its gate fix
+        and 30 for being cleared to its requested level (up to <span class="plus">+100 RP</span>).
+      </div>
+    </li>
+  </ol>
+  <p>
+    If a queue fills up, new departures wait at the gate until space opens. Queue size is part of
+    the traffic settings.
+  </p>
+</section>
+
+<section id="overflights">
+  <span class="flight-tag" style="--c: var(--transit)">Overflights</span>
+  <h2>Working overflights</h2>
+  <p class="kicker">
+    Overflights cross your airspace between cities elsewhere, at the level they filed (about
+    FL160–FL410).
+  </p>
+  <ol class="steps transits">
+    <li>
+      <div>
+        <b>Check-in.</b> They enter on the boundary, flying direct to an exit fix on the far side,
+        and call you at their cruise level.
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Keep them clear</b> of your climbing departures and descending arrivals. They are often
+        the traffic that crosses your flows.
+      </div>
+    </li>
+    <li>
+      <div>
+        <b>Hand off</b> to the Center they are leaving into, within 20 NM of the N90 boundary, at or
+        above 17,000 ft eastbound or FL180 westbound. <span class="plus">+30 RP</span>, plus 30 for
+        having flown their exit fix and 30 at their requested level (up to
+        <span class="plus">+90 RP</span>).
+      </div>
+    </li>
+  </ol>
+</section>
+
+<section id="center">
+  <h2>Handoffs and Center</h2>
+  <p class="kicker">
+    Four Centers surround you: New York, Boston, Washington and Cleveland. The Handoff tab always
+    offers the one the aircraft is flying into, on its nearest radio site for its altitude.
+  </p>
+  <ul class="radio">
+    <li class="you">
+      <span class="who">N90</span
+      ><span
+        >American seven eighty-seven, contact Washington Center one three three point one two
+        five.</span
+      >
+    </li>
+    <li>
+      <span class="who">AAL787</span
+      ><span
+        >Washington Center one three three point one two five, good day, American seven
+        eighty-seven.</span
+      >
+    </li>
+  </ul>
+  <h3>When Center accepts a handoff</h3>
+  <ul class="plain">
+    <li>
+      <b>Near the N90 boundary:</b> within 20 NM of where its heading takes it out of the N90 TRACON
+      (the dashed outline on the scope). An aircraft already outside the TRACON can be handed off at
+      once.
+    </li>
+    <li>
+      <b>High enough:</b> at or above 17,000 ft eastbound (magnetic heading 000–179°) or FL180
+      westbound (180–359°), and never below the FAA minimum vectoring or minimum IFR altitude where
+      it is and where it will leave. (Real handoff altitudes are set in agreements between
+      facilities that aren’t published; both values are settings.)
+    </li>
+    <li><b>Leaving:</b> heading out of your airspace. Arrivals are never handed to Center.</li>
+  </ul>
+  <p>
+    The Handoff tab shows each condition with a check mark, how far there is to go, and the RP on
+    offer. Until the conditions are met, the handoff can’t be transmitted.
+  </p>
+  <h3>Flying the route</h3>
+  <p>
+    Pilots fly SIDs and STARs like an FMS: they start the turn before a fly-by fix so they roll out
+    on the next leg, instead of overflying it and coming back.
+  </p>
+  <p>
+    Departures fly their SID and then proceed to their departure gate fix, including SIDs that end
+    in “expect vectors” if you don’t vector them. Past the gate, they head on toward their
+    destination. Overflights fly direct to their exit fix, then on toward their destination. Passing
+    the gate or exit fix, on their own or on your vectors and direct-tos, earns the route bonus at
+    the handoff.
+  </p>
+  <p>
+    After the readback the aircraft turns grey: it belongs to Center now. The computer Center
+    controller then:
+  </p>
+  <ul class="plain">
+    <li>climbs or descends it to its requested cruise level and cancels any speed you assigned;</li>
+    <li>
+      routes it along the rest of its flight plan and on toward its destination (the data block
+      shows <span class="mono">→KBOS</span>);
+    </li>
+    <li>
+      keeps its own aircraft apart: when two are predicted to meet, one levels off 1,000 ft short or
+      steps 2,000 ft, then continues once they are clear.
+    </li>
+  </ul>
+  <div class="note">
+    <b>Your part:</b> Center separates its traffic from each other, not from yours. A handed-off
+    aircraft still counts in conflict alerts against your traffic, so hand off once it is clear of
+    your flows.
+  </div>
+</section>
+
+<section id="separation">
+  <h2>Separation rules</h2>
+  <p class="kicker">
+    Two aircraft are separated when they are far enough apart laterally <em>or</em> vertically. Only
+    pairs involving your traffic are checked, and aircraft below 400 ft above the airport are
+    Tower’s concern.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Where</th>
+          <th class="num">Minimum</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Vertical, everywhere</td>
+          <td class="num">1,000 ft</td>
+        </tr>
+        <tr>
+          <td>Lateral, within 40 NM of the JFK radar (terminal area)</td>
+          <td class="num">3 NM</td>
+        </tr>
+        <tr>
+          <td>Lateral, when either aircraft is beyond 40 NM (en route)</td>
+          <td class="num">5 NM</td>
+        </tr>
+        <tr>
+          <td>In trail on the same final, both inside 10 NM of the runway</td>
+          <td class="num">2.5 NM</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Wake turbulence on final</h3>
+  <p>
+    An aircraft following a heavier one on the same runway’s approach must stay farther behind it
+    than the radar minimum, at any altitude, because the leader’s wake sinks along the glidepath
+    (FAA Order 7110.65, 5-5-4). This is watched even after Tower has taken both aircraft, since the
+    spacing comes from your sequencing.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Leader → follower</th>
+          <th class="num">Minimum</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Heavy → heavy</td>
+          <td class="num">4 NM</td>
+        </tr>
+        <tr>
+          <td>Heavy → B757 or large</td>
+          <td class="num">5 NM</td>
+        </tr>
+        <tr>
+          <td>Heavy → small</td>
+          <td class="num">6 NM</td>
+        </tr>
+        <tr>
+          <td>B757 → B757 or large</td>
+          <td class="num">4 NM</td>
+        </tr>
+        <tr>
+          <td>B757 → small</td>
+          <td class="num">5 NM</td>
+        </tr>
+        <tr>
+          <td>Large → small</td>
+          <td class="num">4 NM</td>
+        </tr>
+        <tr>
+          <td>Super → super / heavy / B757 or large / small</td>
+          <td class="num">4 / 6 / 7 / 8 NM</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Heavies in the fleet are the A330, 767, 777 and 787; the 757 has its own category. A lost wake
+    spacing shows <span class="mono">WK</span> over the data block and
+    <span class="mono">WAKE 3.8/5 NM</span> on the line between the pair, with a single softer tone.
+    Give heavies extra room when you sequence, and remember the leader slows to its final approach
+    speed near the runway, so the gap behind it closes.
+  </p>
+  <p>
+    <b>Conflict Alert</b> looks 40 seconds ahead. An amber <span class="mono">CA</span> means
+    separation will be lost if nothing changes. A flashing red <span class="mono">CA</span> with a
+    repeating tone means it is lost now, and the pair is logged in the Alerts tab of the radio log.
+  </p>
+</section>
+
+<section id="rp">
+  <h2>RP scoring</h2>
+  <p class="kicker">
+    RP (reputation points) rewards moving traffic safely and efficiently. Your running total is in
+    the top bar; press <kbd>R</kbd> for the breakdown and latest events. Each change pops up as a
+    notification.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th class="num">RP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Arrival lands</td>
+          <td class="num plus">+100</td>
+        </tr>
+        <tr>
+          <td>Departure handed to Center</td>
+          <td class="num plus">+40</td>
+        </tr>
+        <tr>
+          <td>Overflight handed to Center</td>
+          <td class="num plus">+30</td>
+        </tr>
+        <tr>
+          <td>Bonus: it flew its departure gate or exit fix first</td>
+          <td class="num plus">+30</td>
+        </tr>
+        <tr>
+          <td>Bonus: handed off cleared to its requested level</td>
+          <td class="num plus">+30</td>
+        </tr>
+        <tr>
+          <td>Landed or handed off by its target time</td>
+          <td class="num plus">+20</td>
+        </tr>
+        <tr>
+          <td>Late: each minute (or part) after its target time, at most −60</td>
+          <td class="num minus">−5 / min</td>
+        </tr>
+        <tr>
+          <td>Go-around (approach not stabilized)</td>
+          <td class="num minus">−25</td>
+        </tr>
+        <tr>
+          <td>Leaves your airspace without a handoff</td>
+          <td class="num minus">−100</td>
+        </tr>
+        <tr>
+          <td>Loss of separation closer than 5 NM</td>
+          <td class="num minus">−150 to −300</td>
+        </tr>
+        <tr>
+          <td>Wake turbulence spacing lost behind a heavier aircraft on final</td>
+          <td class="num minus">−80 to −160</td>
+        </tr>
+        <tr>
+          <td>Near midair collision: closer than 0.5 NM and 500 ft</td>
+          <td class="num minus">−1,000</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="plain">
+    <li>
+      <b>Separation of 5 NM or more is never penalized.</b> A loss closer than that costs 150 RP,
+      rising to 300 RP the closer the aircraft came. It is scored when the loss ends, at the closest
+      point reached.
+    </li>
+    <li>
+      A near midair collision is scored the moment it happens and replaces the loss-of-separation
+      penalty for that encounter.
+    </li>
+    <li>Every value above is a setting (Setup → Rules &amp; realism → RP scoring).</li>
+  </ul>
+  <h3>Target times</h3>
+  <p>
+    Every flight gets a target time the moment it becomes yours, like the times arrival metering
+    assigns in real life:
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Flight</th>
+          <th>Clock starts</th>
+          <th>Target</th>
+          <th>Allowance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Arrival</td>
+          <td>When it enters</td>
+          <td>Land by</td>
+          <td class="num">10 min</td>
+        </tr>
+        <tr>
+          <td>Departure</td>
+          <td>Radar contact (passing 1,500 ft)</td>
+          <td>Handed to Center by</td>
+          <td class="num">3 min</td>
+        </tr>
+        <tr>
+          <td>Overflight</td>
+          <td>When it enters</td>
+          <td>Handed to Center by</td>
+          <td class="num">3 min</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    The target is the flight’s <b>unimpeded</b> time along its own route, plus 10% and the allowance
+    above for sequencing. Vector works it out from the aircraft type’s speeds at each altitude: an
+    arrival flies its STAR, joins the final of a runway in use 12 NM out and slows down along it; a
+    departure flies its SID to its gate and on to where Center can take it, and never sooner than it
+    can climb to the handoff altitude; an overflight crosses at its level to the handoff point.
+    Efficient handling uses about 70–85% of the target; long vectors, holding for spacing or a
+    go-around use up the rest.
+  </p>
+  <ul class="plain">
+    <li>
+      The command panel shows the selected flight’s target, e.g.
+      <span class="mono">Land by 14:32Z · 6:12 left</span>, amber in the last 2 minutes and red once
+      it is late.
+    </li>
+    <li>
+      The RP panel (<kbd>R</kbd>) shows, for arrivals, departures and overflights, how many you have
+      finished, your <b>average time</b>, your average <b>against the target</b> (<span class="mono"
+        >−3:59</span
+      >
+      is ahead) and your <b>on-time rate</b>, plus the flights <b>due next</b>.
+    </li>
+    <li>
+      A flight that leaves without a handoff has no time scored (it loses 100 RP instead). Target
+      times can be turned off, and every value is a setting.
+    </li>
+    <li>
+      Your session RP is saved with the session. The start screen shows each saved session’s RP and
+      your <b>career</b> across your saved sessions: total RP, flights landed and handed off,
+      on-time rate, losses of separation, wake spacing lost and go-arounds.
+    </li>
+  </ul>
+  <h3>Session debrief</h3>
+  <p>
+    After you save, and before you leave the scope (click the Vector logo), a debrief shows how the
+    session went: total RP with flights landed and handed off, the on-time rate and losses;
+    <b>RP over the session</b> as a chart (hover, or focus it and use the arrow keys, for the value
+    at any time; the same numbers as a table); how RP was earned and lost; timing per kind of
+    flight; your <b>best and worst flights</b> (the worst with what cost them most); and the closest
+    losses of separation. Leaving offers to save first. The sim pauses while the debrief is open.
+  </p>
+</section>
+
+<section id="weather">
+  <h2>Wind and runways</h2>
+  <p class="kicker">
+    Each airport has its own wind, and the wind picks the runways, as it does in real life. Aircraft
+    take off and land into the wind.
+  </p>
+  <p>
+    <b>ATIS.</b> Each airport broadcasts an ATIS in the style of a digital ATIS, for example
+    <span class="mono"
+      >JFK ATIS INFO C 0051Z. 14006KT 10SM FEW045 BKN250 18/16 A3010. ILS RUNWAYS 13L AND 22L
+      APPROACHES IN USE. LANDING RUNWAYS 13L, 22L. DEPARTING RUNWAY 13R.</span
+    >
+    It moves to the next letter when a new weather report arrives, when the runways change, when the
+    wind changes by 30° or 5 kt from the broadcast, or after an hour; between letters the broadcast
+    wind stays as issued, as on a real ATIS. The top bar shows each airport’s letter next to its
+    name (hover for the broadcasts), the Departures panel shows it per airport, a notice says when a
+    new one is current, and arrivals report the letter they have when they check in.
+  </p>
+  <p>
+    <b>Live weather.</b> In the Live wind mode (the default) Vector uses the real current METARs for
+    your airports from the Aviation Weather Center, and checks for a new report every 5 minutes
+    during the session (a setting); airports issue one about hourly, and special reports when the
+    weather changes. Winds are shown magnetic, as on an ATIS, and gusts as reported. The top bar
+    marks the wind <span class="mono">LIVE</span>; hover over it for each airport’s report. If a
+    check fails the badge turns amber and the last reports stay in use (or a realistic wind, if none
+    has arrived yet). A new report can bring a runway change like any other wind shift. The wind
+    doesn’t drift on its own in Live mode.
+  </p>
+  <p>
+    Of the configurations that keep tailwind at 5 kt or less and crosswind at 20 kt or less on every
+    runway, Vector picks the one facing most into the wind. An airport’s preferred configuration
+    wins only when it gives up a little headwind (a quarter of the wind speed, at most 3 kt), and
+    never when it would mean a tailwind while another runway has a headwind, so even a light wind is
+    landed into: 030° at 4 kt puts JFK on the 4s. Only a calm wind (2 kt or less) uses the preferred
+    runways regardless. If nothing is within limits, it picks the configuration that goes least over
+    the tailwind limit, then the crosswind limit. On the setup screen you can override the choice
+    per airport.
+  </p>
+  <p>
+    <b>Dual operations at JFK.</b> When the wind allows it on every runway, JFK runs two arrival
+    runways (or two departure runways) at once, as it does in real life. Arrivals are spread across
+    both, and the Departures panel offers each departure runway in use. In a strong crosswind for
+    the second runway, JFK drops back to one of each.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Airport</th>
+          <th>Configurations (arrivals / departures)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">JFK</td>
+          <td>
+            22L+22R / 22R+31L · 31R+31L / 31L · 13L+22L / 13R · 04R+04L / 04L — or one of each: 22L
+            / 22R · 31R / 31L · 13L / 13R · 04R / 04L
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">LGA</td>
+          <td>22 / 13 · 04 / 13 · 04 / 31 · 13 / 04 · 22 / 31</td>
+        </tr>
+        <tr>
+          <td class="mono">EWR</td>
+          <td>22L / 22R · 04R / 04L · 11 / 04L</td>
+        </tr>
+        <tr>
+          <td class="mono">ORD</td>
+          <td>
+            27L+28C+27R / 28R+22L · 27L+28C / 28R · 10C+09R+09L / 10L+04L · 10C+09R / 10L · 22L+22R
+            / 28R · 04R / 04L
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">MDW</td>
+          <td>31R / 22L · 31R / 31R · 13L / 13L · 04R / 04R</td>
+        </tr>
+        <tr>
+          <td class="mono">DFW</td>
+          <td>
+            17C+17L+18R+13R / 17R+18L · 17C+18R / 17R+18L · 35C+35R+36L+31R / 35L+36R · 35C+36L /
+            35L+36R · 13R / 17R · 31R / 35L
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">DAL</td>
+          <td>13L / 13R · 31R / 31L</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    <b>The wind changes during a session.</b> It drifts smoothly around its starting value, the
+    airports moving together as one weather system: with <b>Slight</b> variation (default) by up to
+    20° and 4 kt, with <b>Moderate</b> by up to 40° and 8 kt, one swing taking about 20 minutes.
+    Reported winds change in 10° and 1 kt steps, like an ATIS. Set the variation to Off for a steady
+    wind. The variation settings are on the setup screen under Wind &amp; runways. The top bar shows
+    the regional wind with an arrow pointing where it blows; hover over it for each airport’s wind.
+  </p>
+  <p>
+    <b>Gusts.</b> A gusting wind reads like <span class="mono">220° 14G26 kt</span>: 14 kt steady,
+    peaks of 26. Gusts are only reported when the peaks are at least 10 kt above the steady wind, as
+    in a real weather report. They come and go as the wind drifts, and crosswind limits are judged
+    at the gust. Manual wind has its own gust setting.
+  </p>
+  <p>
+    <b>Runway changes.</b> When the wind drifts far enough that an airport’s runways go over the
+    tailwind or crosswind limit, or they have a tailwind while other runways would get a clear
+    headwind (at least 5 kt more), the airport announces a runway change: a notice pops up, and the
+    Departures panel counts down to it with the new runways. After the notice (10 minutes by
+    default) the new runways are in use. Aircraft already cleared for an approach to the old runway
+    still land there; clear everyone else for the new runways. An airport keeps its runways for at
+    least 30 minutes after a change, and runways you picked yourself on the setup screen are never
+    changed.
+  </p>
+  <p>Only runways in use get final approach course lines on the scope.</p>
+</section>
+
+<section id="traffic">
+  <h2>Traffic and difficulty</h2>
+  <p class="kicker">
+    Difficulty sets the starting traffic. Open the Traffic panel (<kbd>T</kbd>) to change any of it
+    mid-session; a changed preset shows as Custom.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Preset</th>
+          <th class="num">Arrivals / hr</th>
+          <th class="num">Departures / hr</th>
+          <th class="num">Overflights / hr</th>
+          <th class="num">Queue</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Easy</td>
+          <td class="num">6</td>
+          <td class="num">6</td>
+          <td class="num">2</td>
+          <td class="num">3</td>
+        </tr>
+        <tr>
+          <td>Normal</td>
+          <td class="num">10</td>
+          <td class="num">10</td>
+          <td class="num">4</td>
+          <td class="num">5</td>
+        </tr>
+        <tr>
+          <td>Hard</td>
+          <td class="num">15</td>
+          <td class="num">15</td>
+          <td class="num">6</td>
+          <td class="num">8</td>
+        </tr>
+        <tr>
+          <td>Expert</td>
+          <td class="num">20</td>
+          <td class="num">20</td>
+          <td class="num">8</td>
+          <td class="num">12</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Arrival and departure rates are per airport, so Normal brings 30 arrivals an hour into the three
+    airports. Each airport has its own real carriers, types and city pairs, and each airline uses
+    its real radio name. Heavy aircraft add “heavy” to their callsign and the A380 adds “super”
+    (<span class="mono">“Emirates two zero one super”</span>), in your transmissions and in their
+    readbacks; a 757 doesn’t.
+  </p>
+  <ul>
+    <li>
+      <b>Kennedy:</b> JetBlue, Delta, American, United and Alaska, the regionals, and long-haul
+      carriers to their hubs only: British Airways and Virgin Atlantic to London, Air France to
+      Paris, Lufthansa to Frankfurt and Munich, KLM to Amsterdam, Iberia to Madrid, Emirates (A380
+      and 777) to Dubai and Qatar to Doha.
+    </li>
+    <li>
+      <b>LaGuardia:</b> narrow-bodies and regional jets only (Delta’s A220s, Southwest, Frontier,
+      Air Canada, Envoy, PSA, SkyWest and others), within the perimeter.
+    </li>
+    <li>
+      <b>Newark:</b> United’s hub, from E175s to 777s, plus FedEx to Memphis and Indianapolis, UPS
+      to Louisville, British Airways to London and TAP to Lisbon.
+    </li>
+  </ul>
+  <p>
+    Each type only flies trips within its practical airline range: CRJ900 1,500 NM, E175 1,800,
+    A220, A320 and 737 (and their neo and MAX versions) about 2,700–2,900, A321neo LR 4,000, 757
+    3,900, wide-bodies 4,900–8,700. So transatlantic flights are wide-bodies and JetBlue’s and TAP’s
+    A321neo, never regional jets or other narrow-bodies. Overflights are city pairs whose route
+    really crosses New York, such as Boston–Atlanta or Montreal–Florida. The airline mix is
+    <b>Realistic</b> (each airport’s real share) or <b>Varied</b> (smaller carriers more often).
+  </p>
+</section>
+
+<section id="sessions">
+  <h2>Saving and resuming</h2>
+  <ul class="plain">
+    <li>
+      Press <kbd>Shift</kbd> <kbd>S</kbd> or <b>Save</b>. The sim pauses, and you name the session.
+      The <a href="#rp">debrief</a> follows; keep working or go back to the start screen. A session
+      you loaded or saved before can be overwritten or saved as a new copy.
+    </li>
+    <li>
+      Saved sessions appear on the start screen with their traffic level, sim time, aircraft count
+      and RP. Resume, rename or delete them there.
+    </li>
+    <li>
+      A resumed session continues exactly where you saved it, paused, including traffic settings,
+      heat trails, Center’s plans and your RP.
+    </li>
+    <li>You can keep up to 25 saved sessions on your account.</li>
+  </ul>
+</section>
+
+<section id="keys">
+  <h2>Keyboard</h2>
+  <p class="kicker">
+    Shortcuts only control the game and the display. Rebind any of them in Settings → Keyboard,
+    which warns you if two actions share a key.
+  </p>
+  <div class="keys">
+    <div><span>Pause / resume</span><kbd>Space</kbd></div>
+    <div>
+      <span>Faster / slower sim</span><span><kbd>.</kbd> <kbd>,</kbd></span>
+    </div>
+    <div>
+      <span>Zoom in / out</span><span><kbd>=</kbd> <kbd>−</kbd></span>
+    </div>
+    <div><span>Recenter scope</span><kbd>C</kbd></div>
+    <div><span>Radio log</span><kbd>L</kbd></div>
+    <div><span>Departure queues</span><kbd>Q</kbd></div>
+    <div><span>Map layers</span><kbd>M</kbd></div>
+    <div><span>Traffic panel</span><kbd>T</kbd></div>
+    <div><span>RP panel</span><kbd>R</kbd></div>
+    <div><span>Settings</span><kbd>O</kbd></div>
+    <div><span>Quick reference</span><kbd>?</kbd></div>
+    <div>
+      <span>Save session</span><span><kbd>Shift</kbd> <kbd>S</kbd></span>
+    </div>
+    <div><span>Close the open panel</span><kbd>Esc</kbd></div>
+  </div>
+</section>
+
+<section id="display">
+  <h2>Map and display</h2>
+  <div class="cols">
+    <div>
+      <h3>Map layers (<kbd>M</kbd>)</h3>
+      <ul class="plain">
+        <li>Coastline and rivers, runways, airport labels</li>
+        <li>The region’s other airports (PHL, ISP, HPN, TEB, BDL and more)</li>
+        <li>Final approach courses for runways in use</li>
+        <li>Fixes and navaids (plain waypoints hide when zoomed out)</li>
+        <li>Class B and Class C airspace</li>
+        <li>Your airspace boundary and Center boundaries</li>
+        <li>Jet and Q routes, Victor and T routes</li>
+        <li>Minimum vectoring altitudes and Center minimum IFR altitudes</li>
+        <li>An optional real-world map underneath</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Settings (<kbd>O</kbd>)</h3>
+      <ul class="plain">
+        <li>
+          <b>Display:</b> brightness, data block style and size, trails, heat trails, colors, range
+          rings, sweep, scope range, UI animation
+        </li>
+        <li><b>Audio:</b> volume, Conflict Alert tones, interface sounds</li>
+        <li><b>Controls:</b> zoom sensitivity, direct-to rings, keyboard shortcuts</li>
+      </ul>
+      <p>
+        These follow your account to any device. Session rules (separation, approaches, pilots,
+        Center, RP) are set on the setup screen and saved with each session.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="tips">
+  <h2>Controller tips</h2>
+  <ul class="plain">
+    <li>
+      <b>Plan descents early.</b> Arrivals enter high; three miles per thousand feet tells you when
+      to start.
+    </li>
+    <li><b>Use speed before vectors.</b> Small speed changes 40 NM out save big turns later.</li>
+    <li>
+      <b>Intercept at 20–30°</b> when you can (up to 60° is accepted), below the glideslope, and at
+      least 5 NM from the threshold.
+    </li>
+    <li>
+      <b>Separate crossing flows vertically.</b> Keep departures climbing under or over overflights
+      by at least 1,000 ft until they have passed.
+    </li>
+    <li>
+      <b>Climb departures to their requested level</b> and let them fly their gate fix before the
+      handoff for both bonuses. Hand off in the last 20 NM before the N90 boundary so you never lose
+      100 RP.
+    </li>
+    <li>
+      <b>Watch the amber CA.</b> It gives you 40 seconds to fix a conflict before it costs RP.
+    </li>
+    <li>
+      <b>Mind the clock.</b> Check the RP panel’s Due next list: a flight a minute from its target
+      is worth a shortcut (a direct-to or an earlier handoff) if the traffic allows it.
+    </li>
+    <li>
+      <b>Pause freely.</b> Planning while paused is how real controllers wish they could work.
+    </li>
+  </ul>
+</section>

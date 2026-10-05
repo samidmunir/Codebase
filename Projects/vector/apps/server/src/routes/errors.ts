@@ -18,6 +18,7 @@ import { ForbiddenError, UnauthorizedError } from '../auth/authenticate';
 import { SavedSessionLimitError, SavedSessionNotFoundError } from '../sessions/sessions-repository';
 import { EmailTakenError, HandleTakenError, UserNotFoundError } from '../users/users-repository';
 import { ResultNotFoundError } from '../results/results-repository';
+import { NewsNotFoundError, SlugTakenError } from '../news/news-repository';
 import { InvalidResultError } from '../results/results-service';
 import { WeatherUnavailableError } from '../weather/metar-service';
 import { InvalidSnapshotError } from './sessions';
@@ -74,6 +75,10 @@ export function errorHandler(
     return reply.code(403).send(body('forbidden', error.message));
   if (error instanceof AdminGuardError)
     return reply.code(409).send(body('admin_guard', error.message));
+  if (error instanceof NewsNotFoundError)
+    return reply.code(404).send(body('news_not_found', error.message));
+  if (error instanceof SlugTakenError)
+    return reply.code(409).send(body('slug_taken', error.message, { slug: error.message }));
   if (error instanceof ResultNotFoundError)
     return reply.code(404).send(body('result_not_found', error.message));
   if (error instanceof InvalidResultError) {

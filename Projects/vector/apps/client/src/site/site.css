@@ -1,0 +1,316 @@
+/* ---- Layout ------------------------------------------------------------------------- */
+
+.site {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  background: var(--color-bg);
+}
+
+.site__main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Pages fill the space above the footer. */
+.site__main > :not(.site-footer, .site-banner) {
+  flex: 1 0 auto;
+}
+
+/* ---- Header ------------------------------------------------------------------------- */
+
+.site-header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-6);
+  background: rgba(5, 8, 11, 0.85);
+  border-bottom: 1px solid var(--color-surface-border);
+  backdrop-filter: blur(14px);
+}
+
+.site-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.site-header__mark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-target);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 3px var(--color-bg),
+    inset 0 0 0 5px rgba(76, 242, 160, 0.5);
+}
+
+.site-header__nav {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.site-header__link {
+  padding: 6px 10px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.88rem;
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.site-header__link:hover,
+.site-header__link.active {
+  color: var(--color-text);
+}
+
+.site-header__link.active {
+  background: rgba(76, 242, 160, 0.08);
+}
+
+.site-header__account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* ---- Buttons ------------------------------------------------------------------------ */
+
+.site-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 var(--space-4);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.site-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.site-button--primary {
+  color: #04120c;
+  font-weight: 600;
+  background: var(--color-target);
+  border-color: var(--color-target);
+}
+
+.site-button--primary:hover {
+  background: var(--color-target);
+  box-shadow: 0 0 20px rgba(76, 242, 160, 0.4);
+}
+
+.site-button--large {
+  min-height: 44px;
+  padding: 0 var(--space-6);
+  font-size: 1rem;
+}
+
+/* ---- Account menu ------------------------------------------------------------------- */
+
+.account-menu {
+  position: relative;
+}
+
+.account-menu__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 3px 10px 3px 3px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.account-menu__button:hover,
+.account-menu__button[aria-expanded='true'] {
+  border-color: rgba(76, 242, 160, 0.4);
+}
+
+.account-menu__avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--color-target);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(76, 242, 160, 0.12);
+  border-radius: 50%;
+}
+
+.account-menu__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  min-width: 200px;
+  padding: var(--space-1);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.account-menu__who {
+  display: grid;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-1);
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--color-surface-border);
+}
+
+.account-menu__who span {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.account-menu__list a,
+.account-menu__list button {
+  padding: 8px var(--space-3);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.account-menu__list a:hover,
+.account-menu__list button:hover {
+  background: rgba(76, 242, 160, 0.08);
+}
+
+/* ---- Banner and footer -------------------------------------------------------------- */
+
+.site-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  background: rgba(255, 181, 71, 0.08);
+  border-bottom: 1px solid rgba(255, 181, 71, 0.25);
+}
+
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.site-footer__links a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.site-footer__links a:hover {
+  color: var(--color-text);
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  color: var(--color-text-faint);
+  font-size: 0.78rem;
+  border-top: 1px solid var(--color-surface-border);
+}
+
+/* ---- Simple pages (not found, and page headings) ------------------------------------ */
+
+.site-page {
+  width: min(960px, 100%);
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4);
+}
+
+.site-page h1 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.site-page__lede {
+  margin: 0 0 var(--space-6);
+  color: var(--color-text-muted);
+}
+
+.site-empty {
+  display: grid;
+  place-content: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+.site-empty h1 {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 2.4rem;
+  color: var(--color-target);
+}
+
+.site-empty p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 640px) {
+  .site-header {
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .site-header__nav .site-header__link:not(.active) {
+    padding: 6px;
+  }
+
+  .account-menu__handle {
+    display: none;
+  }
+
+  .account-menu__button {
+    padding-right: 3px;
+  }
+
+  .site-header__account .site-header__link {
+    display: none;
+  }
+}

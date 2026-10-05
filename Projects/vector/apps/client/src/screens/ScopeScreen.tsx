@@ -37,6 +37,7 @@ import { ScopeTopBar } from './scope/ScopeTopBar';
 import { useLiveWeather } from './scope/use-live-weather';
 import { TrafficPanel } from './scope/TrafficPanel';
 import { formatPosition } from './scope/format';
+import { usePageMeta } from '../site/page-meta';
 import './scope-screen.css';
 import './scope/command/command-panel.css';
 
@@ -54,6 +55,7 @@ export function ScopeScreen() {
   const location = useLocation();
   const setup = useMemo(() => parseSetup(location.state), [location.state]);
   const entry = findAirspace(airspaceId);
+  usePageMeta({ title: entry ? `${entry.name} (${entry.facility})` : 'Scope' });
   const { isOpen } = useAirspaceStatus();
   // A new key for every start from the setup screen, so each start is a fresh session.
   const loadKey = `${entry?.id}:${savedId ? `session=${savedId}` : setup ? `setup=${location.key}` : difficulty}`;

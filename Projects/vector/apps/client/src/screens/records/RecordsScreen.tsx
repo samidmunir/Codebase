@@ -15,6 +15,7 @@ import { getRecords } from '../../api/records-api';
 import { DIFFICULTY_LABELS } from '../../settings/difficulty';
 import { airspaceLabel } from '../pilots/pilot-format';
 import { formatRp } from '../scope/score-format';
+import { usePublicPageMeta } from '../../site/page-meta';
 import './records.css';
 
 const BOARDS: Record<RecordBoard, { label: string; value: string; about: string }> = {
@@ -58,6 +59,7 @@ const formatValue = (board: RecordBoard, value: number) =>
 
 /** The leaderboards: verified sessions only. */
 export function RecordsScreen() {
+  usePublicPageMeta('/records');
   const [params, setParams] = useSearchParams();
   const board = (RECORD_BOARDS as readonly string[]).includes(params.get('board') ?? '')
     ? (params.get('board') as RecordBoard)

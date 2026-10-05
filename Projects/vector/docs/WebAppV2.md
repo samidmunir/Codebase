@@ -217,16 +217,24 @@ users.
 
 ## 7. Landing, Guide and News
 
-- **Landing:** fast to load (the engine and one airspace pack only once the page
-  is visible), with a live scope demo running a scripted, deterministic session
-  so it always shows real-looking traffic. Open Graph tags and a static fallback
-  image for link previews.
-- **SEO:** the public pages are prerendered to static HTML at build time, so they
-  load instantly and index well; the app takes over once loaded.
-- **Guide:** the handbook in Markdown in the repo, rendered in the app with a
-  contents sidebar; one source for the in-app help and `/guide`.
-- **News:** `news_posts` (title, slug, Markdown body, published_at), written in the
-  admin pages; the latest shows on the landing and the play hub.
+- **Landing:** a live scope behind the hero: a real session in New York with a
+  simple scripted controller (`apps/client/src/demo`), loaded once the page is
+  showing and paused when it's off screen or the tab is hidden. `og-image.jpg` is
+  the static image for link previews.
+- **Airspace pages:** `/airspaces` and `/airspaces/:id`, the same live scope plus
+  facts read from the airspace pack (runways, ILS, flows, STARs, carriers).
+- **SEO:** each public page's title and description are in
+  `apps/client/src/site/public-pages.json`. The pages read it, and the build writes
+  `dist/<page>/index.html` with those tags in the head (`vite.config.ts`), so search
+  engines and link previews see them without running the app. The page body is
+  still rendered by the app; full prerendering can follow if search needs it.
+- **Guide:** the handbook is HTML in the repo (`screens/guide/guide.html`), shown at
+  `/guide` with its contents. The scope's quick reference links to it.
+- **News:** `news_posts` (title, slug, summary, Markdown body, published_at),
+  written in the admin pages with a live preview; the latest shows on the landing
+  and the play hub. Markdown is rendered with marked and cleaned with DOMPurify.
+- **Legal:** About, Terms and Privacy are plain-language drafts of what Vector does
+  today. Have them reviewed before taking payments.
 
 ---
 

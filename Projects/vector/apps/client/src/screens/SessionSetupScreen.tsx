@@ -25,6 +25,7 @@ import {
   saveSetupSettings,
   type SessionSetup,
 } from '../sim/session-setup';
+import { usePageMeta } from '../site/page-meta';
 import './session-setup.css';
 
 type SessionKey = keyof SessionSettings;
@@ -58,6 +59,7 @@ const ADVANCED_GROUPS: { label: string; keys: SessionKey[] }[] = [
 export function SessionSetupScreen() {
   const { airspaceId = '' } = useParams();
   const entry = findAirspace(airspaceId);
+  usePageMeta({ title: entry ? `${entry.name} setup` : 'Session setup' });
   const { isOpen } = useAirspaceStatus();
   const navigate = useNavigate();
   const [pack, setPack] = useState<{ id: string; pack: AirspacePack } | undefined>(undefined);

@@ -1,0 +1,14 @@
+.live-scope {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.live-scope .radar-scope,
+.live-scope .radar-scope__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

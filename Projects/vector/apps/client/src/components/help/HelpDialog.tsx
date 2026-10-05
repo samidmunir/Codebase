@@ -140,6 +140,14 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
             </dl>
           </section>
         </div>
+        {/* A new tab, so the session keeps running. */}
+        <p className="help-dialog__more">
+          Everything else is in the{' '}
+          <a href="/guide" target="_blank" rel="noopener">
+            Controller’s Handbook
+          </a>
+          .
+        </p>
       </div>
     </div>
   );

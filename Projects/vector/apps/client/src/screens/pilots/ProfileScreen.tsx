@@ -16,6 +16,7 @@ import {
   onTimeRate,
 } from './pilot-format';
 import { ResultList } from './ResultList';
+import { usePageMeta } from '../../site/page-meta';
 import './pilots.css';
 
 type State =
@@ -36,6 +37,7 @@ export function MyProfileRedirect() {
 export function ProfileScreen() {
   const { handle = '' } = useParams();
   const [state, setState] = useState<State>({ kind: 'loading' });
+  usePageMeta({ title: `@${handle}` });
 
   useEffect(() => {
     let cancelled = false;

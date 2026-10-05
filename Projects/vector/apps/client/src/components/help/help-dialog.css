@@ -164,3 +164,13 @@
 .help-unbound {
   color: var(--color-text-faint);
 }
+
+.help-dialog__more {
+  margin: var(--space-4) 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.help-dialog__more a {
+  color: var(--color-target);
+}

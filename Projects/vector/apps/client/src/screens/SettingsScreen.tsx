@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router';
 import { useGameControls } from '../controls/use-game-controls';
 import { SettingsView } from './settings/SettingsView';
+import { usePageMeta } from '../site/page-meta';
 import './settings/settings-screen.css';
 
 /** The simulator settings page, from the account menu. */
 export function SettingsScreen() {
+  usePageMeta({ title: 'Settings' });
   const navigate = useNavigate();
   useGameControls({ closeMenu: () => void navigate('/play') });
   return (

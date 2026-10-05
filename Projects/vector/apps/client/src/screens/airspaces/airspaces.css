@@ -1,0 +1,239 @@
+.airspaces-page {
+  width: min(1040px, 100%);
+}
+
+.airspace-muted {
+  color: var(--color-text-muted);
+}
+
+.airspace-code {
+  font-family: var(--font-data);
+}
+
+.airspace-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.airspace-tile {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  color: inherit;
+  text-decoration: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+}
+
+.airspace-tile:hover,
+.airspace-tile:focus-visible {
+  border-color: rgba(76, 242, 160, 0.4);
+  outline: none;
+}
+
+.airspace-tile__facility,
+.airspace-hero__facility {
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.airspace-tile h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.airspace-tile p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.airspace-tile .airspace-tile__airports {
+  font-family: var(--font-data);
+  font-size: 0.82rem;
+}
+
+.airspace-tile__closed {
+  color: var(--color-caution);
+  font-size: 0.85rem;
+}
+
+/* ---- One airspace ------------------------------------------------------------------- */
+
+.airspace-hero {
+  position: relative;
+  display: grid;
+  align-items: end;
+  min-height: min(60vh, 560px);
+  overflow: hidden;
+}
+
+.airspace-hero__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    var(--color-bg) 5%,
+    rgba(5, 8, 11, 0.75) 40%,
+    rgba(5, 8, 11, 0.15)
+  );
+}
+
+.airspace-hero__text {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  width: min(1040px, 100%);
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4);
+}
+
+.airspace-hero__text h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  letter-spacing: -0.03em;
+}
+
+.airspace-hero__text p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.airspace-details {
+  display: grid;
+  gap: var(--space-4);
+  width: min(1040px, 100%);
+  padding-top: 0;
+}
+
+.airspace-numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.airspace-numbers div {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+}
+
+.airspace-numbers dt {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.airspace-numbers dd {
+  margin: 4px 0 0;
+  font-family: var(--font-data);
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.airspace-card {
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+}
+
+.airspace-card h2 {
+  margin: 0 0 var(--space-1);
+  font-size: 1.15rem;
+}
+
+.airspace-card h3 {
+  margin: var(--space-4) 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.airspace-card p {
+  margin: 0 0 var(--space-2);
+  line-height: 1.55;
+}
+
+.airspace-card__header p {
+  margin: 0;
+}
+
+.airspace-card__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: var(--space-6);
+}
+
+.airspace-table-wrap {
+  overflow-x: auto;
+}
+
+.airspace-table {
+  width: 100%;
+  font-size: 0.85rem;
+  border-collapse: collapse;
+}
+
+.airspace-table th,
+.airspace-table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-surface-border);
+}
+
+.airspace-table th {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.airspace-table .num {
+  font-family: var(--font-data);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.airspace-flows {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-data);
+  font-size: 0.82rem;
+  list-style: none;
+}
+
+.airspace-flows li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.airspace-procedures {
+  font-family: var(--font-data);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 760px) {
+  .airspace-card__grid {
+    grid-template-columns: 1fr;
+  }
+}
