@@ -27,6 +27,17 @@ import {
   InvalidEmailLinkError,
   SameEmailError,
 } from '../email/email-service';
+import {
+  ForumCategoryNotFoundError,
+  ForumPostNotFoundError,
+  ForumThreadNotFoundError,
+} from '../forum/forum-repository';
+import {
+  ForumEditError,
+  ForumPostingError,
+  ForumResultError,
+  OpeningPostError,
+} from '../forum/forum-service';
 import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
 
@@ -67,6 +78,28 @@ export function errorHandler(
   if (error instanceof EmailTakenError) {
     return reply.code(409).send(body('email_taken', error.message, { email: error.message }));
   }
+  if (
+    error instanceof ForumCategoryNotFoundError ||
+    error instanceof ForumThreadNotFoundError ||
+    error instanceof ForumPostNotFoundError
+  )
+    return reply.code(404).send(body('forum_not_found', error.message));
+  if (error instanceof ForumPostingError)
+    return reply
+      .code(error.reason === 'rateLimited' ? 429 : error.reason === 'links' ? 400 : 403)
+      .send(
+        body(
+          `forum_${error.reason}`,
+          error.message,
+          error.reason === 'links' ? { body: error.message } : undefined,
+        ),
+      );
+  if (error instanceof ForumEditError)
+    return reply.code(403).send(body('forum_edit', error.message));
+  if (error instanceof ForumResultError)
+    return reply.code(400).send(body('forum_result', error.message, { resultId: error.message }));
+  if (error instanceof OpeningPostError)
+    return reply.code(409).send(body('opening_post', error.message));
   if (error instanceof InvalidEmailLinkError)
     return reply.code(400).send(body('invalid_link', error.message));
   if (error instanceof EmailCooldownError)

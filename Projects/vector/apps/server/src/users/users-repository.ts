@@ -19,6 +19,8 @@ export interface UserRecord {
   passwordHash: string;
   role: UserRole;
   disabledAt: Date | null;
+  /** Can't post in the community until then ('forever': for good). */
+  postingSuspendedUntil: Date | 'forever' | null;
   createdAt: Date;
   /** Others can see this pilot's profile and results. */
   profilePublic: boolean;
@@ -37,13 +39,18 @@ interface UserRow {
   password_hash: string;
   role: UserRole;
   disabled_at: Date | null;
+  posting_suspended_until: Date | null;
+  posting_suspended_forever: boolean;
   created_at: Date;
   profile_public: boolean;
   show_on_records: boolean;
 }
 
 const COLUMNS =
-  'id, email, email_verified_at, handle, handle_generated, handle_changed_at, display_name, password_hash, role, disabled_at, created_at, profile_public, show_on_records';
+  'id, email, email_verified_at, handle, handle_generated, handle_changed_at, display_name, password_hash, role, disabled_at, created_at, profile_public, show_on_records, ' +
+  // 'infinity' (suspended for good) doesn't come back as a Date, so it's a flag instead.
+  "CASE WHEN posting_suspended_until = 'infinity' THEN NULL ELSE posting_suspended_until END AS posting_suspended_until, " +
+  "coalesce(posting_suspended_until = 'infinity', false) AS posting_suspended_forever";
 
 const toRecord = (row: UserRow): UserRecord => ({
   id: row.id,
@@ -56,6 +63,7 @@ const toRecord = (row: UserRow): UserRecord => ({
   passwordHash: row.password_hash,
   role: row.role,
   disabledAt: row.disabled_at,
+  postingSuspendedUntil: row.posting_suspended_forever ? 'forever' : row.posting_suspended_until,
   createdAt: row.created_at,
   profilePublic: row.profile_public,
   showOnRecords: row.show_on_records,
@@ -69,6 +77,8 @@ interface AdminUserRow {
   display_name: string;
   role: UserRole;
   disabled_at: Date | null;
+  posting_suspended_until: Date | null;
+  posting_suspended_forever: boolean;
   created_at: Date;
   last_active_at: Date | null;
   active_sign_ins: number;
@@ -79,6 +89,9 @@ interface AdminUserRow {
 /** A user with their activity and saved-session totals, for the admin pages. */
 const ADMIN_USER_SELECT = `
   SELECT u.id, u.email, u.email_verified_at, u.handle, u.display_name, u.role, u.disabled_at, u.created_at,
+    CASE WHEN u.posting_suspended_until = 'infinity' THEN NULL ELSE u.posting_suspended_until END
+      AS posting_suspended_until,
+    coalesce(u.posting_suspended_until = 'infinity', false) AS posting_suspended_forever,
     (SELECT max(a.last_used_at) FROM auth_sessions a WHERE a.user_id = u.id) AS last_active_at,
     (SELECT count(*)::int FROM auth_sessions a
        WHERE a.user_id = u.id AND a.revoked_at IS NULL AND a.rotated_at IS NULL
@@ -96,6 +109,11 @@ const toAdminUser = (row: AdminUserRow): AdminUser => ({
   displayName: row.display_name,
   role: row.role,
   disabledAt: row.disabled_at?.toISOString() ?? null,
+  postingSuspendedUntil: row.posting_suspended_forever
+    ? 'forever'
+    : row.posting_suspended_until && row.posting_suspended_until.getTime() > Date.now()
+      ? row.posting_suspended_until.toISOString()
+      : null,
   createdAt: row.created_at.toISOString(),
   lastActiveAt: row.last_active_at?.toISOString() ?? null,
   activeSignIns: row.active_sign_ins,
@@ -250,6 +268,8 @@ export function usersRepository(db: Database) {
         disabled?: boolean;
         /** Defaults to false when the email changes. */
         emailVerified?: boolean;
+        /** Suspend from posting until then, for good, or lift it (null). */
+        postingSuspendedUntil?: Date | 'forever' | null;
         profilePublic?: boolean;
         showOnRecords?: boolean;
       },
@@ -287,6 +307,11 @@ export function usersRepository(db: Database) {
         if (newHandle) sets.push('handle_changed_at = now()');
       }
       if (changes.displayName !== undefined) set('display_name', changes.displayName);
+      if (changes.postingSuspendedUntil !== undefined)
+        set(
+          'posting_suspended_until',
+          changes.postingSuspendedUntil === 'forever' ? 'infinity' : changes.postingSuspendedUntil,
+        );
       if (changes.passwordHash !== undefined) set('password_hash', changes.passwordHash);
       if (changes.role !== undefined) set('role', changes.role);
       if (changes.profilePublic !== undefined) set('profile_public', changes.profilePublic);
