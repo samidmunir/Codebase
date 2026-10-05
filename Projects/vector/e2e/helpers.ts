@@ -114,3 +114,18 @@ export async function verifyEmail(page: Page, email: string): Promise<void> {
   await page.goto(await emailLink(email, 'Verify your email for Vector'));
   await expect(page.getByText('Your email is verified.')).toBeVisible();
 }
+
+/** The registration link in the latest invite email to an address (a path on the client). */
+export async function inviteLink(address: string): Promise<string> {
+  let link: string | undefined;
+  await expect
+    .poll(() => {
+      const email = sentTo(address).findLast(
+        (e) => e.subject === 'You’re invited to the Vector beta',
+      );
+      link = email && /https?:\/\/[^/\s]+(\/register\?invite=[A-Z0-9-]+)/.exec(email.text)?.[1];
+      return link;
+    })
+    .toBeTruthy();
+  return link!;
+}

@@ -39,7 +39,13 @@ import {
   OpeningPostError,
 } from '../forum/forum-service';
 import { CategoryNotEmptyError, CategoryTakenError } from '../forum/forum-admin-repository';
-import { RegistrationClosedError } from '../site/site-settings-repository';
+import { InviteCodeTakenError } from '../beta/beta-repository';
+import {
+  BetaNotFoundError,
+  FeedbackLimitError,
+  InviteRequiredError,
+  RegistrationClosedError,
+} from '../beta/beta-service';
 import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
 
@@ -118,6 +124,16 @@ export function errorHandler(
       .send(body('category_not_empty', error.message, { moveTo: error.message }));
   if (error instanceof RegistrationClosedError)
     return reply.code(403).send(body('registration_closed', error.message));
+  if (error instanceof InviteRequiredError)
+    return reply
+      .code(403)
+      .send(body('invite_required', error.message, { inviteCode: error.message }));
+  if (error instanceof InviteCodeTakenError)
+    return reply.code(409).send(body('invite_taken', error.message, { code: error.message }));
+  if (error instanceof BetaNotFoundError)
+    return reply.code(404).send(body('not_found', error.message));
+  if (error instanceof FeedbackLimitError)
+    return reply.code(429).send(body('feedback_limit', error.message));
   if (error instanceof InvalidEmailLinkError)
     return reply.code(400).send(body('invalid_link', error.message));
   if (error instanceof EmailCooldownError)

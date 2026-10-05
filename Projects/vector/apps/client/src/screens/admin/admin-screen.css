@@ -1149,3 +1149,54 @@ a.admin-user-link:hover .admin-user-link__name {
   align-items: center;
   justify-content: space-between;
 }
+
+/* ---- The beta: invite codes, the waitlist, feedback -------------------------------- */
+
+.admin-code {
+  font-family: var(--font-data);
+  letter-spacing: 0.06em;
+}
+
+.admin-table__caption {
+  padding: 0 0 var(--space-2);
+  text-align: left;
+}
+
+.admin-beta__note {
+  max-width: 360px;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+}
+
+.admin-beta__feedback {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-beta__item {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.admin-beta__item-head,
+.admin-beta__item-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.admin-beta__item-head {
+  justify-content: flex-start;
+}
+
+.admin-beta__message {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

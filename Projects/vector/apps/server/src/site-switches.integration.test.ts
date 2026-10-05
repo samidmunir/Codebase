@@ -86,31 +86,34 @@ describe.skipIf(!db)('site switches (integration)', () => {
 
   it('starts open, with no banner, and only admins change it', async () => {
     expect((await call('GET', '/site')).json()).toEqual({
+      registrationMode: 'open',
       registrationOpen: true,
       registrationMessage: '',
       banner: null,
       communityReadOnly: false,
       communityMessage: '',
+      beta: false,
     });
     const pilot = await register('Ace');
     const morgan = await register('Morgan', 'moderator');
     for (const who of [pilot, morgan])
       expect(
-        (await call('PUT', '/admin/site', who, { registration: { open: false } })).statusCode,
+        (await call('PUT', '/admin/site', who, { registration: { mode: 'closed' } })).statusCode,
       ).toBe(403);
   });
 
   it('closes registration (admins can still create accounts), and opens it again', async () => {
     const chief = await register('Chief', 'admin');
     const closed = await call('PUT', '/admin/site', chief, {
-      registration: { open: false, message: 'Back after the beta, in November.' },
+      registration: { mode: 'closed', message: 'Back after the beta, in November.' },
     });
     expect(closed.json().settings.registration).toEqual({
-      open: false,
+      mode: 'closed',
       message: 'Back after the beta, in November.',
     });
     expect(closed.json().changed.registration.by).toBe('chief@example.com');
     expect((await call('GET', '/site')).json()).toMatchObject({
+      registrationMode: 'closed',
       registrationOpen: false,
       registrationMessage: 'Back after the beta, in November.',
     });
@@ -128,7 +131,7 @@ describe.skipIf(!db)('site switches (integration)', () => {
     });
     expect(created.statusCode).toBe(201);
 
-    await call('PUT', '/admin/site', chief, { registration: { open: true } });
+    await call('PUT', '/admin/site', chief, { registration: { mode: 'open' } });
     expect((await registerRequest('Late')).statusCode).toBe(201);
 
     const { rows } = await db!.query<{ target: string; details: Record<string, unknown> }>(
@@ -137,10 +140,20 @@ describe.skipIf(!db)('site switches (integration)', () => {
     expect(rows).toEqual([
       {
         target: 'registration',
-        details: { open: false, message: 'Back after the beta, in November.' },
+        details: { mode: 'closed', message: 'Back after the beta, in November.' },
       },
-      { target: 'registration', details: { open: true, message: '' } },
+      { target: 'registration', details: { mode: 'open', message: '' } },
     ]);
+  });
+
+  it('reads a registration setting saved before invite codes', async () => {
+    await db!.query(
+      `INSERT INTO site_settings (key, value) VALUES ('registration', '{"open": false, "message": "Soon"}')`,
+    );
+    expect((await call('GET', '/site')).json()).toMatchObject({
+      registrationMode: 'closed',
+      registrationMessage: 'Soon',
+    });
   });
 
   it('shows a banner, and needs its message', async () => {

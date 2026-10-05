@@ -115,3 +115,19 @@ export function emailChangedMessage(
     footer: `The link works for ${EMAIL_LINK_HOURS.revert / 24} days. If you made this change, there’s nothing to do.`,
   });
 }
+
+/** An invite to the beta, from the waitlist. */
+export function inviteMessage(to: string, code: string, url: string): EmailMessage {
+  return compose({
+    to,
+    subject: 'You’re invited to the Vector beta',
+    greeting: 'Hi,',
+    paragraphs: [
+      'You asked to try Vector, and there’s a seat for you: create your account with the link below.',
+      `Your invite code is ${code}, in case you need it.`,
+    ],
+    action: { label: 'Create my account', url },
+    footer:
+      'Vector is in beta: things may break, and your feedback (from the menu, once you’re in) shapes what comes next.',
+  });
+}

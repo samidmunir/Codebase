@@ -37,8 +37,14 @@ export interface AuthRouteOptions {
   /** Runs once an account is created (sends the verification email). */
   onRegistered?: (userId: string) => Promise<void>;
   signIns: SessionsRepository;
-  /** Refuses registration while it's switched off (admins can still create accounts). */
-  checkRegistrationOpen?: () => Promise<void>;
+  /**
+   * Lets a registration through (open), with an invite code (invite-only), or not
+   * (closed: admins can still create accounts). `cancel` if the account isn't made.
+   */
+  admit?: (inviteCode: string | undefined) => Promise<{
+    done: (userId: string) => Promise<void>;
+    cancel: () => Promise<void>;
+  }>;
 }
 
 const signInParams = z.object({ id: z.uuid() });
@@ -60,11 +66,16 @@ export async function authRoutes(app: FastifyInstance, options: AuthRouteOptions
   };
 
   app.post('/auth/register', { config: { rateLimit: AUTH_RATE_LIMIT } }, async (request, reply) => {
-    await options.checkRegistrationOpen?.();
-    const signedIn = await options.auth.register(
-      registerRequestSchema.parse(request.body),
-      clientInfo(request),
-    );
+    const { inviteCode, ...input } = registerRequestSchema.parse(request.body);
+    const admission = await options.admit?.(inviteCode?.toUpperCase());
+    let signedIn;
+    try {
+      signedIn = await options.auth.register(input, clientInfo(request));
+    } catch (error) {
+      await admission?.cancel();
+      throw error;
+    }
+    await admission?.done(signedIn.user.id);
     await options.onRegistered?.(signedIn.user.id);
     return respond(reply, signedIn, 201);
   });

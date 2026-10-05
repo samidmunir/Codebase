@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/auth-store';
 import { useGameControls } from '../../controls/use-game-controls';
 import { ActivityTab } from './ActivityTab';
 import { AirspacesTab } from './AirspacesTab';
+import { BetaTab } from './BetaTab';
 import { CommunityTab } from './CommunityTab';
 import { NewsTab } from './NewsTab';
 import { DashboardTab } from './DashboardTab';
@@ -19,6 +20,7 @@ const TABS = [
   { id: 'users', label: 'Users' },
   { id: 'airspaces', label: 'Airspaces' },
   { id: 'site', label: 'Site' },
+  { id: 'beta', label: 'Beta' },
   { id: 'results', label: 'Results' },
   { id: 'sessions', label: 'Saved sessions' },
   { id: 'news', label: 'News' },
@@ -88,6 +90,7 @@ export function AdminScreen() {
         {tab === 'users' && <UsersTab currentUserId={auth.user.id} />}
         {tab === 'airspaces' && <AirspacesTab />}
         {tab === 'site' && <SiteTab />}
+        {tab === 'beta' && <BetaTab />}
         {tab === 'results' && <ResultsTab />}
         {tab === 'sessions' && <SessionsTab />}
         {tab === 'news' && <NewsTab />}

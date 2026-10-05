@@ -51,8 +51,9 @@ export const auth = {
     password: string,
     displayName: string,
     handle: string,
+    inviteCode?: string,
   ): Promise<void> {
-    await signedIn((await api.register(email, password, displayName, handle)).user);
+    await signedIn((await api.register(email, password, displayName, handle, inviteCode)).user);
   },
 
   /** Reloads the signed-in user from the server (after their email changes or is verified). */
