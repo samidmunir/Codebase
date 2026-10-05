@@ -1,4 +1,10 @@
 import {
+  adminEditPostRequestSchema,
+  adminPostQuerySchema,
+  adminThreadQuerySchema,
+  deleteCategoryRequestSchema,
+  newCategoryRequestSchema,
+  updateCategoryRequestSchema,
   moderatePostRequestSchema,
   moderateThreadRequestSchema,
   newThreadRequestSchema,
@@ -8,10 +14,12 @@ import {
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { Authenticator } from '../auth/authenticate';
+import type { ForumAdminService } from '../forum/forum-admin-service';
 import type { ForumService } from '../forum/forum-service';
 
 export interface CommunityRouteOptions {
   forum: ForumService;
+  content: ForumAdminService;
   authenticate: Authenticator;
 }
 
@@ -158,5 +166,47 @@ export async function communityRoutes(app: FastifyInstance, options: CommunityRo
     const { handle } = handleParams.parse(request.params);
     const { postingSuspension } = suspensionSchema.parse(request.body);
     return forum.setSuspension(actor(request), handle, postingSuspension);
+  });
+
+  // ---- Content: categories (admins), every thread and post (staff) ------------------
+
+  const adminOnly = { preHandler: authenticate.admin };
+
+  app.post('/admin/community/categories', adminOnly, async (request, reply) => {
+    const body = newCategoryRequestSchema.parse(request.body);
+    await options.content.createCategory(actor(request), body);
+    return reply.code(201).send(await forum.overview(request.userId));
+  });
+
+  app.patch('/admin/community/categories/:id', adminOnly, async (request, reply) => {
+    const { id } = categoryParams.parse(request.params);
+    await options.content.updateCategory(
+      actor(request),
+      id,
+      updateCategoryRequestSchema.parse(request.body),
+    );
+    return reply.code(204).send();
+  });
+
+  app.delete('/admin/community/categories/:id', adminOnly, async (request, reply) => {
+    const { id } = categoryParams.parse(request.params);
+    const { moveTo } = deleteCategoryRequestSchema.parse(request.body ?? {});
+    await options.content.deleteCategory(actor(request), id, moveTo);
+    return reply.code(204).send();
+  });
+
+  app.get('/admin/community/threads', admin, async (request) =>
+    options.content.searchThreads(adminThreadQuerySchema.parse(request.query)),
+  );
+
+  app.get('/admin/community/posts', admin, async (request) =>
+    options.content.searchPosts(adminPostQuerySchema.parse(request.query)),
+  );
+
+  app.put('/admin/community/posts/:id/body', admin, async (request, reply) => {
+    const { id } = idParams.parse(request.params);
+    const { body } = adminEditPostRequestSchema.parse(request.body);
+    await options.content.editPost(actor(request), id, body);
+    return reply.code(204).send();
   });
 }

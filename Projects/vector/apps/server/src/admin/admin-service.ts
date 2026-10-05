@@ -386,6 +386,27 @@ export function adminService(deps: {
 
     listResults: (query: Parameters<ResultsRepository['adminList']>[0]) => results.adminList(query),
 
+    listSavedSessions: (query: Parameters<SavedSessionsRepository['adminList']>[0]) =>
+      savedSessions.adminList(query),
+
+    /** Hides or shows several results; ones that are gone are skipped. */
+    async setResultsHidden(
+      actor: Actor,
+      ids: string[],
+      hidden: boolean,
+    ): Promise<{ done: number }> {
+      let done = 0;
+      for (const id of new Set(ids)) {
+        try {
+          await this.setResultHidden(actor, id, hidden);
+          done += 1;
+        } catch {
+          // Deleted meanwhile: nothing to hide.
+        }
+      }
+      return { done };
+    },
+
     async setResultHidden(actor: Actor, id: string, hidden: boolean): Promise<void> {
       const handle = await results.setHidden(id, hidden);
       await audit.record(actor, hidden ? 'result.hide' : 'result.show', `@${handle}`, {

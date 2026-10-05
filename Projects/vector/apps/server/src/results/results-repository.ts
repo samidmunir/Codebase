@@ -204,6 +204,9 @@ export function resultsRepository(db: Database) {
       verification?: Verification | undefined;
       hidden?: boolean | undefined;
       handle?: string | undefined;
+      airspace?: string | undefined;
+      difficulty?: SessionDifficulty | undefined;
+      sort?: 'recent' | 'rp' | undefined;
       offset: number;
       limit: number;
     }): Promise<{ results: AdminResult[]; total: number }> {
@@ -221,14 +224,29 @@ export function resultsRepository(db: Database) {
         params.push(query.handle);
         where.push(`u.handle = $${params.length}`);
       }
+      if (query.airspace) {
+        params.push(query.airspace);
+        where.push(`r.airspace_id = $${params.length}`);
+      }
+      if (query.difficulty) {
+        params.push(query.difficulty);
+        where.push(`r.difficulty = $${params.length}`);
+      }
       const clause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
       const from = `FROM session_results r JOIN users u ON u.id = r.user_id ${clause}`;
       const [{ rows }, count] = await Promise.all([
         db.query<
-          SummaryRow & { handle: string; hidden: boolean; verification_note: string | null }
+          SummaryRow & {
+            handle: string;
+            hidden: boolean;
+            verification_note: string | null;
+            user_id: string;
+            show_on_records: boolean;
+          }
         >(
-          `SELECT ${SUMMARY_COLUMNS}, u.handle, r.hidden, r.verification_note ${from}
-           ORDER BY r.updated_at DESC, r.id
+          `SELECT ${SUMMARY_COLUMNS}, u.handle, r.hidden, r.verification_note, r.user_id,
+             u.show_on_records ${from}
+           ORDER BY ${query.sort === 'rp' ? 'r.rp DESC, r.updated_at DESC' : 'r.updated_at DESC'}, r.id
            LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
           [...params, query.limit, query.offset],
         ),
@@ -240,6 +258,8 @@ export function resultsRepository(db: Database) {
           return {
             id: summary.id,
             handle: row.handle,
+            userId: row.user_id,
+            onRecords: row.show_on_records,
             airspaceId: summary.airspaceId,
             difficulty: summary.difficulty,
             simTimeSec: summary.simTimeSec,

@@ -38,6 +38,7 @@ import {
   ForumResultError,
   OpeningPostError,
 } from '../forum/forum-service';
+import { CategoryNotEmptyError, CategoryTakenError } from '../forum/forum-admin-repository';
 import { InvalidSnapshotError } from './sessions';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth';
 
@@ -100,6 +101,12 @@ export function errorHandler(
     return reply.code(400).send(body('forum_result', error.message, { resultId: error.message }));
   if (error instanceof OpeningPostError)
     return reply.code(409).send(body('opening_post', error.message));
+  if (error instanceof CategoryTakenError)
+    return reply.code(409).send(body('category_taken', error.message, { id: error.message }));
+  if (error instanceof CategoryNotEmptyError)
+    return reply
+      .code(409)
+      .send(body('category_not_empty', error.message, { moveTo: error.message }));
   if (error instanceof InvalidEmailLinkError)
     return reply.code(400).send(body('invalid_link', error.message));
   if (error instanceof EmailCooldownError)

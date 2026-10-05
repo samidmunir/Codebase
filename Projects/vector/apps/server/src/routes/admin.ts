@@ -6,6 +6,9 @@ import {
   adminUpdateAirspaceRequestSchema,
   adminUpdateUserRequestSchema,
   adminUserListQuerySchema,
+  adminResultBulkRequestSchema,
+  adminSavedSessionQuerySchema,
+  type AdminSavedSessionList,
   adminBulkRequestSchema,
   type AdminBulkResult,
   statsQuerySchema,
@@ -166,6 +169,17 @@ export async function adminRoutes(app: FastifyInstance, options: AdminRouteOptio
     await admin.setResultHidden(actor(request), resultId(request), hidden);
     return reply.code(204).send();
   });
+
+  /** Hides (or shows) several results at once. */
+  app.post('/admin/results/bulk', { preHandler }, async (request) => {
+    const { ids, hidden } = adminResultBulkRequestSchema.parse(request.body);
+    return admin.setResultsHidden(actor(request), ids, hidden);
+  });
+
+  /** Every user's saved sessions. */
+  app.get('/admin/sessions', { preHandler }, async (request): Promise<AdminSavedSessionList> =>
+    admin.listSavedSessions(adminSavedSessionQuerySchema.parse(request.query)),
+  );
 
   app.post('/admin/results/:id/verify', { preHandler }, async (request, reply) => {
     await admin.reverifyResult(actor(request), resultId(request));

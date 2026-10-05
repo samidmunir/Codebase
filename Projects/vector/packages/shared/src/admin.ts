@@ -162,6 +162,10 @@ export const AUDIT_ACTIONS = [
   'result.hide',
   'result.show',
   'result.reverify',
+  'forum.createCategory',
+  'forum.updateCategory',
+  'forum.deleteCategory',
+  'forum.editPost',
   'news.create',
   'news.update',
   'news.delete',
@@ -206,6 +210,9 @@ export type AdminSummary = z.infer<typeof adminSummarySchema>;
 export const adminResultSchema = z.object({
   id: z.uuid(),
   handle: z.string(),
+  userId: z.uuid(),
+  /** The pilot is on the records (their own choice, or an admin's). */
+  onRecords: z.boolean(),
   airspaceId: z.string(),
   difficulty: sessionDifficultySchema.nullable(),
   simTimeSec: z.number(),
@@ -224,6 +231,10 @@ export const adminResultListQuerySchema = z.object({
   hidden: z.enum(['true', 'false']).optional(),
   /** A pilot's handle. */
   handle: z.string().trim().max(40).optional(),
+  airspace: z.string().max(40).optional(),
+  difficulty: sessionDifficultySchema.optional(),
+  /** Newest first, or the highest RP first (as the records rank them). */
+  sort: z.enum(['recent', 'rp']).default('recent'),
   offset: z.coerce.number().int().min(0).default(0),
   limit: z.coerce.number().int().min(1).max(200).default(ADMIN_USERS_PAGE_SIZE),
 });
