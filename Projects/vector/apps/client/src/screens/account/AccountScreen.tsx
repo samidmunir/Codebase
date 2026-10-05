@@ -13,6 +13,7 @@ import { auth } from '../../auth/auth-store';
 import { HandleField } from '../../components/HandleField';
 import { useHandleAvailability } from '../../components/use-handle-availability';
 import { formatDate } from '../admin/admin-format';
+import { usePageMeta } from '../../site/page-meta';
 import './account-screen.css';
 
 type Status = { tone: 'ok' | 'alert'; text: string } | undefined;
@@ -21,6 +22,7 @@ const failure = (caught: unknown) => (caught instanceof ApiRequestError ? caught
 
 /** The pilot's own account: profile, password, devices, and deleting it. */
 export function AccountScreen() {
+  usePageMeta({ title: 'Account' });
   const [account, setAccount] = useState<Account | undefined>(undefined);
   const [loadError, setLoadError] = useState<string | undefined>(undefined);
 

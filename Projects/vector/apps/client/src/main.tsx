@@ -11,6 +11,12 @@ import { PlayScreen } from './screens/PlayScreen';
 import { MyProfileRedirect, ProfileScreen } from './screens/pilots/ProfileScreen';
 import { ResultScreen } from './screens/pilots/ResultScreen';
 import { RecordsScreen } from './screens/records/RecordsScreen';
+import { GuideScreen } from './screens/guide/GuideScreen';
+import { AboutScreen, PrivacyScreen, TermsScreen } from './screens/legal/LegalScreens';
+import { AirspaceScreen } from './screens/airspaces/AirspaceScreen';
+import { AirspacesScreen } from './screens/airspaces/AirspacesScreen';
+import { NewsPostScreen } from './screens/news/NewsPostScreen';
+import { NewsScreen } from './screens/news/NewsScreen';
 import { ScopeScreen } from './screens/ScopeScreen';
 import { SessionSetupScreen } from './screens/SessionSetupScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -33,6 +39,14 @@ const router = createBrowserRouter([
       { path: '/pilots/:handle', element: <ProfileScreen /> },
       { path: '/results/:id', element: <ResultScreen /> },
       { path: '/records', element: <RecordsScreen /> },
+      { path: '/guide', element: <GuideScreen /> },
+      { path: '/airspaces', element: <AirspacesScreen /> },
+      { path: '/airspaces/:id', element: <AirspaceScreen /> },
+      { path: '/news', element: <NewsScreen /> },
+      { path: '/about', element: <AboutScreen /> },
+      { path: '/terms', element: <TermsScreen /> },
+      { path: '/privacy', element: <PrivacyScreen /> },
+      { path: '/news/:slug', element: <NewsPostScreen /> },
       { path: '/settings', element: signedIn(<SettingsScreen />) },
       { path: '/admin', element: signedIn(<AdminScreen />) },
       { path: '*', element: <NotFoundScreen /> },

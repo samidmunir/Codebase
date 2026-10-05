@@ -4,6 +4,7 @@ import { PASSWORD_MIN_LENGTH } from '@vector/shared';
 import { ApiRequestError } from '../api/api-client';
 import { auth } from '../auth/auth-store';
 import { HandleField } from '../components/HandleField';
+import { usePageMeta } from '../site/page-meta';
 import './auth-screen.css';
 import './home-screen.css';
 
@@ -25,6 +26,7 @@ const COPY: Record<Mode, { title: string; subtitle: string; submit: string; busy
 };
 
 export function AuthScreen({ mode }: { mode: Mode }) {
+  usePageMeta({ title: mode === 'login' ? 'Sign in' : 'Create an account' });
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

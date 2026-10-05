@@ -8,6 +8,7 @@ import { formatDateTime } from '../../format/dates';
 import { formatRp } from '../scope/score-format';
 import { SessionReportView } from '../scope/SessionReportView';
 import { airspaceLabel, difficultyLabel, formatHours, VERIFICATION } from './pilot-format';
+import { usePageMeta } from '../../site/page-meta';
 import './pilots.css';
 
 type State =
@@ -18,6 +19,7 @@ type State =
 
 /** A finished session's overview: the debrief as it was, kept for good. */
 export function ResultScreen() {
+  usePageMeta({ title: 'Session result' });
   const { id = '' } = useParams();
   const [state, setState] = useState<State>({ kind: 'loading' });
 

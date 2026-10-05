@@ -1,7 +1,10 @@
 import { Link } from 'react-router';
 import { AIRSPACES } from '../../airspaces/registry';
 import { useAuth } from '../../auth/auth-store';
+import { LiveScope } from '../../demo/LiveScope';
 import { shortAirport } from '../../scope/data-block';
+import { usePublicPageMeta } from '../../site/page-meta';
+import { LatestNews } from '../news/LatestNews';
 import '../home-screen.css';
 import './landing.css';
 
@@ -26,16 +29,15 @@ const FEATURES = [
 
 /** The public front page: what Vector is, and a way in. */
 export function LandingScreen() {
+  usePublicPageMeta('/');
   const session = useAuth();
   const signedIn = session.status === 'signedIn';
 
   return (
     <div className="landing">
       <section className="landing-hero">
-        <div className="scope-backdrop" aria-hidden="true">
-          <div className="scope-backdrop__rings" />
-          <div className="scope-backdrop__sweep" />
-        </div>
+        <LiveScope label="A live Vector session over New York: traffic arriving, departing and crossing the airspace" />
+        <div className="landing-hero__shade" aria-hidden="true" />
         <p className="hero__eyebrow">Approach &amp; departure control</p>
         <h1 className="landing-hero__title">Work real airspace.</h1>
         <p className="landing-hero__lede">
@@ -80,16 +82,20 @@ export function LandingScreen() {
         </h2>
         <div className="landing-airspaces">
           {AIRSPACES.map((airspace) => (
-            <article key={airspace.id} className="landing-airspace">
+            <Link key={airspace.id} to={`/airspaces/${airspace.id}`} className="landing-airspace">
               <span className="airspace-card__facility">{airspace.facility}</span>
               <div>
                 <h3>{airspace.name}</h3>
                 <p>{airspace.airports.map(shortAirport).join(' · ')}</p>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
       </section>
+
+      <div className="landing-section">
+        <LatestNews />
+      </div>
 
       {!signedIn && (
         <section className="landing-cta">

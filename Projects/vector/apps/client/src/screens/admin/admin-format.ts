@@ -15,6 +15,9 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'result.hide': 'Hid a session result',
   'result.show': 'Showed a session result',
   'result.reverify': 'Checked a session result again',
+  'news.create': 'Wrote a news post',
+  'news.update': 'Edited a news post',
+  'news.delete': 'Deleted a news post',
   'admin.grant': 'Made admin',
   'admin.revoke': 'Removed admin',
 };
@@ -25,6 +28,8 @@ const describeChange = (key: string, value: unknown): string => {
   if (key === 'password') return 'new password';
   if (key === 'disabled') return value ? 'disabled' : 're-enabled';
   if (key === 'enabled') return value ? 'opened' : 'closed';
+  if (key === 'published') return value ? 'published' : 'unpublished';
+  if (key === 'slug') return `/news/${String(value)}`;
   if (key === 'session') return `“${String(value)}”`;
   if (key === 'result') return `session ${String(value).slice(0, 8)}`;
   if (key === 'signIns') return `${String(value)} sign-in${value === 1 ? '' : 's'} ended`;

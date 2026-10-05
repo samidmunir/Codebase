@@ -5,11 +5,14 @@ import { useAuth } from '../auth/auth-store';
 import { ApiStatus } from '../components/ApiStatus';
 import { shortAirport } from '../scope/data-block';
 import { SavedSessions } from './SavedSessions';
+import { LatestNews } from './news/LatestNews';
+import { usePageMeta } from '../site/page-meta';
 import './auth-screen.css';
 import './home-screen.css';
 
 /** The signed-in hub: choose an airspace, or resume a saved session. */
 export function PlayScreen() {
+  usePageMeta({ title: 'Play' });
   const session = useAuth();
   const { isOpen } = useAirspaceStatus();
 
@@ -55,6 +58,10 @@ export function PlayScreen() {
         </div>
 
         {session.status === 'signedIn' && <SavedSessions />}
+
+        <div className="play-news">
+          <LatestNews count={1} title="Latest news" />
+        </div>
 
         <ApiStatus />
       </section>

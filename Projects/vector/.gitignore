@@ -4,3 +4,6 @@ data/.cache/
 # End-to-end test output
 test-results/
 playwright-report/
+
+# The root .gitignore ignores site/ (generated docs); this one is source.
+!apps/client/src/site/

@@ -1,0 +1,452 @@
+/* The Controller's Handbook (/guide). Everything is scoped under .guide. */
+
+.guide {
+  --guide-panel: #0d151c;
+  --guide-line: rgba(120, 180, 160, 0.16);
+  --guide-line-strong: rgba(120, 180, 160, 0.3);
+  --arrival: #4cf2a0;
+  --departure: #62b8ff;
+  --transit: #d49bff;
+  --unowned: #6f8f83;
+  --caution: var(--color-caution);
+  --alert: var(--color-alert);
+
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 56px;
+  width: min(1160px, 100%);
+  margin: 0 auto;
+  padding: 0 24px 96px;
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+.guide a {
+  color: var(--arrival);
+  text-underline-offset: 3px;
+}
+
+.guide code,
+.guide kbd,
+.guide .mono {
+  font-family: var(--font-data);
+  font-size: 0.88em;
+}
+
+.guide code {
+  padding: 1px 5px;
+  color: var(--arrival);
+  background: rgba(76, 242, 160, 0.07);
+  border-radius: 4px;
+}
+
+.guide kbd {
+  display: inline-block;
+  min-width: 1.9em;
+  padding: 1px 7px;
+  color: var(--color-text);
+  text-align: center;
+  background: #121c24;
+  border: 1px solid var(--guide-line-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+}
+
+/* ---- Header -------------------------------------------------------------------- */
+
+.guide__masthead {
+  grid-column: 1 / -1;
+  padding-block: 48px 32px;
+  border-bottom: 1px solid var(--guide-line);
+}
+
+.guide__eyebrow {
+  margin: 0 0 10px;
+  color: var(--arrival);
+  font: 600 12px/1 var(--font-data);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.guide__masthead h1 {
+  margin: 0;
+  font-size: clamp(2.1rem, 5vw, 3.2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.guide__lede {
+  max-width: 62ch;
+  margin: 16px 0 0;
+  color: var(--color-text-muted);
+  font-size: 1.06rem;
+}
+
+/* ---- Contents ------------------------------------------------------------------ */
+
+.guide__toc {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  padding-top: 40px;
+}
+
+.guide__toc h2 {
+  margin: 0 0 12px;
+  color: var(--color-text-faint);
+  font: 600 11px/1 var(--font-data);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.guide__toc ol {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide__toc a {
+  display: block;
+  padding: 5px 10px;
+  color: var(--color-text-muted);
+  font-size: 13.5px;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.guide__toc a:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ---- Sections ------------------------------------------------------------------ */
+
+.guide__content {
+  min-width: 0;
+  padding-top: 40px;
+}
+
+.guide section {
+  padding-block: 8px 44px;
+  scroll-margin-top: 24px;
+}
+
+.guide section + section {
+  padding-top: 40px;
+  border-top: 1px solid var(--guide-line);
+}
+
+.guide h2 {
+  margin: 0 0 6px;
+  font-size: 1.55rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.guide .kicker {
+  max-width: 66ch;
+  margin: 0 0 18px;
+  color: var(--color-text-muted);
+}
+
+.guide h3 {
+  margin: 28px 0 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.guide p {
+  max-width: 68ch;
+  margin: 0 0 12px;
+}
+
+.guide ul.plain {
+  max-width: 68ch;
+  margin: 0 0 14px;
+  padding-left: 1.2em;
+}
+
+.guide ul.plain li {
+  margin-bottom: 6px;
+}
+
+.guide ul.plain li::marker {
+  color: var(--color-text-faint);
+}
+
+.guide ol.steps {
+  display: grid;
+  gap: 12px;
+  max-width: 72ch;
+  margin: 8px 0 18px;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.guide ol.steps li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 12px;
+  counter-increment: step;
+}
+
+.guide ol.steps li::before {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-top: 1px;
+  color: var(--step-color, var(--arrival));
+  font: 700 12px/1 var(--font-data);
+  content: counter(step);
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.guide ol.steps b {
+  color: var(--color-text);
+}
+
+.guide .departures {
+  --step-color: var(--departure);
+}
+
+.guide .transits {
+  --step-color: var(--transit);
+}
+
+.guide .flight-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  color: var(--c);
+  font: 600 11.5px/1.3 var(--font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  border-radius: 999px;
+}
+
+.guide .flight-tag::before {
+  width: 8px;
+  height: 8px;
+  content: '';
+  background: var(--c);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--c);
+}
+
+.guide .radio {
+  display: grid;
+  gap: 6px;
+  max-width: 72ch;
+  margin: 10px 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.guide .radio li {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  background: var(--guide-panel);
+  border: 1px solid var(--guide-line);
+  border-radius: 8px;
+}
+
+.guide .radio .who {
+  color: var(--color-text-muted);
+  font: 600 12px/1.6 var(--font-data);
+}
+
+.guide .radio .you .who {
+  color: var(--caution);
+}
+
+.guide .blocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 12px 0 18px;
+}
+
+.guide .block {
+  position: relative;
+  min-width: 200px;
+  padding: 16px 18px 16px 44px;
+  color: var(--c);
+  font: 500 14px/1.45 var(--font-data);
+  background: #060c10;
+  border: 1px solid var(--guide-line);
+  border-radius: 10px;
+}
+
+.guide .block .dot {
+  position: absolute;
+  top: 42px;
+  left: 16px;
+  width: 10px;
+  height: 10px;
+  background: var(--c);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--c);
+}
+
+.guide .block .dim {
+  opacity: 0.65;
+}
+
+.guide .block figcaption {
+  margin-top: 10px;
+  color: var(--color-text-muted);
+  font: 400 12px/1.4 var(--font-ui);
+}
+
+.guide .legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 8px 0 18px;
+}
+
+.guide .legend div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  background: var(--guide-panel);
+  border: 1px solid var(--guide-line);
+  border-radius: 8px;
+}
+
+.guide .swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background: var(--c);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--c);
+  transform: translateY(1px);
+}
+
+.guide .table-wrap {
+  margin: 10px 0 18px;
+  overflow-x: auto;
+  border: 1px solid var(--guide-line);
+  border-radius: 10px;
+}
+
+.guide table {
+  width: 100%;
+  font-size: 14px;
+  border-collapse: collapse;
+}
+
+.guide th,
+.guide td {
+  padding: 10px 14px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--guide-line);
+}
+
+.guide tr:last-child td {
+  border-bottom: 0;
+}
+
+.guide th {
+  color: var(--color-text-muted);
+  font: 600 11.5px/1.3 var(--font-data);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--color-bg-elevated);
+}
+
+.guide td.num,
+.guide th.num {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.guide .plus {
+  color: var(--arrival);
+}
+
+.guide .minus {
+  color: var(--alert);
+}
+
+.guide .note {
+  max-width: 72ch;
+  margin: 14px 0 18px;
+  padding: 12px 16px;
+  font-size: 14px;
+  background: rgba(76, 242, 160, 0.05);
+  border: 1px solid rgba(76, 242, 160, 0.25);
+  border-radius: 10px;
+}
+
+.guide .note.warn {
+  background: rgba(255, 181, 71, 0.06);
+  border-color: rgba(255, 181, 71, 0.3);
+}
+
+.guide .keys {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 6px 24px;
+  margin: 10px 0 16px;
+}
+
+.guide .keys div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--guide-line);
+}
+
+.guide .cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px 28px;
+}
+
+.guide .cols h3 {
+  margin-top: 12px;
+}
+
+@media (max-width: 880px) {
+  .guide {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding-inline: 16px;
+  }
+
+  .guide__toc {
+    position: static;
+    padding-top: 24px;
+  }
+
+  .guide__toc ol {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .guide .radio li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}

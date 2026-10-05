@@ -398,3 +398,16 @@
 .career-stats dd[data-sign='minus'] {
   color: var(--color-alert);
 }
+
+.play-news {
+  width: 100%;
+  text-align: left;
+}
+
+.play-news .latest-news__header h2 {
+  font-size: 0.95rem;
+}
+
+.play-news .latest-news__list {
+  grid-template-columns: 1fr;
+}
