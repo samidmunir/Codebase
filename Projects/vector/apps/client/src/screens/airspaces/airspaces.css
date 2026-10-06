@@ -144,19 +144,19 @@
   font-weight: 600;
 }
 
-.airspace-card {
+.airspace-section {
   padding: var(--space-6);
   background: var(--color-surface);
   border: 1px solid var(--color-surface-border);
   border-radius: var(--radius-md);
 }
 
-.airspace-card h2 {
+.airspace-section h2 {
   margin: 0 0 var(--space-1);
   font-size: 1.15rem;
 }
 
-.airspace-card h3 {
+.airspace-section h3 {
   margin: var(--space-4) 0 var(--space-2);
   color: var(--color-text-muted);
   font-size: 0.72rem;
@@ -165,16 +165,16 @@
   text-transform: uppercase;
 }
 
-.airspace-card p {
+.airspace-section p {
   margin: 0 0 var(--space-2);
   line-height: 1.55;
 }
 
-.airspace-card__header p {
+.airspace-section__header p {
   margin: 0;
 }
 
-.airspace-card__grid {
+.airspace-section__grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: var(--space-6);
@@ -232,8 +232,77 @@
   font-size: 0.82rem;
 }
 
+/* Around you: your positions, the Centers, the radars; then the data sources. */
+.airspace-around {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+.airspace-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.airspace-list li {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}
+
+/* One line each: the name, and a figure at the end. */
+.airspace-list--inline li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.airspace-list__name {
+  font-weight: 600;
+}
+
+.airspace-sources {
+  margin-top: var(--space-6);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-surface-border);
+}
+
+.airspace-sources ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  list-style: none;
+}
+
+.airspace-sources a {
+  color: var(--color-target);
+  text-decoration: none;
+}
+
+.airspace-sources a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 960px) {
+  .airspace-around {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 760px) {
-  .airspace-card__grid {
+  .airspace-section__grid,
+  .airspace-around {
     grid-template-columns: 1fr;
   }
 }
