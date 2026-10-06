@@ -39,33 +39,10 @@ export function SiteLayout() {
           )}
         </Link>
         <nav className="site-header__nav" aria-label="Main">
-          {signedIn && (
-            <NavLink to="/play" className="site-header__link">
-              Play
-            </NavLink>
-          )}
-          <NavLink to="/airspaces" className="site-header__link">
-            Airspaces
-          </NavLink>
-          <NavLink to="/records" className="site-header__link">
-            Records
-          </NavLink>
-          <NavLink to="/community" className="site-header__link">
-            Community
-            {communityUnread > 0 && (
-              <span
-                className="site-header__badge"
-                aria-label={`, ${communityUnread} followed thread${communityUnread === 1 ? '' : 's'} with new posts`}
-              >
-                {communityUnread}
-              </span>
-            )}
-          </NavLink>
-          <NavLink to="/guide" className="site-header__link">
-            Guide
-          </NavLink>
+          <MainLinks signedIn={Boolean(signedIn)} communityUnread={communityUnread} />
         </nav>
         <div className="site-header__account">
+          <SiteMenu signedIn={Boolean(signedIn)} communityUnread={communityUnread} />
           {session.status === 'loading' ? null : signedIn ? (
             <AccountMenu
               handle={signedIn.handle}
@@ -115,6 +92,95 @@ export function SiteLayout() {
           </nav>
         </footer>
       </main>
+    </div>
+  );
+}
+
+/** The site's main links: in the header on wide screens, in the Menu panel on phones. */
+function MainLinks({ signedIn, communityUnread }: { signedIn: boolean; communityUnread: number }) {
+  return (
+    <>
+      {signedIn && (
+        <NavLink to="/play" className="site-header__link">
+          Play
+        </NavLink>
+      )}
+      <NavLink to="/airspaces" className="site-header__link">
+        Airspaces
+      </NavLink>
+      <NavLink to="/records" className="site-header__link">
+        Records
+      </NavLink>
+      <NavLink to="/community" className="site-header__link">
+        Community
+        {communityUnread > 0 && (
+          <span
+            className="site-header__badge"
+            aria-label={`, ${communityUnread} followed thread${communityUnread === 1 ? '' : 's'} with new posts`}
+          >
+            {communityUnread}
+          </span>
+        )}
+      </NavLink>
+      <NavLink to="/guide" className="site-header__link">
+        Guide
+      </NavLink>
+    </>
+  );
+}
+
+/** On phones: a Menu button opening the main links (and Sign in, when signed out). */
+function SiteMenu({ signedIn, communityUnread }: { signedIn: boolean; communityUnread: number }) {
+  const [open, setOpen] = useState(false);
+  const menu = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: Event) => {
+      if (
+        event instanceof KeyboardEvent
+          ? event.key === 'Escape'
+          : !menu.current?.contains(event.target as Node)
+      )
+        setOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, [open]);
+
+  return (
+    <div className="site-menu" ref={menu}>
+      <button
+        type="button"
+        className="site-menu__button"
+        aria-expanded={open}
+        aria-controls="site-menu-panel"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="site-menu__icon" aria-hidden="true" data-open={open} />
+        Menu
+        {communityUnread > 0 && !open && <span className="site-menu__dot" aria-hidden="true" />}
+      </button>
+      {open && (
+        <nav
+          id="site-menu-panel"
+          className="site-menu__panel"
+          aria-label="Main"
+          // Following a link closes the menu.
+          onClick={(event) => (event.target as HTMLElement).closest('a') && setOpen(false)}
+        >
+          <MainLinks signedIn={signedIn} communityUnread={communityUnread} />
+          {!signedIn && (
+            <Link to="/login" className="site-header__link site-menu__sign-in">
+              Sign in
+            </Link>
+          )}
+        </nav>
+      )}
     </div>
   );
 }
