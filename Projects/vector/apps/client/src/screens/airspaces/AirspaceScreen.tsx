@@ -86,6 +86,7 @@ export function AirspaceScreen() {
 
 function AirspaceFacts({ pack }: { pack: AirspacePack }) {
   const { airspace } = pack;
+  const { controllers } = airspace;
   const ilsRunways = pack.airports.reduce((n, a) => n + a.runways.filter((r) => r.ils).length, 0);
   const numbers = [
     { label: 'Airports you work', value: airspace.airports.length },
@@ -116,10 +117,10 @@ function AirspaceFacts({ pack }: { pack: AirspacePack }) {
         return (
           <section
             key={airport.icao}
-            className="airspace-card"
+            className="airspace-section"
             aria-labelledby={`${airport.icao}-title`}
           >
-            <header className="airspace-card__header">
+            <header className="airspace-section__header">
               <h2 id={`${airport.icao}-title`}>
                 <span className="airspace-code">{shortAirport(airport.icao)}</span> {airport.name}
               </h2>
@@ -128,7 +129,7 @@ function AirspaceFacts({ pack }: { pack: AirspacePack }) {
               </p>
             </header>
 
-            <div className="airspace-card__grid">
+            <div className="airspace-section__grid">
               <div>
                 <h3>Runways</h3>
                 <div className="airspace-table-wrap">
@@ -192,20 +193,74 @@ function AirspaceFacts({ pack }: { pack: AirspacePack }) {
         );
       })}
 
-      <section className="airspace-card">
-        <h2>Around you</h2>
-        <p>
-          <strong>{airspace.controllers.center.callsign}</strong> owns the airspace around the
-          TRACON
-          {airspace.controllers.adjacentCenters.length > 0 &&
-            `, with ${airspace.controllers.adjacentCenters.map((c) => c.callsign).join(', ')} beyond`}
-          . You’re {airspace.controllers.approach.approachCallsign} and{' '}
-          {airspace.controllers.approach.departureCallsign}, with{' '}
-          {airspace.radars.map((radar) => radar.name).join(', ')} feeding your scope.
-        </p>
-        <p className="airspace-muted">
-          Built from {airspace.sources.map((source) => source.name).join(', ')}.
-        </p>
+      <section className="airspace-section" aria-labelledby="around-title">
+        <header className="airspace-section__header">
+          <h2 id="around-title">Around you</h2>
+          <p className="airspace-muted">Who you work with, and what feeds your scope.</p>
+        </header>
+
+        <div className="airspace-around">
+          <div>
+            <h3>Your positions</h3>
+            <ul className="airspace-list">
+              <li>
+                <span className="airspace-list__name">{controllers.approach.approachCallsign}</span>
+                <span className="airspace-muted">Arrivals, down to final</span>
+              </li>
+              <li>
+                <span className="airspace-list__name">
+                  {controllers.approach.departureCallsign}
+                </span>
+                <span className="airspace-muted">Departures, up to the Center</span>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3>Centers</h3>
+            <ul className="airspace-list">
+              <li>
+                <span className="airspace-list__name">{controllers.center.callsign}</span>
+                <span className="airspace-muted">Owns the airspace around the TRACON</span>
+              </li>
+              {controllers.adjacentCenters.map((center) => (
+                <li key={center.id}>
+                  <span className="airspace-list__name">{center.callsign}</span>
+                  <span className="airspace-muted">Beyond, for traffic leaving that way</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3>Radars feeding your scope</h3>
+            <ul className="airspace-list airspace-list--inline">
+              {airspace.radars.map((radar) => (
+                <li key={radar.id}>
+                  <span className="airspace-list__name airspace-code">{radar.name}</span>
+                  <span className="airspace-muted airspace-code">{radar.rangeNm} nm</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <footer className="airspace-sources">
+          <h3>Built from</h3>
+          <ul>
+            {airspace.sources.map((source) => (
+              <li key={source.name}>
+                <a href={source.url} target="_blank" rel="noreferrer">
+                  {source.name}
+                </a>
+                <span className="airspace-muted">
+                  {' '}
+                  · {source.edition} · {source.usedFor}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </footer>
       </section>
     </>
   );
