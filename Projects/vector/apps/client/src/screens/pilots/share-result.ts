@@ -19,3 +19,26 @@ export function resultShare(result: {
     image: `/api/share/results/${result.id}/card.png${result.version ? `?v=${result.version}` : ''}`,
   };
 }
+
+/** Sharing a pilot's profile: their page (which previews as their career card). */
+export function profileShare(profile: {
+  handle: string;
+  rp: number;
+  sessions: number;
+  by: 'you' | 'them';
+  /** Changes when the card would (sessions, RP, rank). */
+  version: string;
+}): Shareable {
+  const career =
+    profile.sessions === 0
+      ? 'controlling real airspace'
+      : `${formatRp(profile.rp, true)} over ${profile.sessions} session${profile.sessions === 1 ? '' : 's'}`;
+  return {
+    url: `${window.location.origin}/pilots/${profile.handle}`,
+    text:
+      profile.by === 'you'
+        ? `My controller career on Vector: ${career}`
+        : `@${profile.handle} on Vector: ${career}`,
+    image: `/api/share/pilots/${encodeURIComponent(profile.handle)}/card.png?v=${profile.version}`,
+  };
+}

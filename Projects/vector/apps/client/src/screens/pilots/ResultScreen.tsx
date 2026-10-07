@@ -11,6 +11,7 @@ import { airspaceLabel, difficultyLabel, formatHours, VERIFICATION } from './pil
 import { usePageMeta } from '../../site/page-meta';
 import { useAuth } from '../../auth/auth-store';
 import { ShareButton } from '../../components/ShareButton';
+import { JoinBanner } from '../../site/JoinBanner';
 import { resultShare } from './share-result';
 import './pilots.css';
 
@@ -81,6 +82,7 @@ export function ResultScreen() {
   const yours = auth.status === 'signedIn' && auth.user.handle === pilot.handle;
   return (
     <div className="site-page pilot-page">
+      <JoinBanner />
       <header className="result-header">
         <div>
           <p className="result-header__eyebrow">

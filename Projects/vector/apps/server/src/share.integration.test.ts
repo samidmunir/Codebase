@@ -144,6 +144,39 @@ describe.skipIf(!db)('sharing results (integration)', () => {
     expect(missing).toContain('<title>Vector</title>');
   });
 
+  it('gives a pilot’s page their career card and preview', async () => {
+    const card = await app.inject({ method: 'GET', url: '/api/share/pilots/ace/card.png' });
+    expect(card.statusCode).toBe(200);
+    expect(card.rawPayload.readUInt32BE(16)).toBe(1200);
+    const page = (await app.inject({ method: 'GET', url: '/pilots/Ace' })).body;
+    expect(page).toContain('<title>Ace Controller (@Ace) · Vector</title>');
+    expect(page).toMatch(
+      /og:description" content="\+1,240 RP over 1 session · 12 landings · 2 min controlled/,
+    );
+    expect(page).toMatch(
+      /og:image" content="https:\/\/vector\.test\/api\/share\/pilots\/Ace\/card\.png\?v=1-1240-/,
+    );
+    expect(
+      (await app.inject({ method: 'GET', url: '/api/share/pilots/nobody_here/card.png' }))
+        .statusCode,
+    ).toBe(404);
+  });
+
+  it('draws only so many cards a minute for one address', async () => {
+    const url = `/api/share/results/${id}/card.png`;
+    const codes = [];
+    for (let i = 0; i < 61; i += 1)
+      codes.push(
+        (await app.inject({ method: 'GET', url, remoteAddress: '203.0.113.9' })).statusCode,
+      );
+    expect(codes.slice(0, 60).every((code) => code === 200)).toBe(true);
+    expect(codes[60]).toBe(429);
+    // Others aren't held up.
+    expect(
+      (await app.inject({ method: 'GET', url, remoteAddress: '203.0.113.10' })).statusCode,
+    ).toBe(200);
+  });
+
   it('shares nothing from a private profile', async () => {
     await app.inject({
       method: 'PATCH',
@@ -153,6 +186,12 @@ describe.skipIf(!db)('sharing results (integration)', () => {
     });
     const card = await app.inject({ method: 'GET', url: `/api/share/results/${id}/card.png` });
     expect(card.statusCode).toBe(404);
+    expect(
+      (await app.inject({ method: 'GET', url: '/api/share/pilots/Ace/card.png' })).statusCode,
+    ).toBe(404);
+    expect((await app.inject({ method: 'GET', url: '/pilots/Ace' })).body).toContain(
+      '<title>Vector</title>',
+    );
     expect((await app.inject({ method: 'GET', url: `/results/${id}` })).body).toContain(
       '<title>Vector</title>',
     );

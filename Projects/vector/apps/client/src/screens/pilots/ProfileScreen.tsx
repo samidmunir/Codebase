@@ -17,6 +17,9 @@ import {
 } from './pilot-format';
 import { ResultList } from './ResultList';
 import { usePageMeta } from '../../site/page-meta';
+import { ShareButton } from '../../components/ShareButton';
+import { JoinBanner } from '../../site/JoinBanner';
+import { profileShare } from './share-result';
 import './pilots.css';
 
 type State =
@@ -129,6 +132,7 @@ function PublicProfile({ profile }: { profile: Extract<PilotProfile, { visibilit
 
   return (
     <div className="site-page pilot-page">
+      <JoinBanner />
       <header className="pilot-header">
         <span className="pilot-avatar" aria-hidden="true">
           {initials(pilot.displayName)}
@@ -139,18 +143,31 @@ function PublicProfile({ profile }: { profile: Extract<PilotProfile, { visibilit
             @{pilot.handle} · joined {formatDate(pilot.joinedAt)}
           </p>
         </div>
-        {pilot.isYou && (
-          <div className="pilot-header__actions">
-            {!pilot.isPublic && (
-              <span className="pilot-pill" title="Only you can see this profile">
-                Private
-              </span>
-            )}
+        <div className="pilot-header__actions">
+          {pilot.isYou && !pilot.isPublic && (
+            <span className="pilot-pill" title="Only you can see this profile">
+              Private
+            </span>
+          )}
+          {pilot.isPublic && (
+            <ShareButton
+              share={profileShare({
+                handle: pilot.handle,
+                rp: career.rp,
+                sessions: career.sessions,
+                by: pilot.isYou ? 'you' : 'them',
+                version: `${career.sessions}-${Math.round(career.rp)}-${profile.careerRank ?? 0}`,
+              })}
+              label={pilot.isYou ? 'Share your profile' : 'Share'}
+              opens="down-left"
+            />
+          )}
+          {pilot.isYou && (
             <Link to="/account" className="site-button">
               Edit profile
             </Link>
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
       <dl className="pilot-tiles">

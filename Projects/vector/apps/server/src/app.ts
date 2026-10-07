@@ -51,6 +51,8 @@ import { metarService, type MetarService } from './weather/metar-service';
 import { shareRoutes } from './routes/share';
 import { shareService } from './share/share-service';
 
+/** A shared pilot's page: /pilots/<handle>. */
+const PROFILE_PATH = /^\/pilots\/([A-Za-z0-9_]{1,40})$/;
 /** A shared result's page: /results/<uuid>. */
 const RESULT_PATH = /^\/results\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 
@@ -90,8 +92,13 @@ declare module 'fastify' {
 
 export function buildApp(deps: AppDependencies, options: FastifyServerOptions = {}) {
   const app = Fastify(options);
-  /** A result's link preview (set once accounts are wired up). */
-  let resultMeta: ((id: string) => Promise<PageMeta | undefined>) | undefined;
+  /** Shared results' and profiles' link previews (set once accounts are wired up). */
+  let shareMeta:
+    | {
+        result: (id: string) => Promise<PageMeta | undefined>;
+        profile: (handle: string) => Promise<PageMeta | undefined>;
+      }
+    | undefined;
   app.setErrorHandler(errorHandler);
 
   app.register(
@@ -114,7 +121,10 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           results,
           appUrl: deps.accounts.email?.appUrl ?? 'http://localhost:5173',
         });
-        resultMeta = (id) => share.resultMeta(id);
+        shareMeta = {
+          result: (id) => share.resultMeta(id),
+          profile: (handle) => share.profileMeta(handle),
+        };
         await api.register(shareRoutes, { share });
         const verifier = createVerifier({
           results: resultsRepo,
@@ -242,10 +252,12 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
   if (deps.client)
     app.register(serveClient, {
       ...deps.client,
-      // A shared result's page previews as that result.
+      // A shared result's or pilot's page previews as that result or pilot.
       pageMeta: async (path) => {
         const id = RESULT_PATH.exec(path)?.[1];
-        return id ? resultMeta?.(id) : undefined;
+        if (id) return shareMeta?.result(id);
+        const handle = PROFILE_PATH.exec(path)?.[1];
+        return handle ? shareMeta?.profile(handle) : undefined;
       },
     });
 

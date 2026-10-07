@@ -174,53 +174,48 @@ const stat = (label: string, value: string, color = COLORS.text) =>
     el('div', { fontFamily: 'JetBrains Mono', fontSize: 40, fontWeight: 600, color }, value),
   );
 
-export interface ResultCard {
+/** The layout every card uses: a line in green, a big headline, a detail line, and four numbers. */
+export interface StatCard {
   host: string;
-  pilot: { displayName: string; handle: string };
-  facility: string;
-  airspaceName: string;
-  /** e.g. 'Hard · 1 h 12 min of sim time'. */
+  /** Top right, e.g. the verification. */
+  badge?: { label: string; tone: 'ok' | 'alert' | 'neutral' };
+  eyebrow: string;
+  headline: string;
+  headlineTone?: 'alert';
   detail: string;
-  rp: string;
-  rpNegative: boolean;
-  verification: { label: string; tone: 'ok' | 'alert' | 'neutral' };
   stats: { label: string; value: string; alert?: boolean }[];
 }
 
-/** A session result: the pilot, the airspace, the RP and how it went. */
-export async function resultCard(card: ResultCard): Promise<Buffer> {
-  const tone = { ok: COLORS.target, alert: COLORS.alert, neutral: COLORS.muted }[
-    card.verification.tone
-  ];
+/** Long headlines (a pilot's name) get smaller so they stay on one line. */
+const headlineSize = (text: string) => (text.length <= 14 ? 104 : text.length <= 22 ? 80 : 60);
+
+export async function statCard(card: StatCard): Promise<Buffer> {
+  const badge = card.badge
+    ? pill(
+        card.badge.label,
+        { ok: COLORS.target, alert: COLORS.alert, neutral: COLORS.muted }[card.badge.tone],
+      )
+    : undefined;
   return render(
-    frame(card.host, pill(card.verification.label, tone), [
+    frame(card.host, badge, [
       el(
         'div',
-        {
-          fontFamily: 'JetBrains Mono',
-          fontSize: 24,
-          color: COLORS.target,
-          letterSpacing: 3,
-        },
-        `${card.facility} · ${card.airspaceName.toUpperCase()} TRACON`,
+        { fontFamily: 'JetBrains Mono', fontSize: 24, color: COLORS.target, letterSpacing: 3 },
+        card.eyebrow.toUpperCase(),
       ),
       el(
         'div',
         {
           marginTop: 14,
-          fontSize: 104,
+          fontSize: headlineSize(card.headline),
           fontWeight: 700,
           letterSpacing: -2,
-          lineHeight: 1,
-          color: card.rpNegative ? COLORS.alert : COLORS.text,
+          lineHeight: 1.05,
+          color: card.headlineTone === 'alert' ? COLORS.alert : COLORS.text,
         },
-        card.rp,
+        card.headline,
       ),
-      el(
-        'div',
-        { marginTop: 18, fontSize: 28, color: COLORS.muted },
-        `${card.pilot.displayName} · @${card.pilot.handle} · ${card.detail}`,
-      ),
+      el('div', { marginTop: 18, fontSize: 28, color: COLORS.muted }, card.detail),
       el(
         'div',
         { marginTop: 36, gap: 16 },
@@ -229,6 +224,14 @@ export async function resultCard(card: ResultCard): Promise<Buffer> {
     ]),
   );
 }
+
+/**
+ * Whether the card's fonts can draw this text: their "latin" subset (Western
+ * European letters and punctuation). Anything else would come out blank, so the
+ * card shows the pilot's handle instead.
+ */
+export const drawable = (text: string) =>
+  /^[\u0020-\u007e\u00a0-\u00ff\u0131\u0152\u0153\u2000-\u206f\u20ac\u2122]*$/.test(text);
 
 async function render(node: Node): Promise<Buffer> {
   const { fonts } = await setUp();

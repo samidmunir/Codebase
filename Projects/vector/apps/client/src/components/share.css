@@ -59,6 +59,11 @@
   bottom: calc(100% + 8px);
 }
 
+.share-menu[data-opens='down-left'] .share-menu__panel {
+  right: 0;
+  left: auto;
+}
+
 .share-menu__preview {
   width: 100%;
   height: auto;

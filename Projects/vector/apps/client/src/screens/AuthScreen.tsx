@@ -40,7 +40,7 @@ export function AuthScreen({ mode }: { mode: Mode }) {
   const [handle, setHandle] = useState('');
   const [inviteCode, setInviteCode] = useState(searchParams.get('invite') ?? '');
   // On the invite-only page: asking for an invite instead.
-  const [waitlist, setWaitlist] = useState(false);
+  const [waitlist, setWaitlist] = useState(searchParams.get('waitlist') === '1');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [fields, setFields] = useState<Record<string, string>>({});

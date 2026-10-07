@@ -28,8 +28,12 @@ export function ShareButton({
   share: Shareable;
   label?: string;
   className?: string;
-  /** Which way the menu opens (up from a bar at the bottom of a dialog). */
-  opens?: 'up' | 'down';
+  /**
+   * Which way the menu opens: down (lined up with the button's left edge), down-left
+   * (its right edge, for a button at the right of the page), or up (from a bar at the
+   * bottom of a dialog).
+   */
+  opens?: 'up' | 'down' | 'down-left';
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);

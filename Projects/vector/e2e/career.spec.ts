@@ -67,6 +67,32 @@ test('a session played goes into the career, with its overview; a private profil
   // Anyone can open a public profile's session…
   const anonymous = await request.get(`/api/results/${resultId}`);
   expect(anonymous.status()).toBe(200);
+  // A visitor who follows a shared link is told what Vector is, and how to join.
+  const visitor = await page.context().browser()!.newPage();
+  await visitor.goto(resultUrl);
+  const about = visitor.getByRole('complementary', { name: 'About Vector' });
+  await expect(about).toContainText('an air traffic control simulator on real airspace');
+  await expect(about.getByRole('link', { name: 'Create a free account' })).toHaveAttribute(
+    'href',
+    '/register',
+  );
+  await visitor.close();
+
+  // The career can be shared too, as its own card.
+  await openFromMenu(page, 'Profile');
+  await page.getByRole('button', { name: 'Share your profile' }).click();
+  const profileMenu = page.getByRole('menu', { name: 'Share' });
+  await expect(profileMenu.getByRole('menuitem', { name: 'Post on X' })).toHaveAttribute(
+    'href',
+    /text=My%20controller%20career%20on%20Vector/,
+  );
+  const profileCard = profileMenu.getByRole('img', { name: /How the link looks/ });
+  await expect
+    .poll(() =>
+      profileCard.evaluate((img) => (img as unknown as { naturalWidth: number }).naturalWidth),
+    )
+    .toBe(1200);
+  await page.keyboard.press('Escape');
 
   // …until the pilot makes the profile private.
   await openFromMenu(page, 'Account');
