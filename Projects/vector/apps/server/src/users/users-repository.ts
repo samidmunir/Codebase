@@ -344,13 +344,60 @@ export function usersRepository(db: Database) {
       return before;
     },
 
-    async delete(id: string): Promise<UserRecord> {
-      const { rows } = await db.query<UserRow>(
-        `DELETE FROM users WHERE id = $1 RETURNING ${COLUMNS}`,
-        [id],
-      );
-      if (!rows[0]) throw new UserNotFoundError();
-      return toRecord(rows[0]);
+    /**
+     * Deletes an account and everything that's only theirs (sessions, results, sign-ins,
+     * settings, their place on the waitlist), all or nothing. Their community posts stay
+     * as by a deleted pilot unless `withPosts`: then their posts, and the threads they
+     * started (with the replies in them), go too.
+     */
+    async delete(
+      id: string,
+      options: { withPosts?: boolean } = {},
+    ): Promise<UserRecord & { removedThreads: number; removedPosts: number }> {
+      const client = await db.connect();
+      try {
+        await client.query('BEGIN');
+        let removedThreads = 0;
+        let removedPosts = 0;
+        if (options.withPosts) {
+          removedThreads =
+            (await client.query('DELETE FROM forum_threads WHERE author_id = $1', [id])).rowCount ??
+            0;
+          const posts = await client.query<{ thread_id: string }>(
+            'DELETE FROM forum_posts WHERE author_id = $1 RETURNING thread_id',
+            [id],
+          );
+          removedPosts = posts.rowCount ?? 0;
+          // Threads whose latest post was theirs: the latest is now the one before.
+          await client.query(
+            `UPDATE forum_threads t
+                SET last_post_at = coalesce(
+                  (SELECT max(p.created_at) FROM forum_posts p WHERE p.thread_id = t.id),
+                  t.created_at)
+              WHERE t.id = ANY($1::bigint[])`,
+            [[...new Set(posts.rows.map((row) => row.thread_id))]],
+          );
+        }
+        const { rows } = await client.query<UserRow & { invite_code_id: string | null }>(
+          `DELETE FROM users WHERE id = $1 RETURNING ${COLUMNS}, invite_code_id`,
+          [id],
+        );
+        const deleted = rows[0];
+        if (!deleted) throw new UserNotFoundError();
+        // Their email on the waitlist (by address, or by the invite it sent them).
+        await client.query(
+          `DELETE FROM waitlist
+            WHERE email = $1 OR (invite_code_id IS NOT NULL AND invite_code_id = $2)`,
+          [deleted.email, deleted.invite_code_id],
+        );
+        await client.query('COMMIT');
+        return { ...toRecord(deleted), removedThreads, removedPosts };
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
     },
 
     /** Admins who can still sign in. */

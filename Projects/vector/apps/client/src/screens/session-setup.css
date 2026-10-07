@@ -393,3 +393,28 @@
 .setup-screen > .site-notice {
   margin: calc(var(--space-6) * -1) calc(var(--space-4) * -1) var(--space-6);
 }
+
+/* Whether the session will count for the records. */
+.setup-summary__ranked {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  background: rgba(76, 242, 160, 0.05);
+  border: 1px solid rgba(76, 242, 160, 0.25);
+  border-radius: var(--radius-sm);
+}
+
+.setup-summary__ranked strong {
+  color: var(--color-target);
+}
+
+.setup-summary__ranked[data-ranked='false'] {
+  background: rgba(255, 181, 71, 0.06);
+  border-color: rgba(255, 181, 71, 0.3);
+}
+
+.setup-summary__ranked[data-ranked='false'] strong {
+  color: var(--color-caution);
+}

@@ -139,13 +139,6 @@ export class ScopeSession {
     this.status = this.readStatus();
   }
 
-  /** Changes arrival, departure and transit rates or the queue cap while the session runs. */
-  updateTraffic(patch: Partial<TrafficSettings>): ValidationResult {
-    const result = this.engine.updateTrafficSettings(patch);
-    this.refreshStatus(true);
-    return result;
-  }
-
   get trafficSettings(): TrafficSettings {
     const settings = this.engine.settings;
     return Object.fromEntries(

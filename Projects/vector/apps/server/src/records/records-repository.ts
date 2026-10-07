@@ -78,6 +78,8 @@ export function recordsRepository(db: Database) {
       const where = [
         "r.verification = 'verified'",
         'NOT r.hidden',
+        // Official scoring, the standard rules, a difficulty preset (see ranking.ts).
+        'r.ranked IS NOT FALSE',
         'u.disabled_at IS NULL',
         'u.show_on_records',
         // Only pilots who've verified their email go on the records.

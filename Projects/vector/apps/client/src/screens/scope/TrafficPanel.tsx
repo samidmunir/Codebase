@@ -1,9 +1,4 @@
-import {
-  DIFFICULTY_LEVELS,
-  DIFFICULTY_PRESETS,
-  IN_SESSION_TRAFFIC_KEYS,
-  SESSION_SETTINGS,
-} from '@vector/shared';
+import { IN_SESSION_TRAFFIC_KEYS, SESSION_SETTINGS } from '@vector/shared';
 import type { ScopeSession } from '../../sim/scope-session';
 import { DIFFICULTY_LABELS } from '../../settings/difficulty';
 
@@ -14,7 +9,10 @@ interface TrafficPanelProps {
   onClose: () => void;
 }
 
-/** Tunes traffic while the session runs; the values are saved with the session. */
+/**
+ * The session's traffic: chosen in setup and fixed for the session, so every
+ * pilot's session on the records is judged the same way.
+ */
 export function TrafficPanel({ session, onClose }: TrafficPanelProps) {
   const values = session.trafficSettings;
   const difficulty = session.difficulty;
@@ -34,49 +32,29 @@ export function TrafficPanel({ session, onClose }: TrafficPanelProps) {
       </div>
 
       <section className="scope-panel__section">
-        <h3>Preset</h3>
-        <div className="segmented-control traffic-presets" role="radiogroup" aria-label="Preset">
-          {DIFFICULTY_LEVELS.map((level) => (
-            <button
-              key={level}
-              type="button"
-              role="radio"
-              aria-checked={difficulty === level}
-              onClick={() => session.updateTraffic(DIFFICULTY_PRESETS[level])}
-            >
-              {DIFFICULTY_LABELS[level]}
-            </button>
-          ))}
-        </div>
-        {difficulty === 'custom' && <p className="scope-panel__note">Custom traffic</p>}
-      </section>
-
-      <section className="scope-panel__section">
-        <h3>Rates</h3>
-        {IN_SESSION_TRAFFIC_KEYS.map((key) => {
-          const definition = SESSION_SETTINGS[key];
-          return (
-            <label key={key} className="layer-slider" title={definition.description}>
-              <span>
-                {definition.label}
-                <output>
+        <h3>Difficulty</h3>
+        <p className="traffic-difficulty">
+          {difficulty === 'custom'
+            ? 'Custom (practice, not ranked)'
+            : DIFFICULTY_LABELS[difficulty]}
+        </p>
+        <dl className="traffic-rates">
+          {IN_SESSION_TRAFFIC_KEYS.map((key) => {
+            const definition = SESSION_SETTINGS[key];
+            return (
+              <div key={key} title={definition.description}>
+                <dt>{definition.label}</dt>
+                <dd>
                   {values[key]}
                   {'unit' in definition && definition.unit ? ` ${definition.unit}` : ''}
-                </output>
-              </span>
-              <input
-                type="range"
-                min={definition.min}
-                max={definition.max}
-                step={definition.step}
-                value={values[key]}
-                onChange={(event) => session.updateTraffic({ [key]: Number(event.target.value) })}
-              />
-            </label>
-          );
-        })}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
         <p className="scope-panel__note">
-          Changes apply now and are kept when you save the session.
+          Traffic is set when the session starts and stays the same throughout, so sessions on the
+          records are comparable. Start a new session to change it.
         </p>
       </section>
     </aside>

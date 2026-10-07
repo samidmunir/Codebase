@@ -36,6 +36,15 @@ export function ResultList({ results }: { results: readonly ResultSummary[] }) {
               <span className="pilot-pill" data-tone={verification.tone} title={verification.title}>
                 {verification.label}
               </span>
+              {!result.ranked && (
+                <span
+                  className="pilot-pill"
+                  data-tone="caution"
+                  title={result.unrankedReason ?? ''}
+                >
+                  Not ranked
+                </span>
+              )}
             </Link>
           </li>
         );

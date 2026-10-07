@@ -48,7 +48,9 @@ import { savedSessionsRepository } from './sessions/sessions-repository';
 import { settingsRepository } from './settings/settings-repository';
 import { usersRepository } from './users/users-repository';
 import { metarService, type MetarService } from './weather/metar-service';
+import { scoringRoutes } from './routes/scoring';
 import { shareRoutes } from './routes/share';
+import { scoringRepository } from './results/scoring-repository';
 import { shareService } from './share/share-service';
 
 /** A shared pilot's page: /pilots/<handle>. */
@@ -85,6 +87,8 @@ declare module 'fastify' {
   interface FastifyInstance {
     /** Verifies session results by replaying them (start it once the server is listening). */
     verifier?: Verifier;
+    /** Ranks results recorded before ranking existed (run once the server is listening). */
+    rankEarlierResults?: () => Promise<number>;
     /** Hourly tidying: forgetting the devices of sign-ins that have run out. */
     housekeeping?: { start(): void; stop(): void };
   }
@@ -116,7 +120,15 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         const resultsRepo = resultsRepository(db);
         const records = recordsRepository(db);
         const audit = auditRepository(db);
-        const results = resultsService({ results: resultsRepo, users, airspaces, records });
+        const scoring = scoringRepository(db);
+        const results = resultsService({
+          results: resultsRepo,
+          scoring,
+          users,
+          airspaces,
+          records,
+        });
+        app.decorate('rankEarlierResults', () => results.rankUnchecked());
         const share = shareService({
           results,
           appUrl: deps.accounts.email?.appUrl ?? 'http://localhost:5173',
@@ -228,6 +240,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           authenticate,
           secureCookies,
         });
+        await api.register(scoringRoutes, { scoring, audit, authenticate });
         await api.register(adminRoutes, {
           stats: statsRepository(db),
           admin: adminService({

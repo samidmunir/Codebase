@@ -430,6 +430,18 @@
   opacity: 0.7;
 }
 
+/* Under a runway that's in use (the button's green border says so too). */
+.option__tag {
+  margin-top: 1px;
+  color: var(--color-target);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+}
+
+.option-grid button[aria-pressed='true'] .option__tag {
+  color: inherit;
+}
+
 /* ---- Direct-to --------------------------------------------------------------------- */
 
 .fix-list {

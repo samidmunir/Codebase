@@ -69,8 +69,9 @@ export async function updateAdminUser(
   );
 }
 
-export async function deleteAdminUser(id: string): Promise<void> {
-  await apiRequest(user(id), { method: 'DELETE' });
+/** Deletes an account; with `withPosts`, its community posts and threads too. */
+export async function deleteAdminUser(id: string, withPosts = false): Promise<void> {
+  await apiRequest(`${user(id)}?posts=${withPosts ? 'delete' : 'keep'}`, { method: 'DELETE' });
 }
 
 export async function signOutAdminUser(id: string): Promise<void> {

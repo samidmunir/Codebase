@@ -1,4 +1,4 @@
-import type { AuditEntry, UserRole } from '@vector/shared';
+import { SESSION_SETTINGS, type AuditEntry, type UserRole } from '@vector/shared';
 import { ApiRequestError } from '../../api/api-client';
 
 // Wording for the admin pages.
@@ -16,6 +16,7 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'user.export': 'Exported users',
   'user.sessionDelete': 'Deleted a saved session',
   'site.update': 'Changed a site switch',
+  'scoring.update': 'Changed the official scoring',
   'invite.create': 'Made an invite code',
   'invite.revoke': 'Withdrew an invite code',
   'waitlist.invite': 'Invited from the waitlist',
@@ -100,10 +101,13 @@ const describeChange = (key: string, value: unknown, entry: AuditEntry): string 
   if (key === 'slug') return `/news/${String(value)}`;
   if (key === 'session') return `“${String(value)}”`;
   if (key === 'result') return `session ${String(value).slice(0, 8)}`;
+  if (key === 'threadsDeleted') return `${String(value)} thread${value === 1 ? '' : 's'} deleted`;
+  if (key === 'postsDeleted') return `${String(value)} post${value === 1 ? '' : 's'} deleted`;
   if (key === 'signIns') return `${String(value)} sign-in${value === 1 ? '' : 's'} ended`;
   if (value && typeof value === 'object' && 'from' in value && 'to' in value) {
     const change = value as { from: unknown; to: unknown };
-    const label = key === 'displayName' ? 'name' : key;
+    const setting = (SESSION_SETTINGS as Record<string, { label: string } | undefined>)[key];
+    const label = key === 'displayName' ? 'name' : (setting?.label ?? key);
     return `${label} ${String(change.from)} → ${String(change.to)}`;
   }
   if (key === 'role') return `role ${String(value)}`;

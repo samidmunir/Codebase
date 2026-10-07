@@ -5,6 +5,7 @@ import {
   detectDifficulty,
   DIFFICULTY_LEVELS,
   IN_SESSION_TRAFFIC_KEYS,
+  PLAYER_SESSION_KEYS,
   SESSION_SETTINGS,
   type SessionSettings,
 } from '@vector/shared';
@@ -31,8 +32,12 @@ import './session-setup.css';
 
 type SessionKey = keyof SessionSettings;
 
+// Only what a player chooses: scoring is official and the rules are standard, the
+// same for everyone (see official.ts in shared), so they aren't offered here.
 const keysIn = (prefix: string) =>
-  (Object.keys(SESSION_SETTINGS) as SessionKey[]).filter((key) => key.startsWith(prefix));
+  (Object.keys(SESSION_SETTINGS) as SessionKey[]).filter(
+    (key) => key.startsWith(prefix) && PLAYER_SESSION_KEYS.includes(key),
+  );
 
 const TRAFFIC_KEYS: SessionKey[] = [...IN_SESSION_TRAFFIC_KEYS, 'traffic.fleetMix'];
 const WIND_LIMIT_KEYS: SessionKey[] = [
@@ -44,17 +49,13 @@ const WIND_LIMIT_KEYS: SessionKey[] = [
   'weather.runwayChangeNoticeMin',
 ];
 
-/** Rules and realism, collapsed by default: most players keep the defaults. */
+/** Player aids and options, collapsed by default. */
 const ADVANCED_GROUPS: { label: string; keys: SessionKey[] }[] = [
   { label: 'Separation', keys: keysIn('separation.') },
   { label: 'Approaches', keys: keysIn('approaches.') },
-  { label: 'Departures', keys: keysIn('departures.') },
-  { label: 'Center', keys: keysIn('center.') },
-  { label: 'RP scoring', keys: keysIn('scoring.') },
   { label: 'Pilots', keys: keysIn('pilots.') },
-  { label: 'Radar', keys: keysIn('radar.') },
   { label: 'Simulation', keys: keysIn('sim.') },
-];
+].filter((group) => group.keys.length > 0);
 
 /** Choose difficulty, traffic, wind, runways and rules, then start the session. */
 export function SessionSetupScreen() {
@@ -176,7 +177,10 @@ export function SessionSetupScreen() {
           <section className="setup-card" aria-labelledby="setup-traffic">
             <header className="setup-card__header">
               <h2 id="setup-traffic">Traffic</h2>
-              <p>You can fine-tune traffic at any time during the session.</p>
+              <p>
+                Set for the whole session. Easy, Normal, Hard and Expert count for the records;
+                fine-tuned traffic is for practice.
+              </p>
             </header>
             <div className="setup-presets" role="radiogroup" aria-label="Difficulty">
               {DIFFICULTY_LEVELS.map((level) => (
@@ -338,8 +342,8 @@ export function SessionSetupScreen() {
           <details className="setup-card setup-advanced">
             <summary>
               <span>
-                <h2>Rules &amp; realism</h2>
-                <p>Separation minima, approach criteria, pilot behavior and radar.</p>
+                <h2>Player aids &amp; options</h2>
+                <p>Approach eligibility, Conflict Alert look-ahead, readbacks and sim speeds.</p>
               </span>
             </summary>
             {ADVANCED_GROUPS.map((group) => (
@@ -398,6 +402,18 @@ export function SessionSetupScreen() {
               </dd>
             </div>
           </dl>
+          <p className="setup-summary__ranked" data-ranked={difficulty !== 'custom'}>
+            {difficulty === 'custom' ? (
+              <>
+                <strong>Practice · not ranked.</strong> Choose Easy, Normal, Hard or Expert for the
+                records.
+              </>
+            ) : (
+              <>
+                <strong>Ranked.</strong> Scoring and the rules are the same for every pilot.
+              </>
+            )}
+          </p>
           {error && (
             <p className="setup-summary__error" role="alert">
               {error}

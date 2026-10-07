@@ -115,9 +115,10 @@ describe.skipIf(!db)('sharing results (integration)', () => {
   it('gives a result’s page its own link preview', async () => {
     const page = (await app.inject({ method: 'GET', url: `/results/${id}` })).body;
     expect(page).toContain('<title>Ace Controller worked N90 New York: +1,240 RP · Vector</title>');
+    // Normal, not the Hard the upload claimed: the difficulty comes from the session's traffic.
     expect(page).toContain('content="Ace Controller worked N90 New York: +1,240 RP · Vector"');
     expect(page).toMatch(
-      /og:description" content="12 arrivals and 0 departures · no losses of separation · Hard · 2 min of sim time\. (Being verified|Verified)/,
+      /og:description" content="12 arrivals and 0 departures · no losses of separation · Normal · 2 min of sim time\. (Being verified|Verified)/,
     );
     expect(page).toMatch(
       new RegExp(

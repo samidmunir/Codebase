@@ -63,6 +63,10 @@ process.once('SIGTERM', () => void shutdown('SIGTERM'));
 try {
   await app.listen({ host: config.HOST, port: config.PORT });
   app.verifier?.start();
+  void app
+    .rankEarlierResults?.()
+    .then((count) => count > 0 && app.log.info({ count }, 'ranked earlier results'))
+    .catch((error: unknown) => app.log.error({ err: error }, 'ranking earlier results failed'));
   app.housekeeping?.start();
 } catch (error) {
   app.log.error(error);

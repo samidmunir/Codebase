@@ -1393,3 +1393,32 @@
   padding: 2px 16px 2px 0;
   text-align: left;
 }
+
+/* The session's traffic (fixed for the session). */
+.traffic-difficulty {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.traffic-rates {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 var(--space-2);
+}
+
+.traffic-rates div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 0.8rem;
+}
+
+.traffic-rates dt {
+  color: var(--color-text-muted);
+}
+
+.traffic-rates dd {
+  margin: 0;
+  font-family: var(--font-data);
+}

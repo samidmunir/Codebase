@@ -84,20 +84,27 @@ test('sets up a session, controls traffic, saves it and resumes exactly', async 
   expect(resumed.settings).toEqual(saved.settings);
 });
 
-test('tunes traffic during a session', async ({ page }) => {
+test('a session is played on official scoring and rules, its traffic fixed once it starts', async ({
+  page,
+}) => {
   await registerPilot(page);
   await newSession(page, 'New York');
+  // Setup offers the difficulty and the player's own options, not scoring or the rules.
+  await expect(page.getByText('RP scoring')).toHaveCount(0);
+  await expect(page.getByText('Separation minima')).toHaveCount(0);
+  await expect(page.locator('.setup-summary__ranked')).toContainText('Ranked.');
+  await page.getByRole('radio', { name: 'Hard' }).click();
   await page.getByRole('button', { name: 'Start session' }).click();
-  await scopeState(page);
+  const state = await scopeState(page);
+  expect(state.settings['scoring.landingRp']).toBe(100);
+  expect(state.settings['separation.lateralNm']).toBe(3);
 
+  // The traffic panel shows the session's traffic, and can't change it.
   await page.keyboard.press('KeyT');
   const panel = page.getByRole('complementary', { name: 'Traffic' });
-  await panel.locator('label', { hasText: 'Transit rate' }).locator('input').fill('12');
-  await expect(page.locator('.scope-notice')).toContainText('Custom');
-  expect((await scopeState(page)).settings['traffic.transitRatePerHour']).toBe(12);
-
-  await panel.getByRole('radio', { name: 'Hard' }).click();
-  await expect(page.locator('.scope-notice')).toContainText('Hard');
+  await expect(panel).toContainText('Hard');
+  await expect(panel.locator('input')).toHaveCount(0);
+  await expect(panel.getByRole('radio')).toHaveCount(0);
 });
 
 test('works Chicago the same way: O’Hare and Midway on their wind, saved and resumed as C90', async ({
