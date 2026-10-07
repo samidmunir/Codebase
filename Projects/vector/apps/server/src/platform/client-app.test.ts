@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
+import { withPageMeta } from './client-app';
 
 // A tiny stand-in for the built client.
 const dir = mkdtempSync(join(tmpdir(), 'vector-client-'));
@@ -57,5 +58,54 @@ describe('serving the built client', () => {
     expect(response.headers['content-security-policy']).toContain("frame-ancestors 'none'");
     expect(response.headers['strict-transport-security']).toContain('max-age=31536000');
     expect(response.headers['x-content-type-options']).toBe('nosniff');
+  });
+});
+
+describe('link-preview tags', () => {
+  const html = `<head><title>Vector</title>
+    <meta name="description" content="An ATC simulator." />
+    <meta property="og:title" content="Vector" />
+    <meta property="og:description" content="An ATC simulator." />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:alt" content="A radar scope" />
+  </head>`;
+
+  it('makes the image an absolute address and adds the page’s own', () => {
+    const page = withPageMeta(html, {
+      origin: 'https://vector.test',
+      path: '/records',
+      meta: undefined,
+    });
+    expect(page).toContain(
+      '<meta property="og:image" content="https://vector.test/og-image.jpg" />',
+    );
+    expect(page).toContain('<meta property="og:url" content="https://vector.test/records" />');
+    expect(page).toContain(
+      '<meta name="twitter:image" content="https://vector.test/og-image.jpg" />',
+    );
+    expect(page).toContain('<title>Vector</title>');
+  });
+
+  it('gives a page its own title, description and image, escaped', () => {
+    const page = withPageMeta(html, {
+      origin: 'https://vector.test',
+      path: '/results/1',
+      meta: {
+        title: 'Ace <3 worked N90 · "+1" RP',
+        description: 'Fine & dandy',
+        image: 'https://vector.test/api/share/results/1/card.png',
+        imageAlt: 'Ace’s session',
+      },
+    });
+    expect(page).toContain('<title>Ace &lt;3 worked N90 · &quot;+1&quot; RP</title>');
+    expect(page).toContain('content="Fine &amp; dandy"');
+    expect(page).toContain('og:image" content="https://vector.test/api/share/results/1/card.png"');
+    expect(page).toContain('og:image:alt" content="Ace’s session"');
+    expect(page.match(/og:image:alt/g)).toHaveLength(1);
+    expect(page).toContain('<meta property="og:image:width" content="1200" />');
+  });
+
+  it('leaves the HTML alone without a site address (development)', () => {
+    expect(withPageMeta(html, { origin: undefined, path: '/', meta: undefined })).toBe(html);
   });
 });

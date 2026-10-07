@@ -160,6 +160,7 @@ export const AUDIT_ACTIONS = [
   'user.export',
   'airspace.update',
   'site.update',
+  'scoring.update',
   'invite.create',
   'invite.revoke',
   'waitlist.invite',

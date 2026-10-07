@@ -30,6 +30,9 @@ export interface ResultRecord {
   verification: Verification;
   /** SHA-256 of the final state's fingerprint, as uploaded. */
   stateFingerprint: string | null;
+  /** Whether it counts for the records and the career (see ranking.ts), and why not. */
+  ranked: boolean;
+  unrankedReason: string | null;
 }
 
 /** A result waiting to be verified, with what replaying it needs. */
@@ -50,12 +53,14 @@ interface SummaryRow {
   rp: number;
   stats: SessionStats;
   verification: Verification;
+  ranked: boolean | null;
+  unranked_reason: string | null;
   created_at: Date;
   updated_at: Date;
 }
 
 const SUMMARY_COLUMNS =
-  'r.id, r.airspace_id, r.difficulty, r.sim_time_sec, r.rp, r.stats, r.verification, r.created_at, r.updated_at';
+  'r.id, r.airspace_id, r.difficulty, r.sim_time_sec, r.rp, r.stats, r.verification, r.ranked, r.unranked_reason, r.created_at, r.updated_at';
 
 const toSummary = (row: SummaryRow): ResultSummary => ({
   id: row.id,
@@ -65,6 +70,9 @@ const toSummary = (row: SummaryRow): ResultSummary => ({
   rp: row.rp,
   stats: { ...emptySessionStats(), ...row.stats },
   verification: row.verification,
+  // Not checked yet (from before ranking): counted until it's checked, moments after start-up.
+  ranked: row.ranked ?? true,
+  unrankedReason: row.unranked_reason,
   playedAt: row.created_at.toISOString(),
   updatedAt: row.updated_at.toISOString(),
 });
@@ -89,8 +97,13 @@ const toTotals = (row: TotalsRow): CareerTotals => ({
   stats: Object.fromEntries(STAT_KEYS.map((key) => [key, row[key]])) as SessionStats,
 });
 
-/** Results that count: not hidden by an admin. */
+/** Results that show: not hidden by an admin. */
 const VISIBLE = 'NOT r.hidden';
+/**
+ * Results that count for the career: shown, ranked (official scoring, standard
+ * rules), and not found to differ from their replay.
+ */
+const COUNTED = "NOT r.hidden AND r.ranked IS NOT FALSE AND r.verification <> 'mismatch'";
 
 export function resultsRepository(db: Database) {
   return {
@@ -102,14 +115,15 @@ export function resultsRepository(db: Database) {
       const { rows } = await db.query<SummaryRow>(
         `INSERT INTO session_results AS r
            (user_id, session_key, airspace_id, difficulty, sim_time_sec, final_tick, rp, stats,
-            report, replay, engine_version, verification, state_fingerprint)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            report, replay, engine_version, verification, state_fingerprint, ranked, unranked_reason)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
          ON CONFLICT (user_id, session_key) DO UPDATE SET
            difficulty = excluded.difficulty, sim_time_sec = excluded.sim_time_sec,
            final_tick = excluded.final_tick, rp = excluded.rp, stats = excluded.stats,
            report = excluded.report, replay = excluded.replay,
            engine_version = excluded.engine_version, verification = excluded.verification,
            state_fingerprint = excluded.state_fingerprint, verified_at = NULL,
+           ranked = excluded.ranked, unranked_reason = excluded.unranked_reason,
            verification_note = NULL, updated_at = now()
          WHERE r.final_tick <= excluded.final_tick
          RETURNING ${SUMMARY_COLUMNS}`,
@@ -129,6 +143,8 @@ export function resultsRepository(db: Database) {
           record.engineVersion,
           record.verification,
           record.stateFingerprint,
+          record.ranked,
+          record.unrankedReason,
         ],
       );
       if (rows[0]) return toSummary(rows[0]);
@@ -359,7 +375,7 @@ export function resultsRepository(db: Database) {
     /** Career totals over all of a user's results. */
     async careerTotals(userId: string): Promise<CareerTotals> {
       const { rows } = await db.query<TotalsRow>(
-        `SELECT ${TOTALS_SELECT} FROM session_results r WHERE r.user_id = $1 AND ${VISIBLE}`,
+        `SELECT ${TOTALS_SELECT} FROM session_results r WHERE r.user_id = $1 AND ${COUNTED}`,
         [userId],
       );
       return toTotals(rows[0]!);
@@ -371,7 +387,7 @@ export function resultsRepository(db: Database) {
     ): Promise<(CareerTotals & { airspaceId: string; bestRp: number })[]> {
       const { rows } = await db.query<TotalsRow & { airspace_id: string; best_rp: number }>(
         `SELECT r.airspace_id, max(r.rp)::float AS best_rp, ${TOTALS_SELECT}
-         FROM session_results r WHERE r.user_id = $1 AND ${VISIBLE}
+         FROM session_results r WHERE r.user_id = $1 AND ${COUNTED}
          GROUP BY r.airspace_id ORDER BY sessions DESC, r.airspace_id`,
         [userId],
       );
@@ -382,13 +398,39 @@ export function resultsRepository(db: Database) {
       }));
     },
 
+    /** Results not yet ranked (recorded before ranking), with their replays. */
+    async unranked(limit = 50): Promise<{ id: string; replay: unknown }[]> {
+      const { rows } = await db.query<{ id: string; replay: unknown }>(
+        'SELECT id, replay FROM session_results WHERE ranked IS NULL ORDER BY created_at LIMIT $1',
+        [limit],
+      );
+      return rows;
+    },
+
+    /** Records whether a result counts, and the difficulty it actually had. */
+    async setRanking(
+      id: string,
+      ranking: {
+        ranked: boolean;
+        unrankedReason: string | null;
+        difficulty: SessionDifficulty | null;
+      },
+    ): Promise<void> {
+      await db.query(
+        `UPDATE session_results
+            SET ranked = $2, unranked_reason = $3, difficulty = coalesce($4, difficulty)
+          WHERE id = $1`,
+        [id, ranking.ranked, ranking.unrankedReason, ranking.difficulty],
+      );
+    },
+
     /** Career RP after each session, oldest first (the latest `limit` sessions). */
     async history(userId: string, limit = 500): Promise<{ at: string; rp: number }[]> {
       const { rows } = await db.query<{ created_at: Date; career_rp: number }>(
         `SELECT created_at, career_rp FROM (
            SELECT r.created_at,
              sum(r.rp) OVER (ORDER BY r.created_at, r.id)::float AS career_rp
-           FROM session_results r WHERE r.user_id = $1 AND ${VISIBLE}
+           FROM session_results r WHERE r.user_id = $1 AND ${COUNTED}
          ) cumulative ORDER BY created_at DESC LIMIT $2`,
         [userId, limit],
       );

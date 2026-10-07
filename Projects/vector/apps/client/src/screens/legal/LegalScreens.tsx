@@ -247,9 +247,10 @@ export function PrivacyScreen() {
         <li>Change your handle, display name, password and privacy on your Account page.</li>
         <li>Sign out your other devices from your Account page.</li>
         <li>
-          Delete your account from your Account page: your account, settings, saved sessions and
-          results are deleted at once. Your community posts stay so that threads still make sense,
-          but they no longer show your name or link to you; they show as by a deleted pilot.
+          Delete your account from your Account page: your account, settings, saved sessions,
+          results and your place on the waitlist are deleted at once. Your community posts stay so
+          that threads still make sense, but they no longer show your name or link to you; they show
+          as by a deleted pilot, as does feedback you sent.
         </li>
       </ul>
       <h2>Changes</h2>

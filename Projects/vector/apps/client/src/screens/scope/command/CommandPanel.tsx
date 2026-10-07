@@ -751,8 +751,9 @@ function ApproachTab({
               }
               onClick={() => update({ ilsRunway: draft.ilsRunway === runway ? undefined : runway })}
             >
-              <span className="option__caption">{inUse.includes(runway) ? 'IN USE' : 'ILS'}</span>
+              <span className="option__caption">ILS</span>
               {runway}
+              {inUse.includes(runway) && <span className="option__tag">IN USE</span>}
               {eligibility && (
                 <span
                   className={eligibility.ok ? 'option__eligible' : 'option__ineligible'}
@@ -764,9 +765,15 @@ function ApproachTab({
         })}
       </div>
       <p className="command-panel__hint">
-        {showEligibility
-          ? 'Green: the pilot can accept the approach from here. Red: the pilot would be unable (hover for why).'
-          : 'The pilot accepts the approach only from a position they can fly it; otherwise they reply unable.'}
+        {showEligibility ? (
+          'Green: the pilot can accept the approach from here. Red: the pilot would be unable (hover for why).'
+        ) : (
+          <>
+            The pilot accepts the approach only from a position they can fly it; otherwise they
+            reply unable. <strong>Tip:</strong> turn on <em>Show approach eligibility</em> under
+            Approaches in session setup to see, on each runway, whether they can.
+          </>
+        )}
       </p>
     </div>
   );

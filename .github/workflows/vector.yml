@@ -97,6 +97,15 @@ jobs:
           curl -sf http://127.0.0.1:4000/api/health/ready
           curl -sf http://127.0.0.1:4000/about | grep -q '<title>About · Vector</title>'
           curl -sf http://127.0.0.1:4000/api/site
+          curl -sf http://127.0.0.1:4000/version.json | grep -q '"build"'
+      - name: Share cards can find their fonts and renderer in the image
+        run: |
+          docker run --rm vector:ci node -e "
+            const r = require('node:module').createRequire('/app/apps/server/dist/index.js');
+            for (const p of ['satori', '@resvg/resvg-wasm/index_bg.wasm',
+              '@fontsource/inter/files/inter-latin-700-normal.woff',
+              '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-600-normal.woff'])
+              console.log(r.resolve(p));"
       - name: Server log
         if: always()
         run: docker logs vector || true

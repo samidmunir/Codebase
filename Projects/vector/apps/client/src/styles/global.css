@@ -67,3 +67,8 @@ body {
   border: 1px solid rgba(76, 242, 160, 0.35);
   border-radius: 999px;
 }
+
+/* While a screen's code loads (a moment, the first time it's opened). */
+.lazy-page {
+  min-height: 60vh;
+}

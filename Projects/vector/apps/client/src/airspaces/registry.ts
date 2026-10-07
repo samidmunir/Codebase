@@ -1,3 +1,4 @@
+import { missingFileMessage } from '../site/app-version';
 import {
   AirspacePack,
   airlinesFileSchema,
@@ -37,7 +38,7 @@ export interface AirspaceEntry {
 
 async function fetchJson(url: string): Promise<unknown> {
   const response = await fetch(url);
-  if (!response.ok) throw new Error(`Failed to load ${url} (${response.status})`);
+  if (!response.ok) throw new Error(missingFileMessage(response.status, 'the airspace'));
   return response.json();
 }
 

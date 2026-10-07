@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import publicPages from './src/site/public-pages.json' with { type: 'json' };
 
+/** This build's id: the app compares it with the server's /version.json to notice deploys. */
+const BUILD_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
 const escape = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -21,6 +24,7 @@ function publicPageMeta(): Plugin {
       outDir = config.build.outDir;
     },
     closeBundle() {
+      writeFileSync(join(outDir, 'version.json'), `${JSON.stringify({ build: BUILD_ID })}\n`);
       const html = readFileSync(join(outDir, 'index.html'), 'utf8');
       const tags = [
         /(<title>)[^<]*/,
@@ -55,6 +59,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, new URL('.', import.meta.url).pathname, 'VECTOR_');
   return {
     plugins: [react(), publicPageMeta()],
+    define: { __BUILD_ID__: JSON.stringify(mode === 'production' ? BUILD_ID : 'dev') },
     server: {
       port: 5173,
       proxy: {

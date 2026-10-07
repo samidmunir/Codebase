@@ -10,6 +10,9 @@ import { SessionReportView } from '../scope/SessionReportView';
 import { airspaceLabel, difficultyLabel, formatHours, VERIFICATION } from './pilot-format';
 import { usePageMeta } from '../../site/page-meta';
 import { useAuth } from '../../auth/auth-store';
+import { ShareButton } from '../../components/ShareButton';
+import { JoinBanner } from '../../site/JoinBanner';
+import { resultShare } from './share-result';
 import './pilots.css';
 
 type State =
@@ -20,10 +23,15 @@ type State =
 
 /** A finished session's overview: the debrief as it was, kept for good. */
 export function ResultScreen() {
-  usePageMeta({ title: 'Session result' });
   const { id = '' } = useParams();
   const [state, setState] = useState<State>({ kind: 'loading' });
   const auth = useAuth();
+  usePageMeta({
+    title:
+      state.kind === 'ready'
+        ? `${state.detail.pilot.displayName} at ${airspaceLabel(state.detail.result.airspaceId)}`
+        : 'Session result',
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -71,8 +79,10 @@ export function ResultScreen() {
   const { detail, report } = state;
   const { result, pilot } = detail;
   const verification = VERIFICATION[result.verification];
+  const yours = auth.status === 'signedIn' && auth.user.handle === pilot.handle;
   return (
     <div className="site-page pilot-page">
+      <JoinBanner />
       <header className="result-header">
         <div>
           <p className="result-header__eyebrow">
@@ -91,15 +101,37 @@ export function ResultScreen() {
           <span className="pilot-pill" data-tone={verification.tone} title={verification.title}>
             {verification.label}
           </span>
+          {!result.ranked && (
+            <span className="pilot-pill" data-tone="caution" title={result.unrankedReason ?? ''}>
+              Not ranked
+            </span>
+          )}
         </div>
       </header>
-      {auth.status === 'signedIn' && auth.user.handle === pilot.handle && (
-        <p className="result-share">
-          <Link to={`/community/general/new?result=${result.id}`} className="site-button">
-            Discuss this session in the community
-          </Link>
+      {!result.ranked && (
+        <p className="result-unranked" role="note">
+          <strong>Not ranked:</strong> {result.unrankedReason ?? 'it doesn’t count for the records'}
+          . It doesn’t count for the records or the career.
         </p>
       )}
+      <div className="result-share">
+        <ShareButton
+          share={resultShare({
+            id: result.id,
+            airspaceId: result.airspaceId,
+            rp: result.rp,
+            by: yours ? 'you' : { handle: pilot.handle },
+            version: `${Date.parse(result.updatedAt)}${result.verification[0]}`,
+          })}
+          label="Share this session"
+          className="site-button site-button--primary"
+        />
+        {yours && (
+          <Link to={`/community/general/new?result=${result.id}`} className="site-button">
+            Discuss it in the community
+          </Link>
+        )}
+      </div>
       <div className="pilot-card result-report">
         <SessionReportView report={report} flightsListed={10} lossesListed={20} />
       </div>
