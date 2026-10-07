@@ -163,6 +163,9 @@ export class ScopeSession {
     return this.engine.toSnapshot();
   }
 
+  /** This session's result in the pilot's career, once one has been kept (its page is /results/:id). */
+  resultId: string | undefined;
+
   /** The tick last recorded as this session's result, and whether a recording is under way. */
   private recordedTick = -1;
   private recording: Promise<void> | undefined;
@@ -179,12 +182,13 @@ export class ScopeSession {
     this.recording ??= (async () => {
       const tick = this.engine.tick;
       try {
-        await recordResult(sessionId, {
+        const summary = await recordResult(sessionId, {
           airspaceId: airspaceId.data,
           difficulty: this.difficulty,
           snapshot: this.engine.toSnapshot(),
         });
         this.recordedTick = tick;
+        if (summary) this.resultId = summary.id;
       } catch {
         // Offline or signed out: try again next time.
       } finally {

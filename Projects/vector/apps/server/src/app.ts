@@ -39,7 +39,7 @@ import { createVerifier, type Verifier } from './results/verifier';
 import { airspacesRoutes } from './routes/airspaces';
 import { authRoutes } from './routes/auth';
 import { errorHandler } from './routes/errors';
-import { serveClient } from './platform/client-app';
+import { serveClient, type ClientOptions, type PageMeta } from './platform/client-app';
 import { healthRoutes } from './routes/health';
 import { sessionsRoutes } from './routes/sessions';
 import { settingsRoutes } from './routes/settings';
@@ -48,6 +48,13 @@ import { savedSessionsRepository } from './sessions/sessions-repository';
 import { settingsRepository } from './settings/settings-repository';
 import { usersRepository } from './users/users-repository';
 import { metarService, type MetarService } from './weather/metar-service';
+import { shareRoutes } from './routes/share';
+import { shareService } from './share/share-service';
+
+/** A shared pilot's page: /pilots/<handle>. */
+const PROFILE_PATH = /^\/pilots\/([A-Za-z0-9_]{1,40})$/;
+/** A shared result's page: /results/<uuid>. */
+const RESULT_PATH = /^\/results\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 
 export const API_VERSION = '0.0.0';
 
@@ -71,7 +78,7 @@ export interface AppDependencies {
     email?: { mailer?: Mailer; appUrl?: string };
   };
   /** Serve the built client from here (production); HSTS once it's behind HTTPS. */
-  client?: { dir: string; hsts: boolean };
+  client?: Omit<ClientOptions, 'pageMeta'>;
 }
 
 declare module 'fastify' {
@@ -85,6 +92,13 @@ declare module 'fastify' {
 
 export function buildApp(deps: AppDependencies, options: FastifyServerOptions = {}) {
   const app = Fastify(options);
+  /** Shared results' and profiles' link previews (set once accounts are wired up). */
+  let shareMeta:
+    | {
+        result: (id: string) => Promise<PageMeta | undefined>;
+        profile: (handle: string) => Promise<PageMeta | undefined>;
+      }
+    | undefined;
   app.setErrorHandler(errorHandler);
 
   app.register(
@@ -103,6 +117,15 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         const records = recordsRepository(db);
         const audit = auditRepository(db);
         const results = resultsService({ results: resultsRepo, users, airspaces, records });
+        const share = shareService({
+          results,
+          appUrl: deps.accounts.email?.appUrl ?? 'http://localhost:5173',
+        });
+        shareMeta = {
+          result: (id) => share.resultMeta(id),
+          profile: (handle) => share.profileMeta(handle),
+        };
+        await api.register(shareRoutes, { share });
         const verifier = createVerifier({
           results: resultsRepo,
           settleSec: deps.accounts.verification?.settleSec ?? 180,
@@ -226,7 +249,17 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
     },
     { prefix: '/api' },
   );
-  if (deps.client) app.register(serveClient, deps.client);
+  if (deps.client)
+    app.register(serveClient, {
+      ...deps.client,
+      // A shared result's or pilot's page previews as that result or pilot.
+      pageMeta: async (path) => {
+        const id = RESULT_PATH.exec(path)?.[1];
+        if (id) return shareMeta?.result(id);
+        const handle = PROFILE_PATH.exec(path)?.[1];
+        return handle ? shareMeta?.profile(handle) : undefined;
+      },
+    });
 
   return app;
 }

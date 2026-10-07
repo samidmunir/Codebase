@@ -636,3 +636,48 @@
   justify-content: flex-end;
   gap: var(--space-2);
 }
+
+/* ---- Join (shared results and profiles, for visitors) -------------------------------- */
+
+.join-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4) var(--space-6);
+  background:
+    radial-gradient(circle at 0% 50%, rgba(76, 242, 160, 0.1), transparent 45%),
+    var(--color-surface);
+  border: 1px solid rgba(76, 242, 160, 0.3);
+  border-radius: var(--radius-md);
+}
+
+.join-banner__mark {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--color-target);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 6px var(--color-bg),
+    inset 0 0 0 9px rgba(76, 242, 160, 0.5);
+}
+
+.join-banner__text {
+  display: grid;
+  flex: 1 1 320px;
+  gap: 2px;
+  line-height: 1.5;
+}
+
+.join-banner__text span {
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+
+.join-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

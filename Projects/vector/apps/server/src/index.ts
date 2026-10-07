@@ -36,6 +36,7 @@ const app = buildApp(
           client: {
             dir: config.CLIENT_DIR ?? fileURLToPath(new URL('../../client/dist', import.meta.url)),
             hsts: config.NODE_ENV === 'production',
+            origin: config.CLIENT_ORIGIN,
           },
         }
       : {}),
