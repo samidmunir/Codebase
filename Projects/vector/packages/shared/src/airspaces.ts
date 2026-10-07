@@ -8,6 +8,13 @@ export type AirspaceId = (typeof AIRSPACE_IDS)[number];
 
 export const airspaceIdSchema = z.enum(AIRSPACE_IDS, { error: 'Unknown airspace' });
 
+/** Each airspace's TRACON and name, for text outside the app (link previews, share cards). */
+export const AIRSPACE_NAMES: Record<AirspaceId, { facility: string; name: string }> = {
+  'new-york': { facility: 'N90', name: 'New York' },
+  chicago: { facility: 'C90', name: 'Chicago' },
+  dallas: { facility: 'D10', name: 'Dallas–Fort Worth' },
+};
+
 export const airspaceStatusSchema = z.object({
   id: z.string(),
   enabled: z.boolean(),

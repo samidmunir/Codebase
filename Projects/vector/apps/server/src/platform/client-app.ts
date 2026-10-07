@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, normalize, resolve } from 'node:path';
 import helmet from '@fastify/helmet';
 import fastifyStatic from '@fastify/static';
@@ -34,6 +34,74 @@ const CONTENT_SECURITY_POLICY = {
   upgradeInsecureRequests: [],
 };
 
+/** A page's own link-preview tags, for pages whose preview depends on data (a shared result). */
+export interface PageMeta {
+  title: string;
+  description: string;
+  /** An absolute URL. */
+  image: string;
+  imageAlt: string;
+}
+
+export interface ClientOptions {
+  dir: string;
+  hsts: boolean;
+  /** The site's address (CLIENT_ORIGIN): link previews need absolute URLs. */
+  origin?: string;
+  /** The preview for a path that has its own (undefined: the page's usual one). */
+  pageMeta?: (path: string) => Promise<PageMeta | undefined>;
+}
+
+const attribute = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * A page's HTML with its link-preview tags finished: the image as an absolute URL
+ * (Facebook, LinkedIn, iMessage and Slack need one), the page's own address, and,
+ * for pages with their own preview, its title, description and image.
+ */
+export function withPageMeta(
+  html: string,
+  { origin, path, meta }: { origin: string | undefined; path: string; meta: PageMeta | undefined },
+): string {
+  let page = html;
+  if (meta) {
+    page = page
+      .replace(/(<title>)[^<]*/, `$1${attribute(meta.title)}`)
+      .replace(/(<meta\s+name="description"\s+content=")[^"]*/, `$1${attribute(meta.description)}`)
+      .replace(/(<meta\s+property="og:title"\s+content=")[^"]*/, `$1${attribute(meta.title)}`)
+      .replace(
+        /(<meta\s+property="og:description"\s+content=")[^"]*/,
+        `$1${attribute(meta.description)}`,
+      )
+      .replace(/(<meta\s+property="og:image"\s+content=")[^"]*/, `$1${attribute(meta.image)}`);
+  }
+  if (!origin) return page;
+  const image = /<meta\s+property="og:image"\s+content="([^"]*)"/.exec(page)?.[1];
+  const absolute = image?.startsWith('/') ? `${origin}${image}` : image;
+  if (image && absolute) page = page.replace(`content="${image}"`, `content="${absolute}"`);
+  const has = (property: string) => new RegExp(`<meta\\s+property="${property}"`).test(page);
+  if (meta && has('og:image:alt'))
+    page = page.replace(
+      /(<meta\s+property="og:image:alt"\s+content=")[^"]*/,
+      `$1${attribute(meta.imageAlt)}`,
+    );
+  const extra = [
+    `<meta property="og:url" content="${attribute(`${origin}${path}`)}" />`,
+    ...(absolute ? [`<meta name="twitter:image" content="${absolute}" />`] : []),
+    ...(meta && !has('og:image:width')
+      ? [
+          '<meta property="og:image:width" content="1200" />',
+          '<meta property="og:image:height" content="630" />',
+        ]
+      : []),
+    ...(meta && !has('og:image:alt')
+      ? [`<meta property="og:image:alt" content="${attribute(meta.imageAlt)}" />`]
+      : []),
+  ];
+  return page.replace('</head>', `    ${extra.join('\n    ')}\n  </head>`);
+}
+
 /** The prerendered page for a path (e.g. /airspaces/chicago/index.html), if there is one. */
 function prerendered(dir: string, path: string): string | undefined {
   const clean = normalize(decodeURIComponent(path)).replace(/^(\.\.(\/|\\|$))+/, '');
@@ -44,8 +112,18 @@ function prerendered(dir: string, path: string): string | undefined {
 }
 
 /** Serves the built client from `dir`, with security headers on every response. */
-export async function serveClient(app: FastifyInstance, options: { dir: string; hsts: boolean }) {
+export async function serveClient(app: FastifyInstance, options: ClientOptions) {
   const dir = resolve(options.dir);
+  // Pages don't change while the server runs.
+  const pages = new Map<string, string>();
+  const read = (file: string) => {
+    let html = pages.get(file);
+    if (html === undefined) {
+      html = readFileSync(join(dir, file), 'utf8');
+      pages.set(file, html);
+    }
+    return html;
+  };
   if (!existsSync(join(dir, 'index.html')))
     throw new Error(`No built client in ${dir}: run npm run build first`);
 
@@ -66,7 +144,7 @@ export async function serveClient(app: FastifyInstance, options: { dir: string; 
   });
 
   // Pages: a public page's own HTML (title and link previews), else the app's shell.
-  app.setNotFoundHandler((request, reply) => {
+  app.setNotFoundHandler(async (request, reply) => {
     const path = request.url.split('?')[0] ?? '/';
     if (path.startsWith('/api/') || path === '/api') {
       return reply.code(404).send({ error: { code: 'not_found', message: 'No such route' } });
@@ -77,7 +155,10 @@ export async function serveClient(app: FastifyInstance, options: { dir: string; 
     if (/\.[a-z0-9]+$/i.test(path) && !path.endsWith('.html'))
       return reply.code(404).type('text/plain').send('Not found');
     const page = path === '/' ? undefined : prerendered(dir, path);
+    const meta = await options.pageMeta?.(path).catch(() => undefined);
     reply.header('cache-control', REVALIDATE);
-    return reply.sendFile(page ?? 'index.html');
+    return reply
+      .type('text/html; charset=utf-8')
+      .send(withPageMeta(read(page ?? 'index.html'), { origin: options.origin, path, meta }));
   });
 }
