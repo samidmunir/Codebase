@@ -101,8 +101,19 @@ export function ResultScreen() {
           <span className="pilot-pill" data-tone={verification.tone} title={verification.title}>
             {verification.label}
           </span>
+          {!result.ranked && (
+            <span className="pilot-pill" data-tone="caution" title={result.unrankedReason ?? ''}>
+              Not ranked
+            </span>
+          )}
         </div>
       </header>
+      {!result.ranked && (
+        <p className="result-unranked" role="note">
+          <strong>Not ranked:</strong> {result.unrankedReason ?? 'it doesn’t count for the records'}
+          . It doesn’t count for the records or the career.
+        </p>
+      )}
       <div className="result-share">
         <ShareButton
           share={resultShare({

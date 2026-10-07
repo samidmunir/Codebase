@@ -33,6 +33,13 @@ export const resultSummarySchema = z.object({
   rp: z.number(),
   stats: sessionStatsSchema,
   verification: verificationSchema,
+  /**
+   * Whether it counts for the records and the career: official scoring, the
+   * standard rules, a difficulty preset, and no traffic changes during it.
+   */
+  ranked: z.boolean(),
+  /** Why it doesn't count, when it doesn't. */
+  unrankedReason: z.string().nullable(),
   /** When the session was first played, and last updated. */
   playedAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
