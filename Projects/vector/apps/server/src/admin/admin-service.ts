@@ -349,14 +349,22 @@ export function adminService(deps: {
       return users.adminView(id);
     },
 
-    async deleteUser(actor: Actor, id: string): Promise<void> {
+    /** Deletes an account; with `withPosts`, its community posts and threads too. */
+    async deleteUser(
+      actor: Actor,
+      id: string,
+      options: { withPosts?: boolean } = {},
+    ): Promise<void> {
       if (id === actor.id) throw new AdminGuardError('You can’t delete your own account');
       const current = await users.findById(id);
       if (current && removesAdmin(current, { role: 'player' })) await keepAnAdmin();
-      const deleted = await users.delete(id);
+      const deleted = await users.delete(id, options);
       await audit.record(actor, 'user.delete', deleted.email, {
         displayName: deleted.displayName,
         role: deleted.role,
+        ...(options.withPosts
+          ? { threadsDeleted: deleted.removedThreads, postsDeleted: deleted.removedPosts }
+          : {}),
       });
     },
 

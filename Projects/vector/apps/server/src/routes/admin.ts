@@ -81,8 +81,12 @@ export async function adminRoutes(app: FastifyInstance, options: AdminRouteOptio
     return admin.updateUser(actor(request), id, adminUpdateUserRequestSchema.parse(request.body));
   });
 
+  /** Deletes an account (?posts=delete: its community posts and threads too). */
   app.delete('/admin/users/:id', { preHandler }, async (request, reply) => {
-    await admin.deleteUser(actor(request), userId(request));
+    const { posts } = z
+      .object({ posts: z.enum(['keep', 'delete']).default('keep') })
+      .parse(request.query);
+    await admin.deleteUser(actor(request), userId(request), { withPosts: posts === 'delete' });
     return reply.code(204).send();
   });
 

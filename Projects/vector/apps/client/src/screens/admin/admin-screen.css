@@ -1223,3 +1223,8 @@ a.admin-user-link:hover .admin-user-link__name {
   gap: var(--space-3);
   font-size: 0.85rem;
 }
+
+.admin-delete__confirm {
+  display: grid;
+  gap: var(--space-2);
+}

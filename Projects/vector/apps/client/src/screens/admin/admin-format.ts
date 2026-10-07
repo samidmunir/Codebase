@@ -101,6 +101,8 @@ const describeChange = (key: string, value: unknown, entry: AuditEntry): string 
   if (key === 'slug') return `/news/${String(value)}`;
   if (key === 'session') return `“${String(value)}”`;
   if (key === 'result') return `session ${String(value).slice(0, 8)}`;
+  if (key === 'threadsDeleted') return `${String(value)} thread${value === 1 ? '' : 's'} deleted`;
+  if (key === 'postsDeleted') return `${String(value)} post${value === 1 ? '' : 's'} deleted`;
   if (key === 'signIns') return `${String(value)} sign-in${value === 1 ? '' : 's'} ended`;
   if (value && typeof value === 'object' && 'from' in value && 'to' in value) {
     const change = value as { from: unknown; to: unknown };

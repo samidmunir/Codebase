@@ -578,10 +578,10 @@ export function AdminUserScreen() {
         <DeleteAccount
           email={user.email}
           busy={busy}
-          onDelete={async () => {
+          onDelete={async (withPosts) => {
             setBusy(true);
             try {
-              await deleteAdminUser(user.id);
+              await deleteAdminUser(user.id, withPosts);
               void navigate('/admin?tab=users', { replace: true });
             } catch (caught) {
               setNotice({ tone: 'alert', text: errorMessage(caught) });

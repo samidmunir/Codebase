@@ -142,36 +142,52 @@ export function DeleteAccount({
 }: {
   email: string;
   busy: boolean;
-  onDelete: () => Promise<void>;
+  /** With `withPosts`, their community posts and the threads they started go too. */
+  onDelete: (withPosts: boolean) => Promise<void>;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [typed, setTyped] = useState('');
+  const [withPosts, setWithPosts] = useState(false);
   return (
     <section className="admin-section admin-danger-zone">
       <h3>Delete account</h3>
       <p className="admin-muted">
-        Permanently removes the account, its saved sessions and settings. This can’t be undone.
+        Permanently removes the account and everything only theirs: saved sessions, results (and
+        their RP on the records), settings, sign-ins and their place on the waitlist. Their
+        community posts stay, shown as by a deleted pilot, unless you remove them too. This can’t be
+        undone.
       </p>
       {confirming ? (
-        <div className="admin-form__inline">
-          <input
-            className="admin-input"
-            aria-label="Type the email to confirm"
-            placeholder={`Type ${email} to confirm`}
-            value={typed}
-            onChange={(event) => setTyped(event.target.value)}
-          />
-          <button
-            type="button"
-            className="admin-button admin-button--danger"
-            disabled={busy || typed.trim().toLowerCase() !== email}
-            onClick={() => void onDelete()}
-          >
-            Delete permanently
-          </button>
-          <button type="button" className="admin-button" onClick={() => setConfirming(false)}>
-            Cancel
-          </button>
+        <div className="admin-delete__confirm">
+          <label className="admin-check">
+            <input
+              type="checkbox"
+              checked={withPosts}
+              onChange={(event) => setWithPosts(event.target.checked)}
+            />
+            Also delete their community posts, and the threads they started (with every reply in
+            them). For spam and abuse.
+          </label>
+          <div className="admin-form__inline">
+            <input
+              className="admin-input"
+              aria-label="Type the email to confirm"
+              placeholder={`Type ${email} to confirm`}
+              value={typed}
+              onChange={(event) => setTyped(event.target.value)}
+            />
+            <button
+              type="button"
+              className="admin-button admin-button--danger"
+              disabled={busy || typed.trim().toLowerCase() !== email}
+              onClick={() => void onDelete(withPosts)}
+            >
+              {withPosts ? 'Delete account and posts' : 'Delete permanently'}
+            </button>
+            <button type="button" className="admin-button" onClick={() => setConfirming(false)}>
+              Cancel
+            </button>
+          </div>
         </div>
       ) : (
         <button
