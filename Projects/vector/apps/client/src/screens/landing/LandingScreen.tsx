@@ -12,6 +12,7 @@ import { AIRSPACE_PITCH } from '../airspaces/airspace-pitch';
 import { useParallax, useReveal } from './landing-motion';
 import { LiveReadout } from './LiveReadout';
 import { FaqSection } from './FaqSection';
+import { PulseSection } from './PulseSection';
 import { RoadmapSection } from './RoadmapSection';
 import '../home-screen.css';
 import './landing.css';
@@ -204,6 +205,8 @@ export function LandingScreen() {
           ))}
         </div>
       </section>
+
+      <PulseSection />
 
       <RoadmapSection />
 

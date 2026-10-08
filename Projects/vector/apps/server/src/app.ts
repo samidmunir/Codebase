@@ -30,6 +30,7 @@ import { forumAdminService } from './forum/forum-admin-service';
 import { communityRoutes } from './routes/community';
 import { newsRepository } from './news/news-repository';
 import { newsRoutes } from './routes/news';
+import { pulseRoutes } from './routes/pulse';
 import { releasesRoutes } from './routes/releases';
 import { releasesRepository } from './releases/releases-repository';
 import { recordsRoutes } from './routes/records';
@@ -78,6 +79,11 @@ export interface AppDependencies {
     metars?: MetarService;
     /** Replaying results to verify them (defaults: 3 minutes after a session's last update, checked every 15 s). */
     verification?: { settleSec?: number; pollMs?: number };
+    /** The landing page's numbers: when they show (PULSE_MINIMUMS) and how long they're kept (tests change both). */
+    pulse?: {
+      minimums?: { sessions: number; landed: number; topPilots: number };
+      cacheMs?: number;
+    };
     /** Sending email (defaults: to the server log, with links to http://localhost:5173). */
     email?: { mailer?: Mailer; appUrl?: string };
   };
@@ -222,6 +228,11 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         });
         await api.register(airspacesRoutes, { airspaces });
         await api.register(recordsRoutes, { records, authenticate });
+        await api.register(pulseRoutes, {
+          db,
+          records,
+          ...deps.accounts.pulse,
+        });
         const news = newsRepository(db);
         newsPaths = async () => (await news.list(0, 200)).posts.map((post) => `/news/${post.slug}`);
         await api.register(newsRoutes, { news, audit, authenticate });
