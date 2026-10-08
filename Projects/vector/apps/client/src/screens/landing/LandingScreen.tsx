@@ -11,6 +11,7 @@ import { LatestNews } from '../news/LatestNews';
 import { AIRSPACE_PITCH } from '../airspaces/airspace-pitch';
 import { useParallax, useReveal } from './landing-motion';
 import { LiveReadout } from './LiveReadout';
+import { FaqSection } from './FaqSection';
 import { RoadmapSection } from './RoadmapSection';
 import '../home-screen.css';
 import './landing.css';
@@ -209,6 +210,8 @@ export function LandingScreen() {
       <div className="landing-section" data-reveal>
         <LatestNews />
       </div>
+
+      <FaqSection />
 
       {!signedIn && registrationMode === 'open' && (
         <section className="landing-cta" data-reveal>

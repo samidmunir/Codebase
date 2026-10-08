@@ -42,6 +42,9 @@ services:
         sync: false # e.g. https://staging.your-domain.example
       - key: TRUST_PROXY
         value: '1'
+      # Staging stays out of search results (robots.txt disallows everything).
+      - key: SEARCH_INDEXING
+        value: 'off'
       # Asked for when the blueprint is created, then set in the dashboard: log (to the
       # service's logs) until Resend is set up, then resend. Never reset by a sync.
       - key: EMAIL_DELIVERY
@@ -78,6 +81,9 @@ services:
         sync: false # e.g. https://your-domain.example
       - key: TRUST_PROXY
         value: '1'
+      # Search engines may index production (robots.txt, sitemap.xml).
+      - key: SEARCH_INDEXING
+        value: 'on'
       # Asked for when the blueprint is created, then set in the dashboard: log (to the
       # service's logs) until Resend is set up, then resend. Never reset by a sync.
       - key: EMAIL_DELIVERY

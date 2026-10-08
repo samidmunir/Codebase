@@ -2,7 +2,23 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
+import faq from './src/screens/landing/faq.json' with { type: 'json' };
 import publicPages from './src/site/public-pages.json' with { type: 'json' };
+
+/**
+ * The front page's questions, as FAQ data search engines can show. Marked with its page:
+ * the front page's HTML is also the app's shell for other pages, and the server leaves
+ * it out of those.
+ */
+const FAQ_DATA = `<script type="application/ld+json" data-page="/">${JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+}).replace(/</g, '\\u003c')}</script>`;
 
 /** This build's id: the app compares it with the server's /version.json to notice deploys. */
 const BUILD_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -45,7 +61,9 @@ function publicPageMeta(): Plugin {
           .replace(titleTag, `$1${escape(title)}`)
           .replace(descriptionTag, `$1${escape(description)}`)
           .replace(ogTitleTag, `$1${escape(title)}`)
-          .replace(ogDescriptionTag, `$1${escape(description)}`);
+          .replace(ogDescriptionTag, `$1${escape(description)}`)
+          // The questions are on the front page only.
+          .replace('</head>', path === '/' ? `    ${FAQ_DATA}\n  </head>` : '</head>');
         const dir = join(outDir, path);
         mkdirSync(dir, { recursive: true });
         writeFileSync(join(dir, 'index.html'), page);

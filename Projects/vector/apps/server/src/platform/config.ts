@@ -34,6 +34,11 @@ const configSchema = z.object({
    * Unset in development, where Vite serves it.
    */
   CLIENT_DIR: z.string().min(1).optional(),
+  /**
+   * Whether search engines may index the site: on for production, off for staging (so
+   * it doesn't compete with the real site). Off: robots.txt disallows everything.
+   */
+  SEARCH_INDEXING: z.enum(['on', 'off']).default('off'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   /**
    * Where emails go: `resend` sends them; `log` writes them to the server log;
