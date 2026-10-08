@@ -30,6 +30,8 @@ import { forumAdminService } from './forum/forum-admin-service';
 import { communityRoutes } from './routes/community';
 import { newsRepository } from './news/news-repository';
 import { newsRoutes } from './routes/news';
+import { releasesRoutes } from './routes/releases';
+import { releasesRepository } from './releases/releases-repository';
 import { recordsRoutes } from './routes/records';
 import { recordsRepository } from './records/records-repository';
 import { resultsRoutes } from './routes/results';
@@ -219,6 +221,11 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         await api.register(airspacesRoutes, { airspaces });
         await api.register(recordsRoutes, { records, authenticate });
         await api.register(newsRoutes, { news: newsRepository(db), audit, authenticate });
+        await api.register(releasesRoutes, {
+          releases: releasesRepository(db),
+          audit,
+          authenticate,
+        });
         const forum = forumRepository(db);
         await api.register(communityRoutes, {
           forum: forumService({

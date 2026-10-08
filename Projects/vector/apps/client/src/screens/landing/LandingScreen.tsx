@@ -11,6 +11,7 @@ import { LatestNews } from '../news/LatestNews';
 import { AIRSPACE_PITCH } from '../airspaces/airspace-pitch';
 import { useParallax, useReveal } from './landing-motion';
 import { LiveReadout } from './LiveReadout';
+import { RoadmapSection } from './RoadmapSection';
 import '../home-screen.css';
 import './landing.css';
 
@@ -202,6 +203,8 @@ export function LandingScreen() {
           ))}
         </div>
       </section>
+
+      <RoadmapSection />
 
       <div className="landing-section" data-reveal>
         <LatestNews />

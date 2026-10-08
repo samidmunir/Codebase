@@ -10,6 +10,7 @@ export * from './community';
 export * from './email';
 export * from './news';
 export * from './records';
+export * from './releases';
 export * from './results';
 export * from './settings';
 export * from './sign-ins';

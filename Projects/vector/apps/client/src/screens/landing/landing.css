@@ -584,3 +584,56 @@
     animation: none;
   }
 }
+
+/* ---- Roadmap: what the next version brings ----------------------------------------- */
+
+.landing-roadmap__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  align-items: end;
+  gap: var(--space-8);
+  margin-bottom: var(--space-6);
+}
+
+.landing-roadmap__head .landing-section__title {
+  margin-bottom: var(--space-2);
+}
+
+.landing-roadmap__name {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.landing-roadmap__summary {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.landing-roadmap__feature {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 181, 71, 0.07), transparent 55%),
+    var(--color-surface);
+}
+
+.landing-roadmap__more {
+  margin: var(--space-4) 0 0;
+}
+
+.landing-roadmap__more a {
+  color: var(--color-target);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.landing-roadmap__more a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  .landing-roadmap__head {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+}

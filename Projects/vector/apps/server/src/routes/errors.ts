@@ -19,6 +19,7 @@ import { SavedSessionLimitError, SavedSessionNotFoundError } from '../sessions/s
 import { EmailTakenError, HandleTakenError, UserNotFoundError } from '../users/users-repository';
 import { ResultNotFoundError } from '../results/results-repository';
 import { NewsNotFoundError, SlugTakenError } from '../news/news-repository';
+import { ReleaseNotFoundError, VersionTakenError } from '../releases/releases-repository';
 import { InvalidResultError } from '../results/results-service';
 import { WeatherUnavailableError } from '../weather/metar-service';
 import {
@@ -159,6 +160,10 @@ export function errorHandler(
     return reply.code(403).send(body('forbidden', error.message));
   if (error instanceof AdminGuardError)
     return reply.code(409).send(body('admin_guard', error.message));
+  if (error instanceof ReleaseNotFoundError)
+    return reply.code(404).send(body('release_not_found', error.message));
+  if (error instanceof VersionTakenError)
+    return reply.code(409).send(body('version_taken', error.message, { version: error.message }));
   if (error instanceof NewsNotFoundError)
     return reply.code(404).send(body('news_not_found', error.message));
   if (error instanceof SlugTakenError)

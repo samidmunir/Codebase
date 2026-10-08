@@ -1228,3 +1228,26 @@ a.admin-user-link:hover .admin-user-link__name {
   display: grid;
   gap: var(--space-2);
 }
+
+/* ---- Releases (the roadmap) ---------------------------------------------------------- */
+
+.admin-release__features-title {
+  margin: var(--space-2) 0 0;
+}
+
+.admin-release__features {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-release__feature {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}
