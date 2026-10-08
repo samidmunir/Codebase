@@ -5,6 +5,10 @@
   pointer-events: none;
 }
 
+.live-scope--interactive {
+  pointer-events: auto;
+}
+
 .live-scope .radar-scope,
 .live-scope .radar-scope__layer {
   position: absolute;

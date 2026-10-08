@@ -50,9 +50,14 @@ const handoffChecks = new WeakMap<object, Map<string, number>>();
  * would accept, and hands traffic to Center when Center would take it. Not a good
  * controller, just enough to keep traffic moving.
  */
-export function runDemoController(session: ScopeSession): void {
+export function runDemoController(
+  session: ScopeSession,
+  /** Aircraft a visitor is working (the landing page's try-it): left alone. */
+  leaveAlone?: (aircraftId: string) => boolean,
+): void {
   const { engine, pack } = session;
   const give = (id: string, commands: AtcCommand[]) => {
+    if (leaveAlone?.(id)) return;
     if (engine.pendingInstructions(id).length > 0) return;
     // If the pilot can't take all of it (a speed, say), give what they can.
     const withoutSpeed = commands.filter((command) => command.type !== 'speed');
