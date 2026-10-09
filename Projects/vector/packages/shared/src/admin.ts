@@ -161,6 +161,7 @@ export const AUDIT_ACTIONS = [
   'airspace.update',
   'site.update',
   'scoring.update',
+  'rules.update',
   'release.create',
   'release.update',
   'release.delete',

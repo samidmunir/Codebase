@@ -86,6 +86,8 @@ export const pilotProfileSchema = z.discriminatedUnion('visibility', [
     /** Career RP after each session, oldest first. */
     history: z.array(z.object({ at: z.iso.datetime(), rp: z.number() })),
     recent: z.array(resultSummarySchema),
+    /** Every session listed (ranked or practice); the career counts the ranked ones. */
+    sessionsListed: z.number().int().min(0),
   }),
   z.object({ visibility: z.literal('private'), pilot: z.object({ handle: z.string() }) }),
 ]);

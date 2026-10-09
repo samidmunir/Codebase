@@ -7,9 +7,13 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 
 // Every test shares the test database: put the official scoring back.
 test.afterEach(() => {
-  execFileSync('psql', [process.env.TEST_DATABASE_URL!, '-qtAc', 'TRUNCATE scoring_versions'], {
-    stdio: 'pipe',
-  });
+  execFileSync(
+    'psql',
+    [process.env.TEST_DATABASE_URL!, '-qtAc', 'TRUNCATE session_rules_versions'],
+    {
+      stdio: 'pipe',
+    },
+  );
 });
 
 test('an admin sets the official scoring, and every new session uses it', async ({ page }) => {
@@ -24,13 +28,13 @@ test('an admin sets the official scoring, and every new session uses it', async 
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(accountMenu(page)).toBeVisible();
   await openFromMenu(page, 'Admin');
-  await page.getByRole('button', { name: 'Scoring', exact: true }).click();
+  await page.getByRole('button', { name: 'Session rules', exact: true }).click();
 
-  const card = page.getByRole('region', { name: 'Official scoring' });
+  const card = page.getByRole('region', { name: 'Session rules' });
   await expect(card).toContainText('The defaults: never changed.');
   await card.getByLabel('Landing', { exact: false }).first().fill('150');
   await card.getByRole('button', { name: 'Save 1 change' }).click();
-  await expect(page.getByText(/Saved: new sessions use it from now on/)).toBeVisible();
+  await expect(page.getByText(/Saved: new sessions use them from now on/)).toBeVisible();
   await expect(page.getByRole('region', { name: 'Earlier versions' })).toContainText('Current');
 
   // A new session (from any player) uses it, whatever was stored on the device.
@@ -41,5 +45,5 @@ test('an admin sets the official scoring, and every new session uses it', async 
 
   // And it's in the log.
   await page.goto('/admin?tab=activity');
-  await expect(page.locator('.admin-table tbody')).toContainText('Changed the official scoring');
+  await expect(page.locator('.admin-table tbody')).toContainText('Changed the session rules');
 });

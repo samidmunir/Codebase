@@ -1251,3 +1251,42 @@ a.admin-user-link:hover .admin-user-link__name {
   border: 1px solid var(--color-surface-border);
   border-radius: var(--radius-sm);
 }
+
+.admin-rules__group {
+  border-top: 1px solid var(--color-surface-border);
+}
+
+.admin-rules__group summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Saving stays in reach while scrolling through the settings. */
+.admin-rules__save {
+  position: sticky;
+  bottom: 0;
+  padding: var(--space-3) 0;
+  background: linear-gradient(transparent, var(--color-surface) 30%);
+}
+
+/* Many tabs: one line, scrolling sideways when they don't fit. */
+.admin-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.admin-tabs > * {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Each setting gets the full width unless there's room for two. */
+.admin-rules__group .admin-scoring {
+  grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+}

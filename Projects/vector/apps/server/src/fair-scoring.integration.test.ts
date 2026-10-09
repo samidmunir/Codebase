@@ -1,6 +1,6 @@
 import {
   applyDifficulty,
-  defaultScoring,
+  defaultOfficial,
   defaultSettings,
   type SessionSettings,
 } from '@vector/shared';
@@ -113,12 +113,12 @@ describe.skipIf(!db)('fair scoring (integration)', () => {
 
   beforeEach(async () => {
     await db!.query('TRUNCATE users CASCADE');
-    await db!.query('TRUNCATE scoring_versions');
+    await db!.query('TRUNCATE session_rules_versions');
     ace = await pilot('Ace');
   });
 
   afterAll(async () => {
-    await db?.query('TRUNCATE scoring_versions');
+    await db?.query('TRUNCATE session_rules_versions');
     await app.close();
     await db?.end();
   });
@@ -154,6 +154,19 @@ describe.skipIf(!db)('fair scoring (integration)', () => {
         unrankedReason: 'Custom traffic isn’t ranked: choose Easy, Normal, Hard or Expert',
       },
     );
+    expect(
+      await record(ace, 'w', { ...normal(), 'weather.runwayChangeNoticeMin': 1 }),
+    ).toMatchObject({
+      ranked: false,
+      unrankedReason: 'Played with non-standard weather or traffic settings',
+    });
+    expect(await record(ace, 'm', { ...normal(), 'weather.windMode': 'manual' })).toMatchObject({
+      ranked: false,
+      unrankedReason: 'Manual wind is for practice: choose live or random wind for the records',
+    });
+    expect((await record(ace, 'r', { ...normal(), 'weather.windMode': 'random' })).ranked).toBe(
+      true,
+    );
     expect(await record(ace, 'd', normal(), { changeTraffic: true })).toMatchObject({
       ranked: false,
       unrankedReason: 'Traffic was changed during the session',
@@ -172,20 +185,25 @@ describe.skipIf(!db)('fair scoring (integration)', () => {
   });
 
   it('lets admins (only) change the official scoring, and keeps the previous version counting', async () => {
-    expect((await app.inject({ method: 'GET', url: '/api/scoring' })).json()).toEqual({
-      values: defaultScoring(),
+    expect((await app.inject({ method: 'GET', url: '/api/session-rules' })).json()).toEqual({
+      values: defaultOfficial(),
       changedAt: null,
     });
     const chief = await pilot('Chief', true);
-    const changed = { ...defaultScoring(), 'scoring.landingRp': 150 };
+    // Scoring and a rule (the Center handoff window) at once.
+    const changed = {
+      ...defaultOfficial(),
+      'scoring.landingRp': 150,
+      'center.handoffWindowNm': 25,
+    };
     const put = (as: Pilot, payload: object) =>
-      app.inject({ method: 'PUT', url: '/api/admin/scoring', headers: as.headers, payload });
+      app.inject({ method: 'PUT', url: '/api/admin/session-rules', headers: as.headers, payload });
     expect((await put(ace, changed)).statusCode).toBe(403);
     expect(
       (await put(chief, { 'scoring.landingRp': -5, 'separation.lateralNm': 1 })).statusCode,
     ).toBe(400);
     expect((await put(chief, changed)).statusCode).toBe(204);
-    const official = (await app.inject({ method: 'GET', url: '/api/scoring' })).json();
+    const official = (await app.inject({ method: 'GET', url: '/api/session-rules' })).json();
     expect(official.values['scoring.landingRp']).toBe(150);
     expect(official.changedAt).not.toBeNull();
 
@@ -197,8 +215,11 @@ describe.skipIf(!db)('fair scoring (integration)', () => {
       await app.inject({ method: 'GET', url: '/api/admin/audit', headers: chief.headers })
     ).json();
     expect(log.entries[0]).toMatchObject({
-      action: 'scoring.update',
-      details: { 'scoring.landingRp': { from: 100, to: 150 } },
+      action: 'rules.update',
+      details: {
+        'scoring.landingRp': { from: 100, to: 150 },
+        'center.handoffWindowNm': { to: 25 },
+      },
     });
   });
 

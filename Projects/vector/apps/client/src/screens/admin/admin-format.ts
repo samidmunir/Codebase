@@ -17,6 +17,7 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'user.sessionDelete': 'Deleted a saved session',
   'site.update': 'Changed a site switch',
   'scoring.update': 'Changed the official scoring',
+  'rules.update': 'Changed the session rules',
   'release.create': 'Added a version to the roadmap',
   'release.update': 'Edited a version on the roadmap',
   'release.delete': 'Deleted a version from the roadmap',
