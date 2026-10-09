@@ -851,3 +851,195 @@
     border-top: 1px solid var(--color-surface-border);
   }
 }
+
+/* ---- Try it: a visitor works an aircraft in the hero's live session ----------------- */
+
+/* Clicks reach the scope except over the words and the panel. */
+.landing-hero__inner {
+  pointer-events: none;
+}
+
+.landing-hero__content,
+.landing-hero__readout {
+  pointer-events: auto;
+}
+
+/* While trying, the scope holds still (no parallax), so aircraft are easy to click. */
+.landing-hero[data-trying] {
+  --px: 0 !important;
+  --py: 0 !important;
+}
+
+.landing-hero__try {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 16px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: rgba(76, 242, 160, 0.06);
+  border: 1px solid rgba(76, 242, 160, 0.4);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.landing-hero__try:hover {
+  background: rgba(76, 242, 160, 0.14);
+}
+
+.hero-try {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: rgba(7, 12, 16, 0.86);
+  border: 1px solid rgba(76, 242, 160, 0.4);
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+.hero-try p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.hero-try__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-try__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero-try__close {
+  padding: 2px 8px;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.hero-try__aircraft {
+  display: grid;
+  gap: 2px;
+  font-family: var(--font-data);
+}
+
+.hero-try__aircraft strong {
+  color: var(--color-target);
+  font-size: 1.3rem;
+}
+
+.hero-try__aircraft span {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.hero-try__data {
+  color: var(--color-text) !important;
+}
+
+.hero-try__options {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.hero-try__options button {
+  padding: 9px 12px;
+  color: var(--color-text);
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.hero-try__options button:hover {
+  background: rgba(76, 242, 160, 0.1);
+  border-color: rgba(76, 242, 160, 0.45);
+}
+
+.hero-try__problem {
+  color: var(--color-caution) !important;
+}
+
+.hero-try__done {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.hero-try__calls {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-data);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  list-style: none;
+}
+
+.hero-try__calls li span {
+  display: block;
+  color: var(--color-text-faint);
+  font-size: 0.7rem;
+}
+
+.hero-try__calls li[data-controller] {
+  color: var(--color-target);
+}
+
+.hero-try__waiting {
+  color: var(--color-text-faint);
+}
+
+.hero-try__nice strong {
+  color: var(--color-text);
+}
+
+.hero-try__next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.hero-try__primary {
+  padding: 9px 14px;
+  color: #04120c;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--color-target);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.hero-try__link {
+  padding: 0;
+  color: var(--color-target);
+  font: inherit;
+  font-size: 0.88rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}

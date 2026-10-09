@@ -43,6 +43,11 @@ interface RadarScopeProps {
   highlightFix?: string | undefined;
   /** Ctrl-click (Cmd-click) on a fix while an aircraft is selected. */
   onFixCommand?: (ident: string) => void;
+  /**
+   * Clicks select aircraft, and that's all: no zoom, pan or measuring, so the wheel and
+   * drags still scroll the page around it (the landing page's hero).
+   */
+  selectOnly?: boolean;
   ref?: Ref<RadarScopeHandle>;
 }
 
@@ -76,6 +81,7 @@ export function RadarScope({
   highlightFix,
   onFixCommand,
   ref,
+  selectOnly = false,
 }: RadarScopeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -83,6 +89,10 @@ export function RadarScope({
 
   const cameraRef = useRef<Camera | null>(null);
   const settingsRef = useRef(settings);
+  const selectOnlyRef = useRef(selectOnly);
+  useEffect(() => {
+    selectOnlyRef.current = selectOnly;
+  });
   const mapDirtyRef = useRef(true);
   const hitsRef = useRef<TargetHitArea[]>([]);
   const hoveredRef = useRef<string | undefined>(undefined);
@@ -260,6 +270,8 @@ export function RadarScope({
   useEffect(() => {
     const canvas = trafficCanvasRef.current!;
     const onWheel = (event: WheelEvent) => {
+      // Select-only: the wheel scrolls the page.
+      if (selectOnlyRef.current) return;
       event.preventDefault();
       const camera = cameraRef.current;
       if (!camera) return;
@@ -276,6 +288,12 @@ export function RadarScope({
     const camera = cameraRef.current;
     if (!camera) return;
     const point = pointFromEvent(event, event.currentTarget);
+    if (selectOnly) {
+      // A press that turns into a drag isn't a click (and doesn't pan).
+      if (event.button === 0)
+        gestureRef.current = { kind: 'pan', start: point, camera, moved: false };
+      return;
+    }
     // Ctrl-click (Cmd-click on a Mac, where Ctrl-click is a right click) on a fix: direct-to.
     if (event.button === 0 && ctrlClickActive(event)) {
       const fix = fixAt(session.pack, camera, point);
@@ -308,7 +326,8 @@ export function RadarScope({
       const dy = point.y - gesture.start.y;
       if (gesture.moved || Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) {
         gesture.moved = true;
-        setCamera({ ...pan(gesture.camera, dx, dy), width: camera.width, height: camera.height });
+        if (!selectOnly)
+          setCamera({ ...pan(gesture.camera, dx, dy), width: camera.width, height: camera.height });
       }
     } else if (gesture?.kind === 'measure') {
       gesture.to = unproject(camera, point);
@@ -318,7 +337,7 @@ export function RadarScope({
         ? fixAt(session.pack, camera, point)?.ident
         : undefined;
       event.currentTarget.style.cursor =
-        hoveredRef.current || ctrlFixRef.current ? 'pointer' : 'crosshair';
+        hoveredRef.current || ctrlFixRef.current ? 'pointer' : selectOnly ? 'default' : 'crosshair';
     }
   };
 
@@ -343,6 +362,7 @@ export function RadarScope({
   };
 
   const onDoubleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (selectOnly) return;
     const camera = cameraRef.current;
     if (camera) zoomSmoothly(pointFromEvent(event, event.currentTarget), 1);
   };

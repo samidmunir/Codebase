@@ -11,6 +11,8 @@ import { LatestNews } from '../news/LatestNews';
 import { AIRSPACE_PITCH } from '../airspaces/airspace-pitch';
 import { useParallax, useReveal } from './landing-motion';
 import { LiveReadout } from './LiveReadout';
+import { pickAircraft, useCanTry, useHeroVisitor } from './hero-try';
+import { TryPanel } from './HeroTry';
 import { FaqSection } from './FaqSection';
 import { PulseSection } from './PulseSection';
 import { RoadmapSection } from './RoadmapSection';
@@ -70,16 +72,21 @@ export function LandingScreen() {
   const [session, setSession] = useState<ScopeSession | undefined>(undefined);
   const onSession = useCallback((running: ScopeSession) => setSession(running), []);
   useParallax(hero);
+  // Visitors with a mouse can work an aircraft in the live session.
+  const canTry = useCanTry();
+  const visitor = useHeroVisitor();
+  const trying = Boolean(session && visitor.selectedId);
 
   return (
     <div className="landing" ref={page}>
-      <section className="landing-hero" ref={hero}>
+      <section className="landing-hero" ref={hero} data-trying={trying || undefined}>
         <div className="landing-hero__scope">
           <LiveScope
             label="A live Vector session over New York: traffic arriving, departing and crossing the airspace"
             traffic={HERO_TRAFFIC}
             warmUpMinutes={HERO_WARM_UP_MIN}
             onSession={onSession}
+            {...(canTry ? { visitor } : {})}
           />
         </div>
         <div className="landing-hero__shade" aria-hidden="true" />
@@ -132,13 +139,27 @@ export function LandingScreen() {
                   </Link>
                 </>
               )}
+              {canTry && session && (
+                <button
+                  type="button"
+                  className="landing-hero__try"
+                  onClick={() => visitor.onSelect(pickAircraft(session))}
+                >
+                  <span className="landing-hero__pulse" aria-hidden="true" /> Try it: work an
+                  aircraft
+                </button>
+              )}
               <Link to="/airspaces/new-york" className="landing-hero__link">
                 Explore N90 →
               </Link>
             </div>
           </div>
           <div className="landing-hero__readout">
-            <LiveReadout session={session} />
+            {session && trying ? (
+              <TryPanel session={session} visitor={visitor} />
+            ) : (
+              <LiveReadout session={session} />
+            )}
           </div>
         </div>
         <span className="landing-hero__cue" aria-hidden="true">
