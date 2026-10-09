@@ -8,7 +8,7 @@ import { parseSnapshot, scoreStats, sessionReport } from '@vector/sim-core';
 import { createDatabase } from '../platform/database';
 import { rankSession } from '../results/ranking';
 import { resultsRepository } from '../results/results-repository';
-import { scoringRepository } from '../results/scoring-repository';
+import { sessionRulesRepository } from '../results/session-rules-repository';
 import '../platform/config';
 
 const useTestDb = process.argv.includes('--test');
@@ -47,7 +47,7 @@ try {
     }
     // A session saved after replays existed records under its own id; older ones by the save's.
     const sessionKey = state.replay?.sessionId ?? `saved-${row.id}`;
-    const ranking = rankSession(state.replay, await scoringRepository(db).versions());
+    const ranking = rankSession(state.replay, await sessionRulesRepository(db).versions());
     await results.upsert(row.user_id, {
       sessionKey,
       airspaceId: row.airspace_id,

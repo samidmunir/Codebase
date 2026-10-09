@@ -479,8 +479,8 @@
     </li>
   </ul>
   <p>
-    Pilots take 2–6 seconds to respond (a setting). The instruction shows as pending until they read
-    it back, and they only start turning, climbing or slowing after that.
+    Pilots take 2–6 seconds to respond. The instruction shows as pending until they read it back,
+    and they only start turning, climbing or slowing after that.
   </p>
 </section>
 
@@ -1056,8 +1056,10 @@
     </li>
     <li>
       These values are the same for every pilot: they’re set by Vector’s admins, not in your
-      settings, so the records compare like with like. So are the rules: separation minima, wake
-      turbulence, approach criteria, Center and radar.
+      settings, so the records compare like with like. So are the rules (separation minima, wake
+      turbulence, approach criteria, Center and radar) and the conditions (how the wind varies,
+      runway changes, the departure queue and the airline mix). You choose the difficulty, live or
+      random wind (manual wind is for practice, not ranked), the sim speeds and your aids.
     </li>
   </ul>
   <h3>Target times</h3>
@@ -1120,8 +1122,8 @@
       is ahead) and your <b>on-time rate</b>, plus the flights <b>due next</b>.
     </li>
     <li>
-      A flight that leaves without a handoff has no time scored (it loses 100 RP instead). Target
-      times can be turned off, and every value is a setting.
+      A flight that leaves without a handoff has no time scored (it loses 100 RP instead). The
+      values are set by Vector’s admins, the same for every pilot.
     </li>
     <li>
       Your session RP is saved with the session. The start screen shows each saved session’s RP and
@@ -1160,13 +1162,13 @@
   </p>
   <p>
     <b>Live weather.</b> In the Live wind mode (the default) Vector uses the real current METARs for
-    your airports from the Aviation Weather Center, and checks for a new report every 5 minutes
-    during the session (a setting); airports issue one about hourly, and special reports when the
-    weather changes. Winds are shown magnetic, as on an ATIS, and gusts as reported. The top bar
-    marks the wind <span class="mono">LIVE</span>; hover over it for each airport’s report. If a
-    check fails the badge turns amber and the last reports stay in use (or a realistic wind, if none
-    has arrived yet). A new report can bring a runway change like any other wind shift. The wind
-    doesn’t drift on its own in Live mode.
+    your airports from the Aviation Weather Center, and checks for a new report every few minutes
+    during the session; airports issue one about hourly, and special reports when the weather
+    changes. Winds are shown magnetic, as on an ATIS, and gusts as reported. The top bar marks the
+    wind <span class="mono">LIVE</span>; hover over it for each airport’s report. If a check fails
+    the badge turns amber and the last reports stay in use (or a realistic wind, if none has arrived
+    yet). A new report can bring a runway change like any other wind shift. The wind doesn’t drift
+    on its own in Live mode.
   </p>
   <p>
     Of the configurations that keep tailwind at 5 kt or less and crosswind at 20 kt or less on every
@@ -1251,11 +1253,10 @@
     <b>Runway changes.</b> When the wind drifts far enough that an airport’s runways go over the
     tailwind or crosswind limit, or they have a tailwind while other runways would get a clear
     headwind (at least 5 kt more), the airport announces a runway change: a notice pops up, and the
-    Departures panel counts down to it with the new runways. After the notice (10 minutes by
-    default) the new runways are in use. Aircraft already cleared for an approach to the old runway
-    still land there; clear everyone else for the new runways. An airport keeps its runways for at
-    least 30 minutes after a change, and runways you picked yourself on the setup screen are never
-    changed.
+    Departures panel counts down to it with the new runways. After the notice (10 minutes) the new
+    runways are in use. Aircraft already cleared for an approach to the old runway still land there;
+    clear everyone else for the new runways. An airport keeps its runways for at least 30 minutes
+    after a change, and runways you picked yourself on the setup screen are never changed.
   </p>
   <p>Only runways in use get final approach course lines on the scope.</p>
 </section>

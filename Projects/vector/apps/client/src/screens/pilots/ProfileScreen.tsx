@@ -91,7 +91,7 @@ export function ProfileScreen() {
 function PublicProfile({ profile }: { profile: Extract<PilotProfile, { visibility: 'public' }> }) {
   const { pilot, career, byAirspace, history } = profile;
   const [sessions, setSessions] = useState<ResultSummary[]>(profile.recent);
-  const [total, setTotal] = useState(career.sessions);
+  const [total, setTotal] = useState(profile.sessionsListed);
   const [loadingMore, setLoadingMore] = useState(false);
   const losses = lossesPer100(career);
   const onTime = onTimeRate(career.stats);
@@ -181,7 +181,7 @@ function PublicProfile({ profile }: { profile: Extract<PilotProfile, { visibilit
         ))}
       </dl>
 
-      {career.sessions === 0 ? (
+      {sessions.length === 0 ? (
         <section className="pilot-card pilot-empty">
           <p>
             {pilot.isYou

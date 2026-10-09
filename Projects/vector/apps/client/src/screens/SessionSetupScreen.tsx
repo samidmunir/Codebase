@@ -6,6 +6,7 @@ import {
   DIFFICULTY_LEVELS,
   IN_SESSION_TRAFFIC_KEYS,
   PLAYER_SESSION_KEYS,
+  withOfficialRules,
   SESSION_SETTINGS,
   type SessionSettings,
 } from '@vector/shared';
@@ -16,6 +17,7 @@ import { SettingRow } from '../components/settings/SettingControl';
 import { useGameControls } from '../controls/use-game-controls';
 import { shortAirport } from '../scope/data-block';
 import { formatWind } from './scope/format';
+import { getOfficialSettings } from '../api/session-rules-api';
 import { fetchMetars } from '../api/weather-api';
 import { DIFFICULTY_LABELS } from '../settings/difficulty';
 import {
@@ -39,15 +41,10 @@ const keysIn = (prefix: string) =>
     (key) => key.startsWith(prefix) && PLAYER_SESSION_KEYS.includes(key),
   );
 
-const TRAFFIC_KEYS: SessionKey[] = [...IN_SESSION_TRAFFIC_KEYS, 'traffic.fleetMix'];
-const WIND_LIMIT_KEYS: SessionKey[] = [
-  'weather.maxTailwindKts',
-  'weather.maxCrosswindKts',
-  'weather.windVariation',
-  'weather.windVariationPeriodMin',
-  'weather.runwayChanges',
-  'weather.runwayChangeNoticeMin',
-];
+/** The traffic a player sets: the rates (the queue and the airline mix are official). */
+const TRAFFIC_KEYS: SessionKey[] = IN_SESSION_TRAFFIC_KEYS.filter((key) =>
+  PLAYER_SESSION_KEYS.includes(key),
+);
 
 /** Player aids and options, collapsed by default. */
 const ADVANCED_GROUPS: { label: string; keys: SessionKey[] }[] = [
@@ -71,6 +68,22 @@ export function SessionSetupScreen() {
     seed: newSeed(),
     runwayConfigs: {},
   }));
+
+  // The official settings (the wind limits pick the runways in the preview, too).
+  useEffect(() => {
+    let current = true;
+    void getOfficialSettings().then(
+      (official) =>
+        current &&
+        setSetup((before) => ({
+          ...before,
+          settings: withOfficialRules(before.settings, official),
+        })),
+    );
+    return () => {
+      current = false;
+    };
+  }, []);
 
   useGameControls({ closeMenu: () => void navigate('/play') });
 
@@ -261,10 +274,6 @@ export function SessionSetupScreen() {
                   </div>
                 </div>
               )}
-              {live && row('weather.livePollMin')}
-              {WIND_LIMIT_KEYS.filter(
-                (key) => !live || !key.startsWith('weather.windVariation'),
-              ).map((key) => row(key))}
             </div>
 
             {preview && (
@@ -402,15 +411,21 @@ export function SessionSetupScreen() {
               </dd>
             </div>
           </dl>
-          <p className="setup-summary__ranked" data-ranked={difficulty !== 'custom'}>
+          <p className="setup-summary__ranked" data-ranked={difficulty !== 'custom' && !manualWind}>
             {difficulty === 'custom' ? (
               <>
                 <strong>Practice · not ranked.</strong> Choose Easy, Normal, Hard or Expert for the
                 records.
               </>
+            ) : manualWind ? (
+              <>
+                <strong>Practice · not ranked.</strong> Manual wind is for practice: choose live or
+                random wind for the records.
+              </>
             ) : (
               <>
-                <strong>Ranked.</strong> Scoring and the rules are the same for every pilot.
+                <strong>Ranked.</strong> Scoring, the rules and the conditions are the same for
+                every pilot.
               </>
             )}
           </p>

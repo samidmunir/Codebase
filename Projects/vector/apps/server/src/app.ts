@@ -51,9 +51,9 @@ import { savedSessionsRepository } from './sessions/sessions-repository';
 import { settingsRepository } from './settings/settings-repository';
 import { usersRepository } from './users/users-repository';
 import { metarService, type MetarService } from './weather/metar-service';
-import { scoringRoutes } from './routes/scoring';
+import { sessionRulesRoutes } from './routes/session-rules';
 import { shareRoutes } from './routes/share';
-import { scoringRepository } from './results/scoring-repository';
+import { sessionRulesRepository } from './results/session-rules-repository';
 import { shareService } from './share/share-service';
 
 /** A shared pilot's page: /pilots/<handle>. */
@@ -130,10 +130,10 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         const resultsRepo = resultsRepository(db);
         const records = recordsRepository(db);
         const audit = auditRepository(db);
-        const scoring = scoringRepository(db);
+        const rules = sessionRulesRepository(db);
         const results = resultsService({
           results: resultsRepo,
-          scoring,
+          rules,
           users,
           airspaces,
           records,
@@ -262,7 +262,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           authenticate,
           secureCookies,
         });
-        await api.register(scoringRoutes, { scoring, audit, authenticate });
+        await api.register(sessionRulesRoutes, { rules, audit, authenticate });
         await api.register(adminRoutes, {
           stats: statsRepository(db),
           admin: adminService({

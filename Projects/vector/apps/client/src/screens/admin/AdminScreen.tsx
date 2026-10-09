@@ -10,7 +10,7 @@ import { DashboardTab } from './DashboardTab';
 import { OverviewTab } from './OverviewTab';
 import { ReleasesTab } from './ReleasesTab';
 import { ResultsTab } from './ResultsTab';
-import { ScoringTab } from './ScoringTab';
+import { SessionRulesTab } from './SessionRulesTab';
 import { SessionsTab } from './SessionsTab';
 import { SiteTab } from './SiteTab';
 import { UsersTab } from './UsersTab';
@@ -23,7 +23,7 @@ const TABS = [
   { id: 'airspaces', label: 'Airspaces' },
   { id: 'site', label: 'Site' },
   { id: 'beta', label: 'Beta' },
-  { id: 'scoring', label: 'Scoring' },
+  { id: 'rules', label: 'Session rules' },
   { id: 'results', label: 'Results' },
   { id: 'sessions', label: 'Saved sessions' },
   { id: 'news', label: 'News' },
@@ -95,7 +95,7 @@ export function AdminScreen() {
         {tab === 'airspaces' && <AirspacesTab />}
         {tab === 'site' && <SiteTab />}
         {tab === 'beta' && <BetaTab />}
-        {tab === 'scoring' && <ScoringTab />}
+        {tab === 'rules' && <SessionRulesTab />}
         {tab === 'releases' && <ReleasesTab />}
         {tab === 'results' && <ResultsTab />}
         {tab === 'sessions' && <SessionsTab />}
