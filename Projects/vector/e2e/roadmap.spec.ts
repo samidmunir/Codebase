@@ -28,3 +28,13 @@ test('the landing page answers the questions people ask first', async ({ page })
   await faq.getByText('Is Vector free?').click();
   await expect(answer).toBeVisible();
 });
+
+test('the landing page shows activity only once there is enough of it', async ({ page }) => {
+  // The test database has a handful of sessions at most: below the minimums.
+  const pulse = page.waitForResponse((response) => response.url().endsWith('/api/pulse'));
+  await page.goto('/');
+  expect((await (await pulse).json()).totals).toBeNull();
+  await expect(
+    page.getByRole('region', { name: /This week on Vector|Since the beta began/ }),
+  ).toHaveCount(0);
+});
