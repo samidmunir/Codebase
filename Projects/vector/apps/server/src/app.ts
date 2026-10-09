@@ -82,7 +82,7 @@ export interface AppDependencies {
     email?: { mailer?: Mailer; appUrl?: string };
   };
   /** Serve the built client from here (production); HSTS once it's behind HTTPS. */
-  client?: Omit<ClientOptions, 'pageMeta'>;
+  client?: Omit<ClientOptions, 'pageMeta' | 'sitemapPaths'>;
 }
 
 declare module 'fastify' {
@@ -98,6 +98,8 @@ declare module 'fastify' {
 
 export function buildApp(deps: AppDependencies, options: FastifyServerOptions = {}) {
   const app = Fastify(options);
+  /** Published news posts' pages, for the sitemap (set once accounts are wired up). */
+  let newsPaths: (() => Promise<string[]>) | undefined;
   /** Shared results' and profiles' link previews (set once accounts are wired up). */
   let shareMeta:
     | {
@@ -220,7 +222,9 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         });
         await api.register(airspacesRoutes, { airspaces });
         await api.register(recordsRoutes, { records, authenticate });
-        await api.register(newsRoutes, { news: newsRepository(db), audit, authenticate });
+        const news = newsRepository(db);
+        newsPaths = async () => (await news.list(0, 200)).posts.map((post) => `/news/${post.slug}`);
+        await api.register(newsRoutes, { news, audit, authenticate });
         await api.register(releasesRoutes, {
           releases: releasesRepository(db),
           audit,
@@ -272,6 +276,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
   if (deps.client)
     app.register(serveClient, {
       ...deps.client,
+      sitemapPaths: async () => (await newsPaths?.()) ?? [],
       // A shared result's or pilot's page previews as that result or pilot.
       pageMeta: async (path) => {
         const id = RESULT_PATH.exec(path)?.[1];

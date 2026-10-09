@@ -18,3 +18,13 @@ test('the landing page shows what the next version brings, and the roadmap shows
   );
   await expect(page.getByRole('region', { name: 'v0.2' })).toContainText('Weekly challenge');
 });
+
+test('the landing page answers the questions people ask first', async ({ page }) => {
+  await page.goto('/');
+  const faq = page.getByRole('region', { name: 'Before you take the frequency' });
+  await faq.scrollIntoViewIfNeeded();
+  const answer = faq.getByText(/free to play while it’s in beta/);
+  await expect(answer).toBeHidden();
+  await faq.getByText('Is Vector free?').click();
+  await expect(answer).toBeVisible();
+});

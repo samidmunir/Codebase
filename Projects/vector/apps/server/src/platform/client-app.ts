@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, normalize, resolve } from 'node:path';
 import helmet from '@fastify/helmet';
 import fastifyStatic from '@fastify/static';
@@ -50,6 +50,63 @@ export interface ClientOptions {
   origin?: string;
   /** The preview for a path that has its own (undefined: the page's usual one). */
   pageMeta?: (path: string) => Promise<PageMeta | undefined>;
+  /** Search engines may index the site (production), or not (staging). */
+  indexing?: boolean;
+  /** Pages for the sitemap beyond the prerendered ones (e.g. news posts). */
+  sitemapPaths?: () => Promise<string[]>;
+}
+
+/** Pages search engines shouldn't index: signed-in pages, emailed links, the API. */
+const PRIVATE_PATHS = [
+  '/admin',
+  '/account',
+  '/settings',
+  '/play',
+  '/me',
+  '/setup/',
+  '/scope/',
+  '/verify-email',
+  '/reset-password',
+  '/confirm-email',
+  '/undo-email-change',
+  '/api/',
+];
+
+/** robots.txt: everything public, or (staging) nothing at all. */
+export function robotsTxt(origin: string | undefined, indexing: boolean): string {
+  if (!indexing || !origin) return 'User-agent: *\nDisallow: /\n';
+  return [
+    'User-agent: *',
+    ...PRIVATE_PATHS.map((path) => `Disallow: ${path}`),
+    // Link previews (share cards) are fetched by crawlers too.
+    'Allow: /api/share/',
+    '',
+    `Sitemap: ${origin}/sitemap.xml`,
+    '',
+  ].join('\n');
+}
+
+/** The pages the build prerendered (each public page has its own index.html). */
+function prerenderedPaths(dir: string): string[] {
+  const paths: string[] = [];
+  const walk = (relative: string) => {
+    for (const entry of readdirSync(join(dir, relative), { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.name === 'assets') continue;
+      const child = `${relative}/${entry.name}`;
+      if (existsSync(join(dir, child, 'index.html'))) paths.push(child);
+      walk(child);
+    }
+  };
+  walk('');
+  return ['/', ...paths.sort()];
+}
+
+/** sitemap.xml for these paths. */
+export function sitemapXml(origin: string, paths: string[]): string {
+  const urls = [...new Set(paths)]
+    .map((path) => `  <url><loc>${attribute(`${origin}${path === '/' ? '' : path}`)}</loc></url>`)
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 
 const attribute = (text: string) =>
@@ -64,7 +121,11 @@ export function withPageMeta(
   html: string,
   { origin, path, meta }: { origin: string | undefined; path: string; meta: PageMeta | undefined },
 ): string {
-  let page = html;
+  // Structured data that belongs to one page (data-page="/…"), on other pages: left out.
+  let page = html.replace(
+    /\s*<script type="application\/ld\+json" data-page="([^"]*)">[\s\S]*?<\/script>/g,
+    (tag, owner: string) => (owner === path ? tag : ''),
+  );
   if (meta) {
     page = page
       .replace(/(<title>)[^<]*/, `$1${attribute(meta.title)}`)
@@ -87,6 +148,7 @@ export function withPageMeta(
       `$1${attribute(meta.imageAlt)}`,
     );
   const extra = [
+    `<link rel="canonical" href="${attribute(`${origin}${path}`)}" />`,
     `<meta property="og:url" content="${attribute(`${origin}${path}`)}" />`,
     ...(absolute ? [`<meta name="twitter:image" content="${absolute}" />`] : []),
     ...(meta && !has('og:image:width')
@@ -143,6 +205,22 @@ export async function serveClient(app: FastifyInstance, options: ClientOptions) 
     },
   });
 
+  const indexing = options.indexing ?? false;
+  app.get('/robots.txt', async (_request, reply) =>
+    reply
+      .type('text/plain; charset=utf-8')
+      .header('cache-control', 'public, max-age=3600')
+      .send(robotsTxt(options.origin, indexing)),
+  );
+  app.get('/sitemap.xml', async (_request, reply) => {
+    if (!indexing || !options.origin) return reply.code(404).type('text/plain').send('Not found');
+    const extra = (await options.sitemapPaths?.().catch(() => [])) ?? [];
+    return reply
+      .type('application/xml; charset=utf-8')
+      .header('cache-control', 'public, max-age=3600')
+      .send(sitemapXml(options.origin, [...prerenderedPaths(dir), ...extra]));
+  });
+
   // Pages: a public page's own HTML (title and link previews), else the app's shell.
   app.setNotFoundHandler(async (request, reply) => {
     const path = request.url.split('?')[0] ?? '/';
@@ -157,6 +235,8 @@ export async function serveClient(app: FastifyInstance, options: ClientOptions) 
     const page = path === '/' ? undefined : prerendered(dir, path);
     const meta = await options.pageMeta?.(path).catch(() => undefined);
     reply.header('cache-control', REVALIDATE);
+    // Staging: in case a search engine finds it anyway.
+    if (!indexing) reply.header('x-robots-tag', 'noindex, nofollow');
     return reply
       .type('text/html; charset=utf-8')
       .send(withPageMeta(read(page ?? 'index.html'), { origin: options.origin, path, meta }));
