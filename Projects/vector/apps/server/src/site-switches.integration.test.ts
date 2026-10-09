@@ -93,6 +93,7 @@ describe.skipIf(!db)('site switches (integration)', () => {
       communityReadOnly: false,
       communityMessage: '',
       beta: false,
+      version: '0.1',
     });
     const pilot = await register('Ace');
     const morgan = await register('Morgan', 'moderator');

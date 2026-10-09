@@ -24,7 +24,7 @@ export function SiteLayout() {
 
   const signedIn = session.status === 'signedIn' ? session.user : undefined;
   const communityUnread = useCommunityUnread(location.pathname);
-  const { beta, registrationMode } = useSiteStatus();
+  const { beta, registrationMode, version } = useSiteStatus();
 
   return (
     <div className="site">
@@ -81,10 +81,20 @@ export function SiteLayout() {
         <Outlet />
         <footer className="site-footer">
           <span>
-            Vector · approach and departure control, on real FAA data · not for navigation
+            Vector
+            {version && (
+              <>
+                {' '}
+                <Link to="/roadmap" className="site-footer__version" title="What’s in each version">
+                  v{version}
+                </Link>
+              </>
+            )}{' '}
+            · approach and departure control, on real FAA data · not for navigation
           </span>
           <nav className="site-footer__links" aria-label="Site">
             <Link to="/news">News</Link>
+            <Link to="/roadmap">Roadmap</Link>
             <Link to="/guide">Guide</Link>
             <Link to="/about">About</Link>
             <Link to="/terms">Terms</Link>

@@ -1,4 +1,5 @@
 import {
+  compareVersionsDesc,
   DEFAULT_SITE_SETTINGS,
   siteSettingsSchema,
   type AdminSiteSettings,
@@ -52,7 +53,10 @@ export function siteSettingsRepository(db: Database, audit: AuditRepository) {
     settings,
 
     async status(): Promise<SiteStatus> {
-      const current = await settings();
+      const [current, released] = await Promise.all([
+        settings(),
+        db.query<{ version: string }>("SELECT version FROM releases WHERE status = 'released'"),
+      ]);
       return {
         registrationMode: current.registration.mode,
         registrationOpen: current.registration.mode !== 'closed',
@@ -64,6 +68,8 @@ export function siteSettingsRepository(db: Database, audit: AuditRepository) {
         communityReadOnly: current.community.readOnly,
         communityMessage: current.community.message,
         beta: current.beta.enabled,
+        // The newest released version (for the footer).
+        version: released.rows.map((row) => row.version).sort(compareVersionsDesc)[0] ?? null,
       };
     },
 
