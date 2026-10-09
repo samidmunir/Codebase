@@ -1,12 +1,12 @@
 import {
   defaultSettings,
   detectDifficulty,
-  usesScoring,
-  usesStandardRules,
+  differences,
+  SCORING_KEYS,
   type SessionDifficulty,
   type SessionSettings,
 } from '@vector/shared';
-import type { ScoringVersion } from './scoring-repository';
+import type { RulesVersion } from './session-rules-repository';
 
 // Whether a session counts for the records and the career. Decided from its replay
 // (how it started and every input), never from what the client says, and the
@@ -28,11 +28,7 @@ interface ReplayLike {
 }
 
 /** Ranks a session from its replay, against the official scoring's versions. */
-export function rankSession(
-  replay: unknown,
-  versions: ScoringVersion[],
-  now = new Date(),
-): Ranking {
+export function rankSession(replay: unknown, versions: RulesVersion[], now = new Date()): Ranking {
   const parsed = replay as ReplayLike | null | undefined;
   if (!parsed?.start?.settings || typeof parsed.start.settings !== 'object')
     return {
@@ -53,12 +49,22 @@ export function rankSession(
     unrankedReason,
   });
 
-  const official = versions.filter(
+  const recent = versions.filter(
     (version) => !version.until || now.getTime() - version.until.getTime() <= GRACE_MS,
   );
-  if (!official.some((version) => usesScoring(settings, version.values)))
-    return unranked('Played with unofficial scoring');
-  if (!usesStandardRules(settings)) return unranked('Played with non-standard rules');
+  if (!recent.some((version) => differences(settings, version.values).length === 0)) {
+    // Why not, against the official settings now.
+    const differ = differences(settings, versions.at(-1)!.values);
+    return unranked(
+      differ.some((key) => SCORING_KEYS.includes(key))
+        ? 'Played with unofficial scoring'
+        : differ.some((key) => key.startsWith('weather.') || key.startsWith('traffic.'))
+          ? 'Played with non-standard weather or traffic settings'
+          : 'Played with non-standard rules',
+    );
+  }
+  if (settings['weather.windMode'] === 'manual')
+    return unranked('Manual wind is for practice: choose live or random wind for the records');
   if (difficulty === 'custom')
     return unranked('Custom traffic isn’t ranked: choose Easy, Normal, Hard or Expert');
   if (Array.isArray(parsed.inputs) && parsed.inputs.some((input) => input?.type === 'traffic'))

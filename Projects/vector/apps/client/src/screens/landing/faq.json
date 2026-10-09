@@ -1,0 +1,30 @@
+[
+  {
+    "question": "Is Vector free?",
+    "answer": "Yes. Vector is free to play while it’s in beta: every airspace, your career, the records and the community."
+  },
+  {
+    "question": "Do I need to know air traffic control?",
+    "answer": "No. Start on Easy, with a few aircraft at a time, and the Controller’s Handbook explains the scope, the commands and the phraseology. Pilots read back every instruction, so you can hear what you asked for."
+  },
+  {
+    "question": "What do I need to play?",
+    "answer": "A laptop or desktop computer with an up-to-date browser (Chrome, Edge, Firefox or Safari). There’s nothing to install. The scope is built for a mouse and a larger screen, so it isn’t made for phones."
+  },
+  {
+    "question": "How realistic is it?",
+    "answer": "The airspace is built from the FAA’s own data: published arrival, departure and approach procedures, frequencies and minimum vectoring altitudes. The weather is live, separation follows US terminal standards (3 nautical miles or 1,000 feet), and aircraft fly real performance. It’s a simulation for fun and learning, not certified training or for real-world use."
+  },
+  {
+    "question": "How does the score work?",
+    "answer": "You earn RP for landing arrivals and handing off departures and overflights, with bonuses for being on time, and lose it for losses of separation and go-arounds. Scoring and the rules are the same for every pilot, and the server replays every session to verify it before it counts for the records."
+  },
+  {
+    "question": "How do I join the beta?",
+    "answer": "While Vector is in beta, new accounts may need an invite code. If the sign-up page asks for one and you don’t have it, join the waitlist there and we’ll email you one."
+  },
+  {
+    "question": "Can I save a session and come back to it?",
+    "answer": "Yes. Save a session from the scope and resume it later, exactly where you left it. Every session you play also builds your career, whether you save it or not."
+  }
+]

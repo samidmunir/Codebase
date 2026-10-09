@@ -4,12 +4,14 @@ import { defaultSettings, parseSettingsPatch } from './resolve';
 
 // Fair sessions: what's the same for everyone, and what a player chooses.
 //
-// - Scoring (every RP value) is official: admins set it, for every session.
-// - The rules of the airspace (separation, approaches, Center, radar, pilots'
-//   response) are standard: their default values, for every session.
-// - Players choose the difficulty (traffic, in setup only), the weather, the sim
-//   speeds, readback detail, and player aids (eligibility dots, Conflict Alert
-//   look-ahead).
+// Official (admins set them, Admin → Session rules, for every session):
+// - scoring: every RP value;
+// - the rules: separation, approaches, Center, radar, pilots' response;
+// - the conditions: how the wind varies, runway changes, the departure queue, the
+//   airline mix.
+// Players choose the difficulty (traffic rates, in setup only), live or random wind
+// (manual wind is for practice), the sim speeds, readback detail, and the player aids
+// (eligibility dots, Conflict Alert look-ahead).
 //
 // The server checks each recorded session against this before it counts for the
 // records (see the results service), so a changed client can't get around it.
@@ -20,7 +22,7 @@ const ALL_KEYS = Object.keys(SESSION_SETTINGS) as SessionKey[];
 /** Every RP value: official, set by admins. */
 export const SCORING_KEYS = ALL_KEYS.filter((key) => key.startsWith('scoring.'));
 
-/** The rules of the airspace: the standard values, for everyone. */
+/** The rules of the airspace: official, for everyone. */
 export const RULE_KEYS: SessionKey[] = [
   'separation.lateralNm',
   'separation.enrouteLateralNm',
@@ -45,75 +47,95 @@ export const RULE_KEYS: SessionKey[] = [
   'pilots.responseDelaySec',
 ];
 
-const FIXED = new Set<string>([...SCORING_KEYS, ...RULE_KEYS]);
+/** The conditions: how the wind varies, runway changes, the departure queue, the airline mix. */
+export const CONDITION_KEYS: SessionKey[] = [
+  'weather.windVariation',
+  'weather.windVariationPeriodMin',
+  'weather.livePollMin',
+  'weather.runwayChanges',
+  'weather.runwayChangeNoticeMin',
+  'weather.maxTailwindKts',
+  'weather.maxCrosswindKts',
+  'traffic.maxDepartureQueue',
+  'traffic.fleetMix',
+];
 
-/** What a player chooses for a session (the rest is official or standard). */
-export const PLAYER_SESSION_KEYS = ALL_KEYS.filter((key) => !FIXED.has(key));
+/** Every official setting: admins set them, the same for every session. */
+export const OFFICIAL_KEYS: SessionKey[] = [...SCORING_KEYS, ...RULE_KEYS, ...CONDITION_KEYS];
+const OFFICIAL = new Set<string>(OFFICIAL_KEYS);
 
-/** Official RP values, one for each scoring setting. */
-export type ScoringValues = Pick<SessionSettings, (typeof SCORING_KEYS)[number]>;
+/** The official settings by topic, for Admin → Session rules. */
+export const OFFICIAL_GROUPS: { label: string; keys: SessionKey[] }[] = [
+  { label: 'Scoring', prefix: 'scoring.' },
+  { label: 'Separation', prefix: 'separation.' },
+  { label: 'Approaches', prefix: 'approaches.' },
+  { label: 'Departures', prefix: 'departures.' },
+  { label: 'Center', prefix: 'center.' },
+  { label: 'Radar', prefix: 'radar.' },
+  { label: 'Pilots', prefix: 'pilots.' },
+  { label: 'Weather and runways', prefix: 'weather.' },
+  { label: 'Traffic', prefix: 'traffic.' },
+].map(({ label, prefix }) => ({
+  label,
+  keys: OFFICIAL_KEYS.filter((key) => key.startsWith(prefix)),
+}));
 
-/** The scoring every session uses until an admin changes it. */
-export function defaultScoring(): ScoringValues {
+/** What a player chooses for a session (the rest is official). */
+export const PLAYER_SESSION_KEYS = ALL_KEYS.filter((key) => !OFFICIAL.has(key));
+
+/** The official settings' values. */
+export type OfficialValues = Partial<SessionSettings>;
+
+/** The official settings every session uses until an admin changes them. */
+export function defaultOfficial(): OfficialValues {
   const defaults = defaultSettings('session');
-  return Object.fromEntries(SCORING_KEYS.map((key) => [key, defaults[key]])) as ScoringValues;
+  return Object.fromEntries(OFFICIAL_KEYS.map((key) => [key, defaults[key]])) as OfficialValues;
 }
 
-/** Scoring from an admin: every value valid, nothing but scoring settings. */
-export const scoringValuesSchema = z.unknown().transform((input, context) => {
+/** Official settings from an admin: every value valid, only official settings. */
+export const officialValuesSchema = z.unknown().transform((input, context) => {
   try {
     const patch = parseSettingsPatch('session', input);
-    const stray = Object.keys(patch).filter((key) => !key.startsWith('scoring.'));
+    const stray = Object.keys(patch).filter((key) => !OFFICIAL.has(key));
     if (stray.length > 0) {
-      context.addIssue({ code: 'custom', message: `Not a scoring setting: ${stray.join(', ')}` });
+      context.addIssue({ code: 'custom', message: `Not an official setting: ${stray.join(', ')}` });
       return z.NEVER;
     }
-    return { ...defaultScoring(), ...patch } as ScoringValues;
+    return { ...defaultOfficial(), ...patch } as OfficialValues;
   } catch (error) {
     context.addIssue({
       code: 'custom',
-      message: error instanceof Error ? error.message : 'Invalid scoring',
+      message: error instanceof Error ? error.message : 'Invalid settings',
     });
     return z.NEVER;
   }
 });
 
-/** A session's settings with official scoring and the standard rules in place. */
+/** A session's settings with the official ones in place. */
 export function withOfficialRules(
   settings: SessionSettings,
-  scoring: ScoringValues,
+  official: OfficialValues,
 ): SessionSettings {
-  const defaults = defaultSettings('session');
-  return {
-    ...settings,
-    ...Object.fromEntries(RULE_KEYS.map((key) => [key, defaults[key]])),
-    ...scoring,
-  } as SessionSettings;
+  return { ...settings, ...official } as SessionSettings;
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
-/** Whether a session used these scoring values. */
-export const usesScoring = (settings: SessionSettings, scoring: ScoringValues) =>
-  SCORING_KEYS.every((key) => same(settings[key], scoring[key]));
+/** The official settings a session didn't use these values for (none: it did). */
+export const differences = (settings: SessionSettings, official: OfficialValues) =>
+  OFFICIAL_KEYS.filter((key) => !same(settings[key], official[key]));
 
-/** Whether a session used the standard rules. */
-export function usesStandardRules(settings: SessionSettings): boolean {
-  const defaults = defaultSettings('session');
-  return RULE_KEYS.every((key) => same(settings[key], defaults[key]));
-}
-
-/** GET /api/scoring: the scoring sessions use now. */
-export const officialScoringSchema = z.object({
+/** GET /api/session-rules: the official settings sessions use now. */
+export const officialSettingsSchema = z.object({
   values: z.record(z.string(), z.unknown()),
-  /** When it last changed (null: the defaults, never changed). */
+  /** When they last changed (null: the defaults, never changed). */
   changedAt: z.iso.datetime().nullable(),
 });
-export type OfficialScoring = z.infer<typeof officialScoringSchema>;
+export type OfficialSettings = z.infer<typeof officialSettingsSchema>;
 
-/** GET /api/admin/scoring: the scoring now, and its earlier versions. */
-export const adminScoringSchema = z.object({
-  current: officialScoringSchema.extend({ changedBy: z.string().nullable() }),
+/** GET /api/admin/session-rules: the official settings now, and their earlier versions. */
+export const adminSessionRulesSchema = z.object({
+  current: officialSettingsSchema.extend({ changedBy: z.string().nullable() }),
   versions: z.array(
     z.object({
       id: z.number().int(),
@@ -122,4 +144,4 @@ export const adminScoringSchema = z.object({
     }),
   ),
 });
-export type AdminScoring = z.infer<typeof adminScoringSchema>;
+export type AdminSessionRules = z.infer<typeof adminSessionRulesSchema>;

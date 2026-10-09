@@ -3,19 +3,20 @@ import type { SessionSettings } from './registry';
 export const DIFFICULTY_LEVELS = ['easy', 'normal', 'hard', 'expert'] as const;
 export type DifficultyLevel = (typeof DIFFICULTY_LEVELS)[number];
 
+/** What a difficulty sets: the traffic rates (the departure queue is official, the same for all). */
 type DifficultyKey =
-  | 'traffic.arrivalRatePerHour'
-  | 'traffic.departureRatePerHour'
-  | 'traffic.transitRatePerHour'
-  | 'traffic.maxDepartureQueue';
+  'traffic.arrivalRatePerHour' | 'traffic.departureRatePerHour' | 'traffic.transitRatePerHour';
 
-/** Session settings that can be tuned while a session runs. */
+/**
+ * Traffic settings sessions could once change while they ran (the Traffic panel); their
+ * replays still carry those changes, so the engine still applies them.
+ */
 export const IN_SESSION_TRAFFIC_KEYS = [
   'traffic.arrivalRatePerHour',
   'traffic.departureRatePerHour',
   'traffic.transitRatePerHour',
   'traffic.maxDepartureQueue',
-] as const satisfies readonly DifficultyKey[];
+] as const;
 export type DifficultyPreset = Pick<SessionSettings, DifficultyKey>;
 
 /**
@@ -27,25 +28,21 @@ export const DIFFICULTY_PRESETS: Record<DifficultyLevel, DifficultyPreset> = {
     'traffic.arrivalRatePerHour': 6,
     'traffic.departureRatePerHour': 6,
     'traffic.transitRatePerHour': 2,
-    'traffic.maxDepartureQueue': 3,
   },
   normal: {
     'traffic.arrivalRatePerHour': 10,
     'traffic.departureRatePerHour': 10,
     'traffic.transitRatePerHour': 4,
-    'traffic.maxDepartureQueue': 5,
   },
   hard: {
     'traffic.arrivalRatePerHour': 15,
     'traffic.departureRatePerHour': 15,
     'traffic.transitRatePerHour': 6,
-    'traffic.maxDepartureQueue': 8,
   },
   expert: {
     'traffic.arrivalRatePerHour': 20,
     'traffic.departureRatePerHour': 20,
     'traffic.transitRatePerHour': 8,
-    'traffic.maxDepartureQueue': 12,
   },
 };
 

@@ -17,6 +17,7 @@ const NORMAL: SiteStatus = {
   communityReadOnly: false,
   communityMessage: '',
   beta: false,
+  version: null,
 };
 
 let status: SiteStatus = NORMAL;

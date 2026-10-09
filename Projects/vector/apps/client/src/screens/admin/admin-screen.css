@@ -1228,3 +1228,65 @@ a.admin-user-link:hover .admin-user-link__name {
   display: grid;
   gap: var(--space-2);
 }
+
+/* ---- Releases (the roadmap) ---------------------------------------------------------- */
+
+.admin-release__features-title {
+  margin: var(--space-2) 0 0;
+}
+
+.admin-release__features {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-release__feature {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}
+
+.admin-rules__group {
+  border-top: 1px solid var(--color-surface-border);
+}
+
+.admin-rules__group summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Saving stays in reach while scrolling through the settings. */
+.admin-rules__save {
+  position: sticky;
+  bottom: 0;
+  padding: var(--space-3) 0;
+  background: linear-gradient(transparent, var(--color-surface) 30%);
+}
+
+/* Many tabs: one line, scrolling sideways when they don't fit. */
+.admin-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.admin-tabs > * {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Each setting gets the full width unless there's room for two. */
+.admin-rules__group .admin-scoring {
+  grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+}

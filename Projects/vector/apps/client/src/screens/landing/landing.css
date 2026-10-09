@@ -584,3 +584,462 @@
     animation: none;
   }
 }
+
+/* ---- Roadmap: what the next version brings ----------------------------------------- */
+
+.landing-roadmap__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  align-items: end;
+  gap: var(--space-8);
+  margin-bottom: var(--space-6);
+}
+
+.landing-roadmap__head .landing-section__title {
+  margin-bottom: var(--space-2);
+}
+
+.landing-roadmap__name {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.landing-roadmap__summary {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.landing-roadmap__feature {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 181, 71, 0.07), transparent 55%),
+    var(--color-surface);
+}
+
+.landing-roadmap__more {
+  margin: var(--space-4) 0 0;
+}
+
+.landing-roadmap__more a {
+  color: var(--color-target);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.landing-roadmap__more a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  .landing-roadmap__head {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+}
+
+/* ---- Questions --------------------------------------------------------------------- */
+
+.landing-faq__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-3);
+}
+
+.landing-faq__item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.landing-faq__item[open] {
+  border-color: rgba(76, 242, 160, 0.35);
+}
+
+.landing-faq__item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  font-size: 1.05rem;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.landing-faq__item summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A plus that turns into a minus. */
+.landing-faq__item summary::after {
+  flex-shrink: 0;
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 1.3rem;
+  font-weight: 400;
+  content: '+';
+}
+
+.landing-faq__item[open] summary::after {
+  content: '−';
+}
+
+.landing-faq__item summary:focus-visible {
+  border-radius: var(--radius-md);
+  outline: 2px solid var(--color-target);
+  outline-offset: 2px;
+}
+
+.landing-faq__item p {
+  margin: 0;
+  padding: 0 var(--space-6) var(--space-4);
+  color: var(--color-text-muted);
+  line-height: 1.65;
+}
+
+@media (max-width: 760px) {
+  .landing-faq__list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- On the frequency: real numbers and the top controllers ------------------------- */
+
+.landing-pulse__numbers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0 0 var(--space-8);
+  border-top: 1px solid var(--color-surface-border);
+  border-bottom: 1px solid var(--color-surface-border);
+}
+
+.landing-pulse__numbers div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  padding: var(--space-6) var(--space-4);
+}
+
+.landing-pulse__numbers div + div {
+  border-left: 1px solid var(--color-surface-border);
+}
+
+.landing-pulse__numbers dd {
+  margin: 0;
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.landing-pulse__numbers dt {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.landing-pulse__top h3 {
+  margin: 0 0 var(--space-3);
+  font-size: 1.1rem;
+}
+
+.landing-pulse__note {
+  color: var(--color-text-faint);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.landing-pulse__top ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-pulse__pilot {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  color: var(--color-text);
+  text-decoration: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.landing-pulse__pilot:hover,
+.landing-pulse__pilot:focus-visible {
+  border-color: rgba(76, 242, 160, 0.4);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.landing-pulse__rank {
+  color: var(--color-text-faint);
+  font-family: var(--font-data);
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.landing-pulse__rank[data-rank='1'] {
+  color: var(--color-target);
+}
+
+.landing-pulse__avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--color-target);
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: rgba(76, 242, 160, 0.08);
+  border: 1px solid rgba(76, 242, 160, 0.3);
+  border-radius: 50%;
+}
+
+.landing-pulse__who {
+  display: grid;
+  min-width: 0;
+}
+
+.landing-pulse__who strong,
+.landing-pulse__who span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-pulse__who span {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.landing-pulse__rp {
+  font-family: var(--font-data);
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .landing-pulse__top ol {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .landing-pulse__numbers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .landing-pulse__numbers div:nth-child(3) {
+    border-left: none;
+  }
+
+  .landing-pulse__numbers div:nth-child(n + 3) {
+    border-top: 1px solid var(--color-surface-border);
+  }
+}
+
+/* ---- Try it: a visitor works an aircraft in the hero's live session ----------------- */
+
+/* Clicks reach the scope except over the words and the panel. */
+.landing-hero__inner {
+  pointer-events: none;
+}
+
+.landing-hero__content,
+.landing-hero__readout {
+  pointer-events: auto;
+}
+
+/* While trying, the scope holds still (no parallax), so aircraft are easy to click. */
+.landing-hero[data-trying] {
+  --px: 0 !important;
+  --py: 0 !important;
+}
+
+.landing-hero__try {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 16px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: rgba(76, 242, 160, 0.06);
+  border: 1px solid rgba(76, 242, 160, 0.4);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.landing-hero__try:hover {
+  background: rgba(76, 242, 160, 0.14);
+}
+
+.hero-try {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: rgba(7, 12, 16, 0.86);
+  border: 1px solid rgba(76, 242, 160, 0.4);
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+.hero-try p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.hero-try__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-try__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-target);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero-try__close {
+  padding: 2px 8px;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.hero-try__aircraft {
+  display: grid;
+  gap: 2px;
+  font-family: var(--font-data);
+}
+
+.hero-try__aircraft strong {
+  color: var(--color-target);
+  font-size: 1.3rem;
+}
+
+.hero-try__aircraft span {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.hero-try__data {
+  color: var(--color-text) !important;
+}
+
+.hero-try__options {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.hero-try__options button {
+  padding: 9px 12px;
+  color: var(--color-text);
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.hero-try__options button:hover {
+  background: rgba(76, 242, 160, 0.1);
+  border-color: rgba(76, 242, 160, 0.45);
+}
+
+.hero-try__problem {
+  color: var(--color-caution) !important;
+}
+
+.hero-try__done {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.hero-try__calls {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-data);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  list-style: none;
+}
+
+.hero-try__calls li span {
+  display: block;
+  color: var(--color-text-faint);
+  font-size: 0.7rem;
+}
+
+.hero-try__calls li[data-controller] {
+  color: var(--color-target);
+}
+
+.hero-try__waiting {
+  color: var(--color-text-faint);
+}
+
+.hero-try__nice strong {
+  color: var(--color-text);
+}
+
+.hero-try__next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.hero-try__primary {
+  padding: 9px 14px;
+  color: #04120c;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--color-target);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.hero-try__link {
+  padding: 0;
+  color: var(--color-target);
+  font: inherit;
+  font-size: 0.88rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}

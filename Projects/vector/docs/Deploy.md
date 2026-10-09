@@ -117,6 +117,17 @@ Then, before telling anyone about it, open the beta:
 
 When the beta's over, set Registration to **Open** and turn Beta off.
 
+### 6. Search engines
+
+Production is indexed (`SEARCH_INDEXING=on` in `render.yaml`): it serves `robots.txt` and
+`sitemap.xml` (the public pages and published news). Staging isn't (`off`): its
+`robots.txt` disallows everything and every page says `noindex`.
+
+To get into Google sooner, add the site to
+[Google Search Console](https://search.google.com/search-console) (a **Domain** property
+for `vectorsim.net`: it gives a TXT record to add in Squarespace), then submit
+`https://vectorsim.net/sitemap.xml` under **Sitemaps**.
+
 ## Day to day
 
 - **Ship to staging:** merge a feature branch into `vector/develop` and push. Watch

@@ -14,7 +14,7 @@ import type { RecordsRepository } from '../records/records-repository';
 import { UserNotFoundError, type UsersRepository } from '../users/users-repository';
 import { rankSession } from './ranking';
 import { ResultNotFoundError, type ResultsRepository } from './results-repository';
-import type { ScoringRepository } from './scoring-repository';
+import type { SessionRulesRepository } from './session-rules-repository';
 
 /** The snapshot isn't one the simulator can read, or isn't this session's. */
 export class InvalidResultError extends Error {
@@ -32,12 +32,12 @@ const PROFILE_RECENT = 10;
 
 export function resultsService(deps: {
   results: ResultsRepository;
-  scoring: ScoringRepository;
+  rules: SessionRulesRepository;
   users: UsersRepository;
   airspaces: AirspacesRepository;
   records: RecordsRepository;
 }) {
-  const { results, users, airspaces, records, scoring } = deps;
+  const { results, users, airspaces, records, rules } = deps;
 
   /** The pilot by handle, if the viewer may see their results. */
   async function visiblePilot(handle: string, viewerId: string | undefined) {
@@ -77,7 +77,7 @@ export function resultsService(deps: {
       // Decided from the session's own replay, not from what the client says, and from
       // the values as sent (reading the snapshot resets out-of-range ones to defaults).
       const sent = (request.snapshot as { state?: { replay?: unknown } } | null)?.state?.replay;
-      const ranking = rankSession(sent ?? state.replay, await scoring.versions());
+      const ranking = rankSession(sent ?? state.replay, await rules.versions());
       return results.upsert(userId, {
         sessionKey,
         airspaceId: request.airspaceId,
@@ -98,7 +98,7 @@ export function resultsService(deps: {
 
     /** Ranks results recorded before ranking existed, from their replays. Returns how many. */
     async rankUnchecked(): Promise<number> {
-      const versions = await scoring.versions();
+      const versions = await rules.versions();
       let count = 0;
       for (;;) {
         const batch = await results.unranked();
@@ -145,6 +145,7 @@ export function resultsService(deps: {
         byAirspace,
         history,
         recent: recent.results,
+        sessionsListed: recent.total,
       };
     },
 

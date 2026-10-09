@@ -77,6 +77,8 @@ export const siteStatusSchema = z.object({
   communityReadOnly: z.boolean(),
   communityMessage: z.string(),
   beta: z.boolean(),
+  /** The version that's out now (e.g. "0.1"), from the releases. */
+  version: z.string().nullable(),
 });
 export type SiteStatus = z.infer<typeof siteStatusSchema>;
 

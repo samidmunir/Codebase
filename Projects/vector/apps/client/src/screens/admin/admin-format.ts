@@ -17,6 +17,10 @@ const ACTIONS: Record<AuditEntry['action'], string> = {
   'user.sessionDelete': 'Deleted a saved session',
   'site.update': 'Changed a site switch',
   'scoring.update': 'Changed the official scoring',
+  'rules.update': 'Changed the session rules',
+  'release.create': 'Added a version to the roadmap',
+  'release.update': 'Edited a version on the roadmap',
+  'release.delete': 'Deleted a version from the roadmap',
   'invite.create': 'Made an invite code',
   'invite.revoke': 'Withdrew an invite code',
   'waitlist.invite': 'Invited from the waitlist',
@@ -101,6 +105,7 @@ const describeChange = (key: string, value: unknown, entry: AuditEntry): string 
   if (key === 'slug') return `/news/${String(value)}`;
   if (key === 'session') return `“${String(value)}”`;
   if (key === 'result') return `session ${String(value).slice(0, 8)}`;
+  if (key === 'features') return `${String(value)} feature${value === 1 ? '' : 's'}`;
   if (key === 'threadsDeleted') return `${String(value)} thread${value === 1 ? '' : 's'} deleted`;
   if (key === 'postsDeleted') return `${String(value)} post${value === 1 ? '' : 's'} deleted`;
   if (key === 'signIns') return `${String(value)} sign-in${value === 1 ? '' : 's'} ended`;

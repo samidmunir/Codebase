@@ -185,15 +185,14 @@ describe('difficulty', () => {
       (level) => DIFFICULTY_PRESETS[level]['traffic.arrivalRatePerHour'],
     );
     expect(rates).toEqual([...rates].sort((a, b) => a - b));
-    expect(
-      DIFFICULTY_LEVELS.map((level) => DIFFICULTY_PRESETS[level]['traffic.maxDepartureQueue']),
-    ).toEqual([3, 5, 8, 12]);
   });
 
   it('applies and detects presets, and reports custom after an adjustment', () => {
     const hard = applyDifficulty(defaultSettings('session'), 'hard');
     expect(detectDifficulty(hard)).toBe('hard');
-    expect(detectDifficulty({ ...hard, 'traffic.maxDepartureQueue': 9 })).toBe('custom');
+    expect(detectDifficulty({ ...hard, 'traffic.arrivalRatePerHour': 16 })).toBe('custom');
+    // The departure queue is official, not part of a difficulty.
+    expect(detectDifficulty({ ...hard, 'traffic.maxDepartureQueue': 9 })).toBe('hard');
   });
 
   it('does not touch non-traffic settings', () => {

@@ -109,3 +109,68 @@ describe('link-preview tags', () => {
     expect(withPageMeta(html, { origin: undefined, path: '/', meta: undefined })).toBe(html);
   });
 });
+
+describe('search engines', () => {
+  const site = mkdtempSync(join(tmpdir(), 'vector-seo-'));
+  const page = (title: string) =>
+    `<head><title>${title}</title><script type="application/ld+json" data-page="/">{"@type":"FAQPage"}</script></head>`;
+  const production = buildApp({
+    checkDatabase: async () => true,
+    client: { dir: site, hsts: true, origin: 'https://vector.test', indexing: true },
+  });
+  const staging = buildApp({
+    checkDatabase: async () => true,
+    client: { dir: site, hsts: true, origin: 'https://staging.vector.test', indexing: false },
+  });
+
+  beforeAll(async () => {
+    writeFileSync(join(site, 'index.html'), page('Vector'));
+    mkdirSync(join(site, 'airspaces', 'chicago'), { recursive: true });
+    writeFileSync(join(site, 'airspaces', 'index.html'), page('Airspaces'));
+    writeFileSync(join(site, 'airspaces', 'chicago', 'index.html'), page('Chicago'));
+    mkdirSync(join(site, 'assets'));
+    await Promise.all([production.ready(), staging.ready()]);
+  });
+
+  afterAll(async () => {
+    await Promise.all([production.close(), staging.close()]);
+    rmSync(site, { recursive: true, force: true });
+  });
+
+  it('lets production be indexed, with a sitemap of the public pages', async () => {
+    const robots = (await production.inject({ method: 'GET', url: '/robots.txt' })).body;
+    expect(robots).toContain('Disallow: /admin');
+    expect(robots).toContain('Allow: /api/share/');
+    expect(robots).toContain('Sitemap: https://vector.test/sitemap.xml');
+    const sitemap = (await production.inject({ method: 'GET', url: '/sitemap.xml' })).body;
+    expect(sitemap.match(/<loc>[^<]+<\/loc>/g)).toEqual([
+      '<loc>https://vector.test</loc>',
+      '<loc>https://vector.test/airspaces</loc>',
+      '<loc>https://vector.test/airspaces/chicago</loc>',
+    ]);
+  });
+
+  it('keeps staging out of search results', async () => {
+    expect((await staging.inject({ method: 'GET', url: '/robots.txt' })).body).toBe(
+      'User-agent: *\nDisallow: /\n',
+    );
+    expect((await staging.inject({ method: 'GET', url: '/sitemap.xml' })).statusCode).toBe(404);
+    const home = await staging.inject({ method: 'GET', url: '/' });
+    expect(home.headers['x-robots-tag']).toBe('noindex, nofollow');
+  });
+
+  it('gives each page its address, and its own structured data only', async () => {
+    const home = (await production.inject({ method: 'GET', url: '/' })).body;
+    expect(home).toContain('<link rel="canonical" href="https://vector.test/" />');
+    expect(home).toContain('"FAQPage"');
+    // The front page's questions aren't on other pages (the shell is the same HTML).
+    const other = (await production.inject({ method: 'GET', url: '/community' })).body;
+    expect(other).not.toContain('FAQPage');
+    expect(other).toContain('<link rel="canonical" href="https://vector.test/community" />');
+    expect(
+      (await production.inject({ method: 'GET', url: '/airspaces/chicago' })).headers[
+        'x-robots-tag'
+      ],
+    ).toBeUndefined();
+  });
+});

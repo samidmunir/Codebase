@@ -3,7 +3,7 @@ import { shortAirport } from '../scope/data-block';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { applyDifficulty, defaultSettings, withOfficialRules } from '@vector/shared';
-import { getOfficialScoring } from '../api/scoring-api';
+import { getOfficialSettings } from '../api/session-rules-api';
 import type { LatLon } from '@vector/sim-core';
 import { useAirspaceStatus } from '../airspaces/airspace-status';
 import { findAirspace } from '../airspaces/registry';
@@ -69,11 +69,11 @@ export function ScopeScreen() {
     const finish = (state: LoadState) => !cancelled && setLoaded({ id: loadKey, state });
     const start = async (): Promise<ScopeSession> => {
       if (!savedId) {
-        const [pack, scoring] = await Promise.all([entry.load!(), getOfficialScoring()]);
-        // Official scoring and the standard rules, whatever was stored on this device.
+        const [pack, official] = await Promise.all([entry.load!(), getOfficialSettings()]);
+        // The official settings, whatever was stored on this device.
         const settings = withOfficialRules(
           setup ? setup.settings : applyDifficulty(defaultSettings('session'), difficulty),
-          scoring,
+          official,
         );
         return new ScopeSession(
           pack,

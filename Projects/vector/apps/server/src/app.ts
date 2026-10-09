@@ -30,6 +30,9 @@ import { forumAdminService } from './forum/forum-admin-service';
 import { communityRoutes } from './routes/community';
 import { newsRepository } from './news/news-repository';
 import { newsRoutes } from './routes/news';
+import { pulseRoutes } from './routes/pulse';
+import { releasesRoutes } from './routes/releases';
+import { releasesRepository } from './releases/releases-repository';
 import { recordsRoutes } from './routes/records';
 import { recordsRepository } from './records/records-repository';
 import { resultsRoutes } from './routes/results';
@@ -48,9 +51,9 @@ import { savedSessionsRepository } from './sessions/sessions-repository';
 import { settingsRepository } from './settings/settings-repository';
 import { usersRepository } from './users/users-repository';
 import { metarService, type MetarService } from './weather/metar-service';
-import { scoringRoutes } from './routes/scoring';
+import { sessionRulesRoutes } from './routes/session-rules';
 import { shareRoutes } from './routes/share';
-import { scoringRepository } from './results/scoring-repository';
+import { sessionRulesRepository } from './results/session-rules-repository';
 import { shareService } from './share/share-service';
 
 /** A shared pilot's page: /pilots/<handle>. */
@@ -76,11 +79,16 @@ export interface AppDependencies {
     metars?: MetarService;
     /** Replaying results to verify them (defaults: 3 minutes after a session's last update, checked every 15 s). */
     verification?: { settleSec?: number; pollMs?: number };
+    /** The landing page's numbers: when they show (PULSE_MINIMUMS) and how long they're kept (tests change both). */
+    pulse?: {
+      minimums?: { sessions: number; landed: number; topPilots: number };
+      cacheMs?: number;
+    };
     /** Sending email (defaults: to the server log, with links to http://localhost:5173). */
     email?: { mailer?: Mailer; appUrl?: string };
   };
   /** Serve the built client from here (production); HSTS once it's behind HTTPS. */
-  client?: Omit<ClientOptions, 'pageMeta'>;
+  client?: Omit<ClientOptions, 'pageMeta' | 'sitemapPaths'>;
 }
 
 declare module 'fastify' {
@@ -96,6 +104,8 @@ declare module 'fastify' {
 
 export function buildApp(deps: AppDependencies, options: FastifyServerOptions = {}) {
   const app = Fastify(options);
+  /** Published news posts' pages, for the sitemap (set once accounts are wired up). */
+  let newsPaths: (() => Promise<string[]>) | undefined;
   /** Shared results' and profiles' link previews (set once accounts are wired up). */
   let shareMeta:
     | {
@@ -120,10 +130,10 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         const resultsRepo = resultsRepository(db);
         const records = recordsRepository(db);
         const audit = auditRepository(db);
-        const scoring = scoringRepository(db);
+        const rules = sessionRulesRepository(db);
         const results = resultsService({
           results: resultsRepo,
-          scoring,
+          rules,
           users,
           airspaces,
           records,
@@ -218,7 +228,19 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
         });
         await api.register(airspacesRoutes, { airspaces });
         await api.register(recordsRoutes, { records, authenticate });
-        await api.register(newsRoutes, { news: newsRepository(db), audit, authenticate });
+        await api.register(pulseRoutes, {
+          db,
+          records,
+          ...deps.accounts.pulse,
+        });
+        const news = newsRepository(db);
+        newsPaths = async () => (await news.list(0, 200)).posts.map((post) => `/news/${post.slug}`);
+        await api.register(newsRoutes, { news, audit, authenticate });
+        await api.register(releasesRoutes, {
+          releases: releasesRepository(db),
+          audit,
+          authenticate,
+        });
         const forum = forumRepository(db);
         await api.register(communityRoutes, {
           forum: forumService({
@@ -240,7 +262,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
           authenticate,
           secureCookies,
         });
-        await api.register(scoringRoutes, { scoring, audit, authenticate });
+        await api.register(sessionRulesRoutes, { rules, audit, authenticate });
         await api.register(adminRoutes, {
           stats: statsRepository(db),
           admin: adminService({
@@ -265,6 +287,7 @@ export function buildApp(deps: AppDependencies, options: FastifyServerOptions = 
   if (deps.client)
     app.register(serveClient, {
       ...deps.client,
+      sitemapPaths: async () => (await newsPaths?.()) ?? [],
       // A shared result's or pilot's page previews as that result or pilot.
       pageMeta: async (path) => {
         const id = RESULT_PATH.exec(path)?.[1];

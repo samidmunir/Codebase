@@ -1,7 +1,7 @@
-import { applyDifficulty, defaultScoring, defaultSettings } from '@vector/shared';
+import { applyDifficulty, defaultOfficial, defaultSettings } from '@vector/shared';
 import { describe, expect, it } from 'vitest';
 import { rankSession } from './ranking';
-import type { ScoringVersion } from './scoring-repository';
+import type { RulesVersion } from './session-rules-repository';
 
 const DAY = 24 * 3_600_000;
 const now = new Date('2026-11-01T12:00:00Z');
@@ -10,17 +10,17 @@ const normal = applyDifficulty(defaultSettings('session'), 'normal');
 
 describe('ranking a session', () => {
   it('keeps a replaced scoring version counting for a week, then not', () => {
-    const versions = (replacedDaysAgo: number): ScoringVersion[] => [
+    const versions = (replacedDaysAgo: number): RulesVersion[] => [
       {
         id: 0,
-        values: defaultScoring(),
+        values: defaultOfficial(),
         from: new Date(0),
         until: new Date(now.getTime() - replacedDaysAgo * DAY),
         createdBy: null,
       },
       {
         id: 1,
-        values: { ...defaultScoring(), 'scoring.landingRp': 150 },
+        values: { ...defaultOfficial(), 'scoring.landingRp': 150 },
         from: new Date(now.getTime() - replacedDaysAgo * DAY),
         until: null,
         createdBy: 'chief@example.com',

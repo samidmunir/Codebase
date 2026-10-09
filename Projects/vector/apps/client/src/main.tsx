@@ -54,6 +54,7 @@ const AdminUserScreen = lazyPage(
   () => import('./screens/admin/AdminUserScreen'),
   'AdminUserScreen',
 );
+const RoadmapScreen = lazyPage(() => import('./screens/roadmap/RoadmapScreen'), 'RoadmapScreen');
 const ProfileScreen = lazyPage(() => import('./screens/pilots/ProfileScreen'), 'ProfileScreen');
 const MyProfileRedirect = lazyPage(
   () => import('./screens/pilots/ProfileScreen'),
@@ -81,6 +82,7 @@ const router = createBrowserRouter([
           { path: '/airspaces', element: <AirspacesScreen /> },
           { path: '/airspaces/:id', element: <AirspaceScreen /> },
           { path: '/news', element: <NewsScreen /> },
+          { path: '/roadmap', element: <RoadmapScreen /> },
           { path: '/community', element: <CommunityScreen /> },
           { path: '/community/t/:id', element: <ThreadScreen /> },
           { path: '/community/t/:id/:slug', element: <ThreadScreen /> },

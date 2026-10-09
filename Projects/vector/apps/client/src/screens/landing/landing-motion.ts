@@ -87,9 +87,24 @@ export function useReveal<T extends HTMLElement>(): RefObject<T | null> {
       },
       { rootMargin: '0px 0px -10% 0px', threshold: 0.12 },
     );
-    for (const element of root.querySelectorAll('[data-reveal]')) observer.observe(element);
+    const watch = (element: Element) => {
+      if (element instanceof HTMLElement && element.dataset.revealed !== 'true')
+        observer.observe(element);
+    };
+    for (const element of root.querySelectorAll('[data-reveal]')) watch(element);
+    // Sections that render once their data loads (the roadmap, the news) reveal too.
+    const added = new MutationObserver((mutations) => {
+      for (const mutation of mutations)
+        for (const node of mutation.addedNodes) {
+          if (!(node instanceof Element)) continue;
+          if (node.matches('[data-reveal]')) watch(node);
+          for (const element of node.querySelectorAll('[data-reveal]')) watch(element);
+        }
+    });
+    added.observe(root, { childList: true, subtree: true });
     return () => {
       observer.disconnect();
+      added.disconnect();
       delete root.dataset.motion;
     };
   }, []);
